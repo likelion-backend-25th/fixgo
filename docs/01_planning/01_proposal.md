@@ -269,20 +269,54 @@
 
 ### 1.4.1 팀 구성 개요
 - PM (Project Manager): 김혜란 (프로젝트 총괄)
-- PL (Project Leader): 김병호 (기술 리딩)
-- 팀원1 (Developer): 김남규 ( )
-- 팀원2 (Developer): 이수환 ( )
-- 팀원3 (Developer): 이지원 ( )
-- 팀원4 (Developer): 최승혁 ( )
-- 팀원5 (Developer): 최원일 ( )
+- PL (Project Leader): 김병호 (기술 리딩, 프론트 배포담당 (Netlify or S3 + CloudFront))
+- 팀원1 (Developer): 김남규 (서기)
+- 팀원2 (Developer): 이수환 (발표)
+- 팀원3 (Developer): 이지원 (서기, 백엔드 배포(AWS, DOCKER, DOCKER-COMPOSE))
+- 팀원4 (Developer): 최승혁 (서기)
+- 팀원5 (Developer): 최원일 (서기)
 
-### 1.4.2 도메인별 상세 역할 및 산출물 분담
-| 담당자 (직책) | 도메인 | 주요 담당 업무 | 핵심 산출물 |
-|---|---|---|---|
-| 용쌤 (PM) | 인증 및 회원 관리 (Auth/Member) | Security 설정, JWT 토큰 발급/재발급, OAuth2 연동, 다중 역할(RBAC) 분기 | SecurityConfig, JwtAuthenticationFilter, MemberController |
-| 나무 (PL) | 강좌 및 커리큘럼 (Course/Curriculum) | 강좌 등록/수정/승인, 챕터-차시 구조 설계, OpenFeign QueryDSL 동적 검색 | CourseService, CourseQueryRepository, CurriculumController |
-| 용쌤 (PM) | 주문 및 결제 관리 (Order/Payment) | 장바구니, 포트원 PG 연동, 결제 사전/사후 검증, 결제 웹훅, 환불 처리 | OrderService, PaymentClient, PaymentWebhookController |
-| 나무 (PL) | 학습 및 과제 관리 (Learning/Assignment) | 동영상 진도율 추적, 과제 제출/채점, 수료증 자동 발급, Q&A 게시판 | LearningProgressService, AssignmentService, S3FileService |
-| 하루 (팀원) | AI 학사 행정 챗봇 (AI Admin Assistant) | 학사 규정/강좌 FAQ 프롬프트 엔지니어링, RAG 기반 행정 데이터 연동, SSE 스트리밍 API | AiAdminChatService, AiChatbotController, AdminFaqPrompt |
-| 용쌤 (PM) | 배치 및 관리자 통계 (Batch/Admin) | 수강 만료 자동화 Job, 월간 매출 정산 Job, 관리자 통계 대시보드 API | ExpiredEnrollmentBatchConfig, SettlementBatchConfig, AdminService |
-| 하루 (팀원) | 인프라 및 프론트엔드 연동 (Infra/Frontend) | Docker Compose 패키징, GitHub Actions CI/CD 구축, React 화면 및 API 연동 | Dockerfile, docker-compose.yml, github-actions.yml, React UI |
+## 1.4 프로젝트 개발 범위 및 구현 우선순위
+
+### 1.4.1 핵심 구현 범위 (1순위)
+
+- 역할 기반 인증 및 직원 계정 관리
+- 플랫폼의 A/S 업체 등록 및 운영 관리
+- 업체별 데이터 격리 및 접근 권한 검증
+- 개인·기업 고객 CRUD 및 엑셀 일괄등록
+- 제품 모델 관리 및 시리얼번호 기반 수리 이력 조회
+- 전화·이메일·방문 A/S 접수
+- 접수 승인 및 수리 기사 배정
+- 수리 내역 등록, 수리 항목 관리 및 수리비 자동 계산
+- 토스페이먼츠 테스트 가상계좌 발급 및 입금 웹훅 처리
+- 입금 완료 후 배송대기 전환
+- 운송장 등록 및 배송 완료 처리
+- A/S 접수, 가상계좌 발급 및 배송 시작 SMS 알림
+- 업체별 기본 운영 대시보드
+- 주요 업무 상태 이력, 권한 검증 및 통합 테스트
+
+### 1.4.2 확장 구현 범위 (2순위)
+
+- 고객 및 제품별 과거 수리 이력 상세 분석
+- 장기 미처리 A/S 업무 관리
+- 가상계좌 만료 및 재발급 처리
+- PG 결제 상태 재조회 및 대사 기능
+- SMS 발송 실패 재시도 및 템플릿 관리
+- 모의 배송 웹훅 자동 연동
+- 방문 수령과 택배 배송의 세부 프로세스 분리
+- 고객 유형별 A/S 통계
+- 기사별 처리 실적 및 평균 A/S 처리 기간 분석
+- 통계 데이터 엑셀 다운로드
+- 관리자 감사 로그 조회 기능
+
+## 1.5 프로젝트 개발 조직 및 역할 분담
+
+| 담당자 | 담당 도메인 | 주요 구현 기능 |
+| --- | --- | --- |
+| **1번 김병호** | 인증·인가 및 직원 관리 | Spring Security, JWT, RBAC, 직원 계정 관리, 복수 역할 관리, 접근 권한 검증 |
+| **2번 김남규** | 고객 및 제품 관리 | 개인·기업 고객 CRUD, 엑셀 일괄등록, 제품 모델·시리얼번호 관리, 고객별 제품 및 A/S 이력 |
+| **3번 김혜란** | A/S 접수 및 배정 관리 | A/S 요청 등록·수정·취소, 접수 승인·반려, 담당 기사 배정·재배정, 배정 이력 관리 |
+| **4번 이수환** | A/S 상태 및 수리 관리 | 상태 전이·이력 관리, 수리 작업 기록, 수리 항목 프리셋, 수리비 계산·확정, 동시성 제어 |
+| **5번 최원일** | 결제 및 입금 관리 | 토스페이먼츠 테스트 가상계좌 발급, 입금 웹훅 처리·멱등성, 수동 입금 확인, 결제 이력 관리 |
+| **6번 이지원** | 배송 및 SMS 알림 관리 | 운송장·방문 수령, 배송 상태 관리, 모의 배송 웹훅, SMS 발송·이력·재시도, Outbox(선택) |
+| **7번 최승혁** | 대시보드·통계 및 AI 분석 | 운영 대시보드, MyBatis 기반 통계 조회, 장기 미처리 A/S 탐지, AI 지연 분석(선택) |
