@@ -216,237 +216,394 @@ erDiagram
 ### 1.2.1 회원 및 인증 도메인 (MEMBER, MEMBER_DETAIL)
 
 #### 1) MEMBER (회원 기본 계정 테이블)
-- 테이블 설명: 수강생, 강사, 관리자의 기본 계정 및 인증 정보를 저장하는 핵심 테이블.
 
-| 컬럼명 | 데이터 타입 | 제약조건 | 기본값 | 인덱스 | 설명 |
-|---|---|---|---|---|---|
-| id | BIGINT | PK, AUTO_INCREMENT | - | PK | 회원 고유 식별자 |
-| email | VARCHAR(100) | NOT NULL, UNIQUE | - | UK_MEMBER_EMAIL | 로그인 이메일 계정 |
-| password | VARCHAR(255) | NOT NULL | - | - | BCrypt 암호화된 비밀번호 |
-| name | VARCHAR(50) | NOT NULL | - | - | 회원 실명 |
-| nickname | VARCHAR(50) | NOT NULL | - | IDX_MEMBER_NICKNAME | 커뮤니티 노출용 닉네임 |
-| role | VARCHAR(20) | NOT NULL | 'ROLE_STUDENT' | - | 권한 (ROLE_STUDENT, ROLE_INSTRUCTOR, ROLE_ADMIN) |
-| profile_image_url | VARCHAR(500) | NULL | - | - | S3 프로필 이미지 URL |
-| created_at | DATETIME | NOT NULL | CURRENT_TIMESTAMP | - | 회원 가입 일시 |
-| updated_at | DATETIME | NOT NULL | CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | - | 회원 정보 수정 일시 |
+#### MEMBER (내부 직원 로그인 계정)
 
-#### 2) MEMBER_DETAIL (회원 부가 정보 테이블)
-- 테이블 설명: 회원 기본 정보와 1:1로 수직 분할된 상세 프로필 테이블.
+- 테이블 설명: 내부 직원 로그인 계정 
 
-| 컬럼명 | 데이터 타입 | 제약조건 | 기본값 | 인덱스 | 설명 |
-|---|---|---|---|---|---|
-| member_id | BIGINT | PK, FK (MEMBER.id) | - | PK, FK | 회원 고유 식별자 |
-| bio | TEXT | NULL | - | - | 강사 약력 또는 수강생 한 줄 소개 |
-| phone_number | VARCHAR(20) | NULL | - | - | 회원 연락처 |
-| marketing_agreed | CHAR(1) | NOT NULL | 'N' | - | 마케팅 수신 동의 여부 (Y/N) |
+ | 컬럼명             | 데이터 타입       | 제약조건               | 기본값                                           | 인덱스               | 설명                       |
+ |-----------------|--------------|--------------------|-----------------------------------------------|-------------------|--------------------------|
+ | id              | BIGINT       | PK, AUTO_INCREMENT | -                                             | PK                | 직원 ID                    |
+ | role_id         | BIGINT       | FK                 | -                                             | IDX_MEMBER_ROLE   | 직책                       |
+ | email           | VARCHAR(120) | NOT NULL, UNIQUE   | -                                             | UK_MEMBER_EMAIL   | 직원용 이메일                  |
+ | password_hash   | VARCHAR(255) | NOT NULL           | -                                             | -                 | BCrypt 등 단방향 해시          |
+ | name            | VARCHAR(60)  | NOT NULL           | -                                             | -                 | 직원명                      |
+ | phone           | VARCHAR(20)  | NULL               | -                                             | -                 | 직원 전화번호                  |
+ | profile_img_url | TEXT         | NULL               | 기본이미지                                         | -                 | 직원 사진                    |
+ | status          | VARCHAR(20)  | NOT NULL           | ACTIVE                                        | IDX_MEMBER_STATUS | ACTIVE, INACTIVE, DELETE |
+ | created_at      | DATETIME     | NOT NULL           | CURRENT_TIMESTAMP                             | -                 | 생성 일시                    |
+ | updated_at      | DATETIME     | NOT NULL           | CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | -                 | 수정 일시                    |
+
+#### 2) ROLE (한 직원의 다중 역할(RBAC) 매핑)
+
+- 테이블 설명: 한 직원의 다중 역할(RBAC) 매핑
+
+| 컬럼명       | 데이터 타입      | 제약조건               | 기본값  | 인덱스  | 설명                              |
+|-----------|-------------|--------------------|------|------|---------------------------------|
+| id        | BIGINT      | PK, AUTO_INCREMENT | -    | PK   | 역할 ID                           |
+| role_name | VARCHAR(30) | -                  | -    | -    | ADMIN, RECEPTIONIST, TECHNICIAN |
+---
+
+#### 3) PERMISSION (역할에 부여된 권한)
+
+- 테이블 설명:
+
+| 컬럼명            | 데이터 타입      | 제약조건               | 기본값  | 인덱스                   | 설명                              |
+|----------------|-------------|--------------------|------|-----------------------|---------------------------------|
+| id             | BIGINT      | PK, AUTO_INCREMENT | -    | PK                    | 권한 ID                           |
+| role_id        | BIGINT      | FK                 | -    | IDX_PERMITION_ROLE_ID | ADMIN, RECEPTIONIST, TECHNICIAN |
+| permition_name | VARCHAR(30) | NOT_NULL           | -    | -                     | 권한 이름                           |
+
+#### 4) REFRESH_TOKEN
+- 로그인 시 발급된 Refresh_Token을 저장
+- Access Token 재발급 시 Refresh 토큰도 동시에 재발급 되며 기존 저장된 토큰값을 업데이트 (기존 토큰 파기)
+- 스케쥴러를 통해 만료된 토큰 정보를 주기적으로 삭제
+
+| 컬럼명                 | 데이터 타입   | 제약조건               | 기본값          | 인덱스  | 설명          |
+|---------------------|----------|--------------------|--------------|------|-------------|
+| id                  | BIGINT   | PK, AUTO_INCREMENT | -            | PK   |             |
+| member_id           | BIGINT   | FK                 | -            | -    | 발급 받은 직원 ID |
+| refresh_token_value | TEXT     | NOT_NULL           | -            |      | 리프레시 토큰 값   |
+| issued_at           | DATETIME | NOT_NULL           | Now()        | -    | 토큰 발급 시점    |
+| expire_at           | DATETIME | NOT_NULL           | 발급 시점에서 7일 후 | -    | 토큰 만료 시점    |
+
+### 1.2.2 고객 도메인 (CUSTOMER)
+
+#### 1) CUSTOMER (고객)
+
+- 테이블 설명: 회원가입하지 않는 고객
+
+| 컬럼명        | 데이터 타입       | 제약조건               | 기본값                                           | 인덱스  | 설명     |
+|------------|--------------|--------------------|-----------------------------------------------|------|--------|
+| id         | BIGINT       | PK, AUTO_INCREMENT | -                                             | PK   | 고객 ID  |
+| name       | VARCHAR(120) | NOT NULL           | -                                             | -    | 고객명    |
+| phone      | VARCHAR(20)  | NULL               | -                                             | -    | 고객 연락처 |
+| email      | VARCHAR(120) | NULL               | -                                             | -    | 이메일    |
+| address    | VARCHAR(255) | NULL               | -                                             | -    | 주소     |
+| created_at | DATETIME     | NOT NULL           | CURRENT_TIMESTAMP                             | -    | 생성 일시  |
+| updated_at | DATETIME     | NOT NULL           | CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | -    | 수정 일시  |
+
+### 1.2.3 제품 도메인 (PRODUCT_MODEL)
+
+#### 1) PRODUCT (관리자가 등록하는 수리 가능 모델)
+
+- 테이블 설명: 관리자가 등록하는 수리 가능 모델
+
+| 컬럼명          | 데이터 타입       | 제약조건               | 기본값                                           | 인덱스  | 설명          |
+|--------------|--------------|--------------------|-----------------------------------------------|------|-------------|
+| id           | BIGINT       | PK, AUTO_INCREMENT | -                                             | PK   | 제품 모델 ID    |
+| manufacturer | VARCHAR(100) | NULL               | -                                             | -    | 제조사         |
+| name         | VARCHAR(120) | NOT NULL           | -                                             | -    | 제품명         |
+| model_name   | VARCHAR(120) | NOT NULL           | -                                             | -    | 모델명         |
+| category     | VARCHAR(60)  | NULL               | -                                             | -    | 제품 분류       |
+| is_active    | BOOLEAN      | NOT NULL           | TRUE                                          | -    | 신규 접수 가능 여부 |
+| created_at   | DATETIME     | NOT NULL           | CURRENT_TIMESTAMP                             | -    | 생성 일시       |
+| updated_at   | DATETIME     | NOT NULL           | CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | -    | 수정 일시       |
+
+### 1.2.4 접수 및 배정 도메인 (AS_REQUEST, AS_STATUS_HISTORY, ASSIGNMENT_HISTORY)
+
+#### 1) AS_REQUEST (한 제품당 한 건의 A/S 접수 및 업무 상태)
+
+- 테이블 설명: 한 제품당 한 건의 A/S 접수 및 업무 상태
+
+| 컬럼명               | 데이터 타입      | 제약조건                       | 기본값                                           | 인덱스                  | 설명                                                                       |
+|-------------------|-------------|----------------------------|-----------------------------------------------|----------------------|--------------------------------------------------------------------------|
+| id                | BIGINT      | PK, AUTO_INCREMENT         | -                                             | PK                   | A/S 요청 ID                                                                |
+| request_number    | VARCHAR(40) | NOT NULL                   | -                                             | UK_AS_REQUEST_NUMBER | 접수번호                                                                     |
+| receptionist_id   | BIGINT      | NOT NULL, FK (MEMBER.id)   | -                                             | IDX_AS_RECEPTIONIST  | 접수 담당자                                                                   |
+| technician_id     | BIGINT      | NULL, FK (MEMBER.id)       | -                                             | IDX_AS_TECHNICIAN    | 배정 기사, 미배정 시 NULL                                                        |
+| customer_id       | BIGINT      | NOT NULL, FK (CUSTOMER.id) | -                                             | IDX_AS_CUSTOMER      | 고객 ID                                                                    |
+| product_id        | BIGINT      | NOT NULL, FK (PRODUCT.id)  | -                                             | IDX_AS_PRODUC        | 접수 제품 ID                                                                 |
+| serial_number     | VARCHAR(50) | NOT NULL                   | -                                             | IDX_SERIAL_NUMBER    | 접수된 제품의 시리얼번호                                                            |
+| purchased_at      | DATE        | NULL                       | -                                             | -                    | 구매 시점을 기준으로 일정 기간 이내면 무상 수리                                              |
+| symptom           | TEXT        | NOT NULL                   | -                                             | -                    | 고장 증상                                                                    |
+| request_memo      | TEXT        | NULL                       | -                                             | -                    | 요청 사항                                                                    |
+| return_method     | VARCHAR(20) | NOT NULL                   | DELIVERY                                      | -                    | DELIVERY, PICKUP                                                         |
+| status            | VARCHAR(25) | NOT NULL                   | PENDING                                       | IDX_AS_STATUS        | RECEIVED, REPAIRING, WAITING_PAYMENT, READY_RETURN, COMPLETED, CANCELLED |
+| status_changed_at | DATETIME    | NOT NULL                   | CURRENT_TIMESTAMP                             | IDX_AS_STATUS_TIME   | 마지막 상태 변경 시간                                                             |
+| closed_at         | DATETIME    | NULL                       | -                                             | -                    | 완료 또는 예외 종료 시간                                                           |
+| version           | BIGINT      | NOT NULL                   | 0                                             | -                    | 낙관적 락 버전                                                                 |
+| created_at        | DATETIME    | NOT NULL                   | CURRENT_TIMESTAMP                             | -                    | 생성 일시                                                                    |
+| updated_at        | DATETIME    | NOT NULL                   | CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | -                    | 수정 일시                                                                    |
+
+#### 2) AS_STATUS_HISTORY (A/S 상태 변경 및 취소·반려 사유 이력)
+
+- 테이블 설명: A/S 상태 변경 및 취소·반려 사유 이력
+
+| 컬럼명           | 데이터 타입       | 제약조건                         | 기본값               | 인덱스                  | 설명                  |
+|---------------|--------------|------------------------------|-------------------|----------------------|---------------------|
+| id            | BIGINT       | PK, AUTO_INCREMENT           | -                 | PK                   | 상태 이력 ID            |
+| as_request_id | BIGINT       | NOT NULL, FK (AS_REQUEST.id) | -                 | IDX_ASH_REQUEST_TIME | 대상 A/S 요청           |
+| from_status   | VARCHAR(25)  | NULL                         | -                 | -                    | 변경 전 상태             |
+| to_status     | VARCHAR(25)  | NOT NULL                     | -                 | -                    | 변경 후 상태             |
+| reason        | VARCHAR(500) | NULL                         | -                 | -                    | 변경 사유               |
+| changed_by    | BIGINT       | NULL, FK (MEMBER.id)         | -                 | IDX_ASH_MEMBER       | 직원 또는 시스템 처리 시 NULL |
+| created_at    | DATETIME     | NOT NULL                     | CURRENT_TIMESTAMP | -                    | 변경 시각               |
+
+#### 3) ASSIGNMENT_HISTORY (기사 재배정 감사 이력)
+
+- 테이블 설명: 기사 재배정 감사 이력
+
+| 컬럼명                    | 데이터 타입       | 제약조건                         | 기본값               | 인덱스                | 설명       |
+|------------------------|--------------|------------------------------|-------------------|--------------------|----------|
+| id                     | BIGINT       | PK, AUTO_INCREMENT           | -                 | PK                 | 배정 이력 ID |
+| as_request_id          | BIGINT       | NOT NULL, FK (AS_REQUEST.id) | -                 | IDX_ASSIGN_REQUEST | 대상 요청    |
+| previous_technician_id | BIGINT       | NULL, FK (MEMBER.id)         | -                 | -                  | 변경 전 기사  |
+| new_technician_id      | BIGINT       | NOT NULL, FK (MEMBER.id)     | -                 | -                  | 변경 후 기사  |
+| assigned_by            | BIGINT       | NOT NULL, FK (MEMBER.id)     | -                 | -                  | 배정한 직원   |
+| reason                 | VARCHAR(500) | NULL                         | -                 | -                  | 배정 사유    |
+| created_at             | DATETIME     | NOT NULL                     | CURRENT_TIMESTAMP | -                  | 배정 시각    |
+
+### 1.2.5 수리 및 비용 도메인 (REPAIR, REPAIR_PRESET, REPAIR_ITEM)
+
+#### 1) REPAIR (요청당 한 개의 수리 작업 및 확정 금액)
+
+- 테이블 설명: 요청당 한 개의 수리 작업 및 확정 금액
+
+| 컬럼명           | 데이터 타입      | 제약조건                                 | 기본값                                           | 인덱스               | 설명                     |
+|---------------|-------------|--------------------------------------|-----------------------------------------------|-------------------|------------------------|
+| id            | BIGINT      | PK, AUTO_INCREMENT                   | -                                             | PK                | 수리 ID                  |
+| as_request_id | BIGINT      | NOT NULL, UNIQUE, FK (AS_REQUEST.id) | -                                             | UK_REPAIR_REQUEST | A/S 요청 1:1             |
+| technician_id | BIGINT      | NOT NULL, FK (MEMBER.id)             | -                                             | -                 | 수리 담당 기사               |
+| diagnosis     | TEXT        | NULL                                 | -                                             | -                 | 진단 및 고장 원인             |
+| work_note     | TEXT        | NULL                                 | -                                             | -                 | 수리 작업 메모               |
+| total_amount  | BIGINT      | NOT NULL                             | 0                                             | -                 | 원 단위 수리비 합계            |
+| status        | VARCHAR(20) | NOT NULL                             | IN_PROGRESS                                   | -                 | IN_PROGRESS, CONFIRMED |
+| confirmed_at  | DATETIME    | NULL                                 | -                                             | -                 | 수리비 확정 시각              |
+| created_at    | DATETIME    | NOT NULL                             | CURRENT_TIMESTAMP                             | -                 | 생성 일시                  |
+| updated_at    | DATETIME    | NOT NULL                             | CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | -                 | 수정 일시                  |
+
+#### 2) REPAIR_PRESET (수리 항목 기본 단가)
+
+- 테이블 설명: 수리 항목 기본 단가
+
+| 컬럼명           | 데이터 타입       | 제약조건               | 기본값                                           | 인덱스  | 설명        |
+|---------------|--------------|--------------------|-----------------------------------------------|------|-----------|
+| id            | BIGINT       | PK, AUTO_INCREMENT | -                                             | PK   | 프리셋 ID    |
+| name          | VARCHAR(120) | NOT NULL           | -                                             | -    | 수리 항목명    |
+| description   | VARCHAR(500) | NULL               | -                                             | -    | 항목 설명     |
+| default_price | BIGINT       | NOT NULL           | 0                                             | -    | 기본 단가 (원) |
+| is_active     | BOOLEAN      | NOT NULL           | TRUE                                          | -    | 사용 여부     |
+| created_at    | DATETIME     | NOT NULL           | CURRENT_TIMESTAMP                             | -    | 생성 일시     |
+| updated_at    | DATETIME     | NOT NULL           | CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | -    | 수정 일시     |
+
+#### 3) REPAIR_ITEM (수리 건에 실제 적용된 작업·단가 스냅샷)
+
+- 테이블 설명: 수리 건에 실제 적용된 작업·단가 스냅샷
+
+| 컬럼명         | 데이터 타입       | 제약조건                        | 기본값                                           | 인덱스              | 설명            |
+|-------------|--------------|-----------------------------|-----------------------------------------------|------------------|---------------|
+| id          | BIGINT       | PK, AUTO_INCREMENT          | -                                             | PK               | 수리 항목 ID      |
+| repair_id   | BIGINT       | NOT NULL, FK (REPAIR.id)    | -                                             | IDX_RITEM_REPAIR | 수리 ID         |
+| preset_id   | BIGINT       | NULL, FK (REPAIR_PRESET.id) | -                                             | -                | 선택한 프리셋 ID    |
+| name        | VARCHAR(120) | NOT NULL                    | -                                             | -                | 확정 시점 항목명 스냅샷 |
+| quantity    | INT          | NOT NULL                    | 1                                             | -                | 수량, 1 이상      |
+| unit_price  | BIGINT       | NOT NULL                    | 0                                             | -                | 원 단위 적용 단가    |
+| line_amount | BIGINT       | NOT NULL                    | 0                                             | -                | 수량 × 단가       |
+| created_at  | DATETIME     | NOT NULL                    | CURRENT_TIMESTAMP                             | -                | 생성 일시         |
+| updated_at  | DATETIME     | NOT NULL                    | CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | -                | 수정 일시         |
+
+### 1.2.6 결제 및 입금 도메인 (PAYMENT, VIRTUAL_ACCOUNT, PAYMENT_EVENT)
+
+#### 1) PAYMENT (수리비 청구 및 최종 결제 상태 관리)
+
+- 테이블 설명: A/S 수리 완료 후 확정된 수리비의 청구 정보와 최종 결제 상태를 관리한다. 하나의 A/S 접수 건에 대해 하나의 `PAYMENT`를 생성하며, 결제 재시도가 발생하더라도 기존 `PAYMENT`를
+  유지한다.
+
+| 컬럼명                   | 데이터 타입      | 제약조건                                 | 기본값               | 인덱스                         | 설명                            |
+|-----------------------|-------------|--------------------------------------|-------------------|-----------------------------|-------------------------------|
+| id                    | BIGINT      | PK, AUTO_INCREMENT                   | -                 | PK                          | 결제 청구 ID                      |
+| as_request_id         | BIGINT      | NOT NULL, UNIQUE, FK (AS_REQUEST.id) | -                 | UK_PAYMENT_AS_REQUEST       | 관련 A/S 접수 ID                  |
+| amount                | BIGINT      | NOT NULL                             | -                 | -                           | 확정된 수리비 청구 금액                 |
+| status                | VARCHAR(20) | NOT NULL                             | READY             | IDX_PAYMENT_STATUS          | 결제 상태 (READY, PAID, CANCELED) |
+| successful_attempt_id | BIGINT      | NULL, FK (PAYMENT_ATTEMPT.id)        | NULL              | IDX_PAYMENT_SUCCESS_ATTEMPT | 최종 결제에 성공한 시도 ID              |
+| paid_at               | DATETIME    | NULL                                 | NULL              | -                           | 최종 결제 완료 시각                   |
+| created_at            | DATETIME    | NOT NULL                             | CURRENT_TIMESTAMP | -                           | 청구 생성 시각                      |
+| updated_at            | DATETIME    | NOT NULL                             | CURRENT_TIMESTAMP | -                           | -                             |
+
+#### 2) PAYMENT_ATTEMPT (결제 시도 이력)
+
+- 테이블 설명: 고객의 온라인 결제 시도별 주문번호, 결제수단, PG 승인 결과 및 실패 이력을 관리한다. 하나의 `PAYMENT`에 여러 `PAYMENT_ATTEMPT`가 연결될 수 있다.
+
+| 컬럼명             | 데이터 타입       | 제약조건                      | 기본값               | 인덱스                    | 설명                                                                      |
+|-----------------|--------------|---------------------------|-------------------|------------------------|-------------------------------------------------------------------------|
+| id              | BIGINT       | PK, AUTO_INCREMENT        | -                 | PK                     | 결제 시도 ID                                                                |
+| payment_id      | BIGINT       | NOT NULL, FK (PAYMENT.id) | -                 | IDX_ATTEMPT_PAYMENT    | 관련 결제 청구                                                                |
+| order_id        | VARCHAR(64)  | NOT NULL, UNIQUE          | -                 | UK_ATTEMPT_ORDER       | 서버에서 생성하는 고유 주문번호                                                       |
+| payment_key     | VARCHAR(200) | NULL, UNIQUE              | NULL              | UK_ATTEMPT_PAYMENT_KEY | 토스페이먼츠 결제 식별자                                                           |
+| amount          | BIGINT       | NOT NULL                  | -                 | -                      | 결제 시도 금액                                                                |
+| method          | VARCHAR(30)  | NULL                      | NULL              | -                      | 결제수단 (CARD, TRANSFER, VIRTUAL_ACCOUNT 등)                                |
+| status          | VARCHAR(30)  | NOT NULL                  | READY             | -                      | READY, CONFIRMING, WAITING_FOR_DEPOSIT, DONE, FAILED, CANCELED, UNKNOWN |
+| failure_code    | VARCHAR(100) | NULL                      | NULL              | -                      | 결제 실패 코드                                                                |
+| failure_message | VARCHAR(500) | NULL                      | NULL              | -                      | 결제 실패 사유                                                                |
+| approved_at     | DATETIME     | NULL                      | NULL              | -                      | PG 승인 완료 시각                                                             |
+| created_at      | DATETIME     | NOT NULL                  | CURRENT_TIMESTAMP | -                      | 결제 시도 생성 시각                                                             |
+| updated_at      | DATETIME     | NOT NULL                  | CURRENT_TIMESTAMP | -                      |                                                                         |
+
+#### 3) VIRTUAL_ACCOUNT (가상계좌 발급 시점 정보)
+
+- 테이블 설명: 가상계좌 발급 시점 정보
+
+| 컬럼명            | 데이터 타입       | 제약조건                      | 기본값               | 인덱스                  | 설명                      |
+|----------------|--------------|---------------------------|-------------------|----------------------|-------------------------|
+| id             | BIGINT       | PK, AUTO_INCREMENT        | -                 | PK                   | 가상계좌 ID                 |
+| payment_id     | BIGINT       | NOT NULL, FK (PAYMENT.id) | -                 | IDX_VACCOUNT_PAYMENT | 관련 결제                   |
+| bank_code      | VARCHAR(20)  | NULL                      | -                 | -                    | 은행 코드                   |
+| account_number | VARCHAR(100) | NULL                      | -                 | -                    | 가상계좌 번호(민감정보)           |
+| holder_name    | VARCHAR(100) | NULL                      | -                 | -                    | 예금주                     |
+| due_at         | DATETIME     | NULL                      | -                 | -                    | 입금 기한                   |
+| status         | VARCHAR(20)  | NOT NULL                  | ISSUED            | -                    | ISSUED, EXPIRED, CLOSED |
+| created_at     | DATETIME     | NOT NULL                  | CURRENT_TIMESTAMP | -                    | 발급 시각                   |
+
+#### 4) PAYMENT_EVENT (PG 웹훅 중복 수신과 재처리를 위한 이벤트 저장소)
+
+- 테이블 설명: PG 웹훅 중복 수신과 재처리를 위한 이벤트 저장소
+
+| 컬럼명          | 데이터 타입       | 제약조건                  | 기본값               | 인덱스                | 설명                          |
+|--------------|--------------|-----------------------|-------------------|--------------------|-----------------------------|
+| id           | BIGINT       | PK, AUTO_INCREMENT    | -                 | PK                 | 이벤트 ID                      |
+| payment_id   | BIGINT       | NULL, FK (PAYMENT.id) | -                 | IDX_PEVENT_PAYMENT | 대상 결제(미매칭 시 NULL)           |
+| event_key    | VARCHAR(200) | NOT NULL, UNIQUE      | -                 | UK_PEVENT_KEY      | PG 제공 식별자 또는 정규화 이벤트 고유키    |
+| event_type   | VARCHAR(60)  | NOT NULL              | -                 | -                  | 입금 등 이벤트 유형                 |
+| payload      | JSON         | NOT NULL              | -                 | -                  | 검증 필요 최소 원본 이벤트             |
+| status       | VARCHAR(20)  | NOT NULL              | RECEIVED          | -                  | RECEIVED, PROCESSED, FAILED |
+| received_at  | DATETIME     | NOT NULL              | CURRENT_TIMESTAMP | -                  | 수신 시각                       |
+| processed_at | DATETIME     | NULL                  | -                 | -                  | 처리 완료 시각                    |
+
+#### 5) PAYMENT_LINK (고객 결제 URL 관리)
+
+- 테이블 설명: A/S 수리비 결제를 위한 URL의 접근 토큰, 유효기간 및 폐기 여부를 관리한다. 하나의 `PAYMENT`에 여러 결제 링크가 발급될 수 있다.
+
+| 컬럼명        | 데이터 타입   | 제약조건                      | 기본값               | 인덱스                | 설명                     |
+|------------|----------|---------------------------|-------------------|--------------------|------------------------|
+| id         | BIGINT   | PK, AUTO_INCREMENT        | -                 | PK                 | 결제 링크 ID               |
+| payment_id | BIGINT   | NOT NULL, FK (PAYMENT.id) | -                 | IDX_LINK_PAYMENT   | 연결된 결제 청구 ID           |
+| token_hash | CHAR(64) | NOT NULL, UNIQUE          | -                 | UK_LINK_TOKEN_HASH | URL 접근 토큰의 SHA-256 해시값 |
+| expires_at | DATETIME | NOT NULL                  | -                 | -                  | URL 만료 시각              |
+| revoked_at | DATETIME | NULL                      | NULL              | -                  | 링크 폐기 시각               |
+| created_at | DATETIME | NOT NULL                  | CURRENT_TIMESTAMP | -                  | 링크 발급 시각               |
+
+### 1.2.7 배송 및 알림 도메인 (SHIPMENT, SHIPMENT_EVENT, SMS_LOG)
+
+#### 1) SHIPMENT (택배 배송 또는 방문 수령 정보)
+
+- 테이블 설명: 택배 배송 또는 방문 수령 정보
+
+| 컬럼명             | 데이터 타입       | 제약조건                                 | 기본값                                           | 인덱스                 | 설명                         |
+|-----------------|--------------|--------------------------------------|-----------------------------------------------|---------------------|----------------------------|
+| id              | BIGINT       | PK, AUTO_INCREMENT                   | -                                             | PK                  | 반환 ID                      |
+| as_request_id   | BIGINT       | NOT NULL, UNIQUE, FK (AS_REQUEST.id) | -                                             | UK_SHIPMENT_REQUEST | A/S 요청 1:1                 |
+| courier         | VARCHAR(60)  | NULL                                 | -                                             | -                   | 택배사                        |
+| tracking_number | VARCHAR(100) | NULL                                 | -                                             | -                   | 운송장번호                      |
+| status          | VARCHAR(25)  | NOT NULL                             | READY                                         | -                   | READY, SHIPPING, COMPLETED |
+| shipped_at      | DATETIME     | NULL                                 | -                                             | -                   | 배송 시작                      |
+| completed_at    | DATETIME     | NULL                                 | -                                             | -                   | 반환 완료                      |
+| created_at      | DATETIME     | NOT NULL                             | CURRENT_TIMESTAMP                             | -                   | 생성 일시                      |
+| updated_at      | DATETIME     | NOT NULL                             | CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | -                   | 수정 일시                      |
+
+#### 2) SHIPMENT_EVENT (배송 상태 변경·모의 웹훅의 멱등성 기록)
+
+- 테이블 설명: 배송 상태 변경·모의 웹훅의 멱등성 기록
+
+| 컬럼명         | 데이터 타입       | 제약조건                       | 기본값               | 인덱스                 | 설명                          |
+|-------------|--------------|----------------------------|-------------------|---------------------|-----------------------------|
+| id          | BIGINT       | PK, AUTO_INCREMENT         | -                 | PK                  | 배송 이벤트 ID                   |
+| shipment_id | BIGINT       | NOT NULL, FK (SHIPMENT.id) | -                 | IDX_SEVENT_SHIPMENT | 관련 배송                       |
+| event_key   | VARCHAR(150) | NOT NULL, UNIQUE           | -                 | UK_SEVENT_KEY       | 모의 웹훅 중복 방지 식별자             |
+| event_type  | VARCHAR(50)  | NOT NULL                   | -                 | -                   | 배송 이벤트 유형                   |
+| status      | VARCHAR(20)  | NOT NULL                   | RECEIVED          | -                   | RECEIVED, PROCESSED, FAILED |
+| created_at  | DATETIME     | NOT NULL                   | CURRENT_TIMESTAMP | -                   | 발생 시각                       |
+
+#### 3) SMS_LOG (A/S 단계별 문자 발송 결과 및 중복 방지)
+
+- 테이블 설명: A/S 단계별 문자 발송 결과 및 중복 방지
+
+| 컬럼명                 | 데이터 타입       | 제약조건                     | 기본값               | 인덱스             | 설명                                                  |
+|---------------------|--------------|--------------------------|-------------------|-----------------|-----------------------------------------------------|
+| id                  | BIGINT       | PK, AUTO_INCREMENT       | -                 | PK              | 발송 ID                                               |
+| as_request_id       | BIGINT       | NULL, FK (AS_REQUEST.id) | -                 | IDX_SMS_REQUEST | 관련 A/S 건                                            |
+| event_key           | VARCHAR(150) | NOT NULL, UNIQUE         | -                 | UK_SMS_EVENT    | 같은 업무 이벤트 중복 발송 방지 키                                |
+| type                | VARCHAR(40)  | NOT NULL                 | -                 | -               | RECEIVED, ACCOUNT_ISSUED, PAID, SHIPPING, COMPLETED |
+| recipient_phone     | VARCHAR(20)  | NOT NULL                 | -                 | -               | 문자 수신번호                                             |
+| message             | TEXT         | NOT NULL                 | -                 | -               | 발송 메시지                                              |
+| provider_message_id | VARCHAR(120) | NULL                     | -                 | -               | 외부 SMS 응답 식별자                                       |
+| status              | VARCHAR(20)  | NOT NULL                 | PENDING           | -               | PENDING, SENT, FAILED                               |
+| error_message       | VARCHAR(500) | NULL                     | -                 | -               | 실패 사유                                               |
+| sent_at             | DATETIME     | NULL                     | -                 | -               | 발송 시각                                               |
+| created_at          | DATETIME     | NOT NULL                 | CURRENT_TIMESTAMP | -               | 생성 시각                                               |
+
+#### 4) SMS 프리셋
+
+| 컬럼명         | 데이터 타입      | 제약조건               | 기본값  | 인덱스  | 설명    |
+|-------------|-------------|--------------------|------|------|-------|
+| id          | BIGINT      | PK, AUTO_INCREMENT | -    | PK   | 발송 ID |
+| preset_name | VARCHAR(30) |                    |      |      |       |
+| title       | VARCHAR(50) |                    |      |      |       |
+| content     | TEXT        |                    |      |      |       |
+
+### 1.2.9 운영 감사 도메인 (AUDIT_LOG)
+
+#### 1) AUDIT_LOG (관리자 중요 작업의 추적 로그(선택 구현))
+
+- 테이블 설명: 관리자 중요 작업의 추적 로그(선택 구현)
+
+| 컬럼명         | 데이터 타입       | 제약조건                 | 기본값               | 인덱스  | 설명             |
+|-------------|--------------|----------------------|-------------------|------|----------------|
+| id          | BIGINT       | PK, AUTO_INCREMENT   | -                 | PK   | 감사 ID          |
+| actor_id    | BIGINT       | NULL, FK (MEMBER.id) | -                 | -    | 수행 계정          |
+| action      | VARCHAR(80)  | NOT NULL             | -                 | -    | 작업 유형          |
+| target_type | VARCHAR(60)  | NOT NULL             | -                 | -    | 대상 엔티티 유형      |
+| target_id   | BIGINT       | NULL                 | -                 | -    | 대상 엔티티 ID      |
+| description | VARCHAR(500) | NULL                 | -                 | -    | 변경 개요(민감정보 제외) |
+| created_at  | DATETIME     | NOT NULL             | CURRENT_TIMESTAMP | -    | 작업 시각          |
 
 ---
 
-### 1.2.2 강좌 및 커리큘럼 도메인 (COURSE, CHAPTER, LESSON)
+### 1.2.10 선택 확장 도메인 (OUTBOX_EVENT)
 
-#### 3) COURSE (강좌 기본 테이블)
-- 테이블 설명: 강사가 개설하고 수강생이 수강하는 강좌 메타데이터 테이블.
+#### 1) OUTBOX_EVENT (SMS 발송 요청 유실 방지)
 
-| 컬럼명 | 데이터 타입 | 제약조건 | 기본값 | 인덱스 | 설명 |
-|---|---|---|---|---|---|
-| id | BIGINT | PK, AUTO_INCREMENT | - | PK | 강좌 고유 식별자 |
-| instructor_id | BIGINT | NOT NULL, FK (MEMBER.id) | - | IDX_COURSE_INSTRUCTOR | 개설 강사 회원 식별자 |
-| title | VARCHAR(200) | NOT NULL | - | IDX_COURSE_TITLE | 강좌 제목 |
-| description | TEXT | NOT NULL | - | - | 강좌 상세 소개 본문 |
-| category | VARCHAR(50) | NOT NULL | - | IDX_COURSE_CATEGORY | 카테고리 (BACKEND, FRONTEND, INFRA) |
-| level | VARCHAR(20) | NOT NULL | 'BEGINNER' | - | 난이도 (BEGINNER, INTERMEDIATE, ADVANCED) |
-| price | INT | NOT NULL | 0 | - | 수강료 (0원일 경우 무료 강좌) |
-| access_days | INT | NOT NULL | 90 | - | 결제 후 기본 수강 가능 기간 (일수) |
-| status | VARCHAR(20) | NOT NULL | 'DRAFT' | IDX_COURSE_STATUS | 승인 상태 (DRAFT, PENDING, APPROVED, REJECTED) |
-| thumbnail_url | VARCHAR(500) | NULL | - | - | S3 강좌 대표 썸네일 이미지 URL |
-| average_rating | DECIMAL(2,1) | NOT NULL | 0.0 | - | 수강생 평균 평점 |
-| created_at | DATETIME | NOT NULL | CURRENT_TIMESTAMP | - | 강좌 등록 일시 |
-| updated_at | DATETIME | NOT NULL | CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | - | 강좌 수정 일시 |
+- 설명: 업무 트랜잭션과 함께 SMS 발송 요청을 저장하고 스케줄러로 재시도한다. **2순위 구현**이다.
 
-#### 4) CHAPTER (강좌 챕터/대단원 테이블)
-- 테이블 설명: 강좌 하위의 대단원 구조를 정의하는 테이블.
+| 컬럼명           | 데이터 타입       | 제약조건                     | 기본값               | 인덱스                 | 설명         |
+|---------------|--------------|--------------------------|-------------------|---------------------|------------|
+| id            | BIGINT       | PK, AUTO_INCREMENT       | -                 | PK                  | 이벤트 ID     |
+| event_key     | VARCHAR(150) | NOT NULL, UNIQUE         | -                 | UK_OUTBOX_EVENT_KEY | 중복 생성 방지   |
+| as_request_id | BIGINT       | NULL, FK (AS_REQUEST.id) | -                 | IDX_OUTBOX_REQUEST  | 관련 접수      |
+| event_type    | VARCHAR(50)  | NOT NULL                 | -                 | -                   | SMS 이벤트 유형 |
+| payload       | JSON         | NOT NULL                 | -                 | -                   | 발송 데이터     |
+| status        | VARCHAR(20)  | NOT NULL                 | 'PENDING'         | IDX_OUTBOX_RETRY    | 처리 상태      |
+| retry_count   | INT          | NOT NULL                 | 0                 | -                   | 재시도 횟수     |
+| next_retry_at | DATETIME     | NULL                     | -                 | IDX_OUTBOX_RETRY    | 재시도 예정     |
+| created_at    | DATETIME     | NOT NULL                 | CURRENT_TIMESTAMP | -                   | 생성 시각      |
+| processed_at  | DATETIME     | NULL                     | -                 | -                   | 처리 완료      |
 
-| 컬럼명 | 데이터 타입 | 제약조건 | 기본값 | 인덱스 | 설명 |
-|---|---|---|---|---|---|
-| id | BIGINT | PK, AUTO_INCREMENT | - | PK | 챕터 고유 식별자 |
-| course_id | BIGINT | NOT NULL, FK (COURSE.id) | - | IDX_CHAPTER_COURSE | 소속 강좌 식별자 |
-| sequence | INT | NOT NULL | 1 | - | 강좌 내 챕터 표시 순서 |
-| title | VARCHAR(200) | NOT NULL | - | - | 챕터 제목 |
 
-#### 5) LESSON (강좌 차시/소단원 테이블)
-- 테이블 설명: 실제 동영상 강의 및 강의 자료가 매핑되는 최소 학습 단위 테이블.
+## 1.3 핵심 데이터 모델링 정책
 
-| 컬럼명 | 데이터 타입 | 제약조건 | 기본값 | 인덱스 | 설명 |
-|---|---|---|---|---|---|
-| id | BIGINT | PK, AUTO_INCREMENT | - | PK | 차시 고유 식별자 |
-| chapter_id | BIGINT | NOT NULL, FK (CHAPTER.id) | - | IDX_LESSON_CHAPTER | 소속 챕터 식별자 |
-| sequence | INT | NOT NULL | 1 | - | 챕터 내 차시 표시 순서 |
-| title | VARCHAR(200) | NOT NULL | - | - | 차시 제목 |
-| video_url | VARCHAR(500) | NOT NULL | - | - | S3/CloudFront 동영상 스트리밍 URL |
-| duration_seconds | INT | NOT NULL | 0 | - | 동영상 총 재생 시간 (초 단위) |
-| material_url | VARCHAR(500) | NULL | - | - | S3 강의 첨부자료 URL |
-| is_free_preview | CHAR(1) | NOT NULL | 'N' | - | 무료 미리보기 제공 여부 (Y/N) |
+### 1.3.1 단일 업체·단일 지점
 
----
+- `COMPANY` 테이블 및 `company_id`는 사용하지 않는다.
+- 고객은 로그인하지 않으며, 직원이 전화·이메일·방문 접수를 등록한다.
+- `CUSTOMER.type`으로 개인(`INDIVIDUAL`)과 기업(`BUSINESS`)을 구분하고 기업 담당자 정보를 선택 저장한다.
+- 직원 권한은 `ADMIN`, `RECEPTIONIST`, `TECHNICIAN`이며 `MEMBER_ROLE`로 복수 역할을 지원한다.
 
-### 1.2.3 주문 및 결제 도메인 (ORDER_INFO, PAYMENT)
+### 1.3.2 고객·제품·접수
 
-#### 6) ORDER_INFO (수강 주문 테이블)
-- 테이블 설명: 수강생의 강좌 결제 요청 단위를 관리하는 주문 테이블.
+- 고객 한 명이 여러 제품을 보유할 수 있으며 같은 제품에 여러 A/S 요청을 연결할 수 있다.
+- 시리얼번호는 선택 입력이므로 전역 UNIQUE로 강제하지 않는다.
+- `AS_REQUEST.customer_id`와 `CUSTOMER_PRODUCT.customer_id`가 일치하는지 검증한다.
+- 고객은 기존 수리·결제 이력 보존을 위해 비활성화 방식으로 삭제한다.
 
-| 컬럼명 | 데이터 타입 | 제약조건 | 기본값 | 인덱스 | 설명 |
-|---|---|---|---|---|---|
-| id | BIGINT | PK, AUTO_INCREMENT | - | PK | 주문 고유 식별자 |
-| merchant_uid | VARCHAR(100) | NOT NULL, UNIQUE | - | UK_ORDER_MERCHANT_UID | 주문 고유 식별 번호 (결제사 전달용) |
-| student_id | BIGINT | NOT NULL, FK (MEMBER.id) | - | IDX_ORDER_STUDENT | 주문 수강생 식별자 |
-| total_amount | INT | NOT NULL | - | - | 총 결제 예정 금액 |
-| status | VARCHAR(20) | NOT NULL | 'READY' | IDX_ORDER_STATUS | 주문 상태 (READY, PAID, CANCELLED) |
-| ordered_at | DATETIME | NOT NULL | CURRENT_TIMESTAMP | - | 주문 생성 일시 |
+### 1.3.3 상태·금액·동시성
 
-#### 7) PAYMENT (결제 트랜잭션 테이블)
-- 테이블 설명: 포트원 PG사와의 실제 결제 승인 및 사후 검증 결과를 보관하는 테이블.
+- `AS_REQUEST.status`를 현재 업무 상태의 기준으로 사용하고 `AS_STATUS_HISTORY`를 남긴다.
+- 수리비 확정 금액은 `REPAIR`, 항목별 적용 단가는 `REPAIR_ITEM`에 스냅샷으로 저장한다.
+- 상태 전이는 공통 서비스에서 검증하고 동시 수정은 `version` 등으로 제어한다.
 
-| 컬럼명 | 데이터 타입 | 제약조건 | 기본값 | 인덱스 | 설명 |
-|---|---|---|---|---|---|
-| id | BIGINT | PK, AUTO_INCREMENT | - | PK | 결제 고유 식별자 |
-| order_id | BIGINT | NOT NULL, UNIQUE, FK (ORDER_INFO.id) | - | UK_PAYMENT_ORDER | 주문 식별자 (1:1 매핑) |
-| imp_uid | VARCHAR(100) | NOT NULL, UNIQUE | - | UK_PAYMENT_IMP_UID | 포트원 결제 고유 번호 |
-| pay_method | VARCHAR(30) | NOT NULL | 'CARD' | - | 결제 수단 (CARD, EASY_PAY, TRANS) |
-| paid_amount | INT | NOT NULL | - | - | PG사 실결제 승인 금액 |
-| paid_at | DATETIME | NOT NULL | - | - | 결제 승인 일시 |
-| refund_amount | INT | NOT NULL | 0 | - | 환불 금액 |
-| refunded_at | DATETIME | NULL | - | - | 환불 처리 일시 |
-| status | VARCHAR(20) | NOT NULL | 'PAID' | IDX_PAYMENT_STATUS | 결제 상태 (PAID, CANCELLED, FORGERY_FAIL) |
+### 1.3.4 결제·배송·알림
 
----
-
-### 1.2.4 수강 및 학습 진도 도메인 (ENROLLMENT, LESSON_PROGRESS)
-
-#### 8) ENROLLMENT (수강권 테이블)
-- 테이블 설명: 결제 완료 후 수강생에게 부여되는 강좌별 수강 권한 및 기간 관리 테이블.
-
-| 컬럼명 | 데이터 타입 | 제약조건 | 기본값 | 인덱스 | 설명 |
-|---|---|---|---|---|---|
-| id | BIGINT | PK, AUTO_INCREMENT | - | PK | 수강권 고유 식별자 |
-| student_id | BIGINT | NOT NULL, FK (MEMBER.id) | - | IDX_ENROLL_STUDENT | 수강생 회원 식별자 |
-| course_id | BIGINT | NOT NULL, FK (COURSE.id) | - | IDX_ENROLL_COURSE | 수강 강좌 식별자 |
-| order_id | BIGINT | NOT NULL, FK (ORDER_INFO.id) | - | - | 원천 주문 식별자 |
-| start_at | DATETIME | NOT NULL | - | - | 수강 시작 일시 |
-| end_at | DATETIME | NOT NULL | - | IDX_ENROLL_END_AT | 수강 만료 일시 (배치 조회 기준) |
-| status | VARCHAR(20) | NOT NULL | 'ACTIVE' | IDX_ENROLL_STATUS | 수강 상태 (ACTIVE, COMPLETED, EXPIRED) |
-| certificate_issued | CHAR(1) | NOT NULL | 'N' | - | 수료증 발급 여부 (Y/N) |
-| completed_at | DATETIME | NULL | - | - | 수료 달성 일시 |
-
-#### 9) LESSON_PROGRESS (차시별 진도율 테이블)
-- 테이블 설명: 수강생의 차시별 동영상 재생 위치 및 80% 완료 여부를 저장하는 테이블.
-
-| 컬럼명 | 데이터 타입 | 제약조건 | 기본값 | 인덱스 | 설명 |
-|---|---|---|---|---|---|
-| id | BIGINT | PK, AUTO_INCREMENT | - | PK | 진도 기록 고유 식별자 |
-| enrollment_id | BIGINT | NOT NULL, FK (ENROLLMENT.id) | - | IDX_PROGRESS_ENROLL | 소속 수강권 식별자 |
-| lesson_id | BIGINT | NOT NULL, FK (LESSON.id) | - | IDX_PROGRESS_LESSON | 대상 차시 식별자 |
-| last_view_second | INT | NOT NULL | 0 | - | 마지막 시청 재생 위치 (초 단위) |
-| max_view_second | INT | NOT NULL | 0 | - | 최대 진입 시청 위치 (초 단위) |
-| is_completed | CHAR(1) | NOT NULL | 'N' | - | 80% 이상 수강 완료 여부 (Y/N) |
-| updated_at | DATETIME | NOT NULL | CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | - | 진도율 최종 동기화 일시 |
-
----
-
-### 1.2.5 과제 및 커뮤니티 도메인 (ASSIGNMENT, ASSIGNMENT_SUBMISSION, QNA, REVIEW)
-
-#### 10) ASSIGNMENT (차시 과제 출제 테이블)
-- 테이블 설명: 강사가 특정 차시에 연결하여 출제한 과제 정보 테이블.
-
-| 컬럼명 | 데이터 타입 | 제약조건 | 기본값 | 인덱스 | 설명 |
-|---|---|---|---|---|---|
-| id | BIGINT | PK, AUTO_INCREMENT | - | PK | 과제 고유 식별자 |
-| lesson_id | BIGINT | NOT NULL, UNIQUE, FK (LESSON.id) | - | UK_ASSIGN_LESSON | 연계 차시 식별자 (1:1 매핑) |
-| instructor_id | BIGINT | NOT NULL, FK (MEMBER.id) | - | - | 출제 강사 식별자 |
-| title | VARCHAR(200) | NOT NULL | - | - | 과제 제목 |
-| content | TEXT | NOT NULL | - | - | 과제 요구사항 및 가이드 본문 |
-| attachment_url | VARCHAR(500) | NULL | - | - | S3 첨부 가이드 파일 URL |
-| deadline | DATETIME | NOT NULL | - | - | 과제 제출 마감 일시 |
-
-#### 11) ASSIGNMENT_SUBMISSION (수강생 과제 제출 및 채점 테이블)
-- 테이블 설명: 수강생이 제출한 과제물과 강사의 평가 점수 및 피드백을 기록하는 테이블.
-
-| 컬럼명 | 데이터 타입 | 제약조건 | 기본값 | 인덱스 | 설명 |
-|---|---|---|---|---|---|
-| id | BIGINT | PK, AUTO_INCREMENT | - | PK | 과제 제출 고유 식별자 |
-| assignment_id | BIGINT | NOT NULL, FK (ASSIGNMENT.id) | - | IDX_SUBMIT_ASSIGN | 대상 과제 식별자 |
-| student_id | BIGINT | NOT NULL, FK (MEMBER.id) | - | IDX_SUBMIT_STUDENT | 제출 수강생 식별자 |
-| submission_content | TEXT | NOT NULL | - | - | 제출 설명 텍스트 |
-| file_url | VARCHAR(500) | NOT NULL | - | - | S3 업로드된 과제물/소스코드 URL |
-| score | INT | NULL | - | - | 강사 평가 점수 (0~100) |
-| instructor_feedback | TEXT | NULL | - | - | 강사 평가 피드백 코멘트 |
-| status | VARCHAR(20) | NOT NULL | 'PENDING' | - | 평가 상태 (PENDING, PASSED, FAILED) |
-| submitted_at | DATETIME | NOT NULL | CURRENT_TIMESTAMP | - | 과제 최초 제출 일시 |
-| graded_at | DATETIME | NULL | - | - | 강사 채점 완료 일시 |
-
-#### 12) QNA_QUESTION (강의 질의응답 질문 테이블)
-- 테이블 설명: 수강생이 강의를 들으며 특정 시점에 등록한 질문 테이블.
-
-| 컬럼명 | 데이터 타입 | 제약조건 | 기본값 | 인덱스 | 설명 |
-|---|---|---|---|---|---|
-| id | BIGINT | PK, AUTO_INCREMENT | - | PK | Q&A 질문 고유 식별자 |
-| lesson_id | BIGINT | NOT NULL, FK (LESSON.id) | - | IDX_QNA_LESSON | 소속 차시 식별자 |
-| student_id | BIGINT | NOT NULL, FK (MEMBER.id) | - | IDX_QNA_STUDENT | 질문 작성 수강생 식별자 |
-| title | VARCHAR(200) | NOT NULL | - | - | 질문 제목 |
-| content | TEXT | NOT NULL | - | - | 질문 본문 |
-| timestamp_second | INT | NULL | - | - | 동영상 타임스탬프 (초 단위) |
-| is_resolved | CHAR(1) | NOT NULL | 'N' | - | 질문 해결 여부 (Y/N) |
-| created_at | DATETIME | NOT NULL | CURRENT_TIMESTAMP | - | 질문 등록 일시 |
-
-#### 13) QNA_ANSWER (강의 질의응답 답변 테이블)
-- 테이블 설명: 강사 또는 관리자가 질문에 대해 작성한 답변 테이블.
-
-| 컬럼명 | 데이터 타입 | 제약조건 | 기본값 | 인덱스 | 설명 |
-|---|---|---|---|---|---|
-| id | BIGINT | PK, AUTO_INCREMENT | - | PK | Q&A 답변 고유 식별자 |
-| question_id | BIGINT | NOT NULL, FK (QNA_QUESTION.id) | - | IDX_ANSWER_QUESTION | 대상 질문 식별자 |
-| responder_id | BIGINT | NOT NULL, FK (MEMBER.id) | - | - | 답변 작성자 식별자 |
-| content | TEXT | NOT NULL | - | - | 답변 본문 |
-| is_accepted | CHAR(1) | NOT NULL | 'N' | - | 질문자 채택 여부 (Y/N) |
-| created_at | DATETIME | NOT NULL | CURRENT_TIMESTAMP | - | 답변 등록 일시 |
-
-#### 14) COURSE_REVIEW (강좌 수강 후기 테이블)
-- 테이블 설명: 수강생이 강좌 수강 후 남기는 별점 및 평가 테이블.
-
-| 컬럼명 | 데이터 타입 | 제약조건 | 기본값 | 인덱스 | 설명 |
-|---|---|---|---|---|---|
-| id | BIGINT | PK, AUTO_INCREMENT | - | PK | 수강 후기 고유 식별자 |
-| course_id | BIGINT | NOT NULL, FK (COURSE.id) | - | IDX_REVIEW_COURSE | 대상 강좌 식별자 |
-| student_id | BIGINT | NOT NULL, FK (MEMBER.id) | - | - | 작성 수강생 식별자 |
-| rating | INT | NOT NULL | 5 | - | 별점 (1~5점) |
-| content | TEXT | NOT NULL | - | - | 후기 본문 |
-| created_at | DATETIME | NOT NULL | CURRENT_TIMESTAMP | - | 후기 등록 일시 |
-
----
-
-### 1.2.6 배치 및 AI 지식 베이스 도메인 (SETTLEMENT, ADMIN_FAQ)
-
-#### 15) SETTLEMENT (강사 월간 정산 집계 테이블)
-- 테이블 설명: Spring Batch가 매월 1일 자정에 강사별 수강료 매출을 집계하여 영속화하는 정산 테이블.
-
-| 컬럼명 | 데이터 타입 | 제약조건 | 기본값 | 인덱스 | 설명 |
-|---|---|---|---|---|---|
-| id | BIGINT | PK, AUTO_INCREMENT | - | PK | 정산 고유 식별자 |
-| instructor_id | BIGINT | NOT NULL, FK (MEMBER.id) | - | IDX_SETTLE_INSTRUCTOR | 정산 대상 강사 식별자 |
-| settlement_month | VARCHAR(7) | NOT NULL | - | IDX_SETTLE_MONTH | 정산 대상 연월 (예: '2026-09') |
-| total_sales | INT | NOT NULL | 0 | - | 해당 월 총 수강료 매출 |
-| platform_fee | INT | NOT NULL | 0 | - | 플랫폼 수수료 공제액 (예: 20%) |
-| net_settlement_amount | INT | NOT NULL | 0 | - | 강사 실수령 최종 정산금 |
-| status | VARCHAR(20) | NOT NULL | 'PENDING' | - | 지급 상태 (PENDING, PAID) |
-| executed_at | DATETIME | NOT NULL | CURRENT_TIMESTAMP | - | 배치 정산 실행 일시 |
-
-#### 16) ADMIN_FAQ (AI 학사 행정 지원 지식 베이스 테이블)
-- 테이블 설명: 과정 운영자의 반복 행정 업무를 무인화하기 위해 AI 챗봇의 프롬프트와 RAG 질의에 활용되는 행정 FAQ 지식 베이스 테이블.
-
-| 컬럼명 | 데이터 타입 | 제약조건 | 기본값 | 인덱스 | 설명 |
-|---|---|---|---|---|---|
-| id | BIGINT | PK, AUTO_INCREMENT | - | PK | FAQ 지식 고유 식별자 |
-| category | VARCHAR(50) | NOT NULL | - | IDX_FAQ_CATEGORY | 카테고리 (COURSE, PAYMENT, REFUND, COMPLETION) |
-| question_pattern | VARCHAR(300) | NOT NULL | - | - | 대표 질문 패턴 및 유사 질문 키워드 |
-| answer_content | TEXT | NOT NULL | - | - | 검증된 공식 학사 행정 표준 답변 |
-| reference_link | VARCHAR(500) | NULL | - | - | 관련 규정 또는 신청 바로가기 URL |
-| is_active | CHAR(1) | NOT NULL | 'Y' | - | AI 질의 사용 활성 여부 (Y/N) |
+- `PAYMENT_EVENT`는 **들어오는** PG 웹훅의 중복 처리 기록이고 `OUTBOX_EVENT`는 **나가는** SMS 요청 유실 방지용이다.
+- `VIRTUAL_ACCOUNT`는 가상계좌 발급·재발급 기록을 보존한다.
+- `SHIPMENT_EVENT`는 모의 배송 웹훅 이력을 기록한다.
+- `SMS_LOG`는 발송 결과를 기록한다. Outbox를 사용해도 외부 SMS의 중복 발송 가능성은 별도로 관리해야 한다.
