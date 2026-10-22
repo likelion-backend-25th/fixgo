@@ -1,7 +1,7 @@
-# 1. 개발자 통합 학습 관리 플랫폼 (하루배움) 코드 컨벤션 정의서
+# 1. AS업무 통합관리시스템 - FixGo 코드 컨벤션 정의서
 
 ## 목차
-- [1. 개발자 통합 학습 관리 플랫폼 (하루배움) 코드 컨벤션 정의서](#1-개발자-통합-학습-관리-플랫폼-하루배움-코드-컨벤션-정의서)
+- [1. AS업무 통합관리시스템 - FixGo 코드 컨벤션 정의서](#1-as업무-통합관리시스템---fixgo-코드-컨벤션-정의서)
 - [1.1 개요 및 기본 원칙](#11-개요-및-기본-원칙)
 - [1.2 Java 및 Spring Boot 표준 스타일](#12-java-및-spring-boot-표준-스타일)
 - [1.3 식별자 명명 규칙](#13-식별자-명명-규칙)
@@ -13,13 +13,13 @@
 ## 1.1 개요 및 기본 원칙
 
 ### 1.1.1 작성 목적
-본 문서는 개발자 통합 학습 관리 플랫폼(LMS, 하루배움) 프로젝트에 참여하는 팀원 간의 일관된 코딩 스타일, 디렉토리 구조, 네이밍 규칙, 아키텍처 원칙을 정의하여 코드의 가독성을 극대화하고 결함을 사전에 방지하는 것을 목적으로 함.
+본 문서는 AS업무 통합관리시스템 - FixGo 프로젝트에 참여하는 팀원 간의 일관된 코딩 스타일, 디렉토리 구조, 네이밍 규칙, 아키텍처 원칙을 정의하여 코드의 가독성을 극대화하고 결함을 사전에 방지하는 것을 목적으로 함.
 
 ### 1.1.2 기본 준수 원칙
 - 단일성 원칙: 프로젝트 내 모든 코드는 마치 한 명의 개발자가 작성한 것과 같은 통일된 서식과 규칙을 유지함.
 - 가독성 우선: 지나치게 함축적이거나 모호한 표현을 지양하고 의도가 명확히 드러나는 어휘와 구조를 채택함.
 - 안정성 및 무결성: DTO와 Entity의 엄격한 분리, 불변성을 보장하는 생성자 주입, 선언적 트랜잭션 경계 설정을 통해 런타임 잠재 결함을 원천 차단함.
-- 표준 기반: Google Java Style Guide 및 Naver Hackday Java Convention을 기본 토대로 하며 하루배움 도메인 환경에 맞게 구체화함.
+- 표준 기반: Google Java Style Guide 및 Naver Hackday Java Convention을 기본 토대로 하며 FixGo 도메인 환경에 맞게 구체화함.
 
 ---
 
@@ -42,14 +42,16 @@ if (isExpired) throw new CourseEnrollmentExpiredException("수강 기간이 만�
 ```
 
 ### 1.2.2 임포트(Import) 규칙
-- 와일드카드 import 금지: `import java.util.*;`와 같은 와일드카드 사용을 엄격히 금지하며, 사용하는 개별 클래스만을 명시적으로 import함.
+- 와일드카드 import 금지: `import java.util.*;`와 같은 와일드카드 사용을 원칙적으로 금지하며, 사용하는 개별 클래스만을 명시적으로 import함.
+- 동일 패키지 내에서 5개 이상의 클래스 사용 시 와일드카드 사용을 허용
 - 미사용 import 제거: 사용하지 않는 import 문은 커밋 전 반드시 정리함 (IntelliJ Optimize Imports 활용).
 - import 정렬 순서:
-  1) `java.*` 및 `javax.*`, `jakarta.*`
-  2) 서드파티 라이브러리 (`org.*`, `com.*` 등)
-  3) Spring 프레임워크 (`org.springframework.*`)
-  4) 하루배움 도메인 패키지 (`net.likelion.bebc25.lms.*`)
-  5) 정적 임포트(`import static ...`)는 최하단 또는 최상단에 그룹화하여 배치
+  1) `jakarta.*`
+  2) FixGo 도메인 패키지 (`net.likelion.bebc25.lms.*`)
+  3) 서드파티 라이브러리 (`org.*`, `com.*` 등)
+  4) Spring 프레임워크 (`org.springframework.*`)
+  5) `java.*` 및 `javax.*`
+  6) 정적 임포트(`import static ...`)는 최하단에 그룹화하여 배치
 
 ### 1.2.3 주석 및 어노테이션 규칙
 - 코드 자체로 설명: 불필요한 사족 주석을 배제하고 메서드명과 변수명만으로 의도를 이해할 수 있도록 작성함.
@@ -64,24 +66,22 @@ if (isExpired) throw new CourseEnrollmentExpiredException("수강 기간이 만�
 ### 1.3.1 패키지 명명 규칙
 - 소문자 알파벳 단어를 결합하여 계층 구조로 구성하며 언더스코어나 대문자를 사용하지 않음.
 - 도메인 주도 설계(DDD) 관점의 도메인 중심 패키지 구조를 적용함.
-  - 패키지 루트: `net.likelion.bebc25.lms`
-  - 공통 모듈: `net.likelion.bebc25.lms.global` (config, error, security, util)
-  - 회원/인증 도메인: `net.likelion.bebc25.lms.domain.member` (controller, service, repository, entity, dto)
-  - 강좌/차시 도메인: `net.likelion.bebc25.lms.domain.course`
-  - 주문/결제 도메인: `net.likelion.bebc25.lms.domain.order`
-  - 학습/과제 도메인: `net.likelion.bebc25.lms.domain.learning`
-  - 정산/배치 도메인: `net.likelion.bebc25.lms.domain.settlement`
+  - 패키지 루트: `net.likelion.bebc25.fixgo`
+  - 공통 모듈: `net.likelion.bebc25.fixgo.global` (config, error, security, util)
+  - 회원/인증 도메인: `net.likelion.bebc25.fixgo.domain.member` (controller, service, repository, entity, dto)
+  - (추후 추가)
 
 ### 1.3.2 클래스 및 인터페이스 명명 규칙
 - 파스칼 케이스(PascalCase)를 적용하며 명사 또는 명사구로 작성함.
 - 아키텍처 역할에 따른 명확한 접미사(Suffix)를 반드시 부여함:
-  - 컨트롤러: `MemberController`, `CourseController`, `PaymentController`
-  - 서비스: `CourseService` (구현체 분리 시 `CourseServiceImpl`)
-  - 리포지토리: `CourseRepository`, `OrderQueryRepository`
-  - 엔티티: `Course`, `Lesson`, `Enrollment`, `Payment`
-  - 요청 DTO: `[기능/목적]Request` (예: `CourseCreateRequest`, `PaymentPrepareRequest`)
-  - 응답 DTO: `[기능/목적]Response` (예: `CourseDetailResponse`, `LessonProgressResponse`)
-  - 예외 클래스: `[도메인/사유]Exception` (예: `CourseNotFoundException`, `DuplicateEnrollmentException`)
+- (아래는 예시, 추후 구조에 맞춰서 수정)
+  - 컨트롤러: `MemberController`
+  - 서비스: 
+  - 리포지토리: 
+  - 엔티티: 
+  - 요청 DTO: `[기능/목적]Request`
+  - 응답 DTO: `[기능/목적]Response`
+  - 예외 클래스: `[도메인/사유]Exception`
   - 설정 클래스: `[역할]Config` (예: `SecurityConfig`, `BatchConfig`, `SwaggerConfig`)
 
 ### 1.3.3 메서드 및 변수 명명 규칙
