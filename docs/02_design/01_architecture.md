@@ -147,12 +147,20 @@ sequenceDiagram
     Technician->>Server: 배정된 A/S 접수 내역 조회 요청
     Server->>DB: 조회
     Server->>Technician: 배정된 A/S 접수 내역 응답
-    Technician->>Server: 수리 시작 상태로 변경 요청
+    Technician->>Server: 수리 시작 상태로 A/S 진행상태 변경 요청
     Server->>DB: 변경 내용 반영
-    Technician->>Server: 상세 수리 내역 저장 및 수리 완료 상태로 변경 요청
+    Technician->>Server: 상세 수리 내역 저장 및 수리 완료 상태로 A/S 진행상태 변경 요청
     Server->>DB: 내역 저장 변경 내용 반영
     
-    Server->>
+    Server->>Customer: 수리 완료 안내 및 결제 링크 발송 (SMS발송 API 경유)
+    Server->>DB: SMS 발송 내역 저장
+    
+    Customer->>PG: 결제 완료
+    PG->>Server: 결제 완료 웹훅 발송
+    Server->>DB: 결제 내역 저장 및 발송대기/수령대기 상태로 A/S 진행상태 변경
+    
+    Receptionist->>Server: 택배발송/고객방문수령 이후 완료 상태로 A/S 진행상태 변경 요청
+    Server->>DB: 변경 내용 반영
 ```
 
 ### 1.4.2 A/S 비용 결제 사전/사후 검증 흐름
