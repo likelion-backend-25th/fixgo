@@ -222,11 +222,11 @@
 ## 1.4 팀 구성 및 행정 역할 분담
 
 - PM (Project Manager): 김혜란 (프로젝트 총괄)
-- PL (Project Leader): 김병호 (기술 리딩, 프론트 배포담당 (Netlify or S3 + CloudFront))
+- PL (Project Leader): 김병호 (기술 리딩)
 - 팀원1 (Developer): 김남규 (서기, 백엔드 배포(AWS, DOCKER, DOCKER-COMPOSE))
 - 팀원2 (Developer): 이수환 (발표)
 - 팀원3 (Developer): 이지원 (서기)
-- 팀원4 (Developer): 최승혁 (서기)
+- 팀원4 (Developer): 최승혁 (서기, 프론트 배포담당 (Netlify, CloudFlare)
 - 팀원5 (Developer): 최원일 (서기)
 
 ## 1.5 프로젝트 개발 조직 및 역할 분담

@@ -273,15 +273,17 @@ erDiagram
 
 - 테이블 설명: 회원가입하지 않는 고객
 
-| 컬럼명        | 데이터 타입       | 제약조건               | 기본값                                           | 인덱스  | 설명     |
-|------------|--------------|--------------------|-----------------------------------------------|------|--------|
-| id         | BIGINT       | PK, AUTO_INCREMENT | -                                             | PK   | 고객 ID  |
-| name       | VARCHAR(120) | NOT NULL           | -                                             | -    | 고객명    |
-| phone      | VARCHAR(20)  | NULL               | -                                             | -    | 고객 연락처 |
-| email      | VARCHAR(120) | NULL               | -                                             | -    | 이메일    |
-| address    | VARCHAR(255) | NULL               | -                                             | -    | 주소     |
-| created_at | DATETIME     | NOT NULL           | CURRENT_TIMESTAMP                             | -    | 생성 일시  |
-| updated_at | DATETIME     | NOT NULL           | CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | -    | 수정 일시  |
+| 컬럼명            | 데이터 타입       | 제약조건               | 기본값                                           | 인덱스  | 설명     |
+|----------------|--------------|--------------------|-----------------------------------------------|------|--------|
+| id             | BIGINT       | PK, AUTO_INCREMENT | -                                             | PK   | 고객 ID  |
+| name           | VARCHAR(120) | NOT NULL           | -                                             | -    | 고객명    |
+| phone          | VARCHAR(20)  | NULL               | -                                             | -    | 고객 연락처 |
+| email          | VARCHAR(120) | NULL               | -                                             | -    | 이메일    |
+| zipcode        | VARCHAR(5)   | NULL               | -                                             | -    | 우편번호   |
+| basic_address  | VARCHAR(255) | NULL               | -                                             | -    | 도로명주소  |
+| detail_address | VARCHAR(255) | NULL               | -                                             | -    | 상세주소   |
+| created_at     | DATETIME     | NOT NULL           | CURRENT_TIMESTAMP                             | -    | 생성 일시  |
+| updated_at     | DATETIME     | NOT NULL           | CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | -    | 수정 일시  |
 
 ### 1.2.3 제품 도메인 (PRODUCT_MODEL)
 
@@ -380,28 +382,14 @@ erDiagram
 | 컬럼명           | 데이터 타입       | 제약조건               | 기본값                                           | 인덱스  | 설명        |
 |---------------|--------------|--------------------|-----------------------------------------------|------|-----------|
 | id            | BIGINT       | PK, AUTO_INCREMENT | -                                             | PK   | 프리셋 ID    |
-| name          | VARCHAR(120) | NOT NULL           | -                                             | -    | 수리 항목명    |
+| name          | VARCHAR(120) | NOT NULL           | -                                             | -    | 프리셋 이름    |
+| device        | VARCHAR(100) | NOT NULL           | -                                             | -    | 수리된 기기 종류 |
 | description   | VARCHAR(500) | NULL               | -                                             | -    | 항목 설명     |
-| default_price | BIGINT       | NOT NULL           | 0                                             | -    | 기본 단가 (원) |
+| default_price | INT          | NOT NULL           | 0                                             | -    | 기본 단가 (원) |
 | is_active     | BOOLEAN      | NOT NULL           | TRUE                                          | -    | 사용 여부     |
 | created_at    | DATETIME     | NOT NULL           | CURRENT_TIMESTAMP                             | -    | 생성 일시     |
 | updated_at    | DATETIME     | NOT NULL           | CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | -    | 수정 일시     |
 
-#### 3) REPAIR_ITEM (수리 건에 실제 적용된 작업·단가 스냅샷)
-
-- 테이블 설명: 수리 건에 실제 적용된 작업·단가 스냅샷
-
-| 컬럼명         | 데이터 타입       | 제약조건                        | 기본값                                           | 인덱스              | 설명            |
-|-------------|--------------|-----------------------------|-----------------------------------------------|------------------|---------------|
-| id          | BIGINT       | PK, AUTO_INCREMENT          | -                                             | PK               | 수리 항목 ID      |
-| repair_id   | BIGINT       | NOT NULL, FK (REPAIR.id)    | -                                             | IDX_RITEM_REPAIR | 수리 ID         |
-| preset_id   | BIGINT       | NULL, FK (REPAIR_PRESET.id) | -                                             | -                | 선택한 프리셋 ID    |
-| name        | VARCHAR(120) | NOT NULL                    | -                                             | -                | 확정 시점 항목명 스냅샷 |
-| quantity    | INT          | NOT NULL                    | 1                                             | -                | 수량, 1 이상      |
-| unit_price  | BIGINT       | NOT NULL                    | 0                                             | -                | 원 단위 적용 단가    |
-| line_amount | BIGINT       | NOT NULL                    | 0                                             | -                | 수량 × 단가       |
-| created_at  | DATETIME     | NOT NULL                    | CURRENT_TIMESTAMP                             | -                | 생성 일시         |
-| updated_at  | DATETIME     | NOT NULL                    | CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | -                | 수정 일시         |
 
 ### 1.2.6 결제 및 입금 도메인 (PAYMENT, VIRTUAL_ACCOUNT, PAYMENT_EVENT)
 
@@ -532,14 +520,14 @@ erDiagram
 | sent_at             | DATETIME     | NULL                     | -                 | -               | 발송 시각                                               |
 | created_at          | DATETIME     | NOT NULL                 | CURRENT_TIMESTAMP | -               | 생성 시각                                               |
 
-#### 4) SMS 프리셋
+#### 4) SMS_PRESET
 
-| 컬럼명         | 데이터 타입      | 제약조건               | 기본값  | 인덱스  | 설명    |
-|-------------|-------------|--------------------|------|------|-------|
-| id          | BIGINT      | PK, AUTO_INCREMENT | -    | PK   | 발송 ID |
-| preset_name | VARCHAR(30) |                    |      |      |       |
-| title       | VARCHAR(50) |                    |      |      |       |
-| content     | TEXT        |                    |      |      |       |
+| 컬럼명         | 데이터 타입      | 제약조건               | 기본값 | 인덱스 | 설명     |
+|-------------|-------------|--------------------|-----|-----|--------|
+| id          | BIGINT      | PK, AUTO_INCREMENT | -   | PK  | 발송 ID  |
+| preset_name | VARCHAR(30) | -                  | -   | -   | 프리셋 이름 |
+| title       | VARCHAR(50) | -                  | -   | -   | 문자 제목  |
+| content     | TEXT        | -                  | -   | -   | 문자 내용  |
 
 ### 1.2.9 운영 감사 도메인 (AUDIT_LOG)
 
