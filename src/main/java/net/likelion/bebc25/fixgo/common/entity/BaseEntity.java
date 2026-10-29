@@ -19,12 +19,15 @@ public abstract class BaseEntity {
     @CreatedBy
     @Column(updatable = false, nullable = false)
     String created_by;
+
     @LastModifiedBy
     @Column(nullable = false)
     String updated_by;
+
     @CreatedDate    // Entity가 최초 저장될 때 생성일시를 자동으로 주입
     @Column(updatable = false, nullable = false)
     private LocalDateTime createdAt;
+
     @LastModifiedDate   // Entity가 등록/수정될 때 등록/수정일시를 자동으로 주입
     @Column(nullable = false)
     private LocalDateTime updatedAt;

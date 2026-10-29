@@ -40,26 +40,23 @@ public class Member extends BaseEntity {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private Status status;
+    private Status status = Status.ACTIVE;
 
-    @Column(nullable = false)
+    @Column
     private LocalDateTime deleted_at;
 
 
-    public Member(Long id, String code, String email, String password_hash, String name, Role role, String profile_img_url, Status status, LocalDateTime deleted_at) {
-        this.id = id;
+    public Member(String code, String email, String password_hash, String name, Role role, String profile_img_url) {
         this.code = code;
         this.email = email;
         this.password_hash = password_hash;
         this.name = name;
-        this.role = role;
         this.profile_img_url = profile_img_url;
-        this.status = status;
-        this.deleted_at = deleted_at;
+        this.role = role;
     }
 
-    public Member(Long id, String code, String email, String password_hash, String name, String phone, Role role, String profile_img_url, Status status, LocalDateTime deleted_at) {
-        this(id, code, email, password_hash, name, role, profile_img_url, status, deleted_at);
+    public Member(String code, String email, String password_hash, String name, String phone, Role role, String profile_img_url) {
+        this(code, email, password_hash, name, role, profile_img_url);
         this.phone = phone;
     }
 }
