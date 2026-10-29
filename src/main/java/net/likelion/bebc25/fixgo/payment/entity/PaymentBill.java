@@ -25,7 +25,9 @@ public class PaymentBill {
     @Column(nullable = false, length = 20)
     private PaymentBillStatus status;
 
-    private Long successfulAttemptId;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "successful_attempt_id")
+    private PaymentAttempt paymentAttempt;
 
     private LocalDateTime paidAt;
 
