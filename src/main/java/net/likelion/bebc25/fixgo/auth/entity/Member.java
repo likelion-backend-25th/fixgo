@@ -23,7 +23,7 @@ public class Member extends BaseEntity {
     private String email;
 
     @Column(nullable = false)
-    private String password_hash;
+    private String passwordHash;
 
     @Column(nullable = false)
     private String name;
@@ -36,7 +36,7 @@ public class Member extends BaseEntity {
     private Role role;
 
     @Column(nullable = false)
-    private String profile_img_url;
+    private String profileImgUrl;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -46,17 +46,17 @@ public class Member extends BaseEntity {
     private LocalDateTime deleted_at;
 
 
-    public Member(String code, String email, String password_hash, String name, Role role, String profile_img_url) {
+    public Member(String code, String email, String passwordHash, String name, Role role, String profileImgUrl) {
         this.code = code;
         this.email = email;
-        this.password_hash = password_hash;
+        this.passwordHash = passwordHash;
         this.name = name;
-        this.profile_img_url = profile_img_url;
+        this.profileImgUrl = profileImgUrl;
         this.role = role;
     }
 
-    public Member(String code, String email, String password_hash, String name, String phone, Role role, String profile_img_url) {
-        this(code, email, password_hash, name, role, profile_img_url);
+    public Member(String code, String email, String passwordHash, String name, String phone, Role role, String profileImgUrl) {
+        this(code, email, passwordHash, name, role, profileImgUrl);
         this.phone = phone;
     }
 }
