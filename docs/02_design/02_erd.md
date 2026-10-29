@@ -78,9 +78,9 @@ erDiagram
 | id         | BIGINT       | PK, AUTO_INCREMENT       | -                 | PK              | 토큰 ID            |
 | member_id  | BIGINT       | NOT NULL, FK → MEMBER.id | -                 | -               | 직원 ID            |
 | token_hash | VARCHAR(255) | NOT NULL, UNIQUE         | -                 | UK_REFRESH_HASH | Refresh Token 해시 |
+| issued_at  | DATETIME     | NOT NULL                 | CURRENT_TIMESTAMP | -               | 발급 시각            |
 | expires_at | DATETIME     | NOT NULL                 | -                 | -               | 만료 시각            |
 | revoked_at | DATETIME     | NULL                     | -                 | -               | 폐기 시각            |
-| created_at | DATETIME     | NOT NULL                 | CURRENT_TIMESTAMP | -               | 발급 시각            |
 
 ## 1.2.2 고객 정보 관리
 
