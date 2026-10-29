@@ -1,3 +1,46 @@
 spring:
   application:
     name: project-FixGo
+  # 데이터베이스 접속 정보
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/fixgo_db?serverTimezone=Asia/Seoul&useSSL=false&allowPublicKeyRetrieval=true
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+
+  # 데이터베이스 초기화 설정
+  sql:
+    init:
+      mode: always
+
+  # JPA 및 하이버네이트 설정
+  jpa:
+    defer-datasource-initialization: true # Hibernate의 DDL 생성 완료 후 data.sql 로드 및 실행
+    hibernate:
+      ddl-auto: create
+      # ddl-auto: none
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+        use_sql_comments: true
+
+# Springdoc OpenAPI 및 Swagger UI 설정
+springdoc:
+  # 기본 응답 미디어 타입을 application/json으로 지정
+  default-produces-media-type: application/json
+  swagger-ui:
+    # Swagger UI 엔드포인트 커스텀 경로 설정
+    path: /swagger-ui.html
+    # 태그 그룹 정렬 기준 (옵션: alpha - 태그명 알파벳/가나다 사전순)
+    tags-sorter: alpha
+    # 개별 API 엔드포인트 정렬 기준 (옵션: alpha - URI 경로 사전순, method - HTTP 메서드명 알파벳순)
+    operations-sorter: alpha
+  api-docs:
+    # OpenAPI 문서 자동 생성 활성화 및 엔드포인트 경로
+    enabled: true
+    path: /v3/api-docs
+
+logging:
+  level:
+    org.springframework.security: DEBUG
