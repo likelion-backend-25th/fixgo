@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
@@ -60,4 +62,45 @@ public class MemberRepositoryTest {
         assertThat(findMember.getId()).isNotEqualTo(existingMember.getId());
     }
 
+    @Test
+    @DisplayName("이메일로 직원 조회")
+    void findByEmail() {
+        Member findMember = memberRepository.findByEmail("test1@test.com").orElse(null);
+
+        assertThat(findMember).isNotNull();
+        assertThat(findMember.getId()).isEqualTo(newMemberId);
+        assertThat(findMember.getCode()).isEqualTo("admin01");
+        assertThat(memberRepository.findByEmail("notfound@test.com")).isEmpty();
+    }
+
+    @Test
+    @DisplayName("이메일 존재 여부 확인")
+    void existsByEmail() {
+        assertThat(memberRepository.existsByEmail("test1@test.com")).isTrue();
+        assertThat(memberRepository.existsByEmail("notfound@test.com")).isFalse();
+    }
+
+    @Test
+    @DisplayName("기간 내 직원 수 조회")
+    void countByCreatedAtBetween() {
+        Member technician = new Member(
+                "tech01",
+                "tech1@test.com",
+                "1234",
+                "tech1",
+                Role.ROLE_TECHNICIAN,
+                ""
+        );
+        memberRepository.save(technician);
+        em.flush();
+        em.clear();
+
+        LocalDateTime start = LocalDateTime.now().minusMinutes(1);
+        LocalDateTime end = LocalDateTime.now().plusMinutes(1);
+        LocalDateTime pastStart = LocalDateTime.now().minusDays(2);
+        LocalDateTime pastEnd = LocalDateTime.now().minusDays(1);
+
+        assertThat(memberRepository.countByCreatedAtBetween(start, end)).isEqualTo(2);
+        assertThat(memberRepository.countByCreatedAtBetween(pastStart, pastEnd)).isEqualTo(0);
+    }
 }
