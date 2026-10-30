@@ -7,6 +7,10 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+/**
+ * A/S 접수 한 건에 대한 청구서
+ * 접수당 하나만 존재하며(asRequestId) 결제 완료/환불 상태를 관리한다.
+ */
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -15,23 +19,20 @@ public class PaymentBill {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, updatable = false)
+    @Column(nullable = false, unique = true)
     private Long asRequestId;
 
-    @Column(nullable = false, updatable = false)
+    @Column(nullable = false)
     private Long amount;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private PaymentBillStatus status;
-
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "successful_attempt_id")
-    private PaymentAttempt paymentAttempt;
+    @Column(nullable = false)
+    private PaymentBillStatus status = PaymentBillStatus.UNPAID;
 
     private LocalDateTime paidAt;
 
-    public PaymentBill(Long asRequestId, Long amount) {
+
+    public static PaymentBill issue(Long asRequestId, Long amount) {
         if (asRequestId == null) {
             throw new IllegalArgumentException("A/S 접수 ID는 필수입니다.");
         }
@@ -40,8 +41,22 @@ public class PaymentBill {
             throw new IllegalArgumentException("청구 금액은 0보다 커야 합니다.");
         }
 
-        this.asRequestId = asRequestId;
-        this.amount = amount;
-        this.status = PaymentBillStatus.UNPAID;
+        PaymentBill paymentBill = new PaymentBill();
+        paymentBill.asRequestId = asRequestId;
+        paymentBill.amount = amount;
+
+        return paymentBill;
+    }
+
+    private void changeStatus(PaymentBillStatus next) {
+        if (!status.canTransitTo(next)) {
+            throw new IllegalStateException(status + " -> " + next + " 불가");
+        }
+        this.status = next;
+    }
+
+    public void markPaid() {
+        changeStatus(PaymentBillStatus.PAID);
+        this.paidAt = LocalDateTime.now();
     }
 }
