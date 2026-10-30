@@ -18,11 +18,11 @@ import java.time.LocalDateTime;
 public abstract class BaseEntity {
     @CreatedBy
     @Column(updatable = false, nullable = false)
-    String created_by;
+    String createdBy;
 
     @LastModifiedBy
     @Column(nullable = false)
-    String updated_by;
+    String updatedBy;
 
     @CreatedDate    // Entity가 최초 저장될 때 생성일시를 자동으로 주입
     @Column(updatable = false, nullable = false)
