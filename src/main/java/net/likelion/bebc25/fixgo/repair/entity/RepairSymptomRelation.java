@@ -21,6 +21,6 @@ public class RepairSymptomRelation {
     @JoinColumn(name = "repair_preset_id", nullable = false)
     private RepairPreset repairPreset;
 
-    @Column(nullable = false)
-    private LocalDateTime created_at;
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
 }

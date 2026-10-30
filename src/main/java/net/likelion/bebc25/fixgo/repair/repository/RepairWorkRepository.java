@@ -14,5 +14,6 @@ public interface RepairWorkRepository extends JpaRepository<RepairWork, Long> {
     List<RepairWork> findByRepairId(@Param("repairId") Long repairId);
 
     // 작업명으로 검색
-    List<RepairWork> findByWorkNameContaining(String workName);
+    @Query("SELECT rw FROM RepairWork rw WHERE rw.workName LIKE CONCAT('%', :workName, '%')")
+    List<RepairWork> findByWorkName(@Param("workName") String workName);
 }
