@@ -1,7 +1,14 @@
 package net.likelion.bebc25.fixgo.repair.entity;
 
 import jakarta.persistence.*;
+import lombok.*;
 
+@Getter
+@Setter
+@Entity
+@NoArgsConstructor
+@Builder
+@AllArgsConstructor
 public class RepairSymptomPreset {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -12,5 +19,5 @@ public class RepairSymptomPreset {
     private Repair repair;
 
     @Column(nullable = false)
-    private String sysptomPresetName;
+    private String symptomPresetNam;
 }

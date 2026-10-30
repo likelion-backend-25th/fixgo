@@ -1,7 +1,10 @@
 package net.likelion.bebc25.fixgo.repair.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
@@ -9,7 +12,6 @@ import java.time.LocalDateTime;
 @Setter
 @Entity
 @NoArgsConstructor
-@Builder
 @AllArgsConstructor
 public class Repair {
 
@@ -17,9 +19,11 @@ public class Repair {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long as_request_id;
+    @Column(name = "as_request_id")
+    private Long asRequestId;
 
-    private Long technician_id;
+    @Column(name = "technician_id")
+    private Long technicianId;
 
     private String diagnosis;
 
@@ -27,8 +31,9 @@ public class Repair {
 
     private String repair_decision;
 
-    @Column(nullable = false)
-    private String warranty_result;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private WarrantyResult warrantyResult;
 
     private String reason;
 
@@ -46,15 +51,15 @@ public class Repair {
 
     private LocalDateTime confirmed_at;
 
-    @Column(nullable = false)
-    private LocalDateTime created_at;
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
 
-    @Column(nullable = false)
-    private LocalDateTime updated_at;
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
 
-    @Column(nullable = false)
-    private String created_by;
+    @Column(name = "created_by", nullable = false)
+    private String createdBy;
 
-    @Column(nullable = false)
-    private String updated_by;
+    @Column(name = "updated_by", nullable = false)
+    private String updatedBy;
 }
