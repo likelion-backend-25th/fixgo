@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(indexes = {@Index(name = "IDX_PSH_PART_TIME", columnList = "part_id")})
 public class PartStockHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(indexes = {@Index(name = "IDX_RPP_PART", columnList = "product_model_id")})
 public class RepairPresetPart {
 //    @EmbeddedId
 //    RepairPresetPartId id;
