@@ -23,13 +23,15 @@ public class AsRequest extends BaseEntity {
     @Column(unique = true, nullable = false)
     private String requestNumber;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "customer_id", nullable = false)
-    private Customer customer;
+    //    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+//    @JoinColumn(name = "customer_id", nullable = false)
+    @Column
+    private Long customerId;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "product_id", nullable = false)
-    private CustomerProduct product;
+    //    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+//    @JoinColumn(name = "product_id", nullable = false)
+    @Column
+    private Long productId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "receptionist_id", nullable = false)
@@ -62,10 +64,10 @@ public class AsRequest extends BaseEntity {
     @Column
     private LocalDateTime closedAt;
 
-    public AsRequest(String requestNumber, Customer customer, CustomerProduct product, Member receptionist, String symptom, String symptomDetail, String requestMemo, ReturnMethod returnMethod) {
+    public AsRequest(String requestNumber, Long customerId, Long productId, Member receptionist, String symptom, String symptomDetail, String requestMemo, ReturnMethod returnMethod) {
         this.requestNumber = requestNumber;
-        this.customer = customer;
-        this.product = product;
+        this.customerId = customerId;
+        this.productId = productId;
         this.receptionist = receptionist;
         this.symptom = symptom;
         this.symptomDetail = symptomDetail;
