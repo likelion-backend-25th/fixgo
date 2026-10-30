@@ -27,7 +27,7 @@ public class ProductModel {
     private Category category;
 
     private Integer warrantyMonths;
-    
+
     private boolean isActive;
 
     @Column(nullable = false)
@@ -41,4 +41,17 @@ public class ProductModel {
 
     @Column(nullable = false)
     private String updatedBy;
+
+    public ProductModel(String name, String modelName, Category category,
+                        Integer warrantyMonths, String createdBy) {
+        this.name = name;
+        this.modelName = modelName;
+        this.category = category;
+        this.warrantyMonths = warrantyMonths;
+        this.isActive = true;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = this.createdAt;
+        this.createdBy = createdBy;
+        this.updatedBy = createdBy;
+    }
 }

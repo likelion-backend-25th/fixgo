@@ -42,4 +42,18 @@ public class Customer {
 
     @Column(nullable = false)
     private String updatedBy;
+
+    public Customer(String name, String phone, String email, String zipcode,
+                    String detailAddress, String basicAddress, String createdBy) {
+        this.name = name;
+        this.phone = phone;
+        this.email = email;
+        this.zipcode = zipcode;
+        this.detailAddress = detailAddress;
+        this.basicAddress = basicAddress;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = this.createdAt;
+        this.createdBy = createdBy;
+        this.updatedBy = createdBy;
+    }
 }

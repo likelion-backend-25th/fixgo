@@ -40,4 +40,13 @@ public class Product {
 
     @Column(nullable = false)
     private String updatedBy;
+
+    public Product(String serialNumber, LocalDateTime manufacturedAt, String createdBy) {
+        this.serialNumber = serialNumber;
+        this.manufacturedAt = manufacturedAt;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = this.createdAt;
+        this.createdBy = createdBy;
+        this.updatedBy = createdBy;
+    }
 }
