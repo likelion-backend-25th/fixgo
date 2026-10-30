@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Getter
@@ -19,7 +20,7 @@ public class PaymentAttempt {
     @JoinColumn(name = "payment_bill_id", nullable = false)
     private PaymentBill paymentBill;
 
-    @Column(unique = true)
+    @Column(nullable = false, unique = true)
     private String orderId;
 
     @Column(unique = true)
@@ -33,11 +34,7 @@ public class PaymentAttempt {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private PaymentChannel channel;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private PaymentAttemptStatus status;
+    private PaymentAttemptStatus status = PaymentAttemptStatus.READY;
 
     private String failureCode;
 
@@ -45,56 +42,46 @@ public class PaymentAttempt {
 
     private LocalDateTime approvedAt;
 
-    @Column(nullable = false, updatable = false)
-    private String createdBy;
+    private Long createdBy;
 
-    public static PaymentAttempt createOnline(PaymentBill paymentBill, String orderId) {
+    public static PaymentAttempt create(PaymentBill paymentBill) {
         if (paymentBill == null) {
-            throw new IllegalArgumentException("청구서는 필수입니다.");
+            throw new IllegalArgumentException("paymentBill is null");
         }
 
-        if (orderId == null || orderId.isBlank()) {
-            throw new IllegalArgumentException("주문번호는 필수입니다.");
-        }
+        PaymentAttempt paymentAttempt = new PaymentAttempt();
 
-        PaymentAttempt attempt = new PaymentAttempt();
+        paymentAttempt.paymentBill = paymentBill;
+        paymentAttempt.orderId = "PAY" + UUID.randomUUID().toString();
+        paymentAttempt.amount = paymentBill.getAmount();
 
-        attempt.paymentBill = paymentBill;
-        attempt.orderId = orderId;
-        attempt.amount = paymentBill.getAmount();
-        attempt.channel = PaymentChannel.ONLINE;
-        attempt.status = PaymentAttemptStatus.READY;
-
-        return attempt;
+        return paymentAttempt;
     }
 
-    public static PaymentAttempt createOnsite(PaymentBill paymentBill, PaymentMethod method, String handledBy, LocalDateTime approvedAt) {
-        if (paymentBill == null) {
-            throw new IllegalArgumentException("청구서는 필수입니다.");
+    public void markFailed(String code, String message) {
+        changeStatus(PaymentAttemptStatus.FAILED);
+        this.failureCode = code;
+        this.failureMessage = message;
+    }
+
+    public void markCardDone(String paymentKey) {
+        changeStatus(PaymentAttemptStatus.DONE);
+        this.paymentKey = paymentKey;
+        this.method = PaymentMethod.CARD;
+        this.approvedAt = LocalDateTime.now();
+    }
+
+    public void markCashDone(Long createdBy) {
+        changeStatus(PaymentAttemptStatus.DONE);
+        this.method = PaymentMethod.CASH;
+        this.createdBy = createdBy;
+        this.approvedAt = LocalDateTime.now();
+    }
+
+    private void changeStatus(PaymentAttemptStatus next) {
+        if (!status.canTransitTo(next)) {
+            throw new IllegalStateException(status + " -> " + next + " 불가");
         }
-
-        if (method != PaymentMethod.CARD && method != PaymentMethod.CASH) {
-            throw new IllegalArgumentException("현장 수납은 카드 또는 현금만 가능합니다.");
-        }
-
-        if (handledBy == null) {
-            throw new IllegalArgumentException("수납 담당 직원은 필수입니다.");
-        }
-
-        if (approvedAt == null) {
-            throw new IllegalArgumentException("수납 일시는 필수입니다.");
-        }
-
-        PaymentAttempt attempt = new PaymentAttempt();
-
-        attempt.paymentBill = paymentBill;
-        attempt.amount = paymentBill.getAmount();
-        attempt.method = method;
-        attempt.channel = PaymentChannel.ONSITE;
-        attempt.status = PaymentAttemptStatus.DONE;
-        attempt.createdBy = handledBy;
-        attempt.approvedAt = approvedAt;
-
-        return attempt;
+        this.status = next;
     }
 }
