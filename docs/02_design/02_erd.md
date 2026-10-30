@@ -269,7 +269,7 @@ erDiagram
 | labor_rate      | INT          | NULL                                 | -          | -               | 당시 적용된 공임 비용               |
 | inspection_cost | INT          | NULL                                 | -          | -               | 당시 적용된 점검 비용               |
 | final_amount    | INT          | NULL                                 | -          | -               | 최종 확정 수리비(원)               |
-| status          | VARCHAR(255) | NOT NULL                             | DIAGNOSING | -               | DIAGNOSING,                
+| status          | VARCHAR(255) | NOT NULL                             | DIAGNOSING | -               | DIAGNOSING,                |
 
 REQUESTED, APPROVED,
 REJECTED,
@@ -371,7 +371,7 @@ REPAIRING, COMPLETED |
 | repair_work_id | BIGINT   | NOT NULL, FK → REPAIR_WORK.id | -                 | FK  | 수리 항목 ID    |
 | part_id        | BIGINT   | NOT NULL, FK → PART.id        | -                 | FK  | 부품 ID       |
 | quantity       | INT      | NOT NULL                      | 1                 | -   | 사용 수량       |
-| unit_price     | BIGINT   | NOT NULL                      | -                 | -   | 당시 적용 단가(원) |
+| unit_price     | INT      | NOT NULL                      | -                 | -   | 당시 적용 단가(원) |
 | created_at     | DATETIME | NOT NULL                      | CURRENT_TIMESTAMP | -   | 사용 기록 시각    |
 
 ### 5) PART_STOCK_HISTORY
@@ -386,8 +386,8 @@ REPAIRING, COMPLETED |
 | movement_type        | VARCHAR(255) | NOT NULL                        | -                 | -                 | IN, OUT, ADJUST |
 | quantity_delta       | INT          | NOT NULL                        | -                 | -                 | 증감 수량(+/-)      |
 | reason               | VARCHAR(255) | NULL                            | -                 | -                 | 변동 사유           |
-| processed_by         | BIGINT       | NULL, FK → MEMBER.id            | -                 | -                 | 처리 직원           |
 | created_at           | DATETIME     | NOT NULL                        | CURRENT_TIMESTAMP | -                 | 재고 변동 시각        |
+| created_by           | BIGINT       | NULL, FK → MEMBER.id            | -                 | -                 | 처리 직원           |
 
 ## 1.2.8 결제 및 입금 관리
 
