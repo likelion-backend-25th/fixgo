@@ -8,7 +8,11 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(uniqueConstraints = @UniqueConstraint(name = "uk_parts_productModel", columnNames = {"parts_id", "product_model_id"}))
+@Table(
+        uniqueConstraints = @UniqueConstraint(name = "uk_parts_productModel", columnNames = {"part_id", "product_model_id"}),
+        indexes = {@Index(name = "IDX_RPP_PART", columnList = "product_model_id")}
+)
+
 public class PartCompatibility {
 
     @EmbeddedId

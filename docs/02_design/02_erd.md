@@ -327,21 +327,21 @@ REPAIRING, COMPLETED |
 
 - 테이블 설명: 부품과 현재 재고 수량.
 
-| 컬럼명              | 데이터 타입       | 제약조건               | 기본값               | 인덱스           | 설명                   |
-|------------------|--------------|--------------------|-------------------|---------------|----------------------|
-| id               | BIGINT       | PK, AUTO_INCREMENT | -                 | PK            | 부품 ID                |
-| part_code        | VARCHAR(255) | NOT NULL, UNIQUE   | -                 | UK_PART_CODE  | 부품 코드                |
-| name             | VARCHAR(255) | NOT NULL           | -                 | IDX_PART_NAME | 부품명                  |
-| unit_price       | INT          | NOT NULL           | -                 | -             | 기준 단가(원)             |
-| standard_minutes | INT          | NOT NULL           | -                 | -             | 표준 작업시간 (10분 단위로 저장) |
-| stock_quantity   | INT          | NOT NULL           | -                 | -             | 현재 수량                |
-| is_discontinued  | BOOLEAN      | NOT NULL           | FALSE             | -             | 단종 여부                |
-| is_active        | BOOLEAN      | NOT NULL           | TRUE              | -             | 사용 여부                |
-| version          | INT          | NOT NULL           | 0                 | -             | 재고 동시성 제어            |
-| created_at       | DATETIME     | NOT NULL           | CURRENT_TIMESTAMP | -             | 생성 시각                |
-| updated_at       | DATETIME     | NOT NULL           | CURRENT_TIMESTAMP | -             | 수정 시각                |
-| created_by       | VARCHAR(255) | NOT NULL           | -                 | -             | 생성자                  |
-| updated_by       | VARCHAR(255) | NOT NULL           | -                 | -             | 수정자                  |
+| 컬럼명              | 데이터 타입       | 제약조건               | 기본값               | 인덱스          | 설명                   |
+|------------------|--------------|--------------------|-------------------|--------------|----------------------|
+| id               | BIGINT       | PK, AUTO_INCREMENT | -                 | PK           | 부품 ID                |
+| part_code        | VARCHAR(255) | NOT NULL, UNIQUE   | -                 | UK_PART_CODE | 부품 코드                |
+| name             | VARCHAR(255) | NOT NULL           | -                 | -            | 부품명                  |
+| unit_price       | INT          | NOT NULL           | -                 | -            | 기준 단가(원)             |
+| standard_minutes | INT          | NOT NULL           | -                 | -            | 표준 작업시간 (10분 단위로 저장) |
+| stock_quantity   | INT          | NOT NULL           | -                 | -            | 현재 수량                |
+| is_discontinued  | BOOLEAN      | NOT NULL           | FALSE             | -            | 단종 여부                |
+| is_active        | BOOLEAN      | NOT NULL           | TRUE              | -            | 사용 여부                |
+| version          | INT          | NOT NULL           | 0                 | -            | 재고 동시성 제어            |
+| created_at       | DATETIME     | NOT NULL           | CURRENT_TIMESTAMP | -            | 생성 시각                |
+| updated_at       | DATETIME     | NOT NULL           | CURRENT_TIMESTAMP | -            | 수정 시각                |
+| created_by       | VARCHAR(255) | NOT NULL           | -                 | -            | 생성자                  |
+| updated_by       | VARCHAR(255) | NOT NULL           | -                 | -            | 수정자                  |
 
 ### 2) PART_COMPATIBILITY
 
