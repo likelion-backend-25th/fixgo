@@ -2,6 +2,7 @@ package net.likelion.bebc25.fixgo.repair.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
 
 @Getter
 @Setter

@@ -1,8 +1,8 @@
 package net.likelion.bebc25.fixgo.repair.repository;
 
-import net.likelion.bebc25.fixgo.repair.entity.Repair;
-import net.likelion.bebc25.fixgo.repair.entity.RepairStatus;
-import net.likelion.bebc25.fixgo.repair.entity.WarrantyResult;
+import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
+import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
+import net.likelion.bebc25.fixgo.repair.entity.repair.WarrantyResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

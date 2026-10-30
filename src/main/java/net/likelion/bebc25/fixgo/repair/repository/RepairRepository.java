@@ -1,7 +1,7 @@
 package net.likelion.bebc25.fixgo.repair.repository;
 
-import net.likelion.bebc25.fixgo.repair.entity.Repair;
-import net.likelion.bebc25.fixgo.repair.entity.RepairStatus;
+import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
+import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

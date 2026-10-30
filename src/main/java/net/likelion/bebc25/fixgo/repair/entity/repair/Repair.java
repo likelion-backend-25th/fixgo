@@ -1,4 +1,4 @@
-package net.likelion.bebc25.fixgo.repair.entity;
+package net.likelion.bebc25.fixgo.repair.entity.repair;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -27,9 +27,11 @@ public class Repair {
 
     private String diagnosis;
 
-    private String work_note;
+    @Column(name = "work_note")
+    private String workNote;
 
-    private String repair_decision;
+    @Column(name = "repair_decision")
+    private String repairDecision;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -37,19 +39,24 @@ public class Repair {
 
     private String reason;
 
-    private int labor_rate;
+    @Column(name = "labor_rate")
+    private int laborRate;
 
-    private int inspection_cost;
+    @Column(name = "inspection_cost")
+    private int inspectionCost;
 
-    private int final_amount;
+    @Column(name = "final_amount")
+    private int finalAmount;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private RepairStatus status;
 
-    private String reason_for_rejection;
+    @Column(name = "reason_for_rejection")
+    private String reasonForRejection;
 
-    private LocalDateTime confirmed_at;
+    @Column(name = "confirmed_at")
+    private LocalDateTime confirmedAt;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
