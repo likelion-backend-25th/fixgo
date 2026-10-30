@@ -45,10 +45,6 @@ public class PaymentRefund {
 
     private String failureMessage;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private PaymentChannel refundChannel;
-
     private LocalDateTime canceledAt;
 
     @Column(nullable = false)
