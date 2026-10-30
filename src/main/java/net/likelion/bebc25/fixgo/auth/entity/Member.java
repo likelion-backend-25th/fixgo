@@ -43,7 +43,7 @@ public class Member extends BaseEntity {
     private Status status = Status.ACTIVE;
 
     @Column
-    private LocalDateTime deleted_at;
+    private LocalDateTime deleted_at = null;
 
 
     public Member(String code, String email, String passwordHash, String name, Role role, String profileImgUrl) {
