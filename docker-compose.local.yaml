@@ -1,0 +1,39 @@
+services:
+  fixgo-app:
+    build: .                          # Dockerfile로 직접 빌드 (문서는 미리 빌드한 이미지 사용)
+    image: fixgo:local
+    container_name: fixgo-app
+    restart: always
+    ports:
+      - "8080:8080"                   # 로컬에서는 Nginx 없이 앱에 직접 접속
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=mysql                 # .env의 DB_HOST보다 우선 → 컨테이너 서비스명으로 접속
+      - SPRING_PROFILES_ACTIVE=local  # Dockerfile의 ENV prod를 덮어씀 → application-prod.yaml 비활성
+      - TZ=Asia/Seoul
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  mysql:
+    image: mysql:9.7
+    container_name: fixgo-db
+    restart: always
+    ports:
+      - "3307:3306"                   # PC에 MySQL이 이미 있으면 3306이 충돌하므로 3307 사용
+    env_file:
+      - .env
+    environment:
+      - TZ=Asia/Seoul
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+volumes:
+  mysql-data:

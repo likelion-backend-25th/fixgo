@@ -1,0 +1,16 @@
+services:
+  nginx:
+    image: nginx:stable-alpine
+    restart: always
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on: [fixgo-app]
+  fixgo-app:
+    image: kimurloc/fixgo:latest
+    restart: always
+    expose: ["8080"]
+    env_file: [.env]
+    environment:
+      - TZ=Asia/Seoul
