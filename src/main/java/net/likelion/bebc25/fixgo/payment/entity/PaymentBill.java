@@ -29,10 +29,14 @@ public class PaymentBill {
     @Column(nullable = false)
     private PaymentBillStatus status = PaymentBillStatus.UNPAID;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PaymentBillType type;
+
     private LocalDateTime paidAt;
 
 
-    public static PaymentBill issue(Long asRequestId, Long amount) {
+    public static PaymentBill issue(Long asRequestId, Long amount, PaymentBillType paymentBillType) {
         if (asRequestId == null) {
             throw new IllegalArgumentException("A/S 접수 ID는 필수입니다.");
         }
@@ -44,6 +48,7 @@ public class PaymentBill {
         PaymentBill paymentBill = new PaymentBill();
         paymentBill.asRequestId = asRequestId;
         paymentBill.amount = amount;
+        paymentBill.type = paymentBillType;
 
         return paymentBill;
     }
