@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 public class EmailClient {
     private final JavaMailSender mailSender;
 
-    @Value("${spring.mail.username")
+    @Value("${spring.mail.username}")
     private String senderEmail;
 
     public void sendEmail(String recipientEmail, String subject, String content) {
