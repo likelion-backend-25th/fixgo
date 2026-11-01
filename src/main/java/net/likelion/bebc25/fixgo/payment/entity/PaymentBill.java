@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 /**
  * A/S 접수 한 건에 대한 청구서
@@ -60,8 +61,8 @@ public class PaymentBill {
         this.status = next;
     }
 
-    public void markPaid() {
+    public void markPaid(OffsetDateTime approvedAt) {
         changeStatus(PaymentBillStatus.PAID);
-        this.paidAt = LocalDateTime.now();
+        this.paidAt = approvedAt.toLocalDateTime();
     }
 }

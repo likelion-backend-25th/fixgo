@@ -5,6 +5,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -29,7 +30,7 @@ public class PaymentBillTest {
         PaymentBill bill = PaymentBill.issue(1L, 30000L, PaymentBillType.REPAIR);
 
         // when
-        bill.markPaid();
+        bill.markPaid(OffsetDateTime.now());
 
         // then
         assertThat(bill.getStatus()).isEqualTo(PaymentBillStatus.PAID);
@@ -40,9 +41,10 @@ public class PaymentBillTest {
     @DisplayName("이미 PAID인 청구서를 다시 결제 완료 처리하면 예외가 난다")
     void markPaid_twice() {
         PaymentBill bill = PaymentBill.issue(1L, 30_000L, PaymentBillType.REPAIR);
-        bill.markPaid();
+        bill.markPaid(OffsetDateTime.now());
 
-        assertThatThrownBy(bill::markPaid).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> bill.markPaid(OffsetDateTime.now()))
+                .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -62,10 +64,11 @@ public class PaymentBillTest {
     @DisplayName("전이에 실패한 markPaid()는 paidAt을 바꾸지 않는다")
     void markPaid_failure_keepsPaidAt() {
         PaymentBill bill = PaymentBill.issue(1L, 30_000L, PaymentBillType.REPAIR);
-        bill.markPaid();
+        bill.markPaid(OffsetDateTime.now());
         LocalDateTime firstPaidAt = bill.getPaidAt();
 
-        assertThatThrownBy(bill::markPaid).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> bill.markPaid(OffsetDateTime.now()))
+                .isInstanceOf(IllegalStateException.class);
 
         assertThat(bill.getPaidAt()).isEqualTo(firstPaidAt);
     }

@@ -6,10 +6,15 @@ import net.likelion.bebc25.fixgo.payment.entity.PaymentAttempt;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentAttemptStatus;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentBill;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentBillStatus;
+import net.likelion.bebc25.fixgo.payment.exception.PaymentErrorCode;
+import net.likelion.bebc25.fixgo.payment.exception.PaymentException;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentAttemptRepository;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentBillRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.OffsetDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -34,12 +39,80 @@ public class PaymentAttemptService {
             throw new IllegalStateException("결제할 수 없습니다.");
         }
 
-        // TODO: WAITING_FOR_DEPOSIT 시도가 있으면 거절한다.
+        List<PaymentAttempt> attempts = paymentAttemptRepository.findAllByPaymentBillId(billId);
+
+        // 승인 진행 중이거나 입금 대기 중인 시도가 있으면 새 결제를 시작하지 않는다.
+        boolean hasInProgress = attempts.stream()
+                .anyMatch(a -> a.getStatus().isInProgress());
+
+        if (hasInProgress) {
+            throw new PaymentException(PaymentErrorCode.PAYMENT_IN_PROGRESS, "진행 중인 결제가 있습니다.");
+        }
+
         // READY 시도가 있으면 재사용, 없으면 새로 만든다.
-        PaymentAttempt attempt = paymentAttemptRepository
-                .findByPaymentBillIdAndStatus(paymentBill.getId(), PaymentAttemptStatus.READY)
+        PaymentAttempt attempt = attempts.stream()
+                .filter(a -> a.getStatus() == PaymentAttemptStatus.READY)
+                .findFirst()
                 .orElseGet(() -> paymentAttemptRepository.save(PaymentAttempt.create(paymentBill)));
 
         return PaymentDto.StartPaymentResponse.from(attempt);
+    }
+
+    /**
+     * 승인 준비: 승인 가능한 상태인지 검증하고 IN_PROGRESS로 바꾼다.
+     */
+    @Transactional
+    public void prepareConfirm(String orderId, Long amount) {
+        PaymentAttempt attempt = paymentAttemptRepository.findByOrderIdForUpdate(orderId).orElseThrow(
+                () -> new PaymentException(PaymentErrorCode.ATTEMPT_NOT_FOUND, "해당 결제 시도가 없습니다.")
+        );
+
+        PaymentBill bill = paymentBillRepository.findByIdForUpdate(attempt.getPaymentBill().getId())
+                .orElseThrow(() -> new IllegalStateException("Payment Bill Not Found"));
+
+        // READY가 아니면 이미 승인 중이거나 끝난 시도다. 상태를 건드리면 안되므로 bill 검사보다 먼저 거른다.
+        if (attempt.getStatus() != PaymentAttemptStatus.READY) {
+            throw new PaymentException(PaymentErrorCode.ATTEMPT_NOT_READY, "해당 결제 시도 상태가 READY가 아닙니다.");
+        }
+
+        // 한 bill에 활성 시도는 하나뿐이다.
+        if (bill.getStatus() != PaymentBillStatus.UNPAID) {
+            throw new PaymentException(PaymentErrorCode.BILL_NOT_PAYABLE, "결제할 수 없는 청구입니다.");
+        }
+
+        // 프론트가 보낸 금액은 신뢰하지 않는다. DB 금액과 다르면 승인하지 않는다.
+        if (!attempt.getAmount().equals(amount)) {
+            throw new PaymentException(PaymentErrorCode.AMOUNT_MISMATCH, "금액이 다릅니다.");
+        }
+
+        attempt.markInProgress();
+    }
+
+    /**
+     * 승인 성공 반영: 토스 승인이 성공한 뒤에만 호출한다.
+     * attempt를 DONE으로, bill을 PAID로 한 트랜잭션에서 바꾼다.
+     * <p>
+     * 잠금을 걸지 않는다. attempt가 IN_PROGRESS인 동안에는
+     * 같은 bill을 바꾸는 다른 경로(startPayment, prepareConfirm, 현금 결제)가 모두 거절되기 때문이다.
+     */
+    @Transactional
+    public PaymentDto.ConfirmPaymentResponse completeConfirm(String orderId, String paymentKey, OffsetDateTime approvedAt) {
+        PaymentAttempt attempt = paymentAttemptRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new IllegalStateException("Payment Attempt Not Found"));
+
+        attempt.markCardDone(paymentKey, approvedAt);
+        PaymentBill bill = attempt.getPaymentBill();
+
+        bill.markPaid(approvedAt);
+
+        return PaymentDto.ConfirmPaymentResponse.from(attempt);
+    }
+
+    @Transactional
+    public void failConfirm(String orderId, String failureCode, String failureMessage) {
+        PaymentAttempt attempt = paymentAttemptRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new IllegalStateException("Payment Attempt Not Found"));
+
+        attempt.markFailed(failureCode, failureMessage);
     }
 }

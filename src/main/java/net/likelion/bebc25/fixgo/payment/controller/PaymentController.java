@@ -3,17 +3,16 @@ package net.likelion.bebc25.fixgo.payment.controller;
 import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
 import net.likelion.bebc25.fixgo.payment.service.PaymentAttemptService;
+import net.likelion.bebc25.fixgo.payment.service.PaymentConfirmService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/payments")
 public class PaymentController {
     private final PaymentAttemptService paymentAttemptService;
+    private final PaymentConfirmService paymentConfirmService;
 
     /**
      * 결제를 시작하고, 프론트가 토스 결제창을 띄우는 데 필요한 값을 반환한다.
@@ -26,10 +25,11 @@ public class PaymentController {
         return ResponseEntity.ok(paymentAttemptService.startPayment(billId));
     }
 
-//    @PostMapping("/bills/{billId}/cofirm")
-//    public ResponseEntity<PaymentDto.ConfirmPaymentResponse> confirmPayment(@PathVariable Long billId,
-//                                                                            @RequestBody PaymentDto.ConfirmPaymentRequest request) {
-//
-//        return ResponseEntity.ok(paymentAttemptService.)
-//    }
+    @PostMapping("/confirm")
+    public ResponseEntity<PaymentDto.ConfirmPaymentResponse> confirmPayment(
+            @RequestBody PaymentDto.ConfirmPaymentRequest request
+    ) {
+        PaymentDto.ConfirmPaymentResponse response = paymentConfirmService.confirmPayment(request.paymentKey(), request.orderId(), request.amount());
+        return ResponseEntity.ok(response);
+    }
 }
