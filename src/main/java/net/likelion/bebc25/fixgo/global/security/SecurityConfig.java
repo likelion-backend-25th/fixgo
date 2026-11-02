@@ -51,6 +51,8 @@ public class SecurityConfig {
                         // TODO: 로컬 결제 테스트용 페이지. 실제 프론트 연결 후 제거
                         .requestMatchers("/payment.html", "/success.html", "/fail.html").permitAll()
 
+                        // 이메일 전송 테스트 (제거예정)
+                        .requestMatchers("/api/v1/notifications/**").permitAll()
 
                         // Swagger UI 및 API 문서
                         .requestMatchers(
