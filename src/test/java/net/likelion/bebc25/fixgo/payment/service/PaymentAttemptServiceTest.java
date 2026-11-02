@@ -51,10 +51,11 @@ public class PaymentAttemptServiceTest {
         @DisplayName("결제를 시작하면 READY 상태의 결제 시도가 만들어진다.")
         void startPayment_createsReadyAttempt() {
             // given: UNPAID bill 저장
-            PaymentBill bill = paymentBillRepository.save(PaymentBill.issue(1L, 30_000L, PaymentBillType.REPAIR));
+            Long asRequestId = 1L;
+            PaymentBill bill = paymentBillRepository.save(PaymentBill.issue(asRequestId, 30_000L, PaymentBillType.REPAIR));
 
             // when
-            paymentAttemptService.startPayment(bill.getId());
+            paymentAttemptService.startPayment(asRequestId);
             em.flush();
             em.clear();
 

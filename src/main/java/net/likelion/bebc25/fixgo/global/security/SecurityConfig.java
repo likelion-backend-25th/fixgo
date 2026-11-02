@@ -19,7 +19,7 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(auth -> auth
                         // 고객 결제는 로그인 없이 링크로 진입한다
-                        .requestMatchers("/api/v1/payments/**").permitAll()
+                        .requestMatchers("/api/v1/portal/**").permitAll()
                         // TODO: 로컬 결제 테스트용 페이지. 실제 프론트 연결 후 제거
                         .requestMatchers("/payment.html", "/success.html", "/fail.html").permitAll()
                         .anyRequest().authenticated()
