@@ -1,0 +1,27 @@
+info:
+  name: 토큰 재발급
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{baseUrl}}/refresh"
+  body:
+    type: json
+    data: |-
+      {
+        "refreshToken":"{{refreshToken}}"
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: refreshToken
+      value: eyJhbGciOiJIUzM4NCJ9.eyJpc3MiOiJmaXhnbyIsInN1YiI6IjEiLCJpYXQiOjE3OTM2MDA0MzAsImV4cCI6MTc5NDIwNTIzMH0.o0GJvbHRuZ8AIgDjMd7-v4WpdiM9sVjjrPB8XkA95VREhxpSB-315IolWmnT_lbY
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

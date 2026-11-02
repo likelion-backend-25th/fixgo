@@ -12,9 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 
 @DataJpaTest
 @Import(JpaConfig.class)
@@ -25,8 +28,7 @@ public class RefreshTokenRepositoryTest {
     private RefreshTokenRepository refreshTokenRepository;
 
     private Long memberId;
-    private LocalDateTime issuedAt;
-    private LocalDateTime expiresAt;
+    private LocalDateTime beforeCreate;
 
     @BeforeEach
     void setup() {
@@ -35,17 +37,10 @@ public class RefreshTokenRepositoryTest {
         em.persist(member); // insert 쿼리문 생성 (실행은 안함)
 
         memberId = member.getId();
-        issuedAt = LocalDateTime.of(2026, 10, 30, 12, 0, 0);
-        expiresAt = LocalDateTime.of(2026, 11, 13, 12, 0, 0);
+        beforeCreate = LocalDateTime.now();
 
         // 리프레시 토큰 등록
-        RefreshToken refreshToken = new RefreshToken(
-                memberId,
-                member,
-                "refresh-token-hash",
-                issuedAt,
-                expiresAt
-        );
+        RefreshToken refreshToken = new RefreshToken(member, "refresh-token-hash");
         em.persist(refreshToken);
 
         em.flush(); // 생성해 둔 쿼리문 실행
@@ -66,43 +61,38 @@ public class RefreshTokenRepositoryTest {
         em.persist(member);
         em.flush();
 
-        LocalDateTime newIssuedAt = LocalDateTime.of(2026, 10, 30, 15, 0, 0);
-        LocalDateTime newExpiresAt = LocalDateTime.of(2026, 11, 13, 15, 0, 0);
+        LocalDateTime newBeforeCreate = LocalDateTime.now();
 
         // @MapsId이므로 id는 null로 두고 member 연관으로 PK를 맞춘다
-        RefreshToken refreshToken = new RefreshToken(
-                null,
-                member,
-                "new-refresh-token-hash",
-                newIssuedAt,
-                newExpiresAt
-        );
+        RefreshToken refreshToken = new RefreshToken(member, "new-refresh-token-hash");
 
         refreshTokenRepository.save(refreshToken);
         em.flush();
         em.clear();
 
-        RefreshToken findToken = refreshTokenRepository.findByMemberId(member.getId()).orElse(null);
+        List<RefreshToken> findTokens = refreshTokenRepository.findByMemberIdAndRevokedAtIsNull(member.getId());
 
-        assertThat(findToken).isNotNull();
+        assertThat(findTokens).hasSize(1);
+        RefreshToken findToken = findTokens.get(0);
         assertThat(findToken.getId()).isEqualTo(member.getId());
         assertThat(findToken.getTokenHash()).isEqualTo("new-refresh-token-hash");
-        assertThat(findToken.getIssuedAt()).isEqualTo(newIssuedAt);
-        assertThat(findToken.getExpiresAt()).isEqualTo(newExpiresAt);
+        assertThat(findToken.getIssuedAt()).isCloseTo(newBeforeCreate, within(Duration.ofSeconds(2)));
+        assertThat(findToken.getExpiresAt()).isEqualTo(findToken.getIssuedAt().plusDays(7));
         assertThat(findToken.getId()).isNotEqualTo(memberId);
     }
 
     @Test
     @DisplayName("회원 ID로 리프레시 토큰 조회")
     void findByMemberId() {
-        RefreshToken findToken = refreshTokenRepository.findByMemberId(memberId).orElse(null);
+        List<RefreshToken> findTokens = refreshTokenRepository.findByMemberIdAndRevokedAtIsNull(memberId);
 
-        assertThat(findToken).isNotNull();
+        assertThat(findTokens).hasSize(1);
+        RefreshToken findToken = findTokens.get(0);
         assertThat(findToken.getId()).isEqualTo(memberId);
         assertThat(findToken.getTokenHash()).isEqualTo("refresh-token-hash");
-        assertThat(findToken.getIssuedAt()).isEqualTo(issuedAt);
-        assertThat(findToken.getExpiresAt()).isEqualTo(expiresAt);
+        assertThat(findToken.getIssuedAt()).isCloseTo(beforeCreate, within(Duration.ofSeconds(2)));
+        assertThat(findToken.getExpiresAt()).isEqualTo(findToken.getIssuedAt().plusDays(7));
         assertThat(findToken.getRevokedAt()).isNull();
-        assertThat(refreshTokenRepository.findByMemberId(999L)).isEmpty();
+        assertThat(refreshTokenRepository.findByMemberIdAndRevokedAtIsNull(999L)).isEmpty();
     }
 }

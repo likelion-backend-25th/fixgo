@@ -9,9 +9,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 
 @DataJpaTest
 @Import(JpaConfig.class)
@@ -20,8 +22,7 @@ public class RefreshTokenTest {
     private EntityManager em;
 
     private Long memberId;
-    private LocalDateTime issuedAt;
-    private LocalDateTime expiresAt;
+    private LocalDateTime beforeCreate;
 
     @BeforeEach
     void setup() {
@@ -30,17 +31,10 @@ public class RefreshTokenTest {
         em.persist(member); // insert 쿼리문 생성 (실행은 안함)
 
         memberId = member.getId();
-        issuedAt = LocalDateTime.of(2026, 10, 30, 12, 0, 0);
-        expiresAt = LocalDateTime.of(2026, 11, 13, 12, 0, 0);
+        beforeCreate = LocalDateTime.now();
 
         // 리프레시 토큰 등록
-        RefreshToken refreshToken = new RefreshToken(
-                memberId,
-                member,
-                "refresh-token-hash",
-                issuedAt,
-                expiresAt
-        );
+        RefreshToken refreshToken = new RefreshToken(member, "refresh-token-hash");
         em.persist(refreshToken);
 
         em.flush(); // 생성해 둔 쿼리문 실행
@@ -55,8 +49,8 @@ public class RefreshTokenTest {
         assertThat(refreshToken).isNotNull();
         assertThat(refreshToken.getId()).isEqualTo(memberId);
         assertThat(refreshToken.getTokenHash()).isEqualTo("refresh-token-hash");
-        assertThat(refreshToken.getIssuedAt()).isEqualTo(issuedAt);
-        assertThat(refreshToken.getExpiresAt()).isEqualTo(expiresAt);
+        assertThat(refreshToken.getIssuedAt()).isCloseTo(beforeCreate, within(Duration.ofSeconds(2)));
+        assertThat(refreshToken.getExpiresAt()).isEqualTo(refreshToken.getIssuedAt().plusDays(7));
         assertThat(refreshToken.getRevokedAt()).isNull();
         assertThat(refreshToken.getMember().getId()).isEqualTo(memberId);
         assertThat(refreshToken.getMember().getCode()).isEqualTo("admin01");
