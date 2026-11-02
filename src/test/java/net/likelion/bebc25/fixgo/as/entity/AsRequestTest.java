@@ -29,6 +29,7 @@ public class AsRequestTest {
     private Customer customer;
     private Product product;
     private Member member;
+    private Member technician;
 
     @BeforeEach
         // 각 테스트 케이스 실행 전에 실행 코드
@@ -37,10 +38,12 @@ public class AsRequestTest {
         this.customer = new Customer("한소희", "010-5555-1212", "user@gamil.com", "12345", "00아파트 12동", "서울 강남구 양재동", "111");
         this.product = new Product(1L, "SN-1004", LocalDateTime.now(), "admin");
         this.member = new Member("4008", "user01@abc.com", "@#$@%", "최미소", Role.ROLE_RECEPTIONIST, "asdfas");
+        this.technician = new Member("4009", "tech01@abc.com", "@#$@%", "김기사", Role.ROLE_TECHNICIAN, "technician01");
 
         em.persist(this.customer);
         em.persist(this.product);
         em.persist(this.member);
+        em.persist(technician);
 
         em.flush();
         em.clear();
@@ -52,13 +55,24 @@ public class AsRequestTest {
 
         AsRequest asRequest = new AsRequest("AS-2026-1030", customer, product, member, "충전불량", "충전이 안 됩니다", "일주일 내로 수리 부탁드립니다.", ReturnMethod.DELIVERY);
 
+        // 저장된 기술자를 접수에 연결
+        asRequest.assignTechnician(technician);
+
         em.persist(asRequest); // insert 쿼리문이 실행되어 접수가 등록됨
+        em.flush();
+
+        Long requestId = asRequest.getId();
+        Long technicianId = technician.getId();
+
+        // DB에서 다시 조회하도록 영속성 컨텍스트 초기화
+        em.clear();
 
         AsRequest findRequest = em.find(AsRequest.class, asRequest.getId());
 
         assertThat(findRequest).isNotNull();
         assertThat(findRequest.getId()).isEqualTo(asRequest.getId());
         assertThat(findRequest.getSymptom()).isEqualTo(asRequest.getSymptom());
+        assertThat(findRequest.getTechnician().getId()).isEqualTo(technicianId);
 
     }
 
