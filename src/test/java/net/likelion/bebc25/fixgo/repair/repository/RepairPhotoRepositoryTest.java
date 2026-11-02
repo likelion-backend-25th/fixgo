@@ -72,9 +72,8 @@ class RepairPhotoRepositoryTest {
         product = productRepository.save(product);
 
         // 테스트용 A/S 접수 생성
-        AsRequest asRequest = new AsRequest("AS-TEST-001", customer, product, technician, "메인보드 이상", "전원이 켜지지 않는 증상", "테스트 접수", ReturnMethod.DELIVERY);
+        AsRequest asRequest = new AsRequest("AS-TEST-001", customer, product, technician, technician, "메인보드 이상", "전원이 켜지지 않는 증상", "테스트 접수", ReturnMethod.DELIVERY);
 
-        asRequest.assignTechnician(technician);
         asRequest = asRequestRepository.save(asRequest);
 
         // 테스트용 수리 데이터 생성
