@@ -20,13 +20,14 @@ class RepairPresetRepositoryTest {
 
     @BeforeEach
     void setUp() {
+
         LocalDateTime now = LocalDateTime.now();
 
-        repairPresetRepository.save(RepairPreset.builder().name("메인보드 교체").description("메인보드 불량으로 인한 교체").createdAt(now).updatedAt(now).createdBy("test").updatedBy("test").build());
+        repairPresetRepository.save(new RepairPreset("메인보드 교체", "메인보드 불량으로 인한 교체", now, now, "test", "test"));
 
-        repairPresetRepository.save(RepairPreset.builder().name("메모리 교체").description("메모리 불량으로 인한 교체").createdAt(now).updatedAt(now).createdBy("test").updatedBy("test").build());
+        repairPresetRepository.save(new RepairPreset("메모리 교체", "메모리 불량으로 인한 교체", now, now, "test", "test"));
 
-        repairPresetRepository.save(RepairPreset.builder().name("메인보드 점검").description("메인보드 상태 점검").createdAt(now).updatedAt(now).createdBy("test").updatedBy("test").build());
+        repairPresetRepository.save(new RepairPreset("메인보드 점검", "메인보드 상태 점검", now, now, "test", "test"));
     }
 
     @Test

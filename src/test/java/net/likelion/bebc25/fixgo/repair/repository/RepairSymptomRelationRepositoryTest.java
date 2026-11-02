@@ -26,39 +26,28 @@ class RepairSymptomRelationRepositoryTest {
 
     @BeforeEach
     void setUp() {
+
         LocalDateTime now = LocalDateTime.now();
 
         // 테스트용 수리 프리셋 생성
-        repairPreset = new RepairPreset();
-        repairPreset.setName("부품 교체");
-        repairPreset.setDescription("부품 교체 작업 프리셋");
-        repairPreset.setCreatedAt(now);
-        repairPreset.setUpdatedAt(now);
-        repairPreset.setCreatedBy("test");
-        repairPreset.setUpdatedBy("test");
+        repairPreset = new RepairPreset("부품 교체", "부품 교체 작업 프리셋", now, now, "tester", "tester");
 
         repairPreset = repairPresetRepository.save(repairPreset);
 
         // 테스트용 증상 관계 데이터 생성
-        RepairSymptomRelation relation1 = new RepairSymptomRelation();
-        relation1.setRepairPreset(repairPreset);
-        relation1.setCreatedAt(now);
-        repairSymptomRelationRepository.save(relation1);
+        RepairSymptomRelation relation1 = new RepairSymptomRelation(repairPreset, now);
 
-        RepairSymptomRelation relation2 = new RepairSymptomRelation();
-        relation2.setRepairPreset(repairPreset);
-        relation2.setCreatedAt(now);
-        repairSymptomRelationRepository.save(relation2);
+        RepairSymptomRelation relation2 = new RepairSymptomRelation(repairPreset, now);
 
-        RepairSymptomRelation relation3 = new RepairSymptomRelation();
-        relation3.setRepairPreset(repairPreset);
-        relation3.setCreatedAt(now);
-        repairSymptomRelationRepository.save(relation3);
+        RepairSymptomRelation relation3 = new RepairSymptomRelation(repairPreset, now);
+
+        repairSymptomRelationRepository.saveAll(List.of(relation1, relation2, relation3));
     }
 
     @Test
     @DisplayName("수리 프리셋별 증상 관계 목록 조회")
     void findByRepairPresetId() {
+
         // when
         List<RepairSymptomRelation> result = repairSymptomRelationRepository.findByRepairPresetId(repairPreset.getId());
 
