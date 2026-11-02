@@ -53,10 +53,7 @@ public class AsRequestTest {
     @DisplayName("접수 등록")
     void registration() {
 
-        AsRequest asRequest = new AsRequest("AS-2026-1030", customer, product, member, "충전불량", "충전이 안 됩니다", "일주일 내로 수리 부탁드립니다.", ReturnMethod.DELIVERY);
-
-        // 저장된 기술자를 접수에 연결
-        asRequest.assignTechnician(technician);
+        AsRequest asRequest = new AsRequest("AS-2026-1030", customer, product, member, technician, "충전불량", "충전이 안 됩니다", "일주일 내로 수리 부탁드립니다.", ReturnMethod.DELIVERY);
 
         em.persist(asRequest); // insert 쿼리문이 실행되어 접수가 등록됨
         em.flush();
