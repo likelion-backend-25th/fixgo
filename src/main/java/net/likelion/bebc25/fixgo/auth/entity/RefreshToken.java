@@ -15,8 +15,7 @@ public class RefreshToken {
     @GeneratedValue(strategy = GenerationType.IDENTITY) // MySQL에서의 Auto Increment와 같은 효과
     private Long id;
 
-    @MapsId
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
 
@@ -24,19 +23,20 @@ public class RefreshToken {
     private String tokenHash;
 
     @Column(nullable = false)
-    private LocalDateTime issuedAt;
+    private LocalDateTime issuedAt = LocalDateTime.now();
 
     @Column(nullable = false)
-    private LocalDateTime expiresAt;
+    private LocalDateTime expiresAt = this.issuedAt.plusDays(7);
 
     @Column
     private LocalDateTime revokedAt;
 
-    public RefreshToken(Long id, Member member, String tokenHash, LocalDateTime issuedAt, LocalDateTime expiresAt) {
-        this.id = id;
+    public RefreshToken(Member member, String tokenHash) {
         this.member = member;
         this.tokenHash = tokenHash;
-        this.issuedAt = issuedAt;
-        this.expiresAt = expiresAt;
+    }
+
+    public void revokeToken() {
+        this.revokedAt = LocalDateTime.now();
     }
 }

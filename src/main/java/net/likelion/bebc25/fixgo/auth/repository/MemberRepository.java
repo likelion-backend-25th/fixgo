@@ -36,10 +36,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
             @Param("role") Role role
     );
 
-
     Optional<Member> findByEmail(String email);
 
     Optional<Member> findByEmailAndStatusNot(String email, Status status);
-
-
 }
