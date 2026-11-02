@@ -1,16 +1,15 @@
 package net.likelion.bebc25.fixgo.repair.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Getter
-@Setter
 @Entity
-@NoArgsConstructor
-@Builder
-@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RepairSymptomRelation {
 
     @Id
@@ -23,4 +22,9 @@ public class RepairSymptomRelation {
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    public RepairSymptomRelation(RepairPreset repairPreset, LocalDateTime createdAt) {
+        this.repairPreset = repairPreset;
+        this.createdAt = createdAt;
+    }
 }

@@ -1,12 +1,14 @@
 package net.likelion.bebc25.fixgo.repair.dto.repair;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class RepairResponseDto {
 
     // 수리 ID

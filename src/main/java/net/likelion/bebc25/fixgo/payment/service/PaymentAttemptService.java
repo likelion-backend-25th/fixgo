@@ -24,15 +24,13 @@ public class PaymentAttemptService {
 
     /**
      * 결제를 시작한다. READY인 결제 시도가 이미 있으면 재사용한다.
-     *
-     * @param billId 결제할 청구서 ID
-     * @return
      */
     @Transactional
-    public PaymentDto.StartPaymentResponse startPayment(Long billId) {
+    public PaymentDto.StartPaymentResponse startPayment(Long asRequestId) {
         // 같은 청구에 대한 동시 요청을 방지한다. 잠금이 없으면 READY 없음을 확인한 후 시도한다.
-        PaymentBill paymentBill = paymentBillRepository.findByIdForUpdate(billId)
-                .orElseThrow(() -> new IllegalArgumentException("Payment Bill Not Found"));
+        PaymentBill paymentBill = paymentBillRepository.findByAsRequestIdForUpdate(asRequestId)
+                .orElseThrow(() -> new PaymentException(PaymentErrorCode.BILL_NOT_FOUND, "청구서가 존재하지 않습니다."));
+        Long billId = paymentBill.getId();
 
         // UNPAID만 허용한다. PAID뿐 아니라 환불된 청구에서도 결제가 시작되면 안 된다.
         if (paymentBill.getStatus() != PaymentBillStatus.UNPAID) {

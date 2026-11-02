@@ -1,11 +1,13 @@
 package net.likelion.bebc25.fixgo.repair.repository;
 
+import net.likelion.bebc25.fixgo.config.JpaConfig;
 import net.likelion.bebc25.fixgo.repair.entity.RepairPreset;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.context.annotation.Import;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -13,6 +15,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
+@Import(JpaConfig.class)
 class RepairPresetRepositoryTest {
 
     @Autowired
@@ -20,13 +23,14 @@ class RepairPresetRepositoryTest {
 
     @BeforeEach
     void setUp() {
+
         LocalDateTime now = LocalDateTime.now();
 
-        repairPresetRepository.save(RepairPreset.builder().name("메인보드 교체").description("메인보드 불량으로 인한 교체").createdAt(now).updatedAt(now).createdBy("test").updatedBy("test").build());
+        repairPresetRepository.save(new RepairPreset("메인보드 교체", "메인보드 불량으로 인한 교체", now, now, "test", "test"));
 
-        repairPresetRepository.save(RepairPreset.builder().name("메모리 교체").description("메모리 불량으로 인한 교체").createdAt(now).updatedAt(now).createdBy("test").updatedBy("test").build());
+        repairPresetRepository.save(new RepairPreset("메모리 교체", "메모리 불량으로 인한 교체", now, now, "test", "test"));
 
-        repairPresetRepository.save(RepairPreset.builder().name("메인보드 점검").description("메인보드 상태 점검").createdAt(now).updatedAt(now).createdBy("test").updatedBy("test").build());
+        repairPresetRepository.save(new RepairPreset("메인보드 점검", "메인보드 상태 점검", now, now, "test", "test"));
     }
 
     @Test

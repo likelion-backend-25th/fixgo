@@ -1,41 +1,42 @@
 package net.likelion.bebc25.fixgo.auth.entity;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+@Entity
 @Getter
-@MappedSuperclass
-@EntityListeners(AuditingEntityListener.class)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RefreshToken {
     @Id // Primary Key로 지정
     @GeneratedValue(strategy = GenerationType.IDENTITY) // MySQL에서의 Auto Increment와 같은 효과
     private Long id;
 
-    @MapsId
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
 
     @Column(nullable = false, unique = true)
-    private String token_hash;
+    private String tokenHash;
 
     @Column(nullable = false)
-    private LocalDateTime issued_at;
+    private LocalDateTime issuedAt = LocalDateTime.now();
 
     @Column(nullable = false)
-    private LocalDateTime expires_at;
+    private LocalDateTime expiresAt = this.issuedAt.plusDays(7);
 
     @Column
-    private LocalDateTime revoked_at;
+    private LocalDateTime revokedAt;
 
-    public RefreshToken(Long id, Member member, String token_hash, LocalDateTime issued_at, LocalDateTime expires_at) {
-        this.id = id;
+    public RefreshToken(Member member, String tokenHash) {
         this.member = member;
-        this.token_hash = token_hash;
-        this.issued_at = issued_at;
-        this.expires_at = expires_at;
+        this.tokenHash = tokenHash;
+    }
+
+    public void revokeToken() {
+        this.revokedAt = LocalDateTime.now();
     }
 }

@@ -1,17 +1,16 @@
 package net.likelion.bebc25.fixgo.repair.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
 
 import java.time.LocalDateTime;
 
 @Getter
-@Setter
 @Entity
-@NoArgsConstructor
-@Builder
-@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RepairWork {
 
     @Id
@@ -22,10 +21,10 @@ public class RepairWork {
     @JoinColumn(name = "repair_id", nullable = false)
     private Repair repair;
 
-    @Column(nullable = false)
-    private String repair_preset_name;
+    @Column(name = "repair_preset_name", nullable = false)
+    private String repairPresetName;
 
-    @Column(nullable = false, name = "work_name")
+    @Column(name = "work_name", nullable = false)
     private String workName;
 
     @Column(name = "created_at", nullable = false)
@@ -39,4 +38,26 @@ public class RepairWork {
 
     @Column(name = "updated_by", nullable = false)
     private String updatedBy;
+
+    public RepairWork(Repair repair, String repairPresetName, String workName, LocalDateTime createdAt, LocalDateTime updatedAt, String createdBy, String updatedBy) {
+        this.repair = repair;
+        this.repairPresetName = repairPresetName;
+        this.workName = workName;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.createdBy = createdBy;
+        this.updatedBy = updatedBy;
+    }
+
+    // 작업 내역 수정
+    public void updateRepairWork(String repairPresetName, String workName) {
+        this.repairPresetName = repairPresetName;
+        this.workName = workName;
+    }
+
+    // 수정자 및 수정 일시 갱신
+    public void updateAuditInfo(String updatedBy) {
+        this.updatedAt = LocalDateTime.now();
+        this.updatedBy = updatedBy;
+    }
 }

@@ -1,20 +1,32 @@
 package net.likelion.bebc25.fixgo.payment.exception;
 
-public enum PaymentErrorCode {
-    ATTEMPT_NOT_FOUND(false),
-    ATTEMPT_NOT_READY(false),
-    BILL_NOT_PAYABLE(true),
-    AMOUNT_MISMATCH(true),
-    PAYMENT_IN_PROGRESS(false);
+import net.likelion.bebc25.fixgo.global.exception.ErrorCode;
+import org.springframework.http.HttpStatus;
+
+public enum PaymentErrorCode implements ErrorCode {
+    ATTEMPT_NOT_FOUND(false, HttpStatus.NOT_FOUND),
+    ATTEMPT_NOT_READY(false, HttpStatus.CONFLICT),
+    BILL_NOT_PAYABLE(true, HttpStatus.CONFLICT),
+    AMOUNT_MISMATCH(true, HttpStatus.BAD_REQUEST),
+    PAYMENT_IN_PROGRESS(false, HttpStatus.CONFLICT),
+    BILL_NOT_FOUND(false, HttpStatus.NOT_FOUND);
 
     // 이 실패가 발생하면 attempt를 FAILED로 기록해야 하는가
     private final boolean recordAsFailure;
+    // 이 실패를 응답할 때의 HTTP 상태
+    private final HttpStatus httpStatus;
 
-    PaymentErrorCode(boolean recordAsFailure) {
+    PaymentErrorCode(boolean recordAsFailure, HttpStatus httpStatus) {
         this.recordAsFailure = recordAsFailure;
+        this.httpStatus = httpStatus;
     }
 
     public boolean shouldRecordAsFailure() {
         return recordAsFailure;
+    }
+
+    @Override
+    public HttpStatus getStatus() {
+        return httpStatus;
     }
 }
