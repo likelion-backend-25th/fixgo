@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.common.entity.BaseEntity;
+import net.likelion.bebc25.fixgo.customer.entity.Customer;
+import net.likelion.bebc25.fixgo.product.entity.Product;
 import net.likelion.bebc25.fixgo.shipment.entity.ReturnMethod;
 
 import java.time.LocalDateTime;
@@ -23,22 +25,20 @@ public class AsRequest extends BaseEntity {
     @Column(unique = true, nullable = false)
     private String requestNumber;
 
-    //    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-//    @JoinColumn(name = "customer_id", nullable = false)
-    @Column
-    private Long customerId;
-
-    //    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-//    @JoinColumn(name = "product_id", nullable = false)
-    @Column
-    private Long productId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(nullable = false)
+    private Customer customer;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "receptionist_id", nullable = false)
+    @JoinColumn(nullable = false)
+    private Product product;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(nullable = false)
     private Member receptionist;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "technician_id")
+    @JoinColumn(nullable = false)
     private Member technician;
 
     @Column(nullable = false)
@@ -64,11 +64,12 @@ public class AsRequest extends BaseEntity {
     @Column
     private LocalDateTime closedAt;
 
-    public AsRequest(String requestNumber, Long customerId, Long productId, Member receptionist, String symptom, String symptomDetail, String requestMemo, ReturnMethod returnMethod) {
+    public AsRequest(String requestNumber, Customer customer, Product product, Member receptionist, Member technician, String symptom, String symptomDetail, String requestMemo, ReturnMethod returnMethod) {
         this.requestNumber = requestNumber;
-        this.customerId = customerId;
-        this.productId = productId;
+        this.customer = customer;
+        this.product = product;
         this.receptionist = receptionist;
+        this.technician = technician;
         this.symptom = symptom;
         this.symptomDetail = symptomDetail;
         this.requestMemo = requestMemo;
@@ -85,7 +86,4 @@ public class AsRequest extends BaseEntity {
         }
     }
 
-    public void assignTechnician(Member technician) {
-        this.technician = technician;
-    }
 }

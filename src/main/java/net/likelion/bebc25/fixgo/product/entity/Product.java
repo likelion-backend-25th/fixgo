@@ -41,7 +41,8 @@ public class Product {
     @Column(nullable = false)
     private String updatedBy;
 
-    public Product(String serialNumber, LocalDateTime manufacturedAt, String createdBy) {
+    public Product(Long productModelId, String serialNumber, LocalDateTime manufacturedAt, String createdBy) {
+        this.productModelId = productModelId;
         this.serialNumber = serialNumber;
         this.manufacturedAt = manufacturedAt;
         this.createdAt = LocalDateTime.now();

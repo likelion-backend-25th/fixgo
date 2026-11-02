@@ -106,8 +106,10 @@ public class Repair {
     }
 
     // 상태 변경
-    public void changeStatus(RepairStatus status) {
+    public void changeStatus(RepairStatus status, String updatedBy) {
         this.status = status;
+        this.updatedAt = LocalDateTime.now();
+        this.updatedBy = updatedBy;
     }
 
     // 수정 감사 정보 갱신

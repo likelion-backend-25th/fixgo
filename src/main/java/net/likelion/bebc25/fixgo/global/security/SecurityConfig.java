@@ -18,7 +18,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 /**
  * 보안 설정.
- * 현재는 결제 경로만 비로그인 접근을 허용하고, 나머지는 Spring Boot 기본 동작(로그인 필요)을 유지한다.
+ * 고객 포털과 결제 승인만 비로그인으로 열고, 직원 화면은 로그인 필요를 유지한다.
  * TODO: 직원 로그인 구현 시 담당자가 인증 방식에 맞게 확장
  */
 @Configuration
