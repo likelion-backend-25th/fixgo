@@ -1,13 +1,16 @@
 package net.likelion.bebc25.fixgo.payment.exception;
 
 import lombok.Getter;
+import net.likelion.bebc25.fixgo.global.exception.BusinessException;
 
 @Getter
-public class PaymentException extends RuntimeException {
-    private final PaymentErrorCode errorCode;
-
+public class PaymentException extends BusinessException {
     public PaymentException(PaymentErrorCode errorCode, String message) {
-        super(message);
-        this.errorCode = errorCode;
+        super(errorCode, message);
+    }
+
+    @Override
+    public PaymentErrorCode getErrorCode() {
+        return (PaymentErrorCode) super.getErrorCode();
     }
 }
