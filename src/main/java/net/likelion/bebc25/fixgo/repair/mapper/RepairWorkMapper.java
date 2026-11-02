@@ -1,8 +1,8 @@
 package net.likelion.bebc25.fixgo.repair.mapper;
 
-import net.likelion.bebc25.fixgo.repair.dto.repairWork.RepairWorkRequestDto;
-import net.likelion.bebc25.fixgo.repair.dto.repairWork.RepairWorkResponseDto;
-import net.likelion.bebc25.fixgo.repair.dto.repairWork.RepairWorkUpdateDto;
+import net.likelion.bebc25.fixgo.repair.dto.repairWork.RepairWorkRequest;
+import net.likelion.bebc25.fixgo.repair.dto.repairWork.RepairWorkResponse;
+import net.likelion.bebc25.fixgo.repair.dto.repairWork.RepairWorkUpdate;
 import net.likelion.bebc25.fixgo.repair.entity.RepairWork;
 import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
 import org.springframework.stereotype.Component;
@@ -13,15 +13,15 @@ import java.time.LocalDateTime;
 public class RepairWorkMapper {
 
     // 등록 DTO → Entity
-    public RepairWork toEntity(RepairWorkRequestDto dto, Repair repair) {
+    public RepairWork toEntity(RepairWorkRequest dto, Repair repair) {
         LocalDateTime now = LocalDateTime.now();
 
         return new RepairWork(repair, dto.getRepairPresetName(), dto.getWorkName(), now, now, "test", "test");
     }
 
     // Entity → Response DTO
-    public RepairWorkResponseDto toResponseDto(RepairWork repairWork) {
-        RepairWorkResponseDto dto = new RepairWorkResponseDto();
+    public RepairWorkResponse toResponseDto(RepairWork repairWork) {
+        RepairWorkResponse dto = new RepairWorkResponse();
 
         dto.setId(repairWork.getId());
         dto.setRepairId(repairWork.getRepair().getId());
@@ -36,7 +36,7 @@ public class RepairWorkMapper {
     }
 
     // 수정 DTO → Entity 반영
-    public void updateEntity(RepairWork repairWork, RepairWorkUpdateDto dto) {
+    public void updateEntity(RepairWork repairWork, RepairWorkUpdate dto) {
         repairWork.updateRepairWork(dto.getRepairPresetName(), dto.getWorkName());
     }
 }

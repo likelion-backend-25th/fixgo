@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import net.likelion.bebc25.fixgo.as.entity.AsRequest;
+import net.likelion.bebc25.fixgo.auth.entity.Member;
 
 import java.time.LocalDateTime;
 
@@ -16,11 +18,15 @@ public class Repair {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "as_request_id")
-    private Long asRequestId;
+    // A/S 접수 정보 (1:1)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "as_request_id", nullable = false, unique = true)
+    private AsRequest asRequest;
 
-    @Column(name = "technician_id")
-    private Long technicianId;
+    // 담당 기사 정보 (N:1)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "technician_id", nullable = false)
+    private Member technician;
 
     private String diagnosis;
 
@@ -67,21 +73,16 @@ public class Repair {
     @Column(name = "updated_by", nullable = false)
     private String updatedBy;
 
-    // 기본 수리 생성자
-    public Repair(WarrantyResult warrantyResult, RepairStatus status) {
-        this(null, null, warrantyResult, status, LocalDateTime.now(), LocalDateTime.now(), "test", "test");
-    }
 
-    // 접수 및 담당 기사 정보 포함 생성자
-    public Repair(Long asRequestId, Long technicianId, WarrantyResult warrantyResult, RepairStatus status) {
-        this(asRequestId, technicianId, warrantyResult, status, LocalDateTime.now(), LocalDateTime.now(), "test", "test");
+    // 기본 생성자: 접수 정보 및 담당 기사 정보 포함
+    public Repair(AsRequest asRequest, Member technician, WarrantyResult warrantyResult, RepairStatus status) {
+        this(asRequest, technician, warrantyResult, status, LocalDateTime.now(), LocalDateTime.now(), "test", "test");
     }
 
     // 감사 정보 포함 생성자
-    public Repair(Long asRequestId, Long technicianId, WarrantyResult warrantyResult, RepairStatus status, LocalDateTime createdAt, LocalDateTime updatedAt, String createdBy, String updatedBy) {
-
-        this.asRequestId = asRequestId;
-        this.technicianId = technicianId;
+    public Repair(AsRequest asRequest, Member technician, WarrantyResult warrantyResult, RepairStatus status, LocalDateTime createdAt, LocalDateTime updatedAt, String createdBy, String updatedBy) {
+        this.asRequest = asRequest;
+        this.technician = technician;
         this.warrantyResult = warrantyResult;
         this.status = status;
         this.createdAt = createdAt;
@@ -90,10 +91,11 @@ public class Repair {
         this.updatedBy = updatedBy;
     }
 
+
     // 수리 정보 수정
-    public void updateRepairInfo(Long asRequestId, Long technicianId, String diagnosis, String workNote, String repairDecision, WarrantyResult warrantyResult, String reason, int laborRate, int inspectionCost, int finalAmount, String reasonForRejection) {
-        this.asRequestId = asRequestId;
-        this.technicianId = technicianId;
+    public void updateRepairInfo(AsRequest asRequest, Member technician, String diagnosis, String workNote, String repairDecision, WarrantyResult warrantyResult, String reason, int laborRate, int inspectionCost, int finalAmount, String reasonForRejection) {
+        this.asRequest = asRequest;
+        this.technician = technician;
         this.diagnosis = diagnosis;
         this.workNote = workNote;
         this.repairDecision = repairDecision;
@@ -105,12 +107,14 @@ public class Repair {
         this.reasonForRejection = reasonForRejection;
     }
 
+
     // 상태 변경
     public void changeStatus(RepairStatus status, String updatedBy) {
         this.status = status;
         this.updatedAt = LocalDateTime.now();
         this.updatedBy = updatedBy;
     }
+
 
     // 수정 감사 정보 갱신
     public void updateAuditInfo(String updatedBy) {

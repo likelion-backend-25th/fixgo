@@ -1,7 +1,8 @@
 package net.likelion.bebc25.fixgo.repair.controller;
 
-import net.likelion.bebc25.fixgo.repair.dto.repair.RepairRequestDto;
-import net.likelion.bebc25.fixgo.repair.dto.repair.RepairResponseDto;
+import net.likelion.bebc25.fixgo.repair.dto.repair.RepairRequest;
+import net.likelion.bebc25.fixgo.repair.dto.repair.RepairResponse;
+import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
 import net.likelion.bebc25.fixgo.repair.service.RepairService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +37,7 @@ class RepairControllerTest {
     @WithMockUser
     void createRepairTest() throws Exception {
 
-        when(repairService.createRepair(any(RepairRequestDto.class))).thenReturn(Map.of("message", "수리 정보가 등록되었습니다."));
+        when(repairService.createRepair(any(RepairRequest.class))).thenReturn(Map.of("message", "수리 정보가 등록되었습니다."));
 
         mockMvc.perform(post("/api/repairs").with(csrf()).contentType(MediaType.APPLICATION_JSON).content("""
                                                                                                                   {
@@ -48,7 +49,7 @@ class RepairControllerTest {
                                                                                                                   }
                                                                                                                   """)).andExpect(status().isCreated()).andExpect(jsonPath("$.message").value("수리 정보가 등록되었습니다."));
 
-        verify(repairService, times(1)).createRepair(any(RepairRequestDto.class));
+        verify(repairService, times(1)).createRepair(any(RepairRequest.class));
     }
 
     // 전체 수리 목록 조회 테스트
@@ -56,7 +57,7 @@ class RepairControllerTest {
     @WithMockUser
     void getAllRepairsTest() throws Exception {
 
-        when(repairService.getAllRepairs()).thenReturn(List.of(new RepairResponseDto()));
+        when(repairService.getAllRepairs()).thenReturn(List.of(new RepairResponse()));
 
         mockMvc.perform(get("/api/repairs")).andExpect(status().isOk()).andExpect(jsonPath("$").isArray());
 
@@ -68,7 +69,7 @@ class RepairControllerTest {
     @WithMockUser
     void getRepairTest() throws Exception {
 
-        when(repairService.getRepair(1L)).thenReturn(new RepairResponseDto());
+        when(repairService.getRepair(1L)).thenReturn(new RepairResponse());
 
         mockMvc.perform(get("/api/repairs/1")).andExpect(status().isOk());
 
@@ -80,10 +81,10 @@ class RepairControllerTest {
     @WithMockUser
     void updateRepairTest() throws Exception {
 
-        RepairResponseDto response = new RepairResponseDto();
+        RepairResponse response = new RepairResponse();
         response.setDiagnosis("CPU 점검");
 
-        when(repairService.updateRepair(eq(1L), any(RepairRequestDto.class))).thenReturn(response);
+        when(repairService.updateRepair(eq(1L), any(RepairRequest.class))).thenReturn(response);
 
         mockMvc.perform(put("/api/repairs/1").with(csrf()).contentType(MediaType.APPLICATION_JSON).content("""
                                                                                                                    {
@@ -93,7 +94,23 @@ class RepairControllerTest {
                                                                                                                    }
                                                                                                                    """)).andExpect(status().isOk()).andExpect(jsonPath("$.diagnosis").value("CPU 점검"));
 
-        verify(repairService, times(1)).updateRepair(eq(1L), any(RepairRequestDto.class));
+        verify(repairService, times(1)).updateRepair(eq(1L), any(RepairRequest.class));
+    }
+
+    // 수리 상태 변경 테스트
+    @Test
+    @WithMockUser
+    void changeRepairStatusTest() throws Exception {
+
+        doNothing().when(repairService).changeRepairStatus(1L, RepairStatus.REQUESTED);
+
+        mockMvc.perform(patch("/api/repairs/1/status").with(csrf()).contentType(MediaType.APPLICATION_JSON).content("""
+                                                                                                                            {
+                                                                                                                                "status": "REQUESTED"
+                                                                                                                            }
+                                                                                                                            """)).andExpect(status().isOk()).andExpect(jsonPath("$.message").value("수리 상태가 변경되었습니다."));
+
+        verify(repairService, times(1)).changeRepairStatus(1L, RepairStatus.REQUESTED);
     }
 
     // 수리 삭제 테스트
