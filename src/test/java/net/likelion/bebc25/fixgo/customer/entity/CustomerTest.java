@@ -31,7 +31,7 @@ class CustomerTest {
     @DisplayName("not null 조건 체크")
     void create_withoutAddress() {
         Customer customer = new Customer(
-                "홍길동", "010-1234-5678", "hong@test.com",
+                "홍길동", "010-1234-5678", "hong@gmail.com",
                 null, null, null, "admin");
 
         assertThat(customer.getZipcode()).isNull();
