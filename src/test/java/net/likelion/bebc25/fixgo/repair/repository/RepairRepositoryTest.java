@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,25 +21,14 @@ class RepairRepositoryTest {
 
     // 공통 테스트 데이터 생성
     private Repair createRepair(Long asRequestId, Long technicianId) {
-        LocalDateTime now = LocalDateTime.now();
 
-        Repair repair = new Repair();
-
-        repair.setAsRequestId(asRequestId);
-        repair.setTechnicianId(technicianId);
-        repair.setWarrantyResult(WarrantyResult.FREE);
-        repair.setStatus(RepairStatus.REQUESTED);
-        repair.setCreatedAt(now);
-        repair.setUpdatedAt(now);
-        repair.setCreatedBy("test");
-        repair.setUpdatedBy("test");
-
-        return repair;
+        return new Repair(asRequestId, technicianId, WarrantyResult.FREE, RepairStatus.REQUESTED);
     }
 
     @Test
     @DisplayName("A/S 접수 ID로 수리 정보 조회")
     void findByAsRequestIdTest() {
+
         // given
         Repair repair = createRepair(1L, 100L);
         repairRepository.save(repair);
@@ -56,6 +44,7 @@ class RepairRepositoryTest {
     @Test
     @DisplayName("담당 기사별 수리 목록 조회")
     void findByTechnicianIdTest() {
+
         // given
         Repair repair = createRepair(1L, 100L);
         repairRepository.save(repair);
@@ -71,6 +60,7 @@ class RepairRepositoryTest {
     @Test
     @DisplayName("수리 상태별 목록 조회")
     void findByStatusTest() {
+
         // given
         Repair repair = createRepair(1L, 100L);
         repairRepository.save(repair);
@@ -86,6 +76,7 @@ class RepairRepositoryTest {
     @Test
     @DisplayName("담당 기사 및 수리 상태별 목록 조회")
     void findByTechnicianIdAndStatusTest() {
+
         // given
         Repair repair = createRepair(1L, 100L);
         repairRepository.save(repair);
