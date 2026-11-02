@@ -1,13 +1,14 @@
 package net.likelion.bebc25.fixgo.portal.exception;
 
-import lombok.Getter;
+import net.likelion.bebc25.fixgo.global.exception.BusinessException;
 
-@Getter
-public class PortalException extends RuntimeException {
-    private final PortalErrorCode errorCode;
-
+public class PortalException extends BusinessException {
     public PortalException(PortalErrorCode errorCode, String message) {
-        super(message);
-        this.errorCode = errorCode;
+        super(errorCode, message);
+    }
+
+    @Override
+    public PortalErrorCode getErrorCode() {
+        return (PortalErrorCode) super.getErrorCode();
     }
 }
