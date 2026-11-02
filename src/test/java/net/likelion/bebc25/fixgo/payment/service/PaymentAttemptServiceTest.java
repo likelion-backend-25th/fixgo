@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DataJpaTest
 @Import(PaymentAttemptService.class)
 public class PaymentAttemptServiceTest {
-
+    private static final Long AS_REQUEST_ID = 1L;
     @Autowired
     PaymentAttemptService paymentAttemptService;
     @Autowired
@@ -35,13 +35,13 @@ public class PaymentAttemptServiceTest {
     @Autowired
     EntityManager em;
 
-    private PaymentAttempt startAndFindAttempt(PaymentBill bill) {
-        PaymentDto.StartPaymentResponse startPaymentResponse = paymentAttemptService.startPayment(bill.getId());
+    private PaymentAttempt startAndFindAttempt(Long asRequestId) {
+        PaymentDto.StartPaymentResponse startPaymentResponse = paymentAttemptService.startPayment(asRequestId);
         return paymentAttemptRepository.findByOrderId(startPaymentResponse.orderId()).orElseThrow();
     }
 
     private PaymentBill issueBill() {
-        return paymentBillRepository.save(PaymentBill.issue(1L, 30_000L, PaymentBillType.REPAIR));
+        return paymentBillRepository.save(PaymentBill.issue(AS_REQUEST_ID, 30_000L, PaymentBillType.REPAIR));
     }
 
     @Nested
@@ -51,11 +51,10 @@ public class PaymentAttemptServiceTest {
         @DisplayName("결제를 시작하면 READY 상태의 결제 시도가 만들어진다.")
         void startPayment_createsReadyAttempt() {
             // given: UNPAID bill 저장
-            Long asRequestId = 1L;
-            PaymentBill bill = paymentBillRepository.save(PaymentBill.issue(asRequestId, 30_000L, PaymentBillType.REPAIR));
+            PaymentBill bill = paymentBillRepository.save(PaymentBill.issue(AS_REQUEST_ID, 30_000L, PaymentBillType.REPAIR));
 
             // when
-            paymentAttemptService.startPayment(asRequestId);
+            paymentAttemptService.startPayment(AS_REQUEST_ID);
             em.flush();
             em.clear();
 
@@ -73,10 +72,10 @@ public class PaymentAttemptServiceTest {
             PaymentBill bill = paymentBillRepository.save(PaymentBill.issue(1L, 30_000L, PaymentBillType.REPAIR));
 
             // when: startPayment를 같은 billId로 두 번 호출
-            PaymentAttempt attempt1 = startAndFindAttempt(bill);
+            PaymentAttempt attempt1 = startAndFindAttempt(AS_REQUEST_ID);
             em.flush();
             em.clear();
-            PaymentAttempt attempt2 = startAndFindAttempt(bill);
+            PaymentAttempt attempt2 = startAndFindAttempt(AS_REQUEST_ID);
 
             // then: attempt는 여전히 1개이고, 두 호출이 같은 orderId를 가리킨다
             assertThat(paymentAttemptRepository.findAllByPaymentBillId(bill.getId()).size()).isEqualTo(1);
@@ -89,13 +88,13 @@ public class PaymentAttemptServiceTest {
         void startPayment_afterFailed() {
             // given: bill + FAILED 상태의 attempt
             PaymentBill bill = paymentBillRepository.save(PaymentBill.issue(1L, 30_000L, PaymentBillType.REPAIR));
-            PaymentAttempt attempt1 = startAndFindAttempt(bill);
+            PaymentAttempt attempt1 = startAndFindAttempt(AS_REQUEST_ID);
             attempt1.markFailed("PAY_PROCESS_CANCELED", "사용자가 결제를 취소했습니다.");
             em.flush();
             em.clear();
 
             // when: startPayment
-            PaymentAttempt attempt2 = startAndFindAttempt(bill);
+            PaymentAttempt attempt2 = startAndFindAttempt(AS_REQUEST_ID);
 
             // then: 새 attempt가 READY로 만들어지고, 기존 FAILED attempt는 그대로 남아 있다
             //       (실패 이력을 지우지 않는다는 점도 확인한다)
@@ -113,8 +112,10 @@ public class PaymentAttemptServiceTest {
             Long billId = 999L;
 
             // when & then: startPayment 호출 시 예외 (어떤 예외 타입을 던질지 정한다)
-            assertThatThrownBy(() -> paymentAttemptService.startPayment(billId))
-                    .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> paymentAttemptService.startPayment(AS_REQUEST_ID))
+                    .isInstanceOf(PaymentException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(PaymentErrorCode.BILL_NOT_FOUND);
         }
 
         @Test
@@ -127,7 +128,7 @@ public class PaymentAttemptServiceTest {
             em.clear();
 
             // when & then: startPayment 호출 시 예외
-            assertThatThrownBy(() -> paymentAttemptService.startPayment(bill.getId()))
+            assertThatThrownBy(() -> paymentAttemptService.startPayment(AS_REQUEST_ID))
                     .isInstanceOf(IllegalStateException.class);
 
             // 실패한 호출이 attempt를 남기지 않았는지도 확인한다
@@ -140,13 +141,13 @@ public class PaymentAttemptServiceTest {
         void startPayment_alreadyInProgress() {
             // given: bill + IN_PROGRESS 상태의 attempt
             PaymentBill bill = paymentBillRepository.save(PaymentBill.issue(1L, 30_000L, PaymentBillType.REPAIR));
-            PaymentAttempt attempt = startAndFindAttempt(bill);
+            PaymentAttempt attempt = startAndFindAttempt(AS_REQUEST_ID);
             attempt.markInProgress();
             em.flush();
             em.clear();
 
             // when & then: startPayment 호출 시 예외
-            assertThatThrownBy(() -> paymentAttemptService.startPayment(bill.getId()))
+            assertThatThrownBy(() -> paymentAttemptService.startPayment(AS_REQUEST_ID))
                     .isInstanceOf(PaymentException.class)
                     .extracting("errorCode")
                     .isEqualTo(PaymentErrorCode.PAYMENT_IN_PROGRESS);
@@ -180,7 +181,7 @@ public class PaymentAttemptServiceTest {
         void prepareConfirm_success() {
             // given: bill + READY attempt
             PaymentBill bill = paymentBillRepository.save(PaymentBill.issue(1L, 30_000L, PaymentBillType.REPAIR));
-            PaymentAttempt attempt1 = startAndFindAttempt(bill);
+            PaymentAttempt attempt1 = startAndFindAttempt(AS_REQUEST_ID);
 
             // when: 저장된 orderId와 amount로 prepareConfirm
             paymentAttemptService.prepareConfirm(attempt1.getOrderId(), attempt1.getAmount());
@@ -207,7 +208,7 @@ public class PaymentAttemptServiceTest {
         void prepareConfirm_amountMismatch() {
             // given
             PaymentBill bill = paymentBillRepository.save(PaymentBill.issue(1L, 30_000L, PaymentBillType.REPAIR));
-            PaymentAttempt attempt = startAndFindAttempt(bill);
+            PaymentAttempt attempt = startAndFindAttempt(AS_REQUEST_ID);
             em.flush();
             em.clear();
 
@@ -228,7 +229,7 @@ public class PaymentAttemptServiceTest {
         void prepareConfirm_alreadyInProgress() {
             // given: 한 번 승인 준비해서 IN_PROGRESS로 만든다
             PaymentBill bill = paymentBillRepository.save(PaymentBill.issue(1L, 30_000L, PaymentBillType.REPAIR));
-            PaymentAttempt attempt = startAndFindAttempt(bill);
+            PaymentAttempt attempt = startAndFindAttempt(AS_REQUEST_ID);
             paymentAttemptService.prepareConfirm(attempt.getOrderId(), attempt.getAmount());
             em.flush();
             em.clear();
@@ -246,7 +247,7 @@ public class PaymentAttemptServiceTest {
             // given: READY attempt가 있는 상태에서 bill이 PAID가 된다
             //        (현실에서는 카드 결제창을 띄워 둔 사이 현장에서 현금으로 결제된 경우)
             PaymentBill bill = paymentBillRepository.save(PaymentBill.issue(1L, 30_000L, PaymentBillType.REPAIR));
-            PaymentAttempt attempt = startAndFindAttempt(bill);
+            PaymentAttempt attempt = startAndFindAttempt(AS_REQUEST_ID);
             bill.markPaid(OffsetDateTime.now());
             em.flush();
             em.clear();
@@ -281,7 +282,7 @@ public class PaymentAttemptServiceTest {
         void success() {
             // given: IN_PROGRESS attempt
             PaymentBill bill = issueBill();
-            PaymentAttempt attempt = startAndFindAttempt(bill);
+            PaymentAttempt attempt = startAndFindAttempt(AS_REQUEST_ID);
             paymentAttemptService.prepareConfirm(attempt.getOrderId(), attempt.getAmount());
             em.flush();
             em.clear();
@@ -309,7 +310,7 @@ public class PaymentAttemptServiceTest {
         void notInProgress() {
             // given: READY attempt (prepareConfirm을 거치지 않음)
             PaymentBill bill = issueBill();
-            PaymentAttempt attempt = startAndFindAttempt(bill);
+            PaymentAttempt attempt = startAndFindAttempt(AS_REQUEST_ID);
             em.flush();
             em.clear();
 

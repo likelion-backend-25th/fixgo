@@ -71,7 +71,7 @@ class PaymentQueryServiceTest {
     @DisplayName("결제 시작만 하고 승인 전이면 여전히 UNPAID다.")
     void startedButNotPaid() {
         PaymentBill bill = issueBill();
-        paymentAttemptService.startPayment(bill.getId());
+        paymentAttemptService.startPayment(AS_REQUEST_ID);
 
         PaymentSummary summary = paymentQueryService.getSummary(AS_REQUEST_ID);
 
@@ -83,7 +83,7 @@ class PaymentQueryServiceTest {
     void paid() {
         // given: 실제 결제 흐름을 거쳐 결제 완료 상태를 만든다 (토스 호출 단계는 제외)
         PaymentBill bill = issueBill();
-        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(bill.getId());
+        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(AS_REQUEST_ID);
         paymentAttemptService.prepareConfirm(started.orderId(), started.amount());
         paymentAttemptService.completeConfirm(started.orderId(), "test_payment_key", APPROVED_AT);
         em.flush();
