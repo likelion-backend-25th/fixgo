@@ -1,16 +1,14 @@
 package net.likelion.bebc25.fixgo.repair.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Getter
-@Setter
 @Entity
 @NoArgsConstructor
-@Builder
-@AllArgsConstructor
 public class RepairPreset {
 
     @Id
@@ -33,5 +31,13 @@ public class RepairPreset {
 
     @Column(name = "updated_by", nullable = false)
     private String updatedBy;
-}
 
+    public RepairPreset(String name, String description, LocalDateTime createdAt, LocalDateTime updatedAt, String createdBy, String updatedBy) {
+        this.name = name;
+        this.description = description;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.createdBy = createdBy;
+        this.updatedBy = updatedBy;
+    }
+}

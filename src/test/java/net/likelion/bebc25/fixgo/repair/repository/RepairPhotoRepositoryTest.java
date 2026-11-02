@@ -31,51 +31,23 @@ class RepairPhotoRepositoryTest {
         LocalDateTime now = LocalDateTime.now();
 
         // 테스트용 A/S 수리 데이터 생성
-        repair = new Repair();
-        repair.setWarrantyResult(WarrantyResult.FREE);
-        repair.setStatus(RepairStatus.REQUESTED);
-        repair.setCreatedAt(now);
-        repair.setUpdatedAt(now);
-        repair.setCreatedBy("test");
-        repair.setUpdatedBy("test");
-
+        repair = new Repair(WarrantyResult.FREE, RepairStatus.REQUESTED);
         repair = repairRepository.save(repair);
 
         // 테스트용 수리 사진 데이터 생성
-        RepairPhoto photo1 = new RepairPhoto();
-        photo1.setRepair(repair);
-        photo1.setPhotoType("수리 전");
-        photo1.setFileUrl("https://example.com/before1.jpg");
-        photo1.setCreatedAt(now);
-        photo1.setUpdatedAt(now);
-        photo1.setCreatedBy("test");
-        photo1.setUpdatedBy("test");
-        repairPhotoRepository.save(photo1);
+        RepairPhoto photo1 = new RepairPhoto(repair, "수리 전", "https://example.com/before1.jpg", now, now, "tester", "tester");
 
-        RepairPhoto photo2 = new RepairPhoto();
-        photo2.setRepair(repair);
-        photo2.setPhotoType("수리 중");
-        photo2.setFileUrl("https://example.com/working1.jpg");
-        photo2.setCreatedAt(now);
-        photo2.setUpdatedAt(now);
-        photo2.setCreatedBy("test");
-        photo2.setUpdatedBy("test");
-        repairPhotoRepository.save(photo2);
+        RepairPhoto photo2 = new RepairPhoto(repair, "수리 중", "https://example.com/working1.jpg", now, now, "tester", "tester");
 
-        RepairPhoto photo3 = new RepairPhoto();
-        photo3.setRepair(repair);
-        photo3.setPhotoType("수리 후");
-        photo3.setFileUrl("https://example.com/after1.jpg");
-        photo3.setCreatedAt(now);
-        photo3.setUpdatedAt(now);
-        photo3.setCreatedBy("test");
-        photo3.setUpdatedBy("test");
-        repairPhotoRepository.save(photo3);
+        RepairPhoto photo3 = new RepairPhoto(repair, "수리 후", "https://example.com/after1.jpg", now, now, "tester", "tester");
+
+        repairPhotoRepository.saveAll(List.of(photo1, photo2, photo3));
     }
 
     @Test
     @DisplayName("A/S 수리 건별 사진 목록 조회")
     void findByRepairId() {
+
         // when
         List<RepairPhoto> result = repairPhotoRepository.findByRepairId(repair.getId());
 
@@ -87,6 +59,7 @@ class RepairPhotoRepositoryTest {
     @Test
     @DisplayName("A/S 수리 건별 사진 유형 조회")
     void findByRepairIdAndPhotoType() {
+
         // when
         List<RepairPhoto> result = repairPhotoRepository.findByRepairIdAndPhotoType(repair.getId(), "수리 전");
 
@@ -99,6 +72,7 @@ class RepairPhotoRepositoryTest {
     @Test
     @DisplayName("존재하지 않는 사진 유형 조회")
     void findByRepairIdAndPhotoTypeNotFound() {
+
         // when
         List<RepairPhoto> result = repairPhotoRepository.findByRepairIdAndPhotoType(repair.getId(), "기타");
 

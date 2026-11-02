@@ -1,13 +1,15 @@
 package net.likelion.bebc25.fixgo.repair.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
 
 import java.time.LocalDateTime;
 
 @Getter
-@Setter
 @Entity
 @NoArgsConstructor
 @Builder
@@ -39,4 +41,14 @@ public class RepairWork {
 
     @Column(name = "updated_by", nullable = false)
     private String updatedBy;
+
+    public RepairWork(Repair repair, String repair_preset_name, String workName, LocalDateTime createdAt, LocalDateTime updatedAt, String createdBy, String updatedBy) {
+        this.repair = repair;
+        this.repair_preset_name = repair_preset_name;
+        this.workName = workName;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.createdBy = createdBy;
+        this.updatedBy = updatedBy;
+    }
 }

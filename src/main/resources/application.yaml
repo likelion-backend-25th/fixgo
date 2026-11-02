@@ -63,3 +63,7 @@ logging:
 
 toss:
   secret-key: ${TOSS_SECRET_KEY}
+  
+portal:
+  link:
+    valid-days: 30
