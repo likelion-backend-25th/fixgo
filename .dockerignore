@@ -1,0 +1,23 @@
+# git
+.git
+.gitignore
+.github
+.gitattributes
+
+# 빌드 산출물
+build/
+.gradle/
+.idea/
+*.iml
+out/
+
+# 시크릿
+.env*
+*.pem
+
+# 이미지에 불필요
+docs/
+*.md
+docker-compose*.yaml
+nginx/
+Dockerfile

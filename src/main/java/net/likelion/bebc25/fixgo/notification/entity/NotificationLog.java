@@ -24,19 +24,17 @@ public class NotificationLog {
     @Column(nullable = false)
     private NotificationType notificationType;
 
+    // 고객 이메일 주소
     @Column(nullable = false)
-    private String recipientPhone;
+    private String recipientEmail;
 
+    // 이메일 제목
     @Column(nullable = false)
+    private String messageTitle;
+
+    // 이메일 본문
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String message;
-
-    private String providerMessageId;
-
-    private String providerGroupId;
-
-    private String providerStatusCode;
-
-    private String providerStatusMessage;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

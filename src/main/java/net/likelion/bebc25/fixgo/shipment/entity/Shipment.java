@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import net.likelion.bebc25.fixgo.as.entity.AsRequest;
 
 import java.time.LocalDateTime;
 
@@ -16,9 +17,10 @@ public class Shipment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-//    @OneToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "as_requset_id", nullable = false, unique = true)
-//    private AsRequest asRequest;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "as_requset_id", nullable = false, unique = true)
+    private AsRequest asRequest;
+
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

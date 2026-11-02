@@ -1,0 +1,87 @@
+name: cd.yml
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  # 지속적 제공 (Continuous Delivery) - Docker Hub 이미지 빌드 및 푸시
+  docker-build-and-push:
+    name: Docker Image Build and Push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. 소스코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: 2. Docker Buildx 설정
+        uses: docker/setup-buildx-action@v3
+
+      - name: 3. Docker Hub 로그인 인증
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: 4. Docker 이미지 빌드 및 Docker Hub 자동 푸시
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/fixgo:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/fixgo:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+    # 지속적 배포 (Continuous Deployment) - 이미지 푸시 성공 시 AWS EC2 원격 갱신 배포
+  cd-deploy:
+    name: Continuous Deployment to AWS EC2
+    needs: docker-build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 소스코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: docker-compose.yaml 파일을 EC2로 전송
+        uses: appleboy/scp-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "docker-compose.yaml, nginx/default.conf"
+          target: "/home/ec2-user"
+
+      - name: SSH를 통한 EC2 원격 접속 및 Docker Compose 배포 실행
+        uses: appleboy/ssh-action@v1.0.2
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            cd /home/ec2-user
+            echo ">>> 1. GitHub Secrets 기반 운영 환경 변수(.env) 자동 동기화"
+            cat << 'EOF' > .env
+            DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
+            MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
+            MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+            MYSQL_USER=${{ secrets.MYSQL_USER }}
+            MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}
+            AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}
+            AWS_S3_BUCKET_NAME=${{ secrets.AWS_S3_BUCKET_NAME }}
+            EOF
+
+            echo ">>> 2. 최신 Docker 이미지 다운로드"
+            docker compose pull
+
+            echo ">>> 3. 컨테이너 갱신 및 백그라운드 구동"
+            docker compose up -d
+
+            echo ">>> 4. 사용되지 않는 구버전 이미지 정리"
+            docker image prune -f
+
+            echo ">>> Docker Compose 기반 배포 프로세스가 정상 완료되었습니다."
