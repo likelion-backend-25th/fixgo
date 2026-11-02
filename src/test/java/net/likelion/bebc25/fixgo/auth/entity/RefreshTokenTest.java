@@ -1,19 +1,20 @@
 package net.likelion.bebc25.fixgo.auth.entity;
 
 import jakarta.persistence.EntityManager;
+import net.likelion.bebc25.fixgo.config.JpaConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.context.annotation.Import;
 
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
-@Transactional
+@DataJpaTest
+@Import(JpaConfig.class)
 public class RefreshTokenTest {
     @Autowired
     private EntityManager em;

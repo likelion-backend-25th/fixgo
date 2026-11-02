@@ -3,20 +3,24 @@ package net.likelion.bebc25.fixgo.auth.repository;
 import jakarta.persistence.EntityManager;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.entity.Role;
+import net.likelion.bebc25.fixgo.auth.entity.Status;
+import net.likelion.bebc25.fixgo.config.JpaConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.context.annotation.Import;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
-@Transactional
-public class MemberRepositoryTest {
+@DataJpaTest
+@Import(JpaConfig.class)
+class MemberRepositoryTest {
+
     @Autowired
     private EntityManager em;
     @Autowired
@@ -26,14 +30,13 @@ public class MemberRepositoryTest {
 
     @BeforeEach
     void setup() {
-        // 회원 등록
         Member member = new Member("admin01", "test1@test.com", "1234", "test1", Role.ROLE_ADMIN, "");
-        em.persist(member); // insert 쿼리문 생성 (실행은 안함)
+        em.persist(member);
 
         newMemberId = member.getId();
 
-        em.flush(); // 생성해 둔 쿼리문 실행
-        em.clear(); // 캐시 삭제
+        em.flush();
+        em.clear();
     }
 
     @Test
@@ -102,5 +105,102 @@ public class MemberRepositoryTest {
 
         assertThat(memberRepository.countByCreatedAtBetween(start, end)).isEqualTo(2);
         assertThat(memberRepository.countByCreatedAtBetween(pastStart, pastEnd)).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("생성일 내림차순으로 전체 직원 조회")
+    void findAllByOrderByCreatedAtDesc() {
+        Member technician = new Member("tech01", "tech1@test.com", "1234", "tech1", Role.ROLE_TECHNICIAN, "");
+        memberRepository.save(technician);
+        em.flush();
+        em.clear();
+
+        List<Member> members = memberRepository.findAllByOrderByCreatedAtDesc();
+
+        assertThat(members).hasSize(2);
+        assertThat(members).extracting(Member::getEmail)
+                .containsExactlyInAnyOrder("tech1@test.com", "test1@test.com");
+        assertThat(members.get(0).getCreatedAt())
+                .isAfterOrEqualTo(members.get(1).getCreatedAt());
+    }
+
+    @Test
+    @DisplayName("특정 상태를 제외한 직원 조회")
+    void findAllByStatusNotOrderByCreatedAtDesc() {
+        Member active = new Member("tech01", "tech1@test.com", "1234", "tech1", Role.ROLE_TECHNICIAN, "");
+        Member deleted = new Member("recv01", "recv1@test.com", "1234", "recv1", Role.ROLE_RECEPTIONIST, "");
+        memberRepository.save(active);
+        memberRepository.save(deleted);
+        deleted.changeStatus(Status.DELETED);
+        em.flush();
+        em.clear();
+
+        List<Member> members = memberRepository.findAllByStatusNotOrderByCreatedAtDesc(Status.DELETED);
+
+        assertThat(members).hasSize(2);
+        assertThat(members).extracting(Member::getEmail)
+                .containsExactlyInAnyOrder("test1@test.com", "tech1@test.com");
+        assertThat(members).noneMatch(m -> m.getStatus() == Status.DELETED);
+    }
+
+    @Test
+    @DisplayName("삭제되지 않은 직원만 이메일로 조회")
+    void findByEmailAndStatusNot() {
+        Member deleted = new Member("tech01", "tech1@test.com", "1234", "tech1", Role.ROLE_TECHNICIAN, "");
+        memberRepository.save(deleted);
+        deleted.changeStatus(Status.DELETED);
+        em.flush();
+        em.clear();
+
+        assertThat(memberRepository.findByEmailAndStatusNot("test1@test.com", Status.DELETED)).isPresent();
+        assertThat(memberRepository.findByEmailAndStatusNot("tech1@test.com", Status.DELETED)).isEmpty();
+        assertThat(memberRepository.findByEmailAndStatusNot("notfound@test.com", Status.DELETED)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("키워드와 역할로 직원 검색")
+    void searchMembers() {
+        Member technician = new Member(
+                "tech01",
+                "kim.tech@test.com",
+                "1234",
+                "김기술",
+                Role.ROLE_TECHNICIAN,
+                ""
+        );
+        Member receptionist = new Member(
+                "recv01",
+                "lee.recv@test.com",
+                "1234",
+                "이접수",
+                Role.ROLE_RECEPTIONIST,
+                ""
+        );
+        memberRepository.save(technician);
+        memberRepository.save(receptionist);
+        em.flush();
+        em.clear();
+
+        assertThat(memberRepository.searchMembers(null, null))
+                .extracting(Member::getEmail)
+                .containsExactlyInAnyOrder("test1@test.com", "kim.tech@test.com", "lee.recv@test.com");
+
+        assertThat(memberRepository.searchMembers("김", null))
+                .extracting(Member::getName)
+                .containsExactly("김기술");
+
+        assertThat(memberRepository.searchMembers("lee.recv", null))
+                .extracting(Member::getEmail)
+                .containsExactly("lee.recv@test.com");
+
+        assertThat(memberRepository.searchMembers(null, Role.ROLE_TECHNICIAN))
+                .extracting(Member::getEmail)
+                .containsExactly("kim.tech@test.com");
+
+        assertThat(memberRepository.searchMembers("이", Role.ROLE_RECEPTIONIST))
+                .extracting(Member::getEmail)
+                .containsExactly("lee.recv@test.com");
+
+        assertThat(memberRepository.searchMembers("없는키워드", null)).isEmpty();
     }
 }
