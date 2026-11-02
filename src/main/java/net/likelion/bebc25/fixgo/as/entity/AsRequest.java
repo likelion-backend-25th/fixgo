@@ -64,11 +64,12 @@ public class AsRequest extends BaseEntity {
     @Column
     private LocalDateTime closedAt;
 
-    public AsRequest(String requestNumber, Customer customer, Product product, Member receptionist, String symptom, String symptomDetail, String requestMemo, ReturnMethod returnMethod) {
+    public AsRequest(String requestNumber, Customer customer, Product product, Member receptionist, Member technician, String symptom, String symptomDetail, String requestMemo, ReturnMethod returnMethod) {
         this.requestNumber = requestNumber;
         this.customer = customer;
         this.product = product;
         this.receptionist = receptionist;
+        this.technician = technician;
         this.symptom = symptom;
         this.symptomDetail = symptomDetail;
         this.requestMemo = requestMemo;
@@ -85,7 +86,4 @@ public class AsRequest extends BaseEntity {
         }
     }
 
-    public void assignTechnician(Member technician) {
-        this.technician = technician;
-    }
 }
