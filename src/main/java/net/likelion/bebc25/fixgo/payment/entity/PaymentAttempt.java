@@ -47,26 +47,49 @@ public class PaymentAttempt {
 
     public static PaymentAttempt create(PaymentBill paymentBill) {
         if (paymentBill == null) {
-            throw new IllegalArgumentException("paymentBill is null");
+            throw new IllegalArgumentException("청구서가 존재하지 않습니다.");
         }
 
         PaymentAttempt paymentAttempt = new PaymentAttempt();
 
         paymentAttempt.paymentBill = paymentBill;
-        paymentAttempt.orderId = "PAY" + UUID.randomUUID().toString();
+        paymentAttempt.orderId = "PAY-" + UUID.randomUUID().toString();
         paymentAttempt.amount = paymentBill.getAmount();
 
         return paymentAttempt;
     }
 
+    /**
+     * 상태 전이 규칙을 검증하고 paymentAttempt를 FAILED로 바꾼다.
+     */
     public void markFailed(String code, String message) {
         changeStatus(PaymentAttemptStatus.FAILED);
         this.failureCode = code;
         this.failureMessage = message;
     }
 
+    /**
+     * 상태 전이 규칙을 검증하고 paymentAttempt를 IN_PROGRESS로 바꾼다.
+     */
     public void markInProgress() {
         changeStatus(PaymentAttemptStatus.IN_PROGRESS);
+    }
+
+    /**
+     * 가상계좌 발급 완료 처리. 계좌가 발급되었고 고객의 입금을 기다리는 상태로 바꾼다.
+     * 반드시 승인 준비(IN_PROGRESS)를 거친 시도만 처리할 수 있다.
+     * 계좌 정보(은행, 계좌번호, 입금 기한, 웹훅 검증 값)는 VirtualAccount에 따로 저장한다.
+     * 아직 입금 전이므로 승인 시각은 기록하지 않는다.
+     *
+     * @param paymentKey 토스 승인 응답의 paymentKey (결제 조회, 취소 시 필요)
+     */
+    public void markWaitingForDeposit(String paymentKey) {
+        if (this.getStatus() != PaymentAttemptStatus.IN_PROGRESS) {
+            throw new IllegalStateException("가상계좌 발급 완료는 IN_PROGRESS 상태에서만 가능합니다. 현재: " + status);
+        }
+        changeStatus(PaymentAttemptStatus.WAITING_FOR_DEPOSIT);
+        this.paymentKey = paymentKey;
+        this.method = PaymentMethod.VIRTUAL_ACCOUNT;
     }
 
     /**

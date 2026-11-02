@@ -2,7 +2,6 @@ package net.likelion.bebc25.fixgo.portal.service;
 
 import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
-import net.likelion.bebc25.fixgo.payment.dto.PaymentSummary;
 import net.likelion.bebc25.fixgo.payment.service.PaymentAttemptService;
 import net.likelion.bebc25.fixgo.payment.service.PaymentQueryService;
 import net.likelion.bebc25.fixgo.portal.dto.PortalResponse;
@@ -25,7 +24,7 @@ public class PortalService {
     public PortalResponse getPortal(String token) {
         Long asRequestId = customerPortalLinkService.resolveAsRequestId(token);
 
-        PaymentSummary paymentSummary = paymentQueryService.getSummary(asRequestId);
+        PaymentDto.PaymentSummaryResponse paymentSummary = paymentQueryService.getSummary(asRequestId);
 
         return new PortalResponse(paymentSummary);
     }
