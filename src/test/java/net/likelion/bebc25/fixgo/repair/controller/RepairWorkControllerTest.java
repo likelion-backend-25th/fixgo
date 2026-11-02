@@ -1,8 +1,8 @@
 package net.likelion.bebc25.fixgo.repair.controller;
 
-import net.likelion.bebc25.fixgo.repair.dto.repairWork.RepairWorkRequestDto;
-import net.likelion.bebc25.fixgo.repair.dto.repairWork.RepairWorkResponseDto;
-import net.likelion.bebc25.fixgo.repair.dto.repairWork.RepairWorkUpdateDto;
+import net.likelion.bebc25.fixgo.repair.dto.repairWork.RepairWorkRequest;
+import net.likelion.bebc25.fixgo.repair.dto.repairWork.RepairWorkResponse;
+import net.likelion.bebc25.fixgo.repair.dto.repairWork.RepairWorkUpdate;
 import net.likelion.bebc25.fixgo.repair.service.RepairWorkService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,13 +36,13 @@ class RepairWorkControllerTest {
     @WithMockUser
     void createRepairWorkTest() throws Exception {
 
-        RepairWorkResponseDto response = new RepairWorkResponseDto();
+        RepairWorkResponse response = new RepairWorkResponse();
         response.setId(1L);
         response.setRepairId(1L);
         response.setRepairPresetName("기본 점검");
         response.setWorkName("메인보드 점검");
 
-        when(repairWorkService.createRepairWork(any(RepairWorkRequestDto.class))).thenReturn(response);
+        when(repairWorkService.createRepairWork(any(RepairWorkRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/api/repair-works").with(csrf()).contentType(MediaType.APPLICATION_JSON).content("""
                                                                                                                        {
@@ -52,7 +52,7 @@ class RepairWorkControllerTest {
                                                                                                                        }
                                                                                                                        """)).andExpect(status().isCreated()).andExpect(jsonPath("$.id").value(1)).andExpect(jsonPath("$.repairId").value(1)).andExpect(jsonPath("$.repairPresetName").value("기본 점검")).andExpect(jsonPath("$.workName").value("메인보드 점검"));
 
-        verify(repairWorkService, times(1)).createRepairWork(any(RepairWorkRequestDto.class));
+        verify(repairWorkService, times(1)).createRepairWork(any(RepairWorkRequest.class));
     }
 
     // 전체 수리 작업 내역 조회 테스트
@@ -60,7 +60,7 @@ class RepairWorkControllerTest {
     @WithMockUser
     void getAllRepairWorksTest() throws Exception {
 
-        when(repairWorkService.getAllRepairWorks()).thenReturn(List.of(new RepairWorkResponseDto()));
+        when(repairWorkService.getAllRepairWorks()).thenReturn(List.of(new RepairWorkResponse()));
 
         mockMvc.perform(get("/api/repair-works")).andExpect(status().isOk()).andExpect(jsonPath("$").isArray());
 
@@ -72,7 +72,7 @@ class RepairWorkControllerTest {
     @WithMockUser
     void getRepairWorkTest() throws Exception {
 
-        RepairWorkResponseDto response = new RepairWorkResponseDto();
+        RepairWorkResponse response = new RepairWorkResponse();
         response.setId(1L);
         response.setWorkName("메인보드 점검");
 
@@ -88,7 +88,7 @@ class RepairWorkControllerTest {
     @WithMockUser
     void getRepairWorksByRepairIdTest() throws Exception {
 
-        when(repairWorkService.getRepairWorksByRepairId(1L)).thenReturn(List.of(new RepairWorkResponseDto()));
+        when(repairWorkService.getRepairWorksByRepairId(1L)).thenReturn(List.of(new RepairWorkResponse()));
 
         mockMvc.perform(get("/api/repair-works/repair/1")).andExpect(status().isOk()).andExpect(jsonPath("$").isArray());
 
@@ -100,7 +100,7 @@ class RepairWorkControllerTest {
     @WithMockUser
     void searchRepairWorksTest() throws Exception {
 
-        when(repairWorkService.searchRepairWorks("점검")).thenReturn(List.of(new RepairWorkResponseDto()));
+        when(repairWorkService.searchRepairWorks("점검")).thenReturn(List.of(new RepairWorkResponse()));
 
         mockMvc.perform(get("/api/repair-works/search").param("workName", "점검")).andExpect(status().isOk()).andExpect(jsonPath("$").isArray());
 
@@ -112,11 +112,11 @@ class RepairWorkControllerTest {
     @WithMockUser
     void updateRepairWorkTest() throws Exception {
 
-        RepairWorkResponseDto response = new RepairWorkResponseDto();
+        RepairWorkResponse response = new RepairWorkResponse();
         response.setRepairPresetName("부품 교체");
         response.setWorkName("메인보드 교체");
 
-        when(repairWorkService.updateRepairWork(eq(1L), any(RepairWorkUpdateDto.class))).thenReturn(response);
+        when(repairWorkService.updateRepairWork(eq(1L), any(RepairWorkUpdate.class))).thenReturn(response);
 
         mockMvc.perform(put("/api/repair-works/1").with(csrf()).contentType(MediaType.APPLICATION_JSON).content("""
                                                                                                                         {
@@ -125,7 +125,7 @@ class RepairWorkControllerTest {
                                                                                                                         }
                                                                                                                         """)).andExpect(status().isOk()).andExpect(jsonPath("$.repairPresetName").value("부품 교체")).andExpect(jsonPath("$.workName").value("메인보드 교체"));
 
-        verify(repairWorkService, times(1)).updateRepairWork(eq(1L), any(RepairWorkUpdateDto.class));
+        verify(repairWorkService, times(1)).updateRepairWork(eq(1L), any(RepairWorkUpdate.class));
     }
 
     // 수리 작업 내역 삭제 테스트

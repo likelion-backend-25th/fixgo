@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class RepairRequestDto {
+public class RepairRequest {
 
     // A/S 접수 ID
     private Long asRequestId;

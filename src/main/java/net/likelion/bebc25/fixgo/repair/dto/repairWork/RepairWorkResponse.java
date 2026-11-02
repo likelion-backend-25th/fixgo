@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-public class RepairWorkResponseDto {
+public class RepairWorkResponse {
 
     // 작업 내역 ID
     private Long id;

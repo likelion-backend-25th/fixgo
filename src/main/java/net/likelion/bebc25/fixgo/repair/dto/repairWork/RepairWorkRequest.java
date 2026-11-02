@@ -5,7 +5,10 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class RepairWorkUpdateDto {
+public class RepairWorkRequest {
+
+    // 수리 ID
+    private Long repairId;
 
     // 수리 프리셋 이름
     private String repairPresetName;

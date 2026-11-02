@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class RepairCostResponseDto {
+public class RepairCostResponse {
 
     // 시간당 공임
     private int laborRate;
