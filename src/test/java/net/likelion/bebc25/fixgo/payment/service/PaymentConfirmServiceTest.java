@@ -69,29 +69,27 @@ class PaymentConfirmServiceTest {
     }
 
     @Test
-    @DisplayName("토스 승인이 성공하면 attempt는 DONE, bill은 PAID가 되고 결제 정보를 반환한다.")
+    @DisplayName("토스 승인이 성공하면 attempt는 DONE, bill은 PAID가 되고 승인 정보가 저장된다.")
     void success() {
         // given
         PaymentBill bill = issueBill();
         PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(AS_REQUEST_ID);
         given(tossPaymentsClient.confirm(PAYMENT_KEY, started.orderId(), started.amount()))
-                .willReturn(new TossDto.ConfirmResponse(PAYMENT_KEY, started.orderId(), "DONE", APPROVED_AT));
+                .willReturn(new TossDto.ConfirmResponse(PAYMENT_KEY, started.orderId(), "DONE", APPROVED_AT, null, null));
 
         // when
-        PaymentDto.ConfirmPaymentResponse response =
-                paymentConfirmService.confirmPayment(PAYMENT_KEY, started.orderId(), started.amount());
+        paymentConfirmService.confirmPayment(PAYMENT_KEY, started.orderId(), started.amount());
 
-        // then: 응답
-        assertThat(response.orderName()).isEqualTo("A/S 수리비");
-        assertThat(response.amount()).isEqualTo(30_000L);
-        assertThat(response.approvedAt()).isEqualTo(LocalDateTime.of(2026, 11, 1, 15, 30));
-
-        // then: DB
+        // then: attempt
         PaymentAttempt attempt = findAttempt(started.orderId());
         assertThat(attempt.getStatus()).isEqualTo(PaymentAttemptStatus.DONE);
         assertThat(attempt.getPaymentKey()).isEqualTo(PAYMENT_KEY);
-        assertThat(paymentBillRepository.findById(bill.getId()).orElseThrow().getStatus())
-                .isEqualTo(PaymentBillStatus.PAID);
+        assertThat(attempt.getApprovedAt()).isEqualTo(LocalDateTime.of(2026, 11, 1, 15, 30));
+
+        // then: bill
+        PaymentBill reloadedBill = paymentBillRepository.findById(bill.getId()).orElseThrow();
+        assertThat(reloadedBill.getStatus()).isEqualTo(PaymentBillStatus.PAID);
+        assertThat(reloadedBill.getPaidAt()).isEqualTo(LocalDateTime.of(2026, 11, 1, 15, 30));
     }
 
     @Test

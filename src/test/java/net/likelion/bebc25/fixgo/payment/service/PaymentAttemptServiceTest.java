@@ -7,6 +7,7 @@ import net.likelion.bebc25.fixgo.payment.exception.PaymentErrorCode;
 import net.likelion.bebc25.fixgo.payment.exception.PaymentException;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentAttemptRepository;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentBillRepository;
+import net.likelion.bebc25.fixgo.payment.repository.VirtualAccountRepository;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -33,7 +34,10 @@ public class PaymentAttemptServiceTest {
     @Autowired
     PaymentBillRepository paymentBillRepository;
     @Autowired
+    VirtualAccountRepository virtualAccountRepository;
+    @Autowired
     EntityManager em;
+
 
     private PaymentAttempt startAndFindAttempt(Long asRequestId) {
         PaymentDto.StartPaymentResponse startPaymentResponse = paymentAttemptService.startPayment(asRequestId);
@@ -324,6 +328,66 @@ public class PaymentAttemptServiceTest {
                     .isEqualTo(PaymentAttemptStatus.READY);
             assertThat(paymentBillRepository.findById(bill.getId()).orElseThrow().getStatus())
                     .isEqualTo(PaymentBillStatus.UNPAID);
+        }
+    }
+
+    @Nested
+    @DisplayName("issueVirtualAccount")
+    class IssueVirtualAccount {
+
+        private final LocalDateTime dueAt = LocalDateTime.of(2026, 11, 9, 23, 59, 59);
+
+        @Test
+        @DisplayName("승인 진행 중인 시도에 가상계좌가 발급되면 입금 대기가 되고 계좌 정보가 저장된다. bill은 UNPAID 그대로다.")
+        void success() {
+            // given: IN_PROGRESS attempt
+            PaymentBill bill = issueBill();
+            PaymentAttempt attempt = startAndFindAttempt(AS_REQUEST_ID);
+            paymentAttemptService.prepareConfirm(attempt.getOrderId(), attempt.getAmount());
+
+            // when
+            paymentAttemptService.issueVirtualAccount(
+                    attempt.getOrderId(), "test_payment_key", "20", "12345678901234", "ps_test_secret", dueAt);
+            em.flush();
+            em.clear();
+
+            // then: attempt
+            PaymentAttempt reloaded = paymentAttemptRepository.findById(attempt.getId()).orElseThrow();
+            assertThat(reloaded.getStatus()).isEqualTo(PaymentAttemptStatus.WAITING_FOR_DEPOSIT);
+            assertThat(reloaded.getPaymentKey()).isEqualTo("test_payment_key");
+            assertThat(reloaded.getMethod()).isEqualTo(PaymentMethod.VIRTUAL_ACCOUNT);
+            assertThat(reloaded.getApprovedAt()).isNull();
+
+            // then: 계좌 정보. 매개변수 순서가 바뀌는 실수를 잡기 위해 필드를 하나씩 확인한다
+            VirtualAccount virtualAccount = virtualAccountRepository.findByPaymentAttemptId(attempt.getId()).orElseThrow();
+            assertThat(virtualAccount.getBankCode()).isEqualTo("20");
+            assertThat(virtualAccount.getAccountNumber()).isEqualTo("12345678901234");
+            assertThat(virtualAccount.getWebhookSecret()).isEqualTo("ps_test_secret");
+            assertThat(virtualAccount.getDueAt()).isEqualTo(dueAt);
+
+            // then: 입금 전이므로 청구서는 그대로
+            assertThat(paymentBillRepository.findById(bill.getId()).orElseThrow().getStatus())
+                    .isEqualTo(PaymentBillStatus.UNPAID);
+        }
+
+        @Test
+        @DisplayName("승인 준비를 거치지 않은 시도에는 가상계좌를 발급할 수 없고 계좌도 저장되지 않는다.")
+        void notInProgress() {
+            // given: READY attempt
+            PaymentBill bill = issueBill();
+            PaymentAttempt attempt = startAndFindAttempt(AS_REQUEST_ID);
+            em.flush();
+            em.clear();
+
+            // when & then
+            assertThatThrownBy(() -> paymentAttemptService.issueVirtualAccount(
+                    attempt.getOrderId(), "test_payment_key", "20", "12345678901234", "ps_test_secret", dueAt))
+                    .isInstanceOf(IllegalStateException.class);
+
+            em.clear();
+            assertThat(virtualAccountRepository.findByPaymentAttemptId(attempt.getId())).isEmpty();
+            assertThat(paymentAttemptRepository.findById(attempt.getId()).orElseThrow().getStatus())
+                    .isEqualTo(PaymentAttemptStatus.READY);
         }
     }
 }

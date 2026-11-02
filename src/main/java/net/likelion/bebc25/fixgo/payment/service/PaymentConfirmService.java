@@ -3,7 +3,6 @@ package net.likelion.bebc25.fixgo.payment.service;
 import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.payment.client.TossDto;
 import net.likelion.bebc25.fixgo.payment.client.TossPaymentsClient;
-import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
 import net.likelion.bebc25.fixgo.payment.exception.PaymentException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResourceAccessException;
@@ -16,7 +15,7 @@ public class PaymentConfirmService {
 
     private final TossPaymentsClient tossPaymentsClient;
 
-    public PaymentDto.ConfirmPaymentResponse confirmPayment(String paymentKey, String orderId, Long amount) {
+    public void confirmPayment(String paymentKey, String orderId, Long amount) {
         try {
             paymentAttemptService.prepareConfirm(orderId, amount);
         } catch (PaymentException e) {
@@ -45,12 +44,15 @@ public class PaymentConfirmService {
             throw e;
         }
 
-        // 카드 결제는 승인 성공 시 DONE이다. 승인 시각(nullable)도 DONE일 때만 보장된다.
-        if (!"DONE".equals(response.status())) {
-            // TODO: 가상계좌(WAITING_FOR_DEPOSIT) 분기 추가
-            throw new IllegalStateException("예상하지 못한 결제 상태: " + response.status());
+        // 카드는 DONE, 가상계좌는 WAITING_FOR_DEPOSIT으로 온다. 그 외 상태는 attempt가 IN_PROGRESS로 남으므로 결제 조회로 정리가 필요하다(TODO)
+        switch (response.status()) {
+            case "DONE" ->
+                    paymentAttemptService.completeConfirm(response.orderId(), response.paymentKey(), response.approvedAt());
+            case "WAITING_FOR_DEPOSIT" ->
+                    paymentAttemptService.issueVirtualAccount(response.orderId(), response.paymentKey(), response.virtualAccount().bankCode(),
+                                                              response.virtualAccount().accountNumber(), response.secret(),
+                                                              response.virtualAccount().dueDate().toLocalDateTime());
+            default -> throw new IllegalStateException("예상하지 못한 결제 상태: " + response.status());
         }
-
-        return paymentAttemptService.completeConfirm(response.orderId(), response.paymentKey(), response.approvedAt());
     }
 }
