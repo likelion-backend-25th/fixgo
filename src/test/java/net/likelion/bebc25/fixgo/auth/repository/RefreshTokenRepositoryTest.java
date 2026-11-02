@@ -28,6 +28,7 @@ public class RefreshTokenRepositoryTest {
     private RefreshTokenRepository refreshTokenRepository;
 
     private Long memberId;
+    private Long refreshTokenId;
     private LocalDateTime beforeCreate;
 
     @BeforeEach
@@ -44,6 +45,7 @@ public class RefreshTokenRepositoryTest {
         em.persist(refreshToken);
 
         em.flush(); // 생성해 둔 쿼리문 실행
+        refreshTokenId = refreshToken.getId();
         em.clear(); // 캐시 삭제
     }
 
@@ -63,7 +65,6 @@ public class RefreshTokenRepositoryTest {
 
         LocalDateTime newBeforeCreate = LocalDateTime.now();
 
-        // @MapsId이므로 id는 null로 두고 member 연관으로 PK를 맞춘다
         RefreshToken refreshToken = new RefreshToken(member, "new-refresh-token-hash");
 
         refreshTokenRepository.save(refreshToken);
@@ -74,11 +75,12 @@ public class RefreshTokenRepositoryTest {
 
         assertThat(findTokens).hasSize(1);
         RefreshToken findToken = findTokens.get(0);
-        assertThat(findToken.getId()).isEqualTo(member.getId());
+        assertThat(findToken.getId()).isNotNull();
+        assertThat(findToken.getId()).isNotEqualTo(refreshTokenId);
+        assertThat(findToken.getMember().getId()).isEqualTo(member.getId());
         assertThat(findToken.getTokenHash()).isEqualTo("new-refresh-token-hash");
         assertThat(findToken.getIssuedAt()).isCloseTo(newBeforeCreate, within(Duration.ofSeconds(2)));
         assertThat(findToken.getExpiresAt()).isEqualTo(findToken.getIssuedAt().plusDays(7));
-        assertThat(findToken.getId()).isNotEqualTo(memberId);
     }
 
     @Test
@@ -88,7 +90,8 @@ public class RefreshTokenRepositoryTest {
 
         assertThat(findTokens).hasSize(1);
         RefreshToken findToken = findTokens.get(0);
-        assertThat(findToken.getId()).isEqualTo(memberId);
+        assertThat(findToken.getId()).isEqualTo(refreshTokenId);
+        assertThat(findToken.getMember().getId()).isEqualTo(memberId);
         assertThat(findToken.getTokenHash()).isEqualTo("refresh-token-hash");
         assertThat(findToken.getIssuedAt()).isCloseTo(beforeCreate, within(Duration.ofSeconds(2)));
         assertThat(findToken.getExpiresAt()).isEqualTo(findToken.getIssuedAt().plusDays(7));

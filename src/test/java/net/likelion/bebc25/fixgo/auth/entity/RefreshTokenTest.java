@@ -22,6 +22,7 @@ public class RefreshTokenTest {
     private EntityManager em;
 
     private Long memberId;
+    private Long refreshTokenId;
     private LocalDateTime beforeCreate;
 
     @BeforeEach
@@ -38,16 +39,17 @@ public class RefreshTokenTest {
         em.persist(refreshToken);
 
         em.flush(); // 생성해 둔 쿼리문 실행
+        refreshTokenId = refreshToken.getId();
         em.clear(); // 캐시 삭제
     }
 
     @Test
     @DisplayName("리프레시 토큰 조회")
     void findRefreshToken() {
-        RefreshToken refreshToken = em.find(RefreshToken.class, memberId);
+        RefreshToken refreshToken = em.find(RefreshToken.class, refreshTokenId);
 
         assertThat(refreshToken).isNotNull();
-        assertThat(refreshToken.getId()).isEqualTo(memberId);
+        assertThat(refreshToken.getId()).isEqualTo(refreshTokenId);
         assertThat(refreshToken.getTokenHash()).isEqualTo("refresh-token-hash");
         assertThat(refreshToken.getIssuedAt()).isCloseTo(beforeCreate, within(Duration.ofSeconds(2)));
         assertThat(refreshToken.getExpiresAt()).isEqualTo(refreshToken.getIssuedAt().plusDays(7));
