@@ -12,14 +12,21 @@ import java.util.Optional;
 public interface RepairRepository extends JpaRepository<Repair, Long> {
 
     // A/S 접수 ID로 수리 정보 조회
-    @Query("SELECT r FROM Repair r WHERE r.asRequestId = :asRequestId")
-    Optional<Repair> findByAsRequestId(@Param("asRequestId") Long asRequestId);
+    @Query("SELECT r FROM Repair r WHERE r.asRequest.id = :asRequestId")
+    Optional<Repair> findByAsRequestID(@Param("asRequestId") Long asRequestId);
 
-    @Query("SELECT r FROM Repair r WHERE r.technicianId = :technicianId")
-    List<Repair> findByTechnicianId(@Param("technicianId") Long technicianId);
+    // 담당 기사 ID로 수리 목록 조회
+    @Query("SELECT r FROM Repair r WHERE r.technician.id = :technicianId")
+    List<Repair> findByTechnicianID(@Param("technicianId") Long technicianId);
 
+    // 수리 상태로 수리 목록 조회
     List<Repair> findByStatus(RepairStatus status);
 
-    @Query("SELECT r FROM Repair r WHERE r.technicianId = :technicianId AND r.status = :status")
-    List<Repair> findByTechnicianIdAndStatus(@Param("technicianId") Long technicianId, @Param("status") RepairStatus status);
+    // 담당 기사 ID와 수리 상태로 수리 목록 조회
+    @Query("""
+            SELECT r FROM Repair r
+            WHERE r.technician.id = :technicianId
+            AND r.status = :status
+            """)
+    List<Repair> findByTechnicianIDAndStatus(@Param("technicianId") Long technicianId, @Param("status") RepairStatus status);
 }

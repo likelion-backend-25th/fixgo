@@ -1,8 +1,8 @@
 package net.likelion.bebc25.fixgo.repair.service;
 
-import net.likelion.bebc25.fixgo.repair.dto.repairWork.RepairWorkRequestDto;
-import net.likelion.bebc25.fixgo.repair.dto.repairWork.RepairWorkResponseDto;
-import net.likelion.bebc25.fixgo.repair.dto.repairWork.RepairWorkUpdateDto;
+import net.likelion.bebc25.fixgo.repair.dto.repairWork.RepairWorkRequest;
+import net.likelion.bebc25.fixgo.repair.dto.repairWork.RepairWorkResponse;
+import net.likelion.bebc25.fixgo.repair.dto.repairWork.RepairWorkUpdate;
 import net.likelion.bebc25.fixgo.repair.entity.RepairWork;
 import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
 import net.likelion.bebc25.fixgo.repair.mapper.RepairWorkMapper;
@@ -40,20 +40,20 @@ class RepairWorkServiceTest {
 
     private Repair repair;
     private RepairWork repairWork;
-    private RepairWorkResponseDto responseDto;
+    private RepairWorkResponse responseDto;
 
     @BeforeEach
     void setUp() {
         repair = mock(Repair.class);
         repairWork = mock(RepairWork.class);
-        responseDto = new RepairWorkResponseDto();
+        responseDto = new RepairWorkResponse();
     }
 
     @Test
     @DisplayName("수리 작업 내역 등록 성공")
     void createRepairWork() {
         // given
-        RepairWorkRequestDto requestDto = new RepairWorkRequestDto();
+        RepairWorkRequest requestDto = new RepairWorkRequest();
         requestDto.setRepairId(1L);
         requestDto.setRepairPresetName("기본 점검");
         requestDto.setWorkName("메인보드 점검");
@@ -67,7 +67,7 @@ class RepairWorkServiceTest {
         when(repairWorkMapper.toResponseDto(repairWork)).thenReturn(responseDto);
 
         // when
-        RepairWorkResponseDto result = repairWorkService.createRepairWork(requestDto);
+        RepairWorkResponse result = repairWorkService.createRepairWork(requestDto);
 
         // then
         assertThat(result).isNotNull();
@@ -88,7 +88,7 @@ class RepairWorkServiceTest {
         when(repairWorkMapper.toResponseDto(repairWork)).thenReturn(responseDto);
 
         // when
-        List<RepairWorkResponseDto> result = repairWorkService.getAllRepairWorks();
+        List<RepairWorkResponse> result = repairWorkService.getAllRepairWorks();
 
         // then
         assertThat(result).hasSize(1);
@@ -105,7 +105,7 @@ class RepairWorkServiceTest {
         when(repairWorkMapper.toResponseDto(repairWork)).thenReturn(responseDto);
 
         // when
-        RepairWorkResponseDto result = repairWorkService.getRepairWork(1L);
+        RepairWorkResponse result = repairWorkService.getRepairWork(1L);
 
         // then
         assertThat(result).isNotNull();
@@ -122,7 +122,7 @@ class RepairWorkServiceTest {
         when(repairWorkMapper.toResponseDto(repairWork)).thenReturn(responseDto);
 
         // when
-        List<RepairWorkResponseDto> result = repairWorkService.getRepairWorksByRepairId(1L);
+        List<RepairWorkResponse> result = repairWorkService.getRepairWorksByRepairId(1L);
 
         // then
         assertThat(result).hasSize(1);
@@ -139,7 +139,7 @@ class RepairWorkServiceTest {
         when(repairWorkMapper.toResponseDto(repairWork)).thenReturn(responseDto);
 
         // when
-        List<RepairWorkResponseDto> result = repairWorkService.searchRepairWorks("점검");
+        List<RepairWorkResponse> result = repairWorkService.searchRepairWorks("점검");
 
         // then
         assertThat(result).hasSize(1);
@@ -151,7 +151,7 @@ class RepairWorkServiceTest {
     @DisplayName("수리 작업 내역 수정 성공")
     void updateRepairWork() {
         // given
-        RepairWorkUpdateDto updateDto = new RepairWorkUpdateDto();
+        RepairWorkUpdate updateDto = new RepairWorkUpdate();
         updateDto.setRepairPresetName("부품 교체");
         updateDto.setWorkName("메인보드 교체");
 
@@ -160,7 +160,7 @@ class RepairWorkServiceTest {
         when(repairWorkMapper.toResponseDto(repairWork)).thenReturn(responseDto);
 
         // when
-        RepairWorkResponseDto result = repairWorkService.updateRepairWork(1L, updateDto);
+        RepairWorkResponse result = repairWorkService.updateRepairWork(1L, updateDto);
 
         // then
         assertThat(result).isNotNull();
@@ -198,7 +198,7 @@ class RepairWorkServiceTest {
     @DisplayName("존재하지 않는 수리 데이터로 작업 내역 등록 시 예외 발생")
     void createRepairWorkNotFound() {
         // given
-        RepairWorkRequestDto requestDto = new RepairWorkRequestDto();
+        RepairWorkRequest requestDto = new RepairWorkRequest();
         requestDto.setRepairId(1L);
 
         when(repairRepository.findById(1L)).thenReturn(Optional.empty());

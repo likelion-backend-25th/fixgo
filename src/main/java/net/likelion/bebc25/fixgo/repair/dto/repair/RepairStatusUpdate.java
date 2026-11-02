@@ -6,7 +6,7 @@ import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
 
 @Getter
 @Setter
-public class RepairStatusUpdateDto {
+public class RepairStatusUpdate {
 
     // 변경할 수리 상태
     private RepairStatus status;
