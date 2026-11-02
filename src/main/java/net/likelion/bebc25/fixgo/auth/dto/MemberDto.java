@@ -2,6 +2,7 @@ package net.likelion.bebc25.fixgo.auth.dto;
 
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.entity.Role;
+import net.likelion.bebc25.fixgo.auth.entity.Status;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
@@ -24,12 +25,25 @@ public class MemberDto {
         }
     }
 
-    public record UpdateRequest(
+    public record MemberSearchRequest(
+            String keyword,
+            Role role
+    ) {}
+
+    public record StatusChangeRequest(
             String email,
-            String password,
+            Status status
+    ) {}
+
+    public record PasswordUpdateRequest(
+            String email,
+            String password
+    ) {}
+
+    public record ProfileUpdateRequest(
+            String email,
             String name,
             String phone,
-            Role role,
             String profileImgUrl
     ) {}
 

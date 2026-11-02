@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import net.likelion.bebc25.fixgo.auth.dto.MemberDto;
 import net.likelion.bebc25.fixgo.common.entity.BaseEntity;
 
 import java.time.LocalDateTime;
@@ -58,5 +59,19 @@ public class Member extends BaseEntity {
     public Member(String code, String email, String passwordHash, String name, String phone, Role role, String profileImgUrl) {
         this(code, email, passwordHash, name, role, profileImgUrl);
         this.phone = phone;
+    }
+
+    public void changeStatus(Status newStatus) {
+        this.status = newStatus;
+    }
+
+    public void changePassword(String newPasswordHash) {
+        this.passwordHash = newPasswordHash;
+    }
+
+    public void updateProfile(MemberDto.ProfileUpdateRequest request) {
+        this.name = request.name();
+        this.phone = request.phone();
+        this.profileImgUrl = request.profileImgUrl();
     }
 }
