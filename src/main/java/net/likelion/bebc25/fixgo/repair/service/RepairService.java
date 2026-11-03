@@ -30,19 +30,20 @@ public class RepairService {
     private final MemberRepository memberRepository;
 
     // 수리 등록
+    // 수리 등록
     @Transactional
-    public Map<String, String> createRepair(RepairRequest dto) {
+    public Map<String, String> createRepair(RepairRequest dto, String createdBy) {
 
-        // A/S 접수 정보 조회
         AsRequest asRequest = asRequestRepository.findById(dto.getAsRequestId()).orElseThrow(() -> new IllegalArgumentException("A/S 접수 정보를 찾을 수 없습니다."));
 
-        // 담당 기사 정보 조회
         Member technician = memberRepository.findById(dto.getTechnicianId()).orElseThrow(() -> new IllegalArgumentException("담당 기사를 찾을 수 없습니다."));
 
-        // 수리 생성 (초기 상태 DIAGNOSING)
         Repair repair = new Repair(asRequest, technician, WarrantyResult.FREE, RepairStatus.DIAGNOSING);
 
         repairMapper.toRepairEntity(repair, dto, asRequest, technician);
+
+        // 등록자 및 최종 수정자 저장
+        repair.setCreateAuditInfo(createdBy);
 
         repairRepository.save(repair);
 
@@ -62,9 +63,16 @@ public class RepairService {
         return repairMapper.toRepairResponseDto(findRepair(id));
     }
 
+    // A/S 접수번호로 수리 상세 조회
+    public RepairResponse getRepairByRequestNumber(String requestNumber) {
+        Repair repair = repairRepository.findByRequestNumber(requestNumber).orElseThrow(() -> new IllegalArgumentException("해당 A/S 접수번호의 수리 정보를 찾을 수 없습니다."));
+
+        return repairMapper.toRepairResponseDto(repair);
+    }
+
     // 수리 정보 수정
     @Transactional
-    public RepairResponse updateRepair(Long id, RepairRequest dto) {
+    public RepairResponse updateRepair(Long id, RepairRequest dto, String updatedBy) {
 
         Repair repair = findRepair(id);
 
@@ -75,7 +83,7 @@ public class RepairService {
         Member technician = memberRepository.findById(dto.getTechnicianId()).orElseThrow(() -> new IllegalArgumentException("담당 기사를 찾을 수 없습니다."));
 
         repairMapper.toRepairEntity(repair, dto, asRequest, technician);
-        repair.updateAuditInfo("test");
+        repair.updateAuditInfo(updatedBy);
 
         return repairMapper.toRepairResponseDto(repair);
     }
@@ -93,18 +101,16 @@ public class RepairService {
 
     // 수리 상태 변경
     @Transactional
-    public void changeRepairStatus(Long id, RepairStatus status) {
+    public void changeRepairStatus(Long id, RepairStatus status, String updatedBy) {
 
         Repair repair = findRepair(id);
 
         RepairStatus currentStatus = repair.getStatus();
 
-        // 동일한 상태로 변경하는 경우
         if (currentStatus == status) {
             throw new IllegalArgumentException("이미 해당 상태로 처리되어 있습니다.");
         }
 
-        // 상태 전이 검증
         boolean isValidTransition = switch (currentStatus) {
             case DIAGNOSING -> status == RepairStatus.REQUESTED;
             case REQUESTED -> status == RepairStatus.APPROVED || status == RepairStatus.REJECTED;
@@ -117,6 +123,6 @@ public class RepairService {
             throw new IllegalArgumentException("허용되지 않은 상태 변경입니다. 현재 상태: " + currentStatus + ", 변경 요청 상태: " + status);
         }
 
-        repair.changeStatus(status, "test");
+        repair.changeStatus(status, updatedBy);
     }
 }

@@ -30,17 +30,14 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class RepairServiceTest {
 
+    private static final String TEST_EMAIL = "test@example.com";
     @Mock
     private RepairRepository repairRepository;
-
     @Mock
     private AsRequestRepository asRequestRepository;
-
     @Mock
     private MemberRepository memberRepository;
-
     private RepairMapper repairMapper;
-
     private RepairService repairService;
 
     @BeforeEach
@@ -108,7 +105,7 @@ class RepairServiceTest {
 
         when(memberRepository.findById(20L)).thenReturn(Optional.of(technician));
 
-        Map<String, String> response = repairService.createRepair(dto);
+        Map<String, String> response = repairService.createRepair(dto, TEST_EMAIL);
 
         assertEquals("수리 정보가 등록되었습니다.", response.get("message"));
 
@@ -160,6 +157,28 @@ class RepairServiceTest {
         verify(repairRepository, times(1)).findById(1L);
     }
 
+    // A/S 접수번호로 수리 상세 조회 테스트
+    @Test
+    void getRepairByRequestNumberTest() {
+
+        Repair repair = createRepair();
+
+        String requestNumber = "AS-2026-1112";
+
+        when(repair.getAsRequest().getId()).thenReturn(10L);
+        when(repair.getTechnician().getId()).thenReturn(20L);
+
+        when(repairRepository.findByRequestNumber(requestNumber)).thenReturn(Optional.of(repair));
+
+        RepairResponse response = repairService.getRepairByRequestNumber(requestNumber);
+
+        assertEquals(1L, response.getId());
+        assertEquals(10L, response.getAsRequestId());
+        assertEquals(20L, response.getTechnicianId());
+
+        verify(repairRepository, times(1)).findByRequestNumber(requestNumber);
+    }
+
     // 수리 수정 테스트
     @Test
     void updateRepairTest() {
@@ -179,7 +198,7 @@ class RepairServiceTest {
 
         when(memberRepository.findById(20L)).thenReturn(Optional.of(technician));
 
-        RepairResponse response = repairService.updateRepair(1L, dto);
+        RepairResponse response = repairService.updateRepair(1L, dto, TEST_EMAIL);
 
         assertEquals("CPU 점검", response.getDiagnosis());
         assertEquals("CPU 교체", response.getWorkNote());
@@ -220,7 +239,7 @@ class RepairServiceTest {
 
         when(repairRepository.findById(1L)).thenReturn(Optional.of(repair));
 
-        repairService.changeRepairStatus(1L, RepairStatus.REQUESTED);
+        repairService.changeRepairStatus(1L, RepairStatus.REQUESTED, TEST_EMAIL);
 
         assertEquals(RepairStatus.REQUESTED, repair.getStatus());
     }
@@ -234,7 +253,7 @@ class RepairServiceTest {
 
         when(repairRepository.findById(1L)).thenReturn(Optional.of(repair));
 
-        assertThrows(IllegalArgumentException.class, () -> repairService.changeRepairStatus(1L, RepairStatus.APPROVED));
+        assertThrows(IllegalArgumentException.class, () -> repairService.changeRepairStatus(1L, RepairStatus.APPROVED, TEST_EMAIL));
 
         assertEquals(RepairStatus.DIAGNOSING, repair.getStatus());
     }

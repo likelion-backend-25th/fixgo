@@ -1,12 +1,14 @@
 package net.likelion.bebc25.fixgo.repair.controller;
 
 import lombok.RequiredArgsConstructor;
+import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
 import net.likelion.bebc25.fixgo.repair.dto.repairWork.RepairWorkRequest;
 import net.likelion.bebc25.fixgo.repair.dto.repairWork.RepairWorkResponse;
 import net.likelion.bebc25.fixgo.repair.dto.repairWork.RepairWorkUpdate;
 import net.likelion.bebc25.fixgo.repair.service.RepairWorkService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,8 +22,8 @@ public class RepairWorkController {
 
     // 수리 작업 내역 등록
     @PostMapping
-    public ResponseEntity<RepairWorkResponse> createRepairWork(@RequestBody RepairWorkRequest dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(repairWorkService.createRepairWork(dto));
+    public ResponseEntity<RepairWorkResponse> createRepairWork(@RequestBody RepairWorkRequest dto, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(repairWorkService.createRepairWork(dto, userDetails.getUsername()));
     }
 
     // 수리 작업 내역 전체 조회
@@ -50,8 +52,8 @@ public class RepairWorkController {
 
     // 수리 작업 내역 수정
     @PutMapping("/{id}")
-    public ResponseEntity<RepairWorkResponse> updateRepairWork(@PathVariable Long id, @RequestBody RepairWorkUpdate dto) {
-        return ResponseEntity.ok(repairWorkService.updateRepairWork(id, dto));
+    public ResponseEntity<RepairWorkResponse> updateRepairWork(@PathVariable Long id, @RequestBody RepairWorkUpdate dto, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(repairWorkService.updateRepairWork(id, dto, userDetails.getUsername()));
     }
 
     // 수리 작업 내역 삭제

@@ -29,4 +29,13 @@ public interface RepairRepository extends JpaRepository<Repair, Long> {
             AND r.status = :status
             """)
     List<Repair> findByTechnicianIDAndStatus(@Param("technicianId") Long technicianId, @Param("status") RepairStatus status);
+
+    // A/S 접수번호로 수리 정보 조회
+    @Query("""
+            SELECT r
+            FROM Repair r
+            JOIN r.asRequest a
+            WHERE a.requestNumber = :requestNumber
+            """)
+    Optional<Repair> findByRequestNumber(@Param("requestNumber") String requestNumber);
 }
