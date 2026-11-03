@@ -122,6 +122,9 @@ public class PaymentAttempt {
 
 
     public void markCashDone(Long createdBy) {
+        if (this.getStatus() != PaymentAttemptStatus.READY) {
+            throw new IllegalStateException("현장 현금 결제 완료는 READY 상태에서만 가능합니다. 현재: " + status);
+        }
         changeStatus(PaymentAttemptStatus.DONE);
         this.method = PaymentMethod.CASH;
         this.createdBy = createdBy;

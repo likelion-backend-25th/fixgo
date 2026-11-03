@@ -41,8 +41,8 @@ public class CustomerPortalLink {
      * 링크를 발급한다.
      *
      * @param asReceptionId 링크가 가리키는 A/S 접수 ID
-     * @param tokenHash   서비스가 생성한 토큰의 SHA-256 해시 (64자 16진수)
-     * @param expiresAt   만료 시각
+     * @param tokenHash     서비스가 생성한 토큰의 SHA-256 해시 (64자 16진수)
+     * @param expiresAt     만료 시각
      */
     public static CustomerPortalLink issue(Long asReceptionId, String tokenHash, LocalDateTime expiresAt) {
         if (asReceptionId == null) {

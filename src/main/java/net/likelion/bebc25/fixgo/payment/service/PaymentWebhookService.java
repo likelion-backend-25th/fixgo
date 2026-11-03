@@ -79,15 +79,22 @@ public class PaymentWebhookService {
             case "CANCELED" -> {
                 switch (attempt.getStatus()) {
                     case WAITING_FOR_DEPOSIT -> {
-
+                        attempt.markFailed("VIRTUAL_ACCOUNT_CANCELED", "가상계좌가 취소되었습니다.");
                     }
-                    case DONE -> {
+                    case DONE -> { // TODO: 환불
+                        log.warn("가상계좌 웹훅: 환불 웹훅 orderId={}", webhook.orderId());
                     }
-                    case FAILED -> {
+                    case FAILED -> { // TODO: 이미 취소가 반영됨.
+                        log.info("가상계좌 웹훅: 이미 취소 반영된 결제. orderId={}", webhook.orderId());
                     }
-                    default -> {
+                    default -> { // TODO: 그 외의 상태
+                        log.warn("가상계좌 웹훅: 입금 취소/환불 을 반영할 수 없는 결제 시도 상태. orderId={}, attemptStatus={}",
+                                 webhook.orderId(), attempt.getStatus());
                     }
                 }
+            }
+            default -> {
+                // TODO: DONE, CANCELED 외의 웹훅
             }
         }
 

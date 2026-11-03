@@ -36,7 +36,6 @@ public class PaymentController {
             @RequestBody TossDto.DepositCallbackWebhook request
     ) {
         paymentWebhookService.handleDepositCallback(request);
-        log.info("토스 웹훅 수신: {}", request);
         return ResponseEntity.ok().build();
     }
 }
