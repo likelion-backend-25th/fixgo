@@ -15,10 +15,10 @@ public interface PaymentBillRepository extends JpaRepository<PaymentBill, Long> 
     Optional<PaymentBill> findByIdForUpdate(@Param("id") Long id);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select b from PaymentBill b where b.asRequestId = :asRequestId")
-    Optional<PaymentBill> findByAsRequestIdForUpdate(@Param("asRequestId") Long asRequestId);
+    @Query("select b from PaymentBill b where b.asReceptionId = :asReceptionId")
+    Optional<PaymentBill> findByAsReceptionIdForUpdate(@Param("asReceptionId") Long asReceptionId);
 
-    Optional<PaymentBill> findByAsRequestId(Long asRequestId);
+    Optional<PaymentBill> findByAsReceptionId(Long asReceptionId);
 
-    boolean existsByAsRequestId(Long asRequestId);
+    boolean existsByAsReceptionId(Long asReceptionId);
 }

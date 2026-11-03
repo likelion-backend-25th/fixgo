@@ -38,7 +38,7 @@ import static org.mockito.BDDMockito.then;
 @Import({PaymentConfirmService.class, PaymentAttemptService.class})
 @Transactional(propagation = Propagation.NOT_SUPPORTED) // 테스트 전체를 감싸는 트랜잭션을 끈다 
 class PaymentConfirmServiceTest {
-    private static final Long AS_REQUEST_ID = 1L;
+    private static final Long AS_RECEPTION_ID = 1L;
     private static final String PAYMENT_KEY = "test_payment_key";
     private static final OffsetDateTime APPROVED_AT =
             OffsetDateTime.of(2026, 11, 1, 15, 30, 0, 0, ZoneOffset.ofHours(9));
@@ -61,7 +61,7 @@ class PaymentConfirmServiceTest {
     }
 
     private PaymentBill issueBill() {
-        return paymentBillRepository.save(PaymentBill.issue(AS_REQUEST_ID, 30_000L, PaymentBillType.REPAIR));
+        return paymentBillRepository.save(PaymentBill.issue(AS_RECEPTION_ID, 30_000L, PaymentBillType.REPAIR));
     }
 
     private PaymentAttempt findAttempt(String orderId) {
@@ -73,7 +73,7 @@ class PaymentConfirmServiceTest {
     void success() {
         // given
         PaymentBill bill = issueBill();
-        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(AS_REQUEST_ID);
+        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(AS_RECEPTION_ID);
         given(tossPaymentsClient.confirm(PAYMENT_KEY, started.orderId(), started.amount()))
                 .willReturn(new TossDto.ConfirmResponse(PAYMENT_KEY, started.orderId(), "DONE", APPROVED_AT, null, null));
 
@@ -97,7 +97,7 @@ class PaymentConfirmServiceTest {
     void amountMismatch() {
         // given
         PaymentBill bill = issueBill();
-        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(AS_REQUEST_ID);
+        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(AS_RECEPTION_ID);
 
         // when & then
         assertThatThrownBy(() -> paymentConfirmService.confirmPayment(PAYMENT_KEY, started.orderId(), 1_000L))
@@ -119,7 +119,7 @@ class PaymentConfirmServiceTest {
     void alreadyInProgress() {
         // given: 첫 번째 요청이 승인 준비까지 마친 상태
         PaymentBill bill = issueBill();
-        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(AS_REQUEST_ID);
+        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(AS_RECEPTION_ID);
         paymentAttemptService.prepareConfirm(started.orderId(), started.amount());
 
         // when & then: 두 번째 요청
@@ -138,7 +138,7 @@ class PaymentConfirmServiceTest {
     void tossRejected() {
         // given
         PaymentBill bill = issueBill();
-        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(AS_REQUEST_ID);
+        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(AS_RECEPTION_ID);
 
         HttpClientErrorException rejected = HttpClientErrorException.create(
                 HttpStatus.BAD_REQUEST, "Bad Request", HttpHeaders.EMPTY, new byte[0], StandardCharsets.UTF_8);
@@ -163,7 +163,7 @@ class PaymentConfirmServiceTest {
     void tossTimeout() {
         // given
         PaymentBill bill = issueBill();
-        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(AS_REQUEST_ID);
+        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(AS_RECEPTION_ID);
         given(tossPaymentsClient.confirm(any(), any(), any()))
                 .willThrow(new ResourceAccessException("Read timed out"));
 

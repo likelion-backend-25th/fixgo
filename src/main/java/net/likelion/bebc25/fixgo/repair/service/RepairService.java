@@ -26,15 +26,15 @@ public class RepairService {
 
     private final RepairRepository repairRepository;
     private final RepairMapper repairMapper;
-    private final AsReceptionRepository asRequestRepository;
+    private final AsReceptionRepository asReceptionRepository;
     private final MemberRepository memberRepository;
 
     // 수리 등록
     @Transactional
-    public Map<String, String> createRepair(RepairRequest dto) {
+    public Map<String, String> createRepair(RepairRequest dto, String createdBy) {
 
         // A/S 접수 정보 조회
-        AsReception asReception = asRequestRepository.findById(dto.getAsReceptionId()).orElseThrow(() -> new IllegalArgumentException("A/S 접수 정보를 찾을 수 없습니다."));
+        AsReception asReception = asReceptionRepository.findById(dto.getAsReceptionId()).orElseThrow(() -> new IllegalArgumentException("A/S 접수 정보를 찾을 수 없습니다."));
 
         // 담당 기사 정보 조회
         Member technician = memberRepository.findById(dto.getTechnicianId()).orElseThrow(() -> new IllegalArgumentException("담당 기사를 찾을 수 없습니다."));
@@ -43,6 +43,9 @@ public class RepairService {
         Repair repair = new Repair(asReception, technician, WarrantyResult.FREE, RepairStatus.DIAGNOSING);
 
         repairMapper.toRepairEntity(repair, dto, asReception, technician);
+
+        // 생성자 정보 기록
+        repair.setCreateAuditInfo(createdBy);
 
         repairRepository.save(repair);
 
@@ -62,20 +65,29 @@ public class RepairService {
         return repairMapper.toRepairResponseDto(findRepair(id));
     }
 
+    // 요청번호로 수리 상세 조회
+    public RepairResponse getRepairByReceptionNumber(String receptionNumber) {
+        Repair repair = repairRepository.findByReceptionNumber(receptionNumber).orElseThrow(() -> new IllegalArgumentException("해당 접수번호의 수리 정보를 찾을 수 없습니다."));
+
+        return repairMapper.toRepairResponseDto(repair);
+    }
+
     // 수리 정보 수정
     @Transactional
-    public RepairResponse updateRepair(Long id, RepairRequest dto) {
+    public RepairResponse updateRepair(Long id, RepairRequest dto, String updatedBy) {
 
         Repair repair = findRepair(id);
 
         // A/S 접수 정보 조회
-        AsReception asReception = asRequestRepository.findById(dto.getAsReceptionId()).orElseThrow(() -> new IllegalArgumentException("A/S 접수 정보를 찾을 수 없습니다."));
+        AsReception asReception = asReceptionRepository.findById(dto.getAsReceptionId()).orElseThrow(() -> new IllegalArgumentException("A/S 접수 정보를 찾을 수 없습니다."));
 
         // 담당 기사 정보 조회
         Member technician = memberRepository.findById(dto.getTechnicianId()).orElseThrow(() -> new IllegalArgumentException("담당 기사를 찾을 수 없습니다."));
 
         repairMapper.toRepairEntity(repair, dto, asReception, technician);
-        repair.updateAuditInfo("test");
+
+        // 수정자 정보 기록
+        repair.updateAuditInfo(updatedBy);
 
         return repairMapper.toRepairResponseDto(repair);
     }
@@ -93,7 +105,7 @@ public class RepairService {
 
     // 수리 상태 변경
     @Transactional
-    public void changeRepairStatus(Long id, RepairStatus status) {
+    public void changeRepairStatus(Long id, RepairStatus status, String updatedBy) {
 
         Repair repair = findRepair(id);
 
@@ -117,6 +129,6 @@ public class RepairService {
             throw new IllegalArgumentException("허용되지 않은 상태 변경입니다. 현재 상태: " + currentStatus + ", 변경 요청 상태: " + status);
         }
 
-        repair.changeStatus(status, "test");
+        repair.changeStatus(status, updatedBy);
     }
 }
