@@ -1,15 +1,19 @@
 package net.likelion.bebc25.fixgo.as.dto;
 
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import net.likelion.bebc25.fixgo.as.entity.AsAttachment;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
+import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.customer.entity.Customer;
 import net.likelion.bebc25.fixgo.product.entity.Product;
 import net.likelion.bebc25.fixgo.shipment.entity.ReturnMethod;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.UUID;
 
 public class AsReceptionDto {
 
@@ -33,18 +37,27 @@ public class AsReceptionDto {
             String symptomDetail,
 
             @Size(max = 1000)
-            String Memo,
+            String memo,
 
             // null이면 Entity 생성자에서 DELIVERY 적용
             ReturnMethod returnMethod,
 
-            @Valid
-            AsAttachmentReception attachment
+            String fileUrl
 
     ) {
 
-        public AsReception toEntity(Customer customer, Product product, Member receptionist, Member technician, AsAttachment attachment) {
-            return new AsReception("AS-2026", customer, product, receptionist, technician, symptom, symptomDetail, Memo, returnMethod, attachment);
+        public AsReception toEntity(
+                Customer customer,
+                Product product,
+                Member receptionist,
+                Member technician
+        ) {
+            String receptionNumber = "AS-%s-%s".formatted(
+                    LocalDate.now().format(DateTimeFormatter.ofPattern("yyMMss")),
+                    UUID.randomUUID()
+            );
+
+            return new AsReception(receptionNumber, customer, product, receptionist, technician, symptom, symptomDetail, memo, returnMethod, fileUrl);
         }
 
     }
@@ -61,42 +74,77 @@ public class AsReceptionDto {
     ) {
     }
 
-    public record Response(
-
+    public record ListResponse(
             Long id,
+            String receptionNumber,
+            LocalDateTime createdAt,
+            String customerName,
+            String customerPhone,
+            String modelName,
+            AsReceptionStatus status,
+            String technicianName
+    ) {
+        public static ListResponse from(
+                AsReception reception,
+                String modelName
+        ) {
+            Member technician = reception.getTechnician();
+
+            return new ListResponse(
+                    reception.getId(),
+                    reception.getReceptionNumber(),
+                    reception.getCreatedAt(),
+                    reception.getCustomer().getName(),
+                    reception.getCustomer().getPhone(),
+                    modelName,
+                    reception.getStatus(),
+                    technician == null ? null : technician.getName()
+            );
+        }
+    }
+
+    public record DetailResponse(
+            Long id,
+            String receptionNumber,
+            LocalDateTime createdAt,
 
             Customer customer,
-
             Product product,
-
+            Member receptionist,
             Member technician,
 
+            AsReceptionStatus status,
+            LocalDateTime statusChangedAt,
+            LocalDateTime closedAt,
+
             String symptom,
-
             String symptomDetail,
-
-            String Memo,
+            String memo,
 
             ReturnMethod returnMethod,
-
-            AsAttachmentReception attachment
+            String fileUrl
     ) {
-        public static Response from(AsReception asReception) {
-            AsAttachment attachment = asReception.getAttachment();
+        public static DetailResponse from(AsReception asReception) {
 
-            return new Response(
+            return new DetailResponse(
                     asReception.getId(),
+                    asReception.getReceptionNumber(),
+                    asReception.getCreatedAt(),
+
                     asReception.getCustomer(),
                     asReception.getProduct(),
+                    asReception.getReceptionist(),
                     asReception.getTechnician(),
+
+                    asReception.getStatus(),
+                    asReception.getStatusChangedAt(),
+                    asReception.getClosedAt(),
+
                     asReception.getSymptom(),
                     asReception.getSymptomDetail(),
                     asReception.getMemo(),
                     asReception.getReturnMethod(),
-                    attachment == null ? null : new AsAttachmentReception(
-                            attachment.getFileUrl(),
-                            attachment.getOriginalName())
-
+                    asReception.getFileUrl()
             );
         }
     }
