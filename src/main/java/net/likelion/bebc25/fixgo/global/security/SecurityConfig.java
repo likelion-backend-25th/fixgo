@@ -50,7 +50,6 @@ public class SecurityConfig {
 
                         // TODO: 로컬 결제 테스트용 페이지. 실제 프론트 연결 후 제거
                         .requestMatchers("/payment.html", "/success.html", "/fail.html").permitAll()
-<<<<<<< Updated upstream
 
                         // 이메일 전송 테스트 (제거예정)
                         .requestMatchers("/api/v1/notifications/**").permitAll()
@@ -59,16 +58,6 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/v3/api-docs"
                         ).permitAll()
-
-=======
-                        // 로그인 없이 swagger ui 조회
-                        .requestMatchers(
-                                "/swagger-ui.html",
-                                "/swagger-ui/**",
-                                "/v3/api-docs",
-                                "/v3/api-docs/**"
-                        ).permitAll()
->>>>>>> Stashed changes
                         .anyRequest().authenticated()
                 )
                 // REST API 환경: CSRF 비활성화
@@ -85,7 +74,7 @@ public class SecurityConfig {
 
                 // 세션을 사용하지 않는 Stateless 방식
                 .sessionManagement(session ->
-                                           session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
                 // 커스텀 JWT 인증 필터를 UsernamePasswordAuthenticationFilter 바로 앞에 배치
