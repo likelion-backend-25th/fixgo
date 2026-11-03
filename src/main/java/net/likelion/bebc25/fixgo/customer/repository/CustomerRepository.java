@@ -14,4 +14,7 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
     // 이메일로 고객 검색
     List<Customer> findByEmailContaining(String keyword);
+
+    // 연락처 중복 확인
+    boolean existsByPhone(String phone);
 }
