@@ -24,6 +24,7 @@ public class LaborRate extends BaseEntity {
     private int cost;
 
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private RateType rateType;
 
     @Column(nullable = false)

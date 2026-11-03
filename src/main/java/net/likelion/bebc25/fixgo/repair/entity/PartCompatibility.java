@@ -26,7 +26,7 @@ public class PartCompatibility {
 
     @MapsId
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "part_id", nullable = false)
+    @JoinColumn(name = "product_model_id", nullable = false)
     ProductModel productModel;
 
     public PartCompatibility(Part part, ProductModel productModel) {
