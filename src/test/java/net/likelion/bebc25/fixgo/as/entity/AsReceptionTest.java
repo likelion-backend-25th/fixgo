@@ -20,12 +20,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @Import(JpaConfig.class)
 @DataJpaTest
-public class AsRequestTest {
+public class AsReceptionTest {
 
     @Autowired
     private EntityManager em;
 
-    private Long newAsRequestId;
+    private Long newAsReceptionId;
     private Customer customer;
     private Product product;
     private Member member;
@@ -50,27 +50,55 @@ public class AsRequestTest {
     }
 
     @Test
-    @DisplayName("접수 등록")
+    @DisplayName("첨부파일 없이 접수 등록")
     void registration() {
+        // given
+        AsReception asReception = new AsReception(
+                "AS-2026-1030",
+                customer,
+                product,
+                member,
+                technician,
+                "충전불량",
+                "충전이 안 됩니다",
+                "일주일 내로 수리 부탁드립니다.",
+                ReturnMethod.DELIVERY,
+                null
+        );
 
-        AsRequest asRequest = new AsRequest("AS-2026-1030", customer, product, member, technician, "충전불량", "충전이 안 됩니다", "일주일 내로 수리 부탁드립니다.", ReturnMethod.DELIVERY);
-
-        em.persist(asRequest); // insert 쿼리문이 실행되어 접수가 등록됨
+        // when
+        em.persist(asReception);
         em.flush();
 
-        Long requestId = asRequest.getId();
+        Long receptionId = asReception.getId();
         Long technicianId = technician.getId();
 
         // DB에서 다시 조회하도록 영속성 컨텍스트 초기화
         em.clear();
 
-        AsRequest findRequest = em.find(AsRequest.class, asRequest.getId());
+        AsReception findReception = em.find(
+                AsReception.class,
+                receptionId
+        );
 
-        assertThat(findRequest).isNotNull();
-        assertThat(findRequest.getId()).isEqualTo(asRequest.getId());
-        assertThat(findRequest.getSymptom()).isEqualTo(asRequest.getSymptom());
-        assertThat(findRequest.getTechnician().getId()).isEqualTo(technicianId);
-
+        // then
+        assertThat(findReception).isNotNull();
+        assertThat(findReception.getId()).isEqualTo(receptionId);
+        assertThat(findReception.getReceptionNumber())
+                .isEqualTo("AS-2026-1030");
+        assertThat(findReception.getSymptom()).isEqualTo("충전불량");
+        assertThat(findReception.getSymptomDetail())
+                .isEqualTo("충전이 안 됩니다");
+        assertThat(findReception.getMemo())
+                .isEqualTo("일주일 내로 수리 부탁드립니다.");
+        assertThat(findReception.getTechnician().getId())
+                .isEqualTo(technicianId);
+        assertThat(findReception.getReturnMethod())
+                .isEqualTo(ReturnMethod.DELIVERY);
+        assertThat(findReception.getStatus())
+                .isEqualTo(AsReceptionStatus.RECEIVED);
+        assertThat(findReception.getStatusChangedAt()).isNotNull();
+        assertThat(findReception.getAttachment()).isNull();
     }
-
+    
 }

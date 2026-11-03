@@ -16,14 +16,14 @@ import java.time.LocalDateTime;
 @Table(indexes = {@Index(name = "IDX_AS_CUSTOMER", columnList = "customer_id"), @Index(name = "IDX_AS_PRODUCT", columnList = "product_id"), @Index(name = "IDX_AS_RECEPTIONIST", columnList = "receptionist_id"), @Index(name = "IDX_AS_TECHNICIAN", columnList = "technician_id"), @Index(name = "IDX_AS_STATUS", columnList = "status"), @Index(name = "IDX_AS_CREATED", columnList = "created_at")})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class AsRequest extends BaseEntity {
+public class AsReception extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(unique = true, nullable = false)
-    private String requestNumber;
+    private String receptionNumber;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(nullable = false)
@@ -48,7 +48,7 @@ public class AsRequest extends BaseEntity {
     private String symptomDetail;
 
     @Column(length = 1000)
-    private String requestMemo;
+    private String Memo;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -56,7 +56,7 @@ public class AsRequest extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private AsRequestStatus status = AsRequestStatus.RECEIVED;
+    private AsReceptionStatus status = AsReceptionStatus.RECEIVED;
 
     @Column(nullable = false)
     private LocalDateTime statusChangedAt;
@@ -64,15 +64,19 @@ public class AsRequest extends BaseEntity {
     @Column
     private LocalDateTime closedAt;
 
-    public AsRequest(String requestNumber, Customer customer, Product product, Member receptionist, Member technician, String symptom, String symptomDetail, String requestMemo, ReturnMethod returnMethod) {
-        this.requestNumber = requestNumber;
+    @OneToOne(fetch = FetchType.LAZY)
+    private AsAttachment attachment;
+
+    public AsReception(String receptionNumber, Customer customer, Product product, Member receptionist, Member technician, String symptom, String symptomDetail, String requestMemo, ReturnMethod returnMethod, AsAttachment attachment) {
+        this.receptionNumber = receptionNumber;
         this.customer = customer;
         this.product = product;
         this.receptionist = receptionist;
         this.technician = technician;
         this.symptom = symptom;
         this.symptomDetail = symptomDetail;
-        this.requestMemo = requestMemo;
+        this.Memo = requestMemo;
+        this.attachment = attachment;
 
         if (returnMethod != null) {
             this.returnMethod = returnMethod;

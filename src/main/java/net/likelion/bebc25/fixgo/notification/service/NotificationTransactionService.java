@@ -3,7 +3,7 @@ package net.likelion.bebc25.fixgo.notification.service;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import lombok.RequiredArgsConstructor;
-import net.likelion.bebc25.fixgo.as.entity.AsRequest;
+import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.notification.dto.EmailDto;
 import net.likelion.bebc25.fixgo.notification.entity.NotificationLog;
 import net.likelion.bebc25.fixgo.notification.entity.NotificationStatus;
@@ -23,17 +23,17 @@ public class NotificationTransactionService {
     @Transactional
     public Long createNotification(EmailDto.CreateRequest request, String eventKey) {
 
-        AsRequest asRequest = null;
+        AsReception asReception = null;
 
-        if (request.asRequestId() != null) {
-            asRequest = entityManager.find(AsRequest.class, request.asRequestId());
+        if (request.asReceptionId() != null) {
+            asReception = entityManager.find(AsReception.class, request.asReceptionId());
         }
 //        if (asRequest == null) {
 //            throw new IllegalArgumentException("존재하지 않는 A/S접수입니다. id: " + request.asRequestId());
 //        }
 
         NotificationLog log = NotificationLog.create(
-                asRequest,
+                asReception,
                 null,
                 eventKey,
                 request.notificationType(),

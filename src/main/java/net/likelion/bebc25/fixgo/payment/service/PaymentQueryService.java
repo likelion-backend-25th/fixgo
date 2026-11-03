@@ -22,8 +22,8 @@ public class PaymentQueryService {
     private final PaymentAttemptRepository paymentAttemptRepository;
     private final VirtualAccountRepository virtualAccountRepository;
 
-    public PaymentDto.PaymentSummaryResponse getSummary(Long asRequestId) {
-        PaymentBill bill = paymentBillRepository.findByAsRequestId(asRequestId).orElse(null);
+    public PaymentDto.PaymentSummaryResponse getSummary(Long asReceptionId) {
+        PaymentBill bill = paymentBillRepository.findByAsReceptionId(asReceptionId).orElse(null);
         if (bill == null) {
             return PaymentDto.PaymentSummaryResponse.notIssued();
         }

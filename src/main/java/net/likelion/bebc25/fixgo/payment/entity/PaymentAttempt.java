@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
@@ -99,15 +98,28 @@ public class PaymentAttempt {
      * @param paymentKey 토스 승인 응답의 paymentKey (환불 시 필요)
      * @param approvedAt 토스 승인 시각
      */
-    public void markCardDone(String paymentKey, OffsetDateTime approvedAt) {
+    public void markCardDone(String paymentKey, LocalDateTime approvedAt) {
         if (this.getStatus() != PaymentAttemptStatus.IN_PROGRESS) {
             throw new IllegalStateException("카드 결제 완료는 IN_PROGRESS 상태에서만 가능합니다. 현재: " + status);
         }
         changeStatus(PaymentAttemptStatus.DONE);
         this.paymentKey = paymentKey;
         this.method = PaymentMethod.CARD;
-        this.approvedAt = approvedAt.toLocalDateTime();
+        this.approvedAt = approvedAt;
     }
+
+    /**
+     * 온라인(가상계좌) 결제 승인 완료 처리
+     * 반드시 입금 대기(WAITING_FOR_DEPOSIT)를 거친 시도만 완료할 수 있다.
+     */
+    public void markVirtualAccountDone(LocalDateTime approvedAt) {
+        if (this.getStatus() != PaymentAttemptStatus.WAITING_FOR_DEPOSIT) {
+            throw new IllegalStateException("가상 계좌 결제 완료는 WAITING_FOR_DEPOSIT 상태에서만 가능합니다. 현재: " + status);
+        }
+        this.approvedAt = approvedAt;
+        changeStatus(PaymentAttemptStatus.DONE);
+    }
+
 
     public void markCashDone(Long createdBy) {
         changeStatus(PaymentAttemptStatus.DONE);

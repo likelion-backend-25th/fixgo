@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import net.likelion.bebc25.fixgo.as.entity.AsRequest;
+import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -58,12 +58,12 @@ public class NotificationLog {
     private Member createdBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "as_request_id")
-    private AsRequest asRequest;
+    @JoinColumn(name = "as_reception_id")
+    private AsReception asReception;
 
     // 이메일 발송 이력
     public static NotificationLog create(
-            AsRequest asRequest,
+            AsReception asReception,
             Member createdBy,
             String eventKey,
             NotificationType notificationType,
@@ -73,7 +73,7 @@ public class NotificationLog {
     ) {
         NotificationLog notificationLog = new NotificationLog();
 
-        notificationLog.asRequest = asRequest;
+        notificationLog.asReception = asReception;
         notificationLog.createdBy = createdBy;
         notificationLog.eventKey = eventKey;
         notificationLog.notificationType = notificationType;

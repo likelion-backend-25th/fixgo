@@ -11,7 +11,7 @@ import java.util.Optional;
 @EnableJpaAuditing
 public class JpaConfig {
     @Bean
-    public AuditorAware<String> auditorProvider() {
-        return () -> Optional.of("SYSTEM");
+    public AuditorAware<Long> auditorProvider() {
+        return () -> Optional.of(1L);
     }
 }

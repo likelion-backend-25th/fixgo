@@ -10,7 +10,7 @@ public class EmailDto {
 
     // 이메일 발송 요청
     public record CreateRequest(
-            Long asRequestId,
+            Long asReceptionId,
             String recipientEmail,
             String messageTitle,
             String message,
@@ -40,7 +40,7 @@ public class EmailDto {
 
     public record DetailResponse(
             Long id,
-            Long asRequestId,
+            Long asReceptionId,
             String customerName,
             String eventKey,
             NotificationType notificationType,
@@ -57,8 +57,8 @@ public class EmailDto {
         public static DetailResponse from(NotificationLog notificationLog) {
             return new DetailResponse(
                     notificationLog.getId(),
-                    notificationLog.getAsRequest() != null ? notificationLog.getAsRequest().getId() : null,
-                    notificationLog.getAsRequest().getCustomer().getName(),
+                    notificationLog.getAsReception() != null ? notificationLog.getAsReception().getId() : null,
+                    notificationLog.getAsReception().getCustomer().getName(),
                     notificationLog.getEventKey(),
                     notificationLog.getNotificationType(),
                     notificationLog.getRecipientEmail(),

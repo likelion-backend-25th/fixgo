@@ -41,9 +41,9 @@ public class RepairController {
         return ResponseEntity.ok(repairService.getRepair(id));
     }
 
-    @GetMapping("/request/{requestNumber}")
-    public ResponseEntity<RepairResponse> getRepairByRequestNumber(@PathVariable String requestNumber) {
-        return ResponseEntity.ok(repairService.getRepairByRequestNumber(requestNumber));
+    @GetMapping("/reception/{receptionNumber}")
+    public ResponseEntity<RepairResponse> getRepairByReceptionNumber(@PathVariable String receptionNumber) {
+        return ResponseEntity.ok(repairService.getRepairByReceptionNumber(receptionNumber));
     }
 
     // 수리 정보 수정

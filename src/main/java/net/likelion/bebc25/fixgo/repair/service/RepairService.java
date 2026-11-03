@@ -1,8 +1,8 @@
 package net.likelion.bebc25.fixgo.repair.service;
 
 import lombok.RequiredArgsConstructor;
-import net.likelion.bebc25.fixgo.as.entity.AsRequest;
-import net.likelion.bebc25.fixgo.as.repository.AsRequestRepository;
+import net.likelion.bebc25.fixgo.as.entity.AsReception;
+import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairRequest;
@@ -26,23 +26,25 @@ public class RepairService {
 
     private final RepairRepository repairRepository;
     private final RepairMapper repairMapper;
-    private final AsRequestRepository asRequestRepository;
+    private final AsReceptionRepository asReceptionRepository;
     private final MemberRepository memberRepository;
 
-    // 수리 등록
     // 수리 등록
     @Transactional
     public Map<String, String> createRepair(RepairRequest dto, String createdBy) {
 
-        AsRequest asRequest = asRequestRepository.findById(dto.getAsRequestId()).orElseThrow(() -> new IllegalArgumentException("A/S 접수 정보를 찾을 수 없습니다."));
+        // A/S 접수 정보 조회
+        AsReception asReception = asReceptionRepository.findById(dto.getAsReceptionId()).orElseThrow(() -> new IllegalArgumentException("A/S 접수 정보를 찾을 수 없습니다."));
 
+        // 담당 기사 정보 조회
         Member technician = memberRepository.findById(dto.getTechnicianId()).orElseThrow(() -> new IllegalArgumentException("담당 기사를 찾을 수 없습니다."));
 
-        Repair repair = new Repair(asRequest, technician, WarrantyResult.FREE, RepairStatus.DIAGNOSING);
+        // 수리 생성 (초기 상태 DIAGNOSING)
+        Repair repair = new Repair(asReception, technician, WarrantyResult.FREE, RepairStatus.DIAGNOSING);
 
-        repairMapper.toRepairEntity(repair, dto, asRequest, technician);
+        repairMapper.toRepairEntity(repair, dto, asReception, technician);
 
-        // 등록자 및 최종 수정자 저장
+        // 생성자 정보 기록
         repair.setCreateAuditInfo(createdBy);
 
         repairRepository.save(repair);
@@ -63,9 +65,9 @@ public class RepairService {
         return repairMapper.toRepairResponseDto(findRepair(id));
     }
 
-    // A/S 접수번호로 수리 상세 조회
-    public RepairResponse getRepairByRequestNumber(String requestNumber) {
-        Repair repair = repairRepository.findByRequestNumber(requestNumber).orElseThrow(() -> new IllegalArgumentException("해당 A/S 접수번호의 수리 정보를 찾을 수 없습니다."));
+    // 요청번호로 수리 상세 조회
+    public RepairResponse getRepairByReceptionNumber(String receptionNumber) {
+        Repair repair = repairRepository.findByReceptionNumber(receptionNumber).orElseThrow(() -> new IllegalArgumentException("해당 접수번호의 수리 정보를 찾을 수 없습니다."));
 
         return repairMapper.toRepairResponseDto(repair);
     }
@@ -77,12 +79,14 @@ public class RepairService {
         Repair repair = findRepair(id);
 
         // A/S 접수 정보 조회
-        AsRequest asRequest = asRequestRepository.findById(dto.getAsRequestId()).orElseThrow(() -> new IllegalArgumentException("A/S 접수 정보를 찾을 수 없습니다."));
+        AsReception asReception = asReceptionRepository.findById(dto.getAsReceptionId()).orElseThrow(() -> new IllegalArgumentException("A/S 접수 정보를 찾을 수 없습니다."));
 
         // 담당 기사 정보 조회
         Member technician = memberRepository.findById(dto.getTechnicianId()).orElseThrow(() -> new IllegalArgumentException("담당 기사를 찾을 수 없습니다."));
 
-        repairMapper.toRepairEntity(repair, dto, asRequest, technician);
+        repairMapper.toRepairEntity(repair, dto, asReception, technician);
+
+        // 수정자 정보 기록
         repair.updateAuditInfo(updatedBy);
 
         return repairMapper.toRepairResponseDto(repair);
@@ -107,10 +111,12 @@ public class RepairService {
 
         RepairStatus currentStatus = repair.getStatus();
 
+        // 동일한 상태로 변경하는 경우
         if (currentStatus == status) {
             throw new IllegalArgumentException("이미 해당 상태로 처리되어 있습니다.");
         }
 
+        // 상태 전이 검증
         boolean isValidTransition = switch (currentStatus) {
             case DIAGNOSING -> status == RepairStatus.REQUESTED;
             case REQUESTED -> status == RepairStatus.APPROVED || status == RepairStatus.REJECTED;

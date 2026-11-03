@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -88,16 +89,16 @@ class RepairControllerTest {
 
     // A/S 접수번호로 수리 상세 조회 테스트
     @Test
-    @org.springframework.security.test.context.support.WithMockUser
-    void getRepairByRequestNumberTest() throws Exception {
+    @WithMockUser
+    void getRepairByReceptionNumberTest() throws Exception {
 
-        String requestNumber = "AS-2026-1112";
+        String receptionNumber = "AS-2026-1112";
 
-        when(repairService.getRepairByRequestNumber(requestNumber)).thenReturn(new RepairResponse());
+        when(repairService.getRepairByReceptionNumber(receptionNumber)).thenReturn(new RepairResponse());
 
-        mockMvc.perform(get("/api/as/repairs/request/{requestNumber}", requestNumber)).andExpect(status().isOk());
+        mockMvc.perform(get("/api/as/repairs/reception/{receptionNumber}", receptionNumber)).andExpect(status().isOk());
 
-        verify(repairService, times(1)).getRepairByRequestNumber(requestNumber);
+        verify(repairService, times(1)).getRepairByReceptionNumber(receptionNumber);
     }
 
     // 수리 정보 수정 테스트

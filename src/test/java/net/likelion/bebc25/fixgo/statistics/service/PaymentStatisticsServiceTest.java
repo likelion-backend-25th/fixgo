@@ -17,8 +17,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -50,7 +49,7 @@ class PaymentStatisticsServiceTest {
         return paymentBillRepository.save(PaymentBill.issue(asRequestId, amount, PaymentBillType.REPAIR));
     }
 
-    private void createDoneAttempt(PaymentBill bill, String paymentKey, OffsetDateTime approvedAt) {
+    private void createDoneAttempt(PaymentBill bill, String paymentKey, LocalDateTime approvedAt) {
         PaymentAttempt attempt = PaymentAttempt.create(bill);
         attempt.markInProgress();
         attempt.markCardDone(paymentKey, approvedAt);
@@ -68,9 +67,9 @@ class PaymentStatisticsServiceTest {
         PaymentBill bill1 = issueBill(1L, 18_400_000L);
         PaymentBill bill2 = issueBill(2L, 500_000L);
 
-        createDoneAttempt(bill1, "payment_key_1", OffsetDateTime.of(2026, 10, 10, 15, 30, 0, 0, ZoneOffset.ofHours(9)));
+        createDoneAttempt(bill1, "payment_key_1", LocalDateTime.of(2026, 10, 10, 15, 30));
 
-        createDoneAttempt(bill2, "payment_key_2", OffsetDateTime.of(2026, 10, 20, 15, 30, 0, 0, ZoneOffset.ofHours(9)));
+        createDoneAttempt(bill2, "payment_key_2", LocalDateTime.of(2026, 10, 20, 15, 30));
 
         // when
         PaymentStatisticsResponse response = paymentStatisticsService.getPaymentStatistics(startDate, endDate);

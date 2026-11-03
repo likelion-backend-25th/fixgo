@@ -16,8 +16,6 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -26,9 +24,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @Import({PaymentQueryService.class, PaymentAttemptService.class})
 class PaymentQueryServiceTest {
 
-    private static final Long AS_REQUEST_ID = 1L;
-    private static final OffsetDateTime APPROVED_AT =
-            OffsetDateTime.of(2026, 11, 2, 15, 30, 0, 0, ZoneOffset.ofHours(9));
+    private static final Long AS_RECEPTION_ID = 1L;
+    private static final LocalDateTime APPROVED_AT =
+            LocalDateTime.of(2026, 11, 2, 15, 30);
     private static final LocalDateTime DUE_AT = LocalDateTime.of(2026, 11, 9, 23, 59, 59);
 
     @Autowired
@@ -45,13 +43,13 @@ class PaymentQueryServiceTest {
     EntityManager em;
 
     private PaymentBill issueBill() {
-        return paymentBillRepository.save(PaymentBill.issue(AS_REQUEST_ID, 30_000L, PaymentBillType.REPAIR));
+        return paymentBillRepository.save(PaymentBill.issue(AS_RECEPTION_ID, 30_000L, PaymentBillType.REPAIR));
     }
 
     @Test
     @DisplayName("청구서가 없으면 NOT_ISSUED이고 나머지 값은 모두 비어 있다.")
     void notIssued() {
-        PaymentDto.PaymentSummaryResponse summary = paymentQueryService.getSummary(AS_REQUEST_ID);
+        PaymentDto.PaymentSummaryResponse summary = paymentQueryService.getSummary(AS_RECEPTION_ID);
 
         assertThat(summary.status()).isEqualTo(PaymentDto.PaymentSummaryResponse.Status.NOT_ISSUED);
         assertThat(summary.amount()).isNull();
@@ -64,7 +62,7 @@ class PaymentQueryServiceTest {
     void unpaid() {
         issueBill();
 
-        PaymentDto.PaymentSummaryResponse summary = paymentQueryService.getSummary(AS_REQUEST_ID);
+        PaymentDto.PaymentSummaryResponse summary = paymentQueryService.getSummary(AS_RECEPTION_ID);
 
         assertThat(summary.status()).isEqualTo(PaymentDto.PaymentSummaryResponse.Status.UNPAID);
         assertThat(summary.orderName()).isEqualTo("A/S 수리비");
@@ -77,9 +75,9 @@ class PaymentQueryServiceTest {
     @DisplayName("결제 시작만 하고 승인 전이면 여전히 UNPAID다.")
     void startedButNotPaid() {
         PaymentBill bill = issueBill();
-        paymentAttemptService.startPayment(AS_REQUEST_ID);
+        paymentAttemptService.startPayment(AS_RECEPTION_ID);
 
-        PaymentDto.PaymentSummaryResponse summary = paymentQueryService.getSummary(AS_REQUEST_ID);
+        PaymentDto.PaymentSummaryResponse summary = paymentQueryService.getSummary(AS_RECEPTION_ID);
 
         assertThat(summary.status()).isEqualTo(PaymentDto.PaymentSummaryResponse.Status.UNPAID);
     }
@@ -89,14 +87,14 @@ class PaymentQueryServiceTest {
     void paid() {
         // given: 실제 결제 흐름을 거쳐 결제 완료 상태를 만든다 (토스 호출 단계는 제외)
         PaymentBill bill = issueBill();
-        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(AS_REQUEST_ID);
+        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(AS_RECEPTION_ID);
         paymentAttemptService.prepareConfirm(started.orderId(), started.amount());
         paymentAttemptService.completeConfirm(started.orderId(), "test_payment_key", APPROVED_AT);
         em.flush();
         em.clear();
 
         // when
-        PaymentDto.PaymentSummaryResponse summary = paymentQueryService.getSummary(AS_REQUEST_ID);
+        PaymentDto.PaymentSummaryResponse summary = paymentQueryService.getSummary(AS_RECEPTION_ID);
 
         // then
         assertThat(summary.status()).isEqualTo(PaymentDto.PaymentSummaryResponse.Status.PAID);
@@ -115,7 +113,7 @@ class PaymentQueryServiceTest {
         em.clear();
 
         // when & then
-        assertThatThrownBy(() -> paymentQueryService.getSummary(AS_REQUEST_ID))
+        assertThatThrownBy(() -> paymentQueryService.getSummary(AS_RECEPTION_ID))
                 .isInstanceOf(IllegalStateException.class);
     }
 
@@ -124,7 +122,7 @@ class PaymentQueryServiceTest {
     void waitingForDeposit() {
         // given: 실제 흐름으로 가상계좌 발급까지 진행 (토스 호출 단계는 제외)
         PaymentBill bill = issueBill();
-        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(AS_REQUEST_ID);
+        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(AS_RECEPTION_ID);
         paymentAttemptService.prepareConfirm(started.orderId(), started.amount());
         paymentAttemptService.issueVirtualAccount(
                 started.orderId(), "test_payment_key", "20", "12345678901234", "ps_test_secret", DUE_AT);
@@ -132,7 +130,7 @@ class PaymentQueryServiceTest {
         em.clear();
 
         // when
-        PaymentDto.PaymentSummaryResponse summary = paymentQueryService.getSummary(AS_REQUEST_ID);
+        PaymentDto.PaymentSummaryResponse summary = paymentQueryService.getSummary(AS_RECEPTION_ID);
 
         // then
         assertThat(summary.status()).isEqualTo(PaymentDto.PaymentSummaryResponse.Status.WAITING_FOR_DEPOSIT);
@@ -150,7 +148,7 @@ class PaymentQueryServiceTest {
     void waitingWithoutVirtualAccount() {
         // given: 계좌 저장 없이 attempt만 입금 대기로 바꿔 깨진 데이터를 만든다
         PaymentBill bill = issueBill();
-        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(AS_REQUEST_ID);
+        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(AS_RECEPTION_ID);
         paymentAttemptService.prepareConfirm(started.orderId(), started.amount());
         PaymentAttempt attempt = paymentAttemptRepository.findByOrderId(started.orderId()).orElseThrow();
         attempt.markWaitingForDeposit("test_payment_key");
@@ -158,7 +156,7 @@ class PaymentQueryServiceTest {
         em.clear();
 
         // when & then
-        assertThatThrownBy(() -> paymentQueryService.getSummary(AS_REQUEST_ID))
+        assertThatThrownBy(() -> paymentQueryService.getSummary(AS_RECEPTION_ID))
                 .isInstanceOf(IllegalStateException.class);
     }
 }

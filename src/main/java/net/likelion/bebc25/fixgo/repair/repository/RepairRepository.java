@@ -12,12 +12,12 @@ import java.util.Optional;
 public interface RepairRepository extends JpaRepository<Repair, Long> {
 
     // A/S 접수 ID로 수리 정보 조회
-    @Query("SELECT r FROM Repair r WHERE r.asRequest.id = :asRequestId")
-    Optional<Repair> findByAsRequestID(@Param("asRequestId") Long asRequestId);
+    @Query("SELECT r FROM Repair r WHERE r.asReception.id = :asRequestId")
+    Optional<Repair> findByAsReceptionId(@Param("asRequestId") Long asRequestId);
 
     // 담당 기사 ID로 수리 목록 조회
     @Query("SELECT r FROM Repair r WHERE r.technician.id = :technicianId")
-    List<Repair> findByTechnicianID(@Param("technicianId") Long technicianId);
+    List<Repair> findByTechnicianId(@Param("technicianId") Long technicianId);
 
     // 수리 상태로 수리 목록 조회
     List<Repair> findByStatus(RepairStatus status);
@@ -34,8 +34,8 @@ public interface RepairRepository extends JpaRepository<Repair, Long> {
     @Query("""
             SELECT r
             FROM Repair r
-            JOIN r.asRequest a
-            WHERE a.requestNumber = :requestNumber
+            JOIN r.asReception a
+            WHERE a.receptionNumber = :receptionNumber
             """)
-    Optional<Repair> findByRequestNumber(@Param("requestNumber") String requestNumber);
+    Optional<Repair> findByReceptionNumber(@Param("receptionNumber") String receptionNumber);
 }
