@@ -3,6 +3,7 @@ package net.likelion.bebc25.fixgo.auth.service;
 import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.auth.dto.MemberDto;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
+import net.likelion.bebc25.fixgo.auth.entity.Role;
 import net.likelion.bebc25.fixgo.auth.entity.Status;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,10 +37,12 @@ public class MemberService {
     }
 
     // 모든 직원 목록 조회
-    public List<MemberDto.Response> getAllMembers() {
-//         return memberRepository.findAllByStatusNotOrderByCreatedAtDesc(Status.DELETED)
-//         .stream().map(MemberDto.Response::from)
-//         .toList();
+    public List<MemberDto.Response> getAllMembers(Role loginMemberRole) {
+        if (!loginMemberRole.equals(Role.ROLE_ADMIN)) {
+            return memberRepository.findAllByStatusNotOrderByCreatedAtDesc(Status.DELETED)
+                    .stream().map(MemberDto.Response::from)
+                    .toList();
+        }
         return memberRepository.findAllByOrderByCreatedAtDesc()
                 .stream().map(MemberDto.Response::from)
                 .toList();
@@ -58,6 +61,13 @@ public class MemberService {
                 .toList();
     }
 
+    // Id로 1건 조회
+    public MemberDto.Response getMemberById(Long id) {
+        return MemberDto.Response.from(memberRepository.findById(id).orElseThrow(
+                () -> new NoSuchElementException("유효하지 않은 계정입니다.")
+        ));
+    }
+
     // 상태 변경
     @Transactional
     public MemberDto.Response changeStatus(MemberDto.StatusChangeRequest request) {
@@ -72,10 +82,13 @@ public class MemberService {
 
     // 비밀번호 변경
     @Transactional
-    public MemberDto.Response changePassword(MemberDto.PasswordUpdateRequest request) {
-        Member member = memberRepository.findByEmailAndStatusNot(request.email(), Status.DELETED).orElseThrow(
+    public MemberDto.Response changePassword(Long loginMemberId, MemberDto.PasswordUpdateRequest request) {
+        Member member = memberRepository.findById(loginMemberId).orElseThrow(
                 () -> new NoSuchElementException("존재하지 않는 계정입니다.")
         );
+        if (!member.getEmail().equals(request.email())) {
+            throw new IllegalArgumentException("비정상적인 접근입니다.");
+        }
 
         member.changePassword(passwordEncoder.encode(request.password()));
 

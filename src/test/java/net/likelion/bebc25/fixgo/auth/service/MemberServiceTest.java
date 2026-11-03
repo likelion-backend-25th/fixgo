@@ -88,17 +88,34 @@ class MemberServiceTest {
     }
 
     @Test
-    @DisplayName("전체 직원 목록을 생성일 내림차순으로 조회한다")
-    void getAllMembers() {
+    @DisplayName("관리자는 삭제된 직원을 포함한 전체 목록을 조회한다")
+    void getAllMembers_asAdmin() {
         saveMember("admin01", "admin@test.com", Role.ROLE_ADMIN);
-        saveMember("tech01", "tech@test.com", Role.ROLE_TECHNICIAN);
+        Member deleted = saveMember("tech01", "tech@test.com", Role.ROLE_TECHNICIAN);
+        deleted.changeStatus(Status.DELETED);
 
-        List<MemberDto.Response> responses = memberService.getAllMembers();
+        List<MemberDto.Response> responses = memberService.getAllMembers(Role.ROLE_ADMIN);
 
         assertThat(responses).hasSize(2);
         assertThat(responses).extracting(MemberDto.Response::email)
                 .containsExactlyInAnyOrder("admin@test.com", "tech@test.com");
         assertThat(responses.get(0).id()).isGreaterThanOrEqualTo(responses.get(1).id());
+    }
+
+    @Test
+    @DisplayName("관리자가 아니면 삭제된 직원을 제외한 목록을 조회한다")
+    void getAllMembers_asNonAdmin() {
+        saveMember("admin01", "admin@test.com", Role.ROLE_ADMIN);
+        saveMember("tech01", "tech@test.com", Role.ROLE_TECHNICIAN);
+        Member deleted = saveMember("recv01", "recv@test.com", Role.ROLE_RECEPTIONIST);
+        deleted.changeStatus(Status.DELETED);
+
+        List<MemberDto.Response> responses = memberService.getAllMembers(Role.ROLE_TECHNICIAN);
+
+        assertThat(responses).hasSize(2);
+        assertThat(responses).extracting(MemberDto.Response::email)
+                .containsExactlyInAnyOrder("admin@test.com", "tech@test.com");
+        assertThat(responses).noneMatch(r -> r.email().equals("recv@test.com"));
     }
 
     @Test
