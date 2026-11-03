@@ -168,6 +168,7 @@ erDiagram
 | symptom_detail    | VARCHAR(255)  | NOT NULL                           | -                 | -                      | 고장 증상 상세         |
 | reception_memo    | VARCHAR(1000) | NULL                               | -                 | -                      | 요청 메모            |
 | return_method     | VARCHAR(255)  | NOT NULL                           | DELIVERY          | -                      | DELIVERY, PICKUP |
+| file_url          | VARCHAR(255)  | NULL                               | -                 | -                      | 구매 영수증 url       |
 | status            | VARCHAR(255)  | NOT NULL                           | RECEIVED          | IDX_AS_STATUS          | 현재 A/S 상태        |
 | status_changed_at | DATETIME      | NOT NULL                           | CURRENT_TIMESTAMP | -                      | 마지막 상태 변경        |
 | closed_at         | DATETIME      | NULL                               | -                 | -                      | 종결 시각            |
@@ -175,21 +176,6 @@ erDiagram
 | updated_at        | DATETIME      | NOT NULL                           | CURRENT_TIMESTAMP | -                      | 수정 시각            |
 | created_by        | BIGINT        | NOT NULL, FK -> Member.id          | -                 | -                      | 생성자              |
 | updated_by        | BIGINT        | NOT NULL, FK -> Member.id          | -                 | -                      | 수정자              |
-
-### 3) AS_ATTACHMENT
-
-- 테이블 설명: 구매 증빙 첨부 파일 메타데이터.
-
-| 컬럼명             | 데이터 타입       | 제약조건                           | 기본값               | 인덱스                         | 설명     |
-|-----------------|--------------|--------------------------------|-------------------|-----------------------------|--------|
-| id              | BIGINT       | PK, AUTO_INCREMENT             | -                 | PK                          | 첨부 ID  |
-| as_reception_id | BIGINT       | NOT NULL, FK → AS_RECEPTION.id | -                 | IDX_AS_ATTACHMENT_RECEPTION | A/S ID |
-| file_url        | VARCHAR(500) | NOT NULL                       | -                 | -                           | 저장 경로  |
-| original_name   | VARCHAR(255) | NULL                           | -                 | -                           | 원본 파일명 |
-| created_at      | DATETIME     | NOT NULL                       | CURRENT_TIMESTAMP | -                           | 등록 시각  |
-| updated_at      | DATETIME     | NOT NULL                       | CURRENT_TIMESTAMP | -                           | 수정 시각  |
-| created_by      | BIGINT       | NOT NULL, FK -> Member.id      | -                 | -                           | 생성자    |
-| updated_by      | BIGINT       | NOT NULL, FK -> Member.id      | -                 | -                           | 수정자    |
 
 ## 1.2.5 A/S 배정 및 진행 관리
 

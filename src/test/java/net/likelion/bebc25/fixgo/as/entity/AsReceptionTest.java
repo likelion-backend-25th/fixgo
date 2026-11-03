@@ -98,7 +98,38 @@ public class AsReceptionTest {
         assertThat(findReception.getStatus())
                 .isEqualTo(AsReceptionStatus.RECEIVED);
         assertThat(findReception.getStatusChangedAt()).isNotNull();
-        assertThat(findReception.getAttachment()).isNull();
+        assertThat(findReception.getFileUrl()).isNull();
     }
-    
+
+    @Test
+    @DisplayName("파일 URL과 함께 접수 등록")
+    void registrationWithFileUrl() {
+        // given
+        String fileUrl = "https://example.com/as/photo.jpg";
+        AsReception asReception = new AsReception(
+                "AS-2026-1031",
+                customer,
+                product,
+                member,
+                technician,
+                "충전불량",
+                "충전이 안 됩니다",
+                "일주일 내로 수리 부탁드립니다.",
+                ReturnMethod.DELIVERY,
+                fileUrl
+        );
+
+        // when
+        em.persist(asReception);
+        em.flush();
+
+        Long receptionId = asReception.getId();
+        em.clear();
+
+        AsReception findReception = em.find(AsReception.class, receptionId);
+
+        // then
+        assertThat(findReception.getFileUrl()).isEqualTo(fileUrl);
+    }
+
 }
