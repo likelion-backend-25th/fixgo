@@ -24,11 +24,14 @@ public class RepairWorkService {
 
     // 작업 내역 등록
     @Transactional
-    public RepairWorkResponse createRepairWork(RepairWorkRequest dto) {
+    public RepairWorkResponse createRepairWork(RepairWorkRequest dto, String createdBy) {
 
         Repair repair = repairRepository.findById(dto.getRepairId()).orElseThrow(() -> new IllegalArgumentException("해당 수리 내역을 찾을 수 없습니다."));
 
         RepairWork repairWork = repairWorkMapper.toEntity(dto, repair);
+
+        // 등록자 및 최종 수정자 저장
+        repairWork.setCreateAuditInfo(createdBy);
 
         return repairWorkMapper.toResponseDto(repairWorkRepository.save(repairWork));
     }
@@ -61,12 +64,11 @@ public class RepairWorkService {
 
     // 작업 내역 수정
     @Transactional
-    public RepairWorkResponse updateRepairWork(Long id, RepairWorkUpdate dto) {
-
+    public RepairWorkResponse updateRepairWork(Long id, RepairWorkUpdate dto, String updatedBy) {
         RepairWork repairWork = repairWorkRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("해당 작업 내역을 찾을 수 없습니다."));
 
         repairWorkMapper.updateEntity(repairWork, dto);
-        repairWork.updateAuditInfo("test");
+        repairWork.updateAuditInfo(updatedBy);
 
         return repairWorkMapper.toResponseDto(repairWork);
     }
