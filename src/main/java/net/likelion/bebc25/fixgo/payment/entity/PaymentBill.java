@@ -6,11 +6,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 
 /**
  * A/S 접수 한 건에 대한 청구서
- * 접수당 하나만 존재하며(asRequestId) 결제 완료/환불 상태를 관리한다.
+ * 접수당 하나만 존재하며(asReceptionId) 결제 완료/환불 상태를 관리한다.
  */
 @Entity
 @Getter
@@ -21,7 +20,7 @@ public class PaymentBill {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private Long asRequestId;
+    private Long asReceptionId;
 
     @Column(nullable = false)
     private Long amount;
@@ -37,8 +36,8 @@ public class PaymentBill {
     private LocalDateTime paidAt;
 
 
-    public static PaymentBill issue(Long asRequestId, Long amount, PaymentBillType paymentBillType) {
-        if (asRequestId == null) {
+    public static PaymentBill issue(Long asReceptionId, Long amount, PaymentBillType paymentBillType) {
+        if (asReceptionId == null) {
             throw new IllegalArgumentException("A/S 접수 ID는 필수입니다.");
         }
 
@@ -47,7 +46,7 @@ public class PaymentBill {
         }
 
         PaymentBill paymentBill = new PaymentBill();
-        paymentBill.asRequestId = asRequestId;
+        paymentBill.asReceptionId = asReceptionId;
         paymentBill.amount = amount;
         paymentBill.type = paymentBillType;
 
@@ -61,8 +60,8 @@ public class PaymentBill {
         this.status = next;
     }
 
-    public void markPaid(OffsetDateTime approvedAt) {
+    public void markPaid(LocalDateTime paidAt) {
         changeStatus(PaymentBillStatus.PAID);
-        this.paidAt = approvedAt.toLocalDateTime();
+        this.paidAt = paidAt;
     }
 }

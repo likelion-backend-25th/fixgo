@@ -10,21 +10,21 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(indexes = {@Index(name = "IDX_RPP_PART", columnList = "product_model_id")})
 public class RepairPresetPart {
-//    @EmbeddedId
-//    RepairPresetPartId id;
+    @EmbeddedId
+    RepairPresetPartId id;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+    @MapsId
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "repair_preset_id", nullable = false)
+    RepairPreset repairPreset;
 
-    @Column(nullable = false)
-    Long repairPresetId;
+    @MapsId
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "part_id", nullable = false)
+    Part part;
 
-    @Column(nullable = false)
-    int productModelId;
-
-    public RepairPresetPart(Long repairPresetId, int productModelId) {
-        this.repairPresetId = repairPresetId;
-        this.productModelId = productModelId;
+    public RepairPresetPart(RepairPreset repairPreset, Part part) {
+        this.repairPreset = repairPreset;
+        this.part = part;
     }
 }

@@ -6,14 +6,16 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 @Embeddable
 @Getter
 @NoArgsConstructor
 @EqualsAndHashCode
-public class RepairPresetPartId {
+public class RepairPresetPartId implements Serializable {
     @Column
-    private Long partsId;
+    private Long repairPresetId;
 
     @Column
-    private Long productModelId;
+    private Long partsId;
 }
