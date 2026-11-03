@@ -31,7 +31,7 @@ class PaymentBillServiceTest {
 
         // then
         PaymentBill saved = paymentBillRepository.findById(billId).orElseThrow();
-        assertThat(saved.getAsRequestId()).isEqualTo(1L);
+        assertThat(saved.getAsReceptionId()).isEqualTo(1L);
         assertThat(saved.getAmount()).isEqualTo(30_000L);
         assertThat(saved.getStatus()).isEqualTo(PaymentBillStatus.UNPAID);
     }
@@ -47,7 +47,7 @@ class PaymentBillServiceTest {
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("이미 청구서");
 
         // 실패한 두 번째 호출이 기존 데이터를 건드리지 않았는지도 확인한다.
-        PaymentBill existing = paymentBillRepository.findByAsRequestId(1L).orElseThrow();
+        PaymentBill existing = paymentBillRepository.findByAsReceptionId(1L).orElseThrow();
         assertThat(existing.getAmount()).isEqualTo(30_000L);
     }
 
@@ -57,6 +57,6 @@ class PaymentBillServiceTest {
         assertThatThrownBy(() -> paymentBillService.issueBill(1L, 0L, PaymentBillType.REPAIR))
                 .isInstanceOf(IllegalArgumentException.class);
 
-        assertThat(paymentBillRepository.existsByAsRequestId(1L)).isFalse();
+        assertThat(paymentBillRepository.existsByAsReceptionId(1L)).isFalse();
     }
 }

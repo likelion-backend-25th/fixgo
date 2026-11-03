@@ -5,7 +5,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -30,7 +29,7 @@ public class PaymentBillTest {
         PaymentBill bill = PaymentBill.issue(1L, 30000L, PaymentBillType.REPAIR);
 
         // when
-        bill.markPaid(OffsetDateTime.now());
+        bill.markPaid(LocalDateTime.now());
 
         // then
         assertThat(bill.getStatus()).isEqualTo(PaymentBillStatus.PAID);
@@ -41,15 +40,15 @@ public class PaymentBillTest {
     @DisplayName("이미 PAID인 청구서를 다시 결제 완료 처리하면 예외가 난다")
     void markPaid_twice() {
         PaymentBill bill = PaymentBill.issue(1L, 30_000L, PaymentBillType.REPAIR);
-        bill.markPaid(OffsetDateTime.now());
+        bill.markPaid(LocalDateTime.now());
 
-        assertThatThrownBy(() -> bill.markPaid(OffsetDateTime.now()))
+        assertThatThrownBy(() -> bill.markPaid(LocalDateTime.now()))
                 .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    @DisplayName("asRequestId가 null이면 발행할 수 없다")
-    void issue_nullAsRequestId() {
+    @DisplayName("asReceptionId가 null이면 발행할 수 없다")
+    void issue_nullAsReceptionId() {
         assertThatThrownBy(() -> PaymentBill.issue(null, 30_000L, PaymentBillType.REPAIR)).isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("A/S 접수 ID");
     }
@@ -64,10 +63,10 @@ public class PaymentBillTest {
     @DisplayName("전이에 실패한 markPaid()는 paidAt을 바꾸지 않는다")
     void markPaid_failure_keepsPaidAt() {
         PaymentBill bill = PaymentBill.issue(1L, 30_000L, PaymentBillType.REPAIR);
-        bill.markPaid(OffsetDateTime.now());
+        bill.markPaid(LocalDateTime.now());
         LocalDateTime firstPaidAt = bill.getPaidAt();
 
-        assertThatThrownBy(() -> bill.markPaid(OffsetDateTime.now()))
+        assertThatThrownBy(() -> bill.markPaid(LocalDateTime.now()))
                 .isInstanceOf(IllegalStateException.class);
 
         assertThat(bill.getPaidAt()).isEqualTo(firstPaidAt);

@@ -30,11 +30,13 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class RepairServiceTest {
 
+    private static final String TEST_EMAIL = "test@example.com";
+
     @Mock
     private RepairRepository repairRepository;
 
     @Mock
-    private AsReceptionRepository AsReceptionRepository;
+    private AsReceptionRepository asReceptionRepository;
 
     @Mock
     private MemberRepository memberRepository;
@@ -47,7 +49,7 @@ class RepairServiceTest {
     void setUp() {
         repairMapper = new RepairMapper();
 
-        repairService = new RepairService(repairRepository, repairMapper, AsReceptionRepository, memberRepository);
+        repairService = new RepairService(repairRepository, repairMapper, asReceptionRepository, memberRepository);
     }
 
     // 테스트용 A/S 접수 정보 생성
@@ -63,12 +65,12 @@ class RepairServiceTest {
     // 테스트용 수리 정보 생성
     private Repair createRepair() {
 
-        AsReception AsReception = createAsReception();
+        AsReception asReception = createAsReception();
         Member technician = createTechnician();
 
-        Repair repair = new Repair(AsReception, technician, WarrantyResult.FREE, RepairStatus.DIAGNOSING);
+        Repair repair = new Repair(asReception, technician, WarrantyResult.FREE, RepairStatus.DIAGNOSING);
 
-        repair.updateRepairInfo(AsReception, technician, "메인보드 점검", "부품 교체", "수리 진행", WarrantyResult.FREE, "보증 기간 내", 10000, 5000, 15000, null);
+        repair.updateRepairInfo(asReception, technician, "메인보드 점검", "부품 교체", "수리 진행", WarrantyResult.FREE, "보증 기간 내", 10000, 5000, 15000, null);
 
         ReflectionTestUtils.setField(repair, "id", 1L);
 
@@ -101,18 +103,18 @@ class RepairServiceTest {
 
         RepairRequest dto = createRequestDto();
 
-        AsReception AsReception = createAsReception();
+        AsReception asReception = createAsReception();
         Member technician = createTechnician();
 
-        when(AsReceptionRepository.findById(10L)).thenReturn(Optional.of(AsReception));
+        when(asReceptionRepository.findById(10L)).thenReturn(Optional.of(asReception));
 
         when(memberRepository.findById(20L)).thenReturn(Optional.of(technician));
 
-        Map<String, String> response = repairService.createRepair(dto);
+        Map<String, String> response = repairService.createRepair(dto, TEST_EMAIL);
 
         assertEquals("수리 정보가 등록되었습니다.", response.get("message"));
 
-        verify(AsReceptionRepository, times(1)).findById(10L);
+        verify(asReceptionRepository, times(1)).findById(10L);
         verify(memberRepository, times(1)).findById(20L);
         verify(repairRepository, times(1)).save(any(Repair.class));
     }
@@ -160,6 +162,27 @@ class RepairServiceTest {
         verify(repairRepository, times(1)).findById(1L);
     }
 
+    // A/S 접수번호로 수리 상세 조회 테스트
+    @Test
+    void getRepairByReceptionNumberTest() {
+
+        Repair repair = createRepair();
+        String receptionNumber = "AS-2026-1112";
+
+        when(repair.getAsReception().getId()).thenReturn(10L);
+        when(repair.getTechnician().getId()).thenReturn(20L);
+
+        when(repairRepository.findByReceptionNumber(receptionNumber)).thenReturn(Optional.of(repair));
+
+        RepairResponse response = repairService.getRepairByReceptionNumber(receptionNumber);
+
+        assertEquals(1L, response.getId());
+        assertEquals(10L, response.getAsReceptionId());
+        assertEquals(20L, response.getTechnicianId());
+
+        verify(repairRepository, times(1)).findByReceptionNumber(receptionNumber);
+    }
+
     // 수리 수정 테스트
     @Test
     void updateRepairTest() {
@@ -170,22 +193,22 @@ class RepairServiceTest {
         dto.setDiagnosis("CPU 점검");
         dto.setWorkNote("CPU 교체");
 
-        AsReception AsReception = createAsReception();
+        AsReception asReception = createAsReception();
         Member technician = createTechnician();
 
         when(repairRepository.findById(1L)).thenReturn(Optional.of(repair));
 
-        when(AsReceptionRepository.findById(10L)).thenReturn(Optional.of(AsReception));
+        when(asReceptionRepository.findById(10L)).thenReturn(Optional.of(asReception));
 
         when(memberRepository.findById(20L)).thenReturn(Optional.of(technician));
 
-        RepairResponse response = repairService.updateRepair(1L, dto);
+        RepairResponse response = repairService.updateRepair(1L, dto, TEST_EMAIL);
 
         assertEquals("CPU 점검", response.getDiagnosis());
         assertEquals("CPU 교체", response.getWorkNote());
 
         verify(repairRepository, times(1)).findById(1L);
-        verify(AsReceptionRepository, times(1)).findById(10L);
+        verify(asReceptionRepository, times(1)).findById(10L);
         verify(memberRepository, times(1)).findById(20L);
     }
 
@@ -220,7 +243,7 @@ class RepairServiceTest {
 
         when(repairRepository.findById(1L)).thenReturn(Optional.of(repair));
 
-        repairService.changeRepairStatus(1L, RepairStatus.REQUESTED);
+        repairService.changeRepairStatus(1L, RepairStatus.REQUESTED, TEST_EMAIL);
 
         assertEquals(RepairStatus.REQUESTED, repair.getStatus());
     }
@@ -234,7 +257,7 @@ class RepairServiceTest {
 
         when(repairRepository.findById(1L)).thenReturn(Optional.of(repair));
 
-        assertThrows(IllegalArgumentException.class, () -> repairService.changeRepairStatus(1L, RepairStatus.APPROVED));
+        assertThrows(IllegalArgumentException.class, () -> repairService.changeRepairStatus(1L, RepairStatus.APPROVED, TEST_EMAIL));
 
         assertEquals(RepairStatus.DIAGNOSING, repair.getStatus());
     }

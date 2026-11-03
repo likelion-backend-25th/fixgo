@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @Import(CustomerPortalLinkService.class)
 class CustomerPortalLinkServiceTest {
 
-    private static final Long AS_REQUEST_ID = 1L;
+    private static final Long AS_RECEPTION_ID = 1L;
 
     @Autowired
     CustomerPortalLinkService customerPortalLinkService;
@@ -47,19 +47,19 @@ class CustomerPortalLinkServiceTest {
     class IssueLink {
 
         @Test
-        @DisplayName("발급한 토큰으로 조회하면 asRequestId를 찾을 수 있다.")
+        @DisplayName("발급한 토큰으로 조회하면 asReceptionId를 찾을 수 있다.")
         void issueAndResolve() {
-            String token = customerPortalLinkService.issueLink(AS_REQUEST_ID);
+            String token = customerPortalLinkService.issueLink(AS_RECEPTION_ID);
 
-            assertThat(customerPortalLinkService.resolveAsRequestId(token)).isEqualTo(AS_REQUEST_ID);
+            assertThat(customerPortalLinkService.resolveAsReceptionId(token)).isEqualTo(AS_RECEPTION_ID);
         }
 
         @Test
         @DisplayName("DB에는 토큰 원본이 아니라 해시가 저장된다.")
         void storesHashNotToken() throws Exception {
-            String token = customerPortalLinkService.issueLink(AS_REQUEST_ID);
+            String token = customerPortalLinkService.issueLink(AS_RECEPTION_ID);
 
-            CustomerPortalLink saved = customerPortalLinkRepository.findByAsRequestId(AS_REQUEST_ID).orElseThrow();
+            CustomerPortalLink saved = customerPortalLinkRepository.findByAsReceptionId(AS_RECEPTION_ID).orElseThrow();
             assertThat(saved.getTokenHash()).isNotEqualTo(token);
             assertThat(saved.getTokenHash()).isEqualTo(sha256(token));
         }
@@ -67,9 +67,9 @@ class CustomerPortalLinkServiceTest {
         @Test
         @DisplayName("이미 링크가 있는 A/S 건에는 다시 발급할 수 없다.")
         void alreadyExists() {
-            customerPortalLinkService.issueLink(AS_REQUEST_ID);
+            customerPortalLinkService.issueLink(AS_RECEPTION_ID);
 
-            assertThatThrownBy(() -> customerPortalLinkService.issueLink(AS_REQUEST_ID))
+            assertThatThrownBy(() -> customerPortalLinkService.issueLink(AS_RECEPTION_ID))
                     .isInstanceOf(PortalException.class)
                     .extracting("errorCode")
                     .isEqualTo(PortalErrorCode.LINK_ALREADY_EXISTS);
@@ -77,13 +77,13 @@ class CustomerPortalLinkServiceTest {
     }
 
     @Nested
-    @DisplayName("resolveAsRequestId")
-    class ResolveAsRequestId {
+    @DisplayName("resolveAsReceptionId")
+    class ResolveAsReceptionId {
 
         @Test
         @DisplayName("존재하지 않는 토큰이면 LINK_NOT_FOUND")
         void notFound() {
-            assertThatThrownBy(() -> customerPortalLinkService.resolveAsRequestId("not-exist-token"))
+            assertThatThrownBy(() -> customerPortalLinkService.resolveAsReceptionId("not-exist-token"))
                     .isInstanceOf(PortalException.class)
                     .extracting("errorCode")
                     .isEqualTo(PortalErrorCode.LINK_NOT_FOUND);
@@ -95,10 +95,10 @@ class CustomerPortalLinkServiceTest {
             // given: 토큰을 알고 있는 링크를 만료 시각을 과거로 해서 직접 저장한다
             String token = "expired-test-token";
             customerPortalLinkRepository.save(
-                    CustomerPortalLink.issue(AS_REQUEST_ID, sha256(token), LocalDateTime.now().minusDays(1)));
+                    CustomerPortalLink.issue(AS_RECEPTION_ID, sha256(token), LocalDateTime.now().minusDays(1)));
 
             // when & then
-            assertThatThrownBy(() -> customerPortalLinkService.resolveAsRequestId(token))
+            assertThatThrownBy(() -> customerPortalLinkService.resolveAsReceptionId(token))
                     .isInstanceOf(PortalException.class)
                     .extracting("errorCode")
                     .isEqualTo(PortalErrorCode.LINK_EXPIRED);
@@ -112,15 +112,15 @@ class CustomerPortalLinkServiceTest {
         @Test
         @DisplayName("재발급하면 새 토큰은 유효하고 이전 토큰은 더 이상 조회되지 않는다.")
         void rotatesToken() {
-            String oldToken = customerPortalLinkService.issueLink(AS_REQUEST_ID);
+            String oldToken = customerPortalLinkService.issueLink(AS_RECEPTION_ID);
 
-            String newToken = customerPortalLinkService.reissueLink(AS_REQUEST_ID);
+            String newToken = customerPortalLinkService.reissueLink(AS_RECEPTION_ID);
             em.flush();
             em.clear();
 
             assertThat(newToken).isNotEqualTo(oldToken);
-            assertThat(customerPortalLinkService.resolveAsRequestId(newToken)).isEqualTo(AS_REQUEST_ID);
-            assertThatThrownBy(() -> customerPortalLinkService.resolveAsRequestId(oldToken))
+            assertThat(customerPortalLinkService.resolveAsReceptionId(newToken)).isEqualTo(AS_RECEPTION_ID);
+            assertThatThrownBy(() -> customerPortalLinkService.resolveAsReceptionId(oldToken))
                     .isInstanceOf(PortalException.class)
                     .extracting("errorCode")
                     .isEqualTo(PortalErrorCode.LINK_NOT_FOUND);
@@ -130,19 +130,19 @@ class CustomerPortalLinkServiceTest {
         @DisplayName("만료된 링크도 재발급하면 다시 유효해진다.")
         void renewsExpiredLink() throws Exception {
             customerPortalLinkRepository.save(
-                    CustomerPortalLink.issue(AS_REQUEST_ID, sha256("expired-test-token"), LocalDateTime.now().minusDays(1)));
+                    CustomerPortalLink.issue(AS_RECEPTION_ID, sha256("expired-test-token"), LocalDateTime.now().minusDays(1)));
 
-            String newToken = customerPortalLinkService.reissueLink(AS_REQUEST_ID);
+            String newToken = customerPortalLinkService.reissueLink(AS_RECEPTION_ID);
             em.flush();
             em.clear();
 
-            assertThat(customerPortalLinkService.resolveAsRequestId(newToken)).isEqualTo(AS_REQUEST_ID);
+            assertThat(customerPortalLinkService.resolveAsReceptionId(newToken)).isEqualTo(AS_RECEPTION_ID);
         }
 
         @Test
         @DisplayName("발급된 링크가 없는 A/S 건은 재발급할 수 없다.")
         void noLink() {
-            assertThatThrownBy(() -> customerPortalLinkService.reissueLink(AS_REQUEST_ID))
+            assertThatThrownBy(() -> customerPortalLinkService.reissueLink(AS_RECEPTION_ID))
                     .isInstanceOf(PortalException.class)
                     .extracting("errorCode")
                     .isEqualTo(PortalErrorCode.LINK_NOT_FOUND);

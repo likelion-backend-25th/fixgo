@@ -14,9 +14,6 @@ public class Part extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY) // MySQL에서의 Auto Increment와 같은 효과
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String partCode;
-
     @Column(nullable = false)
     private String name;
 
@@ -38,8 +35,7 @@ public class Part extends BaseEntity {
     @Column(nullable = false)
     private int version = 0;
 
-    public Part(String partCode, String name, int unitPrice, int standardMinutes, int stockQuantity) {
-        this.partCode = partCode;
+    public Part(String name, int unitPrice, int standardMinutes, int stockQuantity) {
         this.name = name;
         this.unitPrice = unitPrice;
         this.standardMinutes = standardMinutes;

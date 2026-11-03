@@ -60,4 +60,13 @@ public class RepairWork {
         this.updatedAt = LocalDateTime.now();
         this.updatedBy = updatedBy;
     }
+
+    public void setCreateAuditInfo(String createdBy) {
+        LocalDateTime now = LocalDateTime.now();
+
+        this.createdAt = now;
+        this.updatedAt = now;
+        this.createdBy = createdBy;
+        this.updatedBy = createdBy;
+    }
 }
