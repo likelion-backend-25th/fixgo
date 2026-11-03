@@ -12,8 +12,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -40,7 +38,7 @@ class PaymentStatisticsRepositoryTest {
         return paymentBillRepository.save(PaymentBill.issue(asRequestId, amount, PaymentBillType.REPAIR));
     }
 
-    private PaymentAttempt createDoneAttempt(PaymentBill bill, String paymentKey, OffsetDateTime approvedAt) {
+    private PaymentAttempt createDoneAttempt(PaymentBill bill, String paymentKey, LocalDateTime approvedAt) {
         PaymentAttempt attempt = PaymentAttempt.create(bill);
         attempt.markInProgress();
         attempt.markCardDone(paymentKey, approvedAt);
@@ -60,9 +58,9 @@ class PaymentStatisticsRepositoryTest {
         PaymentBill bill2 = issueBill(2L, 50_000L);
         PaymentBill bill3 = issueBill(3L, 70_000L);
 
-        createDoneAttempt(bill1, "payment_key_1", OffsetDateTime.of(2026, 10, 10, 15, 30, 0, 0, ZoneOffset.ofHours(9)));
+        createDoneAttempt(bill1, "payment_key_1", LocalDateTime.of(2026, 10, 10, 15, 30));
 
-        createDoneAttempt(bill2, "payment_key_2", OffsetDateTime.of(2026, 10, 20, 15, 30, 0, 0, ZoneOffset.ofHours(9)));
+        createDoneAttempt(bill2, "payment_key_2", LocalDateTime.of(2026, 10, 20, 15, 30));
 
         // READY 상태이므로 합산되지 않아야 한다.
         createReadyAttempt(bill3);
@@ -88,7 +86,7 @@ class PaymentStatisticsRepositoryTest {
         issueBill(3L, 70_000L);
 
         // bill1은 결제 완료 처리
-        bill1.markPaid(OffsetDateTime.of(2026, 10, 10, 15, 30, 0, 0, ZoneOffset.ofHours(9)));
+        bill1.markPaid(LocalDateTime.of(2026, 10, 10, 15, 30));
 
         paymentBillRepository.save(bill1);
 

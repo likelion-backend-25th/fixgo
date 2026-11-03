@@ -36,14 +36,14 @@ public class CustomerPortalLinkService {
      * 접수 기능에서 호출하며, 분실 시 재발급에도 쓴다(한 A/S 건에 여러 링크 가능).
      */
     @Transactional
-    public String issueLink(Long asRequestId) {
-        CustomerPortalLink customerPortalLink = customerPortalLinkRepository.findByAsRequestId(asRequestId).orElse(null);
+    public String issueLink(Long asReceptionId) {
+        CustomerPortalLink customerPortalLink = customerPortalLinkRepository.findByAsReceptionId(asReceptionId).orElse(null);
         if (customerPortalLink != null) {
             throw new PortalException(PortalErrorCode.LINK_ALREADY_EXISTS, "이미 링크가 발급되었습니다.");
         }
         String token = generateToken();
         LocalDateTime expiresAt = LocalDateTime.now().plusDays(validDays);
-        customerPortalLinkRepository.save(CustomerPortalLink.issue(asRequestId, hash(token), expiresAt));
+        customerPortalLinkRepository.save(CustomerPortalLink.issue(asReceptionId, hash(token), expiresAt));
         return token;
     }
 
@@ -52,14 +52,14 @@ public class CustomerPortalLinkService {
      * 토큰 원본은 저장하지 않으므로, 같은 방식으로 해시해서 조회한다.
      */
     @Transactional(readOnly = true)
-    public Long resolveAsRequestId(String token) {
+    public Long resolveAsReceptionId(String token) {
         CustomerPortalLink link = customerPortalLinkRepository.findByTokenHash(hash(token))
                 .orElseThrow(() -> new PortalException(PortalErrorCode.LINK_NOT_FOUND, "유효하지 않은 링크입니다."));
 
         if (link.isExpiredAt(LocalDateTime.now())) {
             throw new PortalException(PortalErrorCode.LINK_EXPIRED, "만료된 링크입니다.");
         }
-        return link.getAsRequestId();
+        return link.getAsReceptionId();
     }
 
     /**
@@ -72,8 +72,8 @@ public class CustomerPortalLinkService {
      * @return 새 원본 토큰. 고객에게 전달할 수 있는 유일한 값이다.
      */
     @Transactional
-    public String reissueLink(Long asRequestId) {
-        CustomerPortalLink link = customerPortalLinkRepository.findByAsRequestId(asRequestId)
+    public String reissueLink(Long asReceptionId) {
+        CustomerPortalLink link = customerPortalLinkRepository.findByAsReceptionId(asReceptionId)
                 .orElseThrow(() -> new PortalException(PortalErrorCode.LINK_NOT_FOUND, "유효하지 않은 링크입니다."));
         String token = generateToken();
         LocalDateTime expiresAt = LocalDateTime.now().plusDays(validDays);

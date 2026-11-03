@@ -8,5 +8,5 @@ import java.util.Optional;
 public interface CustomerPortalLinkRepository extends JpaRepository<CustomerPortalLink, Long> {
     Optional<CustomerPortalLink> findByTokenHash(String tokenHash);
 
-    Optional<CustomerPortalLink> findByAsRequestId(Long asRequestId);
+    Optional<CustomerPortalLink> findByAsReceptionId(Long asReceptionId);
 }
