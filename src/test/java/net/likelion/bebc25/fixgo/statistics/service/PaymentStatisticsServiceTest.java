@@ -5,7 +5,7 @@ import net.likelion.bebc25.fixgo.payment.entity.PaymentBill;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentBillType;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentAttemptRepository;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentBillRepository;
-import net.likelion.bebc25.fixgo.statistics.dto.PaymentStatisticsResponse;
+import net.likelion.bebc25.fixgo.statistics.dto.PaymentStatisticsDto;
 import net.likelion.bebc25.fixgo.statistics.repository.PaymentStatisticsRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -73,7 +73,7 @@ class PaymentStatisticsServiceTest {
         createDoneAttempt(bill2, "payment_key_2", OffsetDateTime.of(2026, 10, 20, 15, 30, 0, 0, ZoneOffset.ofHours(9)));
 
         // when
-        PaymentStatisticsResponse response = paymentStatisticsService.getPaymentStatistics(startDate, endDate);
+        PaymentStatisticsDto response = paymentStatisticsService.getPaymentStatistics(startDate, endDate);
 
         // then
         assertThat(response.startDate()).isEqualTo(startDate);
