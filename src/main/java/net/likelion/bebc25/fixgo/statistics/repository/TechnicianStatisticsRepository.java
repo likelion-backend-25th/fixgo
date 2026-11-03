@@ -48,7 +48,7 @@ public interface TechnicianStatisticsRepository extends Repository<AsReception, 
                 COALESCE(SUM(pa.amount), 0) AS revenue
             FROM AsReception ar
             JOIN PaymentBill pb
-                ON pb.asRequestId = ar.id
+                ON pb.asReceptionId = ar.id
             JOIN PaymentAttempt pa
                 ON pa.paymentBill = pb
             WHERE pa.status = :paymentStatus
