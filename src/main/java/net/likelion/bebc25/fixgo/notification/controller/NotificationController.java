@@ -41,5 +41,17 @@ public class NotificationController {
         return notificationService.getEmailDetail(id);
     }
 
+    // 이메일 발송 통계 조회
+    @GetMapping("/statistics")
+    public EmailDto.StatisticsResponse getEmailStatistics() {
+        return notificationService.getEmailStatistics();
+    }
+
+    // 실패 이메일 재발송
+    @PostMapping("/emails/{id}/retry")
+    public EmailDto.Response retryEmail(@PathVariable Long id) {
+        return notificationService.retryEmail(id);
+    }
+
 
 }
