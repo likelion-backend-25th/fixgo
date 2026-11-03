@@ -58,7 +58,6 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/v3/api-docs"
                         ).permitAll()
-
                         .anyRequest().authenticated()
                 )
                 // REST API 환경: CSRF 비활성화
@@ -75,7 +74,7 @@ public class SecurityConfig {
 
                 // 세션을 사용하지 않는 Stateless 방식
                 .sessionManagement(session ->
-                                           session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
                 // 커스텀 JWT 인증 필터를 UsernamePasswordAuthenticationFilter 바로 앞에 배치

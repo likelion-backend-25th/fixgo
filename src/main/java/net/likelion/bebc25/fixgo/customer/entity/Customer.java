@@ -56,4 +56,17 @@ public class Customer {
         this.createdBy = createdBy;
         this.updatedBy = createdBy;
     }
+
+    public void update(String name, String phone, String email,
+                       String zipcode, String basicAddress, String detailAddress,
+                       String updatedBy) {
+        this.name = name;
+        this.phone = phone;
+        this.email = email;
+        this.zipcode = zipcode;
+        this.basicAddress = basicAddress;
+        this.detailAddress = detailAddress;
+        this.updatedAt = LocalDateTime.now();
+        this.updatedBy = updatedBy;
+    }
 }

@@ -13,13 +13,13 @@ class CustomerTest {
         // Customer(name, phone, email, zipcode, basicAddress, detailAddress, createdAt, updatedAt, createdBy, updatedBy)
         Customer customer = new Customer(
                 "홍길동", "010-1234-5678", "hong@gmail.com",
-                "12345", "OO시 OO구 OO동", "OOO동 OOO호", "admin");
+                "12345", "OO시 OO구 OO대로 123", "OOO동 OOO호", "admin");
 
         assertThat(customer.getName()).isEqualTo("홍길동");
         assertThat(customer.getPhone()).isEqualTo("010-1234-5678");
         assertThat(customer.getEmail()).isEqualTo("hong@gmail.com");
         assertThat(customer.getZipcode()).isEqualTo("12345");
-        assertThat(customer.getBasicAddress()).isEqualTo("OO시 OO구 OO동");
+        assertThat(customer.getBasicAddress()).isEqualTo("OO시 OO구 OO대로 123");
         assertThat(customer.getDetailAddress()).isEqualTo("OOO동 OOO호");
         assertThat(customer.getCreatedAt()).isNotNull();
         assertThat(customer.getUpdatedAt()).isEqualTo(customer.getCreatedAt());
