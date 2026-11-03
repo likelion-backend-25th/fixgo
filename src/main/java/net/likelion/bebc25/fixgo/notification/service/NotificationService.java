@@ -6,13 +6,14 @@ import net.likelion.bebc25.fixgo.notification.dto.EmailDto;
 import net.likelion.bebc25.fixgo.notification.entity.NotificationLog;
 import net.likelion.bebc25.fixgo.notification.entity.NotificationStatus;
 import net.likelion.bebc25.fixgo.notification.repository.NotificationLogRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.mail.MailException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -66,13 +67,37 @@ public class NotificationService {
         return new EmailDto.StatisticsResponse(total, success, faild);
     }
 
-    // 이메일 발송 내역 조회
+    // 이메일 발송 내역 검색 및 페이지네이션
     @Transactional(readOnly = true)
-    public List<EmailDto.Response> getEmailList() {
-        return notificationLogRepository.findAll()
-                .stream()
-                .map(EmailDto.Response::from)
-                .toList();
+    public Page<EmailDto.Response> getEmailList(String keyword, LocalDate startDate, LocalDate endDate, Pageable pageable) {
+
+        // 날짜 범위
+        if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("시작일은 종료일보다 늦을 수 없습니다.");
+        }
+
+        // 빈 검색어는 전체 조회
+        if (keyword != null && keyword.isBlank()) {
+            keyword = null;
+        }
+
+        // 검색어
+        if (keyword != null) {
+            keyword = keyword.trim();
+        }
+
+        // 시작일
+        LocalDateTime start = startDate != null ? startDate.atStartOfDay() : null;
+
+        // 종료일
+        LocalDateTime end = endDate != null ? endDate.plusDays(1).atStartOfDay() : null;
+
+        // 이메일 발송 내역 검색 및 페이지네이션
+        Page<NotificationLog> logs = notificationLogRepository.searchEmails(keyword, start, end, pageable);
+
+        return logs.map(EmailDto.Response::from);
+
+
     }
 
     // 이메일 발송 상세 조회
