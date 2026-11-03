@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import net.likelion.bebc25.fixgo.product.entity.ProductModel;
 
 @Entity
 @Getter
@@ -23,11 +24,13 @@ public class PartCompatibility {
     @JoinColumn(name = "part_id", nullable = false)
     Part part;
 
-    @Column(nullable = false)
-    int productModelId;
+    @MapsId
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "part_id", nullable = false)
+    ProductModel productModel;
 
-    public PartCompatibility(Part part, int productModelId) {
+    public PartCompatibility(Part part, ProductModel productModel) {
         this.part = part;
-        this.productModelId = productModelId;
+        this.productModel = productModel;
     }
 }
