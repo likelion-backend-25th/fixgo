@@ -149,7 +149,7 @@
 
 ## A/S 목록
 
-- 엔드포인트: `POST /api/v1/as-requests`
+- 엔드포인트: `POST /api/v1/as-receptions`
 - 접근 권한: 관리자, 접수 담당자
 - 등록된 A/S 요청 목록을 조회하고 검색 조건, 처리 상태, 담당 기사에 따라 필터링한다.
 
@@ -160,7 +160,7 @@ Response Body (HTTP 200 OK)
   "content": [
     {
       "id": 1,
-      "requestNumber": "AS-2026-1101",
+      "receptionNumber": "AS-2026-1101",
       "customerId": 1,
       "customerName": "김하늘",
       "customerPhone": "010-1234-5678",
@@ -173,7 +173,7 @@ Response Body (HTTP 200 OK)
     },
     {
       "id": 2,
-      "requestNumber": "AS-2026-1102",
+      "receptionNumber": "AS-2026-1102",
       "customerId": 2,
       "customerName": "홍길동",
       "customerPhone": "010-2222-3333",
@@ -198,7 +198,7 @@ Response Body (HTTP 200 OK)
 
 엔드포인트:
 
-- 엔드포인트: `POST /api/v1/as-requests`
+- 엔드포인트: `POST /api/v1/as-receptions`
 - 접근 권한: 관리자, 접수 담당자
 - 고객, 제품, 고장 증상, 담당 기사 및 수령 방식 정보를 입력하여 A/S 접수를 등록한다.
 
@@ -211,7 +211,7 @@ Request Body
   "technicianId": 5,
   "symptom": "전원 불량",
   "symptomDetail": "전원 버튼을 눌러도 화면이 켜지지 않음",
-  "requestMemo": "수리 완료 후 고객에게 연락 요청",
+  "Memo": "수리 완료 후 고객에게 연락 요청",
   "returnMethod": "DELIVERY"
 }
 ```
@@ -221,14 +221,14 @@ Response Body (HTTP 201 Created)
 ```json
 {
   "id": 1,
-  "requestNumber": "AS-2026-0001",
+  "receptionNumber": "AS-2026-0001",
   "customerId": 1,
   "productId": 3,
   "receptionistId": 2,
   "technicianId": 5,
   "symptom": "전원 불량",
   "symptomDetail": "전원 버튼을 눌러도 화면이 켜지지 않음",
-  "requestMemo": "수리 완료 후 고객에게 연락 요청",
+  "Memo": "수리 완료 후 고객에게 연락 요청",
   "returnMethod": "DELIVERY",
   "status": "RECEIVED",
   "createdAt": "2026-10-29T09:30:00",
@@ -238,7 +238,7 @@ Response Body (HTTP 201 Created)
 
 ## A/S 접수 상세
 
-- 엔드포인트: `GET /api/v1/as-requests/{requestId}`
+- 엔드포인트: `GET /api/v1/as-receptions/{receptionId}`
 - 접근 권한: 관리자, 접수 담당자
 - 선택한 A/S 접수 건의 고객 정보, 제품 정보, 고장 내용, 담당 기사 및 처리 상태를 조회한다.
 
@@ -247,7 +247,7 @@ Response Body (HTTP 200 OK)
 ```json
 {
   "id": 1,
-  "requestNumber": "AS-2026-1112",
+  "receptionNumber": "AS-2026-1112",
   "customer": {
     "id": 1,
     "name": "한소희",
@@ -271,7 +271,7 @@ Response Body (HTTP 200 OK)
   },
   "symptom": "스피커 불량",
   "symptomDetail": "스피커가 지지직거리고 소리가 잘 안 들립니다.",
-  "requestMemo": "-",
+  "Memo": "-",
   "returnMethod": "PICKUP",
   "status": "RECEIVED",
   "statusChangedAt": "2026-11-10T09:30:00",
@@ -425,7 +425,7 @@ Request Body
 
 ```json
 {
-  "asRequestId": 1062,
+  "asReceptionId": 1062,
   "courier": "CJ대한통운",
   "courierCode": "SMARTTRACKER_COURIER_CODE",
   "trackingNumber": "5100-2219"
@@ -437,7 +437,7 @@ Response Body
 ```json
 {
   "id": 1,
-  "requestNumber": "AS-2026-1062",
+  "receptionNumber": "AS-2026-1062",
   "recipientName": "정하늘",
   "courier": "CJ대한통운",
   "trackingNumber": "123456789012",
@@ -529,7 +529,7 @@ Response Body (HTTP 200 OK)
   "content": [
     {
       "billId": 10,
-      "asRequestNumber": "AS-2026-1076",
+      "asReceptionNumber": "AS-2026-1076",
       "customerName": "최유진",
       "amount": 45000,
       "status": "UNPAID",
@@ -537,7 +537,7 @@ Response Body (HTTP 200 OK)
     },
     {
       "billId": 11,
-      "asRequestNumber": "AS-2026-1062",
+      "asReceptionNumber": "AS-2026-1062",
       "customerName": "정하늘",
       "amount": 120000,
       "status": "UNPAID",
@@ -560,7 +560,7 @@ Response Body (HTTP 200 OK)
 ```json
 {
   "billId": 10,
-  "asRequestNumber": "AS-2026-1076",
+  "asReceptionNumber": "AS-2026-1076",
   "customerName": "최유진",
   "productName": "시저북 SZ-N14",
   "symptom": "키보드 불량",
@@ -748,7 +748,7 @@ Response Body (HTTP 200 OK)
 
 ```json
 {
-  "asRequestNumber": "AS-2026-1076",
+  "asReceptionNumber": "AS-2026-1076",
   "status": "PAYMENT_PENDING",
   "customerName": "한소희",
   "phone": "010-5555-1212",
@@ -941,7 +941,7 @@ Request Body (HTTP 200 OK)
 
 ```json
 {
-  "asRequestId": 1112,
+  "asReceptionId": 1112,
   "recipientPhone": "01055551212",
   "notificationType": "INSPECTION",
   "requestKey": "AS-1112-INSPECTION-001"
@@ -1026,7 +1026,7 @@ Response Body (HTTP 200 OK)
     "customerName": "김미영",
     "recipientPhone": "010-1234-1234",
     "email": "mi32@naver.com",
-    "requestNumber": "AS-2026-1112"
+    "receptionNumber": "AS-2026-1112"
   },
   "message": "[FixGo] 고객님의 수리가 완료되었습니다.",
   "providerMessageId": "SOLAPI_MESSAGE_ID",
@@ -2104,8 +2104,8 @@ Response Body (HTTP 200 OK)
 {
   "content": [
     {
-      "asRequestId": 1001,
-      "requestNumber": "AS-202610-001",
+      "asReceptionId": 1001,
+      "receptionNumber": "AS-202610-001",
       "customerName": "홍길동",
       "modelName": "Galaxy S24",
       "amount": 150000,
@@ -2114,8 +2114,8 @@ Response Body (HTTP 200 OK)
       "depositStatus": "UNPAID"
     },
     {
-      "asRequestId": 988,
-      "requestNumber": "AS-202609-088",
+      "asReceptionId": 988,
+      "receptionNumber": "AS-202609-088",
       "customerName": "이철수",
       "modelName": "노트북",
       "amount": 90000,
@@ -2288,8 +2288,8 @@ Response Body (HTTP 200 OK)
   "totalCount": 4,
   "content": [
     {
-      "asRequestId": 901,
-      "requestNumber": "AS-202609-054",
+      "asReceptionId": 901,
+      "receptionNumber": "AS-202609-054",
       "customerName": "오세훈",
       "modelName": "MacBook Air",
       "status": "RECEIVED",
@@ -2300,8 +2300,8 @@ Response Body (HTTP 200 OK)
       "lastActivityAt": "2026-09-21T09:12:00"
     },
     {
-      "asRequestId": 988,
-      "requestNumber": "AS-202609-088",
+      "asReceptionId": 988,
+      "receptionNumber": "AS-202609-088",
       "customerName": "이철수",
       "modelName": "Galaxy Book4",
       "status": "WAITING_PAYMENT",

@@ -190,7 +190,7 @@
 - **인증·인가:** Spring Security와 JWT를 사용하며, `ADMIN`, `RECEPTIONIST`, `TECHNICIAN` 역할을 API에서 검증한다. 고객은 로그인하지 않는다.
 - **비밀번호 보호:** BCrypt 등 안전한 단방향 해시를 사용한다. 비활성 직원의 로그인과 보호 API 접근을 차단한다.
 - **입력값 검증:** `@Valid`, `@NotNull`, `@Size` 등 Bean Validation과 `@RestControllerAdvice`로 표준 오류 응답을 제공한다.
-- **업무 상태 정합성:** `AS_REQUEST.status` 변경과 `AS_STATUS_HISTORY` 기록은 같은 DB 트랜잭션으로 처리한다. 접수 → 수리 중 → 입금대기 → 배송대기 → 완료 등 허용된
+- **업무 상태 정합성:** `AS_RECEPTION.status` 변경과 `AS_STATUS_HISTORY` 기록은 같은 DB 트랜잭션으로 처리한다. 접수 → 수리 중 → 입금대기 → 배송대기 → 완료 등 허용된
   전이만 수행한다.
 - **수리비 정합성:** `REPAIR_ITEM`의 실제 적용 단가·수량을 보존하고, 확정 후 임의 수정과 음수 금액을 제한한다.
 - **결제 웹훅 멱등성:** PG 이벤트를 검증·기록하고 중복 웹훅 및 수동 입금 확인과의 경합에도 결제 완료가 한 번만 반영되도록 한다. 외부 PG API 호출과 로컬 DB 커밋은 하나의 DB 트랜잭션으로
