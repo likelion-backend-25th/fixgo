@@ -52,22 +52,22 @@ erDiagram
 
 - 테이블 설명: 내부 직원 로그인 계정
 
-| 컬럼명             | 데이터 타입       | 제약조건               | 기본값               | 인덱스 | 설명                        |
-|-----------------|--------------|--------------------|-------------------|-----|---------------------------|
-| id              | BIGINT       | PK, AUTO_INCREMENT | -                 | PK  | 직원 ID                     |
-| code            | VARCHAR(255) | UNIQUE             | -                 | -   | 직원 코드(동명이인 방지)            |
-| email           | VARCHAR(255) | NOT NULL, UNIQUE   | -                 | -   | 로그인 이메일                   |
-| password_hash   | VARCHAR(255) | NOT NULL           | -                 | -   | 암호 해시                     |
-| name            | VARCHAR(255) | NOT NULL           | -                 | -   | 직원명                       |
-| phone           | VARCHAR(255) | NULL               | -                 | -   | 연락처                       |
-| role            | VARCHAR(255) | NOT NULL           | -                 | -   | 역할                        |
-| profile_img_url | VARCHAR(255) | NULL               | -                 | -   | 프로필 이미지 URL               |
-| status          | VARCHAR(255) | NOT NULL           | ACTIVE            | -   | ACTIVE, INACTIVE, DELETED |
-| deleted_at      | DATETIME     | NULL               | -                 |     | 퇴사(삭제) 시각                 |
-| created_at      | DATETIME     | NOT NULL           | CURRENT_TIMESTAMP | -   | 생성 시각                     |
-| updated_at      | DATETIME     | NOT NULL           | CURRENT_TIMESTAMP | -   | 수정 시각                     |
-| created_by      | VARCHAR(255) | NOT NULL           | -                 | -   | 생성자                       |
-| updated_by      | VARCHAR(255) | NOT NULL           | -                 | -   | 수정자                       |
+| 컬럼명             | 데이터 타입       | 제약조건                      | 기본값               | 인덱스 | 설명                        |
+|-----------------|--------------|---------------------------|-------------------|-----|---------------------------|
+| id              | BIGINT       | PK, AUTO_INCREMENT        | -                 | PK  | 직원 ID                     |
+| code            | VARCHAR(255) | UNIQUE                    | -                 | -   | 직원 코드(동명이인 방지)            |
+| email           | VARCHAR(255) | NOT NULL, UNIQUE          | -                 | -   | 로그인 이메일                   |
+| password_hash   | VARCHAR(255) | NOT NULL                  | -                 | -   | 암호 해시                     |
+| name            | VARCHAR(255) | NOT NULL                  | -                 | -   | 직원명                       |
+| phone           | VARCHAR(255) | NULL                      | -                 | -   | 연락처                       |
+| role            | VARCHAR(255) | NOT NULL                  | -                 | -   | 역할                        |
+| profile_img_url | VARCHAR(255) | NULL                      | -                 | -   | 프로필 이미지 URL               |
+| status          | VARCHAR(255) | NOT NULL                  | ACTIVE            | -   | ACTIVE, INACTIVE, DELETED |
+| deleted_at      | DATETIME     | NULL                      | -                 |     | 퇴사(삭제) 시각                 |
+| created_at      | DATETIME     | NOT NULL                  | CURRENT_TIMESTAMP | -   | 생성 시각                     |
+| updated_at      | DATETIME     | NOT NULL                  | CURRENT_TIMESTAMP | -   | 수정 시각                     |
+| created_by      | BIGINT       | NOT NULL, FK -> Member.id | -                 | -   | 생성자                       |
+| updated_by      | BIGINT       | NOT NULL, FK -> Member.id | -                 | -   | 수정자                       |
 
 ### 2) REFRESH_TOKEN
 
@@ -88,19 +88,19 @@ erDiagram
 
 - 테이블 설명: 회원가입하지 않는 A/S 고객의 연락처 및 주소
 
-| 컬럼명            | 데이터 타입       | 제약조건               | 기본값               | 인덱스 | 설명    |
-|----------------|--------------|--------------------|-------------------|-----|-------|
-| id             | BIGINT       | PK, AUTO_INCREMENT | -                 | PK  | 고객 ID |
-| name           | VARCHAR(255) | NOT NULL           | -                 | -   | 고객명   |
-| phone          | VARCHAR(255) | NOT NULL           | -                 | -   | 연락처   |
-| email          | VARCHAR(255) | NOT NULL           | -                 | -   | 이메일   |
-| zipcode        | VARCHAR(255) | NULL               | -                 | -   | 우편번호  |
-| basic_address  | VARCHAR(255) | NULL               | -                 | -   | 기본 주소 |
-| detail_address | VARCHAR(255) | NULL               | -                 | -   | 상세 주소 |
-| created_at     | DATETIME     | NOT NULL           | CURRENT_TIMESTAMP | -   | 생성 시각 |
-| updated_at     | DATETIME     | NOT NULL           | CURRENT_TIMESTAMP | -   | 수정 시각 |
-| created_by     | VARCHAR(255) | NOT NULL           | -                 | -   | 생성자   |
-| updated_by     | VARCHAR(255) | NOT NULL           | -                 | -   | 수정자   |
+| 컬럼명            | 데이터 타입       | 제약조건                      | 기본값               | 인덱스 | 설명    |
+|----------------|--------------|---------------------------|-------------------|-----|-------|
+| id             | BIGINT       | PK, AUTO_INCREMENT        | -                 | PK  | 고객 ID |
+| name           | VARCHAR(255) | NOT NULL                  | -                 | -   | 고객명   |
+| phone          | VARCHAR(255) | NOT NULL                  | -                 | -   | 연락처   |
+| email          | VARCHAR(255) | NOT NULL                  | -                 | -   | 이메일   |
+| zipcode        | VARCHAR(255) | NULL                      | -                 | -   | 우편번호  |
+| basic_address  | VARCHAR(255) | NULL                      | -                 | -   | 기본 주소 |
+| detail_address | VARCHAR(255) | NULL                      | -                 | -   | 상세 주소 |
+| created_at     | DATETIME     | NOT NULL                  | CURRENT_TIMESTAMP | -   | 생성 시각 |
+| updated_at     | DATETIME     | NOT NULL                  | CURRENT_TIMESTAMP | -   | 수정 시각 |
+| created_by     | BIGINT       | NOT NULL, FK -> Member.id | -                 | -   | 생성자   |
+| updated_by     | BIGINT       | NOT NULL, FK -> Member.id | -                 | -   | 수정자   |
 
 ## 1.2.3 제품 및 수리 이력 관리
 
@@ -108,18 +108,18 @@ erDiagram
 
 - 테이블 설명: 수리 대상 모델 마스터. 기존 PRODUCT를 모델 테이블로 명확하게 변경.
 
-| 컬럼명             | 데이터 타입       | 제약조건               | 기본값               | 인덱스 | 설명            |
-|-----------------|--------------|--------------------|-------------------|-----|---------------|
-| id              | BIGINT       | PK, AUTO_INCREMENT | -                 | PK  | 모델 ID         |
-| name            | VARCHAR(255) | NOT NULL           | -                 | -   | 제품명           |
-| model_name      | VARCHAR(255) | NOT NULL           | -                 | -   | 모델명           |
-| category        | VARCHAR(255) | NOT NULL           | -                 | -   | 제품군           |
-| warranty_months | INT          | NULL               | -                 | -   | 기본 제조 보증 개월 수 |
-| is_active       | BOOLEAN      | NOT NULL           | TRUE              | -   | 신규 접수 가능 여부   |
-| created_at      | DATETIME     | NOT NULL           | CURRENT_TIMESTAMP | -   | 생성 시각         |
-| updated_at      | DATETIME     | NOT NULL           | CURRENT_TIMESTAMP | -   | 수정 시각         |
-| created_by      | VARCHAR(255) | NOT NULL           | -                 | -   | 생성자           |
-| updated_by      | VARCHAR(255) | NOT NULL           | -                 | -   | 수정자           |
+| 컬럼명             | 데이터 타입       | 제약조건                      | 기본값               | 인덱스 | 설명            |
+|-----------------|--------------|---------------------------|-------------------|-----|---------------|
+| id              | BIGINT       | PK, AUTO_INCREMENT        | -                 | PK  | 모델 ID         |
+| name            | VARCHAR(255) | NOT NULL                  | -                 | -   | 제품명           |
+| model_name      | VARCHAR(255) | NOT NULL                  | -                 | -   | 모델명           |
+| category        | VARCHAR(255) | NOT NULL                  | -                 | -   | 제품군           |
+| warranty_months | INT          | NULL                      | -                 | -   | 기본 제조 보증 개월 수 |
+| is_active       | BOOLEAN      | NOT NULL                  | TRUE              | -   | 신규 접수 가능 여부   |
+| created_at      | DATETIME     | NOT NULL                  | CURRENT_TIMESTAMP | -   | 생성 시각         |
+| updated_at      | DATETIME     | NOT NULL                  | CURRENT_TIMESTAMP | -   | 수정 시각         |
+| created_by      | BIGINT       | NOT NULL, FK -> Member.id | -                 | -   | 생성자           |
+| updated_by      | BIGINT       | NOT NULL, FK -> Member.id | -                 | -   | 수정자           |
 
 #### 2) PRODUCT (개별 제품 및 시리얼번호 관리)
 
@@ -137,8 +137,8 @@ erDiagram
 | purchased_at     | DATE         | NULL                            | -                 | -                         | 구매일         |
 | created_at       | DATETIME     | NOT NULL                        | CURRENT_TIMESTAMP | -                         | 등록 시각       |
 | updated_at       | DATETIME     | NOT NULL                        | CURRENT_TIMESTAMP | -                         | 수정 시각       |
-| created_by       | VARCHAR(255) | NOT NULL                        | -                 | -                         | 생성자         |
-| updated_by       | VARCHAR(255) | NOT NULL                        | -                 | -                         | 수정자         |
+| created_by       | BIGINT       | NOT NULL, FK -> Member.id       | -                 | -                         | 생성자         |
+| updated_by       | BIGINT       | NOT NULL, FK -> Member.id       | -                 | -                         | 수정자         |
 
 ## 1.2.4 A/S 요청 및 접수 관리
 
@@ -173,8 +173,8 @@ erDiagram
 | closed_at         | DATETIME      | NULL                               | -                 | -                      | 종결 시각            |
 | created_at        | DATETIME      | NOT NULL                           | CURRENT_TIMESTAMP | IDX_AS_CREATED         | 접수 시각            |
 | updated_at        | DATETIME      | NOT NULL                           | CURRENT_TIMESTAMP | -                      | 수정 시각            |
-| created_by        | VARCHAR(255)  | NOT NULL                           | -                 | -                      | 생성자              |
-| updated_by        | VARCHAR(255)  | NOT NULL                           | -                 | -                      | 수정자              |
+| created_by        | BIGINT        | NOT NULL, FK -> Member.id          | -                 | -                      | 생성자              |
+| updated_by        | BIGINT        | NOT NULL, FK -> Member.id          | -                 | -                      | 수정자              |
 
 ### 3) AS_ATTACHMENT
 
@@ -188,8 +188,8 @@ erDiagram
 | original_name   | VARCHAR(255) | NULL                           | -                 | -                           | 원본 파일명 |
 | created_at      | DATETIME     | NOT NULL                       | CURRENT_TIMESTAMP | -                           | 등록 시각  |
 | updated_at      | DATETIME     | NOT NULL                       | CURRENT_TIMESTAMP | -                           | 수정 시각  |
-| created_by      | VARCHAR(255) | NOT NULL                       | -                 | -                           | 생성자    |
-| updated_by      | VARCHAR(255) | NOT NULL                       | -                 | -                           | 수정자    |
+| created_by      | BIGINT       | NOT NULL, FK -> Member.id      | -                 | -                           | 생성자    |
+| updated_by      | BIGINT       | NOT NULL, FK -> Member.id      | -                 | -                           | 수정자    |
 
 ## 1.2.5 A/S 배정 및 진행 관리
 
@@ -213,32 +213,31 @@ erDiagram
 
 - 테이블 설명: 제품군별 시간당 공임 단가.
 
-| 컬럼명                  | 데이터 타입       | 제약조건               | 기본값               | 인덱스 | 설명            |
-|----------------------|--------------|--------------------|-------------------|-----|---------------|
-| id                   | BIGINT       | PK, AUTO_INCREMENT | -                 | PK  | 공임 단가 ID      |
-| product_category     | VARCHAR(255) | NOT NULL           | -                 | -   | 제품군           |
-| rate_per_ten_minutes | INT          | NOT NULL           | -                 | -   | 10분 당 공임 원 단위 |
-| inspection_cost      | INT          | NOT NULL           | -                 | -   | 점검비           |
-| effective_from       | DATE         | NOT NULL           | -                 | -   | 적용 시작일        |
-| is_active            | BOOLEAN      | NOT NULL           | TRUE              | -   | 현재 사용 여부      |
-| created_at           | DATETIME     | NOT NULL           | CURRENT_TIMESTAMP | -   | 생성 시각         |
-| updated_at           | DATETIME     | NOT NULL           | CURRENT_TIMESTAMP | -   | 수정 시각         |
-| created_by           | VARCHAR(255) | NOT NULL           | -                 | -   | 생성자           |
-| updated_by           | VARCHAR(255) | NOT NULL           | -                 | -   | 수정자           |
+| 컬럼명              | 데이터 타입       | 제약조건                      | 기본값               | 인덱스 | 설명       |
+|------------------|--------------|---------------------------|-------------------|-----|----------|
+| id               | BIGINT       | PK, AUTO_INCREMENT        | -                 | PK  | 공임 단가 ID |
+| product_category | VARCHAR(255) | NOT NULL                  | -                 | -   | 제품군      |
+| cost             | INT          | NOT NULL                  | -                 | -   | 비용       |
+| type             | VARCHAR(255) | NOT NULL                  | -                 | -   | 공임비/점검비  |
+| effective_from   | DATE         | NOT NULL                  | -                 | -   | 적용 시작일   |
+| created_at       | DATETIME     | NOT NULL                  | CURRENT_TIMESTAMP | -   | 생성 시각    |
+| updated_at       | DATETIME     | NOT NULL                  | CURRENT_TIMESTAMP | -   | 수정 시각    |
+| created_by       | BIGINT       | NOT NULL, FK -> Member.id | -                 | -   | 생성자      |
+| updated_by       | BIGINT       | NOT NULL, FK -> Member.id | -                 | -   | 수정자      |
 
 ### 2) REPAIR_PRESET
 
 - 테이블 설명: 표준 수리 작업과 예상 소요시간
 
-| 컬럼명         | 데이터 타입       | 제약조건               | 기본값               | 인덱스 | 설명     |
-|-------------|--------------|--------------------|-------------------|-----|--------|
-| id          | BIGINT       | PK, AUTO_INCREMENT | -                 | PK  | 프리셋 ID |
-| name        | VARCHAR(255) | NOT NULL           | -                 | -   | 작업명    |
-| description | VARCHAR(255) | NULL               | -                 | -   | 작업 설명  |
-| created_at  | DATETIME     | NOT NULL           | CURRENT_TIMESTAMP | -   | 생성 시각  |
-| updated_at  | DATETIME     | NOT NULL           | CURRENT_TIMESTAMP | -   | 수정 시각  |
-| created_by  | VARCHAR(255) | NOT NULL           | -                 | -   | 생성자    |
-| updated_by  | VARCHAR(255) | NOT NULL           | -                 | -   | 수정자    |
+| 컬럼명         | 데이터 타입       | 제약조건                      | 기본값               | 인덱스 | 설명     |
+|-------------|--------------|---------------------------|-------------------|-----|--------|
+| id          | BIGINT       | PK, AUTO_INCREMENT        | -                 | PK  | 프리셋 ID |
+| name        | VARCHAR(255) | NOT NULL                  | -                 | -   | 작업명    |
+| description | VARCHAR(255) | NULL                      | -                 | -   | 작업 설명  |
+| created_at  | DATETIME     | NOT NULL                  | CURRENT_TIMESTAMP | -   | 생성 시각  |
+| updated_at  | DATETIME     | NOT NULL                  | CURRENT_TIMESTAMP | -   | 수정 시각  |
+| created_by  | BIGINT       | NOT NULL, FK -> Member.id | -                 | -   | 생성자    |
+| updated_by  | BIGINT       | NOT NULL, FK -> Member.id | -                 | -   | 수정자    |
 
 ### 3) REPAIR_SYMPTOM_RELATION
 
@@ -256,30 +255,26 @@ erDiagram
 - 테이블 설명: A/S별 점검 및 수리 결과.
 - A/S 요청에 기사 배정되는 시점에 새 Row 생성
 
-| 컬럼명             | 데이터 타입       | 제약조건                                   | 기본값        | 인덱스             | 설명                         |
-|-----------------|--------------|----------------------------------------|------------|-----------------|----------------------------|
-| id              | BIGINT       | PK, AUTO_INCREMENT                     | -          | PK              | 수리 ID                      |
-| as_reception_id | BIGINT       | NOT NULL, UNIQUE, FK → AS_RECEPTION.id | -          | UK_REPAIR_AS    | A/S 1:1                    |
-| technician_id   | BIGINT       | NOT NULL, FK → MEMBER.id               | -          | IDX_REPAIR_TECH | 담당 기사                      |
-| diagnosis       | VARCHAR(255) | NULL                                   | -          | -               | 점검 결과                      |
-| work_note       | VARCHAR(255) | NULL                                   | -          | -               | 수리 메모                      |
-| repair_decision | VARCHAR(255) | NULL                                   | -          | -               | REPAIRABLE, UNREPAIRABLE 등 |
-| warranty_result | VARCHAR(255) | NOT NULL                               | -          | -               | FREE, PAID                 |
-| reason          | VARCHAR(255) | NULL                                   | -          | -               | 보증 판정 사유                   |
-| labor_rate      | INT          | NULL                                   | -          | -               | 당시 적용된 공임 비용               |
-| inspection_cost | INT          | NULL                                   | -          | -               | 당시 적용된 점검 비용               |
-| final_amount    | INT          | NULL                                   | -          | -               | 최종 확정 수리비(원)               |
-| status          | VARCHAR(255) | NOT NULL                               | DIAGNOSING | -               | DIAGNOSING,                |
-
-REQUESTED, APPROVED,
-REJECTED,
-REPAIRING, COMPLETED |
-| reason_for_rejection | VARCHAR(255)  | NULL | - | - | 고객이 입력한 견적 거부 사유 |
-| confirmed_at | DATETIME | NULL | - | - | 최종 비용 확정 시각 |
-| created_at | DATETIME | NOT NULL | CURRENT_TIMESTAMP | - | 생성 시각 |
-| updated_at | DATETIME | NOT NULL | CURRENT_TIMESTAMP | - | 수정 시각 |
-| created_by | VARCHAR(255) | NOT NULL | - | - | 생성자 |
-| updated_by | VARCHAR(255) | NOT NULL | - | - | 수정자 |
+| 컬럼명                  | 데이터 타입       | 제약조건                                   | 기본값               | 인덱스             | 설명                                                             |
+|----------------------|--------------|----------------------------------------|-------------------|-----------------|----------------------------------------------------------------|
+| id                   | BIGINT       | PK, AUTO_INCREMENT                     | -                 | PK              | 수리 ID                                                          |
+| as_reception_id      | BIGINT       | NOT NULL, UNIQUE, FK → AS_RECEPTION.id | -                 | UK_REPAIR_AS    | A/S 1:1                                                        |
+| technician_id        | BIGINT       | NOT NULL, FK → MEMBER.id               | -                 | IDX_REPAIR_TECH | 담당 기사                                                          |
+| diagnosis            | VARCHAR(255) | NULL                                   | -                 | -               | 점검 결과                                                          |
+| work_note            | VARCHAR(255) | NULL                                   | -                 | -               | 수리 메모                                                          |
+| repair_decision      | VARCHAR(255) | NULL                                   | -                 | -               | REPAIRABLE, UNREPAIRABLE 등                                     |
+| warranty_result      | VARCHAR(255) | NOT NULL                               | -                 | -               | FREE, PAID                                                     |
+| reason               | VARCHAR(255) | NULL                                   | -                 | -               | 보증 판정 사유                                                       |
+| labor_rate           | INT          | NULL                                   | -                 | -               | 당시 적용된 공임 비용                                                   |
+| inspection_cost      | INT          | NULL                                   | -                 | -               | 당시 적용된 점검 비용                                                   |
+| final_amount         | INT          | NULL                                   | -                 | -               | 최종 확정 수리비(원)                                                   |
+| status               | VARCHAR(255) | NOT NULL                               | DIAGNOSING        | -               | DIAGNOSING,REQUESTED, APPROVED, REJECTED, REPAIRING, COMPLETED |
+| reason_for_rejection | VARCHAR(255) | NULL                                   | -                 | -               | 고객이 입력한 견적 거부 사유                                               |
+| confirmed_at         | DATETIME     | NULL                                   | -                 | -               | 최종 비용 확정 시각                                                    |
+| created_at           | DATETIME     | NOT NULL                               | CURRENT_TIMESTAMP | -               | 생성 시각                                                          |
+| updated_at           | DATETIME     | NOT NULL                               | CURRENT_TIMESTAMP | -               | 수정 시각                                                          |
+| created_by           | BIGINT       | NOT NULL, FK -> Member.id              | -                 | -               | 생성자                                                            |
+| updated_by           | BIGINT       | NOT NULL, FK -> Member.id              | -                 | -               | 수정자                                                            |
 
 #### 5) REPAIR_SYMPTOM_PRESET
 
@@ -295,31 +290,31 @@ REPAIRING, COMPLETED |
 
 - 테이블 설명: 실제 수행한 수리 작업 항목.
 
-| 컬럼명                | 데이터 타입       | 제약조건                     | 기본값               | 인덱스              | 설명        |
-|--------------------|--------------|--------------------------|-------------------|------------------|-----------|
-| id                 | BIGINT       | PK, AUTO_INCREMENT       | -                 | PK               | 작업 항목 ID  |
-| repair_id          | BIGINT       | NOT NULL, FK → REPAIR.id | -                 | IDX_RITEM_REPAIR | 수리 ID     |
-| repair_preset_name | VARCHAR(255) | NOT NULL                 | -                 | -                | 선택 프리셋 이름 |
-| work_name          | VARCHAR(255) | NOT NULL                 | -                 | -                | 작업명 스냅샷   |
-| created_at         | DATETIME     | NOT NULL                 | CURRENT_TIMESTAMP | -                | 생성 시각     |
-| updated_at         | DATETIME     | NOT NULL                 | CURRENT_TIMESTAMP | -                | 수정 시각     |
-| created_by         | VARCHAR(255) | NOT NULL                 | -                 | -                | 생성자       |
-| updated_by         | VARCHAR(255) | NOT NULL                 | -                 | -                | 수정자       |
+| 컬럼명                | 데이터 타입       | 제약조건                      | 기본값               | 인덱스              | 설명        |
+|--------------------|--------------|---------------------------|-------------------|------------------|-----------|
+| id                 | BIGINT       | PK, AUTO_INCREMENT        | -                 | PK               | 작업 항목 ID  |
+| repair_id          | BIGINT       | NOT NULL, FK → REPAIR.id  | -                 | IDX_RITEM_REPAIR | 수리 ID     |
+| repair_preset_name | VARCHAR(255) | NOT NULL                  | -                 | -                | 선택 프리셋 이름 |
+| work_name          | VARCHAR(255) | NOT NULL                  | -                 | -                | 작업명 스냅샷   |
+| created_at         | DATETIME     | NOT NULL                  | CURRENT_TIMESTAMP | -                | 생성 시각     |
+| updated_at         | DATETIME     | NOT NULL                  | CURRENT_TIMESTAMP | -                | 수정 시각     |
+| created_by         | BIGINT       | NOT NULL, FK -> Member.id | -                 | -                | 생성자       |
+| updated_by         | BIGINT       | NOT NULL, FK -> Member.id | -                 | -                | 수정자       |
 
 ### 6) REPAIR_PHOTO
 
 - 테이블 설명: 수리 전후 사진.
 
-| 컬럼명        | 데이터 타입       | 제약조건                     | 기본값               | 인덱스               | 설명                       |
-|------------|--------------|--------------------------|-------------------|-------------------|--------------------------|
-| id         | BIGINT       | PK, AUTO_INCREMENT       | -                 | PK                | 사진 ID                    |
-| repair_id  | BIGINT       | NOT NULL, FK → REPAIR.id | -                 | IDX_RPHOTO_REPAIR | 수리 ID                    |
-| photo_type | VARCHAR(255) | NOT NULL                 | -                 | -                 | BEFORE, AFTER, DIAGNOSIS |
-| file_url   | VARCHAR(500) | NOT NULL                 | -                 | -                 | 사진 경로                    |
-| created_at | DATETIME     | NOT NULL                 | CURRENT_TIMESTAMP | -                 | 등록 시각                    |
-| updated_at | DATETIME     | NOT NULL                 | CURRENT_TIMESTAMP | -                 | 수정 시각                    |
-| created_by | VARCHAR(255) | NOT NULL                 | -                 | -                 | 생성자                      |
-| updated_by | VARCHAR(255) | NOT NULL                 | -                 | -                 | 수정자                      |
+| 컬럼명        | 데이터 타입       | 제약조건                      | 기본값               | 인덱스               | 설명                       |
+|------------|--------------|---------------------------|-------------------|-------------------|--------------------------|
+| id         | BIGINT       | PK, AUTO_INCREMENT        | -                 | PK                | 사진 ID                    |
+| repair_id  | BIGINT       | NOT NULL, FK → REPAIR.id  | -                 | IDX_RPHOTO_REPAIR | 수리 ID                    |
+| photo_type | VARCHAR(255) | NOT NULL                  | -                 | -                 | BEFORE, AFTER, DIAGNOSIS |
+| file_url   | VARCHAR(500) | NOT NULL                  | -                 | -                 | 사진 경로                    |
+| created_at | DATETIME     | NOT NULL                  | CURRENT_TIMESTAMP | -                 | 등록 시각                    |
+| updated_at | DATETIME     | NOT NULL                  | CURRENT_TIMESTAMP | -                 | 수정 시각                    |
+| created_by | BIGINT       | NOT NULL, FK -> Member.id | -                 | -                 | 생성자                      |
+| updated_by | BIGINT       | NOT NULL, FK -> Member.id | -                 | -                 | 수정자                      |
 
 ## 1.2.7 부품 재고 관리
 
@@ -327,21 +322,21 @@ REPAIRING, COMPLETED |
 
 - 테이블 설명: 부품과 현재 재고 수량.
 
-| 컬럼명              | 데이터 타입       | 제약조건               | 기본값               | 인덱스          | 설명                   |
-|------------------|--------------|--------------------|-------------------|--------------|----------------------|
-| id               | BIGINT       | PK, AUTO_INCREMENT | -                 | PK           | 부품 ID                |
-| part_code        | VARCHAR(255) | NOT NULL, UNIQUE   | -                 | UK_PART_CODE | 부품 코드                |
-| name             | VARCHAR(255) | NOT NULL           | -                 | -            | 부품명                  |
-| unit_price       | INT          | NOT NULL           | -                 | -            | 기준 단가(원)             |
-| standard_minutes | INT          | NOT NULL           | -                 | -            | 표준 작업시간 (10분 단위로 저장) |
-| stock_quantity   | INT          | NOT NULL           | -                 | -            | 현재 수량                |
-| is_discontinued  | BOOLEAN      | NOT NULL           | FALSE             | -            | 단종 여부                |
-| is_active        | BOOLEAN      | NOT NULL           | TRUE              | -            | 사용 여부                |
-| version          | INT          | NOT NULL           | 0                 | -            | 재고 동시성 제어            |
-| created_at       | DATETIME     | NOT NULL           | CURRENT_TIMESTAMP | -            | 생성 시각                |
-| updated_at       | DATETIME     | NOT NULL           | CURRENT_TIMESTAMP | -            | 수정 시각                |
-| created_by       | VARCHAR(255) | NOT NULL           | -                 | -            | 생성자                  |
-| updated_by       | VARCHAR(255) | NOT NULL           | -                 | -            | 수정자                  |
+| 컬럼명              | 데이터 타입       | 제약조건                      | 기본값               | 인덱스          | 설명                   |
+|------------------|--------------|---------------------------|-------------------|--------------|----------------------|
+| id               | BIGINT       | PK, AUTO_INCREMENT        | -                 | PK           | 부품 ID                |
+| part_code        | VARCHAR(255) | NOT NULL, UNIQUE          | -                 | UK_PART_CODE | 부품 코드                |
+| name             | VARCHAR(255) | NOT NULL                  | -                 | -            | 부품명                  |
+| unit_price       | INT          | NOT NULL                  | -                 | -            | 기준 단가(원)             |
+| standard_minutes | INT          | NOT NULL                  | -                 | -            | 표준 작업시간 (10분 단위로 저장) |
+| stock_quantity   | INT          | NOT NULL                  | -                 | -            | 현재 수량                |
+| is_discontinued  | BOOLEAN      | NOT NULL                  | FALSE             | -            | 단종 여부                |
+| is_active        | BOOLEAN      | NOT NULL                  | TRUE              | -            | 사용 여부                |
+| version          | INT          | NOT NULL                  | 0                 | -            | 재고 동시성 제어            |
+| created_at       | DATETIME     | NOT NULL                  | CURRENT_TIMESTAMP | -            | 생성 시각                |
+| updated_at       | DATETIME     | NOT NULL                  | CURRENT_TIMESTAMP | -            | 수정 시각                |
+| created_by       | BIGINT       | NOT NULL, FK -> Member.id | -                 | -            | 생성자                  |
+| updated_by       | BIGINT       | NOT NULL, FK -> Member.id | -                 | -            | 수정자                  |
 
 ### 2) PART_COMPATIBILITY
 
@@ -425,8 +420,8 @@ REPAIRING, COMPLETED |
 | approved_at     | DATETIME     | NULL                           | -                 | -   | 승인/수납 확정 시각                                                                      |
 | created_at      | DATETIME     | NOT NULL                       | CURRENT_TIMESTAMP | -   | 생성 시각                                                                            |
 | updated_at      | DATETIME     | NOT NULL                       | CURRENT_TIMESTAMP | -   | 수정 시각                                                                            |
-| created_by      | VARCHAR(255) | NOT NULL                       | -                 | -   | 생성자                                                                              |
-| updated_by      | VARCHAR(255) | NOT NULL                       | -                 | -   | 수정자                                                                              |
+| created_by      | BIGINT       | NOT NULL, FK -> Member.id      | -                 | -   | 생성자                                                                              |
+| updated_by      | BIGINT       | NOT NULL, FK -> Member.id      | -                 | -   | 수정자                                                                              |
 
 ### 3) VIRTUAL_ACCOUNT
 
@@ -440,8 +435,8 @@ REPAIRING, COMPLETED |
 | account_number     | VARCHAR(255) | NOT NULL                                  | -                 | -   | 가상계좌 번호         |
 | webhook_secret     | VARCHAR(255) | NOT NULL                                  | -                 | -   | 가상계좌 웹훅 검증용 비밀값 |
 | due_at             | DATETIME     | NOT NULL                                  | -                 | -   | 입금 기한           |
-| created_at         | DATETIME     | NOT NULL                                  | CURRENT_TIMESTAMP | -   | 발급 시각           |
-| updated_at         | DATETIME     | NOT NULL                                  | CURRENT_TIMESTAMP | -   | 수정 시각           |
+| created_at         | DATETIME     | NOT NULL, FK -> Member.id                 | CURRENT_TIMESTAMP | -   | 발급 시각           |
+| updated_at         | DATETIME     | NOT NULL, FK -> Member.id                 | CURRENT_TIMESTAMP | -   | 수정 시각           |
 
 ### 4) PAYMENT_REFUND
 
@@ -465,7 +460,7 @@ REPAIRING, COMPLETED |
 | canceled_at           | DATETIME     | NULL                                         | -                 | -   | PG 취소 처리 시각                                  |
 | created_at            | DATETIME     | NOT NULL                                     | CURRENT_TIMESTAMP | -   | 생성 시각                                        |
 | updated_at            | DATETIME     | NOT NULL                                     | CURRENT_TIMESTAMP | -   | 수정 시각                                        |
-| created_by            | VARCHAR(255) | NOT NULL                                     | -                 | -   | 생성자                                          |
+| created_by            | BIGINT       | NOT NULL                                     | -                 | -   | 생성자                                          |
 
 ## 1.2.9 배송 및 제품 반환 관리
 
@@ -493,8 +488,8 @@ REPAIRING, COMPLETED |
 | last_tracking_status | VARCHAR(255) | NULL                                   |                   |                     | 외부 API에서 받은 배송 상태                     |
 | created_at           | DATETIME     | NOT NULL                               | CURRENT_TIMESTAMP | -                   | 생성 시각                                 |
 | updated_at           | DATETIME     | NOT NULL                               | CURRENT_TIMESTAMP | -                   | 수정 시각                                 |
-| created_by           | VARCHAR(255) | NOT NULL                               |                   |                     | 배송 등록 직원 ID                           |
-| updated_by           | VARCHAR(255) | NOT NULL                               |                   |                     | 마지막 수정 직원 ID                          |
+| created_by           | BIGINT       | NOT NULL, FK -> Member.id              |                   |                     | 배송 등록 직원 ID                           |
+| updated_by           | BIGINT       | NOT NULL, FK -> Member.id              |                   |                     | 마지막 수정 직원 ID                          |
 
 ### 2) SHIPMENT_EVENT
 
@@ -528,28 +523,24 @@ REPAIRING, COMPLETED |
 
 - 테이블 설명: 알림톡 우선 발송 및 SMS 대체 발송 이력.
 
-| 컬럼명               | 데이터 타입       | 제약조건                       | 기본값 | 인덱스 | 설명                                                          |
-|-------------------|--------------|----------------------------|-----|-----|-------------------------------------------------------------|
-| id                | BIGINT       | PK, AUTO_INCREMENT         | -   | PK  | 알림 발송 ID                                                    |
-| as_reception_id   | BIGINT       | NULL, FK → AS_RECEPTION.id | -   | -   | 관련 A/S                                                      |
-| event_key         | VARCHAR(255) | NOT NULL, UNIQUE           | -   |     | 업무 이벤트 중복 발송 방지                                             |
-| notification_type | VARCHAR(255) | NOT NULL                   | -   | -   | 접수, 입금, 배송 알림 종류(RECEIVED(A/S 접수 완료), ESTIMATE(견적 발급 및 확인), |
-
-REPAIR(수리 완료),
-PAYMENT(결제 요청)
-SHIPPING(배송 시작) |
-| recipient_phone | VARCHAR(255) | NOT NULL | - | - | 수신 번호 |
-| message | VARCHAR(255) | NOT NULL | - | - | 발송 내용 |
-| provider_message_id | VARCHAR(255) | NULL | - | - | SOLAPI messageId |
-| provider_group_id | VARCHAR(255) | NULL | - | - | SOLAPI groupId |
-| provider_status_code | VARCHAR(255) | NULL | - | - | SOLAPI 4자리 상태 코드 |
-| provider_status_message | VARCHAR(255) | NULL | - | - | SOLAPI 상태 설명 |
-| status | VARCHAR(255) | NOT NULL | PENDING | IDX_NLOG_STATUS | PENDING, SENDING, SENT, FAILED |
-| retry_count | INT | NOT NULL | 0 | - | 재시도 횟수 |
-| error_message | VARCHAR(255) | NULL | - | - | 오류 메시지 |
-| sent_at | DATETIME | NULL | - | - | 발송 시각 |
-| created_at | DATETIME | NOT NULL | CURRENT_TIMESTAMP | - | 생성 시각 |
-| created_by | VARCHAR(255) | NULL | | | 알림을 발송한 직원Id |
+| 컬럼명                     | 데이터 타입       | 제약조건                       | 기본값               | 인덱스             | 설명                                                                                                       |
+|-------------------------|--------------|----------------------------|-------------------|-----------------|----------------------------------------------------------------------------------------------------------|
+| id                      | BIGINT       | PK, AUTO_INCREMENT         | -                 | PK              | 알림 발송 ID                                                                                                 |
+| as_reception_id         | BIGINT       | NULL, FK → AS_RECEPTION.id | -                 | -               | 관련 A/S                                                                                                   |
+| event_key               | VARCHAR(255) | NOT NULL, UNIQUE           | -                 |                 | 업무 이벤트 중복 발송 방지                                                                                          |
+| notification_type       | VARCHAR(255) | NOT NULL                   | -                 | -               | 접수, 입금, 배송 알림 종류(RECEIVED(A/S 접수 완료), ESTIMATE(견적 발급 및 확인), REPAIR(수리 완료), PAYMENT(결제 요청)SHIPPING(배송 시작) |
+| recipient_phone         | VARCHAR(255) | NOT NULL                   | -                 | -               | 수신 번호                                                                                                    |
+| message                 | VARCHAR(255) | NOT NULL                   | -                 | -               | 발송 내용                                                                                                    |
+| provider_message_id     | VARCHAR(255) | NULL                       | -                 | -               | SOLAPI messageId                                                                                         |
+| provider_group_id       | VARCHAR(255) | NULL                       | -                 | -               | SOLAPI groupId                                                                                           |
+| provider_status_code    | VARCHAR(255) | NULL                       | -                 | -               | SOLAPI 4자리 상태 코드                                                                                         |
+| provider_status_message | VARCHAR(255) | NULL                       | -                 | -               | SOLAPI 상태 설명                                                                                             |
+| status                  | VARCHAR(255) | NOT NULL                   | PENDING           | IDX_NLOG_STATUS | PENDING, SENDING, SENT, FAILED                                                                           |
+| retry_count             | INT          | NOT NULL                   | 0                 | -               | 재시도 횟수                                                                                                   |
+| error_message           | VARCHAR(255) | NULL                       | -                 | -               | 오류 메시지                                                                                                   |
+| sent_at                 | DATETIME     | NULL                       | -                 | -               | 발송 시각                                                                                                    |
+| created_at              | DATETIME     | NOT NULL                   | CURRENT_TIMESTAMP | -               | 생성 시각                                                                                                    |
+| created_by              | BIGINT       | NULL, FK -> Member.id      |                   |                 | 알림을 발송한 직원Id                                                                                             |
 
 ## 1.2.11 대시보드 및 운영 통계
 
