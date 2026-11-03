@@ -29,7 +29,7 @@ public class CustomerPortalLink {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private Long asRequestId;
+    private Long asReceptionId;
 
     @Column(nullable = false, unique = true, length = TOKEN_HASH_LENGTH)
     private String tokenHash;
@@ -40,18 +40,18 @@ public class CustomerPortalLink {
     /**
      * 링크를 발급한다.
      *
-     * @param asRequestId 링크가 가리키는 A/S 접수 ID
+     * @param asReceptionId 링크가 가리키는 A/S 접수 ID
      * @param tokenHash   서비스가 생성한 토큰의 SHA-256 해시 (64자 16진수)
      * @param expiresAt   만료 시각
      */
-    public static CustomerPortalLink issue(Long asRequestId, String tokenHash, LocalDateTime expiresAt) {
-        if (asRequestId == null) {
-            throw new IllegalArgumentException("asRequestId는 필수입니다.");
+    public static CustomerPortalLink issue(Long asReceptionId, String tokenHash, LocalDateTime expiresAt) {
+        if (asReceptionId == null) {
+            throw new IllegalArgumentException("asReceptionId는 필수입니다.");
         }
         validateToken(tokenHash, expiresAt);
 
         CustomerPortalLink link = new CustomerPortalLink();
-        link.asRequestId = asRequestId;
+        link.asReceptionId = asReceptionId;
         link.tokenHash = tokenHash;
         link.expiresAt = expiresAt;
         return link;

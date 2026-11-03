@@ -1,5 +1,6 @@
 package net.likelion.bebc25.fixgo.payment.client;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 public class TossDto {
@@ -31,5 +32,15 @@ public class TossDto {
     }
 
     public record ErrorResponse(String code, String message) {}
+
+    /**
+     * 토스 가상계좌 웹훅
+     */
+    public record DepositCallbackWebhook(
+            LocalDateTime createdAt,
+            String secret,
+            String status,
+            String orderId
+    ) {}
 }
 

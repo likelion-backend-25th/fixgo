@@ -37,15 +37,15 @@ class PaymentBillRepositoryTest {
         PaymentBill found = paymentBillRepository.findById(saved.getId()).orElseThrow();
 
         // then
-        assertThat(found.getAsRequestId()).isEqualTo(1L);
+        assertThat(found.getAsReceptionId()).isEqualTo(1L);
         assertThat(found.getAmount()).isEqualTo(30_000L);
         assertThat(found.getStatus()).isEqualTo(PaymentBillStatus.UNPAID);
         assertThat(found.getPaidAt()).isNull();
     }
 
     @Test
-    @DisplayName("같은 asRequestId로 두 번 저장하면 unique 제약 위반 예외가 난다")
-    void save_duplicateAsRequestId() {
+    @DisplayName("같은 asReceptionId로 두 번 저장하면 unique 제약 위반 예외가 난다")
+    void save_duplicateAsReceptionId() {
         paymentBillRepository.saveAndFlush(PaymentBill.issue(1L, 30_000L, PaymentBillType.REPAIR));
 
         // 서비스의 existsBy 체크를 거치지 않고 DB에 직접 넣어서, 유니크 제약조건이 동작하는지 확인한다.
@@ -54,20 +54,20 @@ class PaymentBillRepositoryTest {
     }
 
     @Test
-    @DisplayName("asRequestId로 청구서를 조회할 수 있다")
-    void findByAsRequestId() {
+    @DisplayName("asReceptionId로 청구서를 조회할 수 있다")
+    void findByAsReceptionId() {
         paymentBillRepository.saveAndFlush(PaymentBill.issue(7L, 50_000L, PaymentBillType.REPAIR));
 
-        assertThat(paymentBillRepository.findByAsRequestId(7L)).isPresent();
-        assertThat(paymentBillRepository.findByAsRequestId(999L)).isEmpty();
+        assertThat(paymentBillRepository.findByAsReceptionId(7L)).isPresent();
+        assertThat(paymentBillRepository.findByAsReceptionId(999L)).isEmpty();
     }
 
     @Test
-    @DisplayName("asRequestId로 청구서 존재 여부를 확인할 수 있다")
-    void existsByAsRequestId() {
+    @DisplayName("asReceptionId로 청구서 존재 여부를 확인할 수 있다")
+    void existsByAsReceptionId() {
         paymentBillRepository.saveAndFlush(PaymentBill.issue(7L, 50_000L, PaymentBillType.REPAIR));
 
-        assertThat(paymentBillRepository.existsByAsRequestId(7L)).isTrue();
-        assertThat(paymentBillRepository.existsByAsRequestId(999L)).isFalse();
+        assertThat(paymentBillRepository.existsByAsReceptionId(7L)).isTrue();
+        assertThat(paymentBillRepository.existsByAsReceptionId(999L)).isFalse();
     }
 }

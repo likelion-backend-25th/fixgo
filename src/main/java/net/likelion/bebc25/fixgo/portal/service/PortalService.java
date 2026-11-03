@@ -22,9 +22,9 @@ public class PortalService {
      * 토큰이 없거나 만료되면 PortalException이 발생한다.
      */
     public PortalResponse getPortal(String token) {
-        Long asRequestId = customerPortalLinkService.resolveAsRequestId(token);
+        Long asReceptionId = customerPortalLinkService.resolveAsReceptionId(token);
 
-        PaymentDto.PaymentSummaryResponse paymentSummary = paymentQueryService.getSummary(asRequestId);
+        PaymentDto.PaymentSummaryResponse paymentSummary = paymentQueryService.getSummary(asReceptionId);
 
         return new PortalResponse(paymentSummary);
     }
@@ -33,7 +33,7 @@ public class PortalService {
      * 토큰으로 접수번호를 가져온 후 결제시작에 넘긴다.
      */
     public PaymentDto.StartPaymentResponse startPayment(String token) {
-        Long asRequestId = customerPortalLinkService.resolveAsRequestId(token);
-        return paymentAttemptService.startPayment(asRequestId);
+        Long asReceptionId = customerPortalLinkService.resolveAsReceptionId(token);
+        return paymentAttemptService.startPayment(asReceptionId);
     }
 }

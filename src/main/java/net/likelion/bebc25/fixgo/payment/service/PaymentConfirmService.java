@@ -47,7 +47,7 @@ public class PaymentConfirmService {
         // 카드는 DONE, 가상계좌는 WAITING_FOR_DEPOSIT으로 온다. 그 외 상태는 attempt가 IN_PROGRESS로 남으므로 결제 조회로 정리가 필요하다(TODO)
         switch (response.status()) {
             case "DONE" ->
-                    paymentAttemptService.completeConfirm(response.orderId(), response.paymentKey(), response.approvedAt());
+                    paymentAttemptService.completeConfirm(response.orderId(), response.paymentKey(), response.approvedAt().toLocalDateTime());
             case "WAITING_FOR_DEPOSIT" ->
                     paymentAttemptService.issueVirtualAccount(response.orderId(), response.paymentKey(), response.virtualAccount().bankCode(),
                                                               response.virtualAccount().accountNumber(), response.secret(),
