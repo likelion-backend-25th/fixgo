@@ -42,5 +42,4 @@ public class ShipmentDto {
             Long createdBy,
             Long updatedBy
     ) {}
-
 }
