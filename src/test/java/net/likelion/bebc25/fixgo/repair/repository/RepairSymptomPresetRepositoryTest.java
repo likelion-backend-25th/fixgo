@@ -1,6 +1,6 @@
 package net.likelion.bebc25.fixgo.repair.repository;
 
-import net.likelion.bebc25.fixgo.as.entity.AsRequest;
+import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.entity.Role;
@@ -47,7 +47,7 @@ class RepairSymptomPresetRepositoryTest {
     private ProductRepository productRepository;
 
     @Autowired
-    private AsReceptionRepository asRequestRepository;
+    private AsReceptionRepository asReceptionRepository;
 
     private Repair repair;
 
@@ -72,12 +72,12 @@ class RepairSymptomPresetRepositoryTest {
         product = productRepository.save(product);
 
         // 테스트용 A/S 접수 생성
-        AsRequest asRequest = new AsRequest("AS-TEST-001", customer, product, technician, technician, "메인보드 이상", "전원이 켜지지 않는 증상", "테스트 접수", ReturnMethod.DELIVERY);
+        AsReception asReception = new AsReception("AS-TEST-001", customer, product, technician, technician, "메인보드 이상", "전원이 켜지지 않는 증상", "테스트 접수", ReturnMethod.DELIVERY, null);
 
-        asRequest = asRequestRepository.save(asRequest);
+        asReception = asReceptionRepository.save(asReception);
 
         // 테스트용 수리 데이터 생성
-        repair = new Repair(asRequest, technician, WarrantyResult.FREE, RepairStatus.REQUESTED);
+        repair = new Repair(asReception, technician, WarrantyResult.FREE, RepairStatus.REQUESTED);
 
         repair = repairRepository.save(repair);
 

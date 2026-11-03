@@ -1,6 +1,6 @@
 package net.likelion.bebc25.fixgo.repair.service;
 
-import net.likelion.bebc25.fixgo.as.entity.AsRequest;
+import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
@@ -34,7 +34,7 @@ class RepairServiceTest {
     private RepairRepository repairRepository;
 
     @Mock
-    private AsReceptionRepository asRequestRepository;
+    private AsReceptionRepository AsReceptionRepository;
 
     @Mock
     private MemberRepository memberRepository;
@@ -47,12 +47,12 @@ class RepairServiceTest {
     void setUp() {
         repairMapper = new RepairMapper();
 
-        repairService = new RepairService(repairRepository, repairMapper, asRequestRepository, memberRepository);
+        repairService = new RepairService(repairRepository, repairMapper, AsReceptionRepository, memberRepository);
     }
 
     // 테스트용 A/S 접수 정보 생성
-    private AsRequest createAsRequest() {
-        return mock(AsRequest.class);
+    private AsReception createAsReception() {
+        return mock(AsReception.class);
     }
 
     // 테스트용 담당 기사 생성
@@ -63,12 +63,12 @@ class RepairServiceTest {
     // 테스트용 수리 정보 생성
     private Repair createRepair() {
 
-        AsRequest asRequest = createAsRequest();
+        AsReception AsReception = createAsReception();
         Member technician = createTechnician();
 
-        Repair repair = new Repair(asRequest, technician, WarrantyResult.FREE, RepairStatus.DIAGNOSING);
+        Repair repair = new Repair(AsReception, technician, WarrantyResult.FREE, RepairStatus.DIAGNOSING);
 
-        repair.updateRepairInfo(asRequest, technician, "메인보드 점검", "부품 교체", "수리 진행", WarrantyResult.FREE, "보증 기간 내", 10000, 5000, 15000, null);
+        repair.updateRepairInfo(AsReception, technician, "메인보드 점검", "부품 교체", "수리 진행", WarrantyResult.FREE, "보증 기간 내", 10000, 5000, 15000, null);
 
         ReflectionTestUtils.setField(repair, "id", 1L);
 
@@ -80,7 +80,7 @@ class RepairServiceTest {
 
         RepairRequest dto = new RepairRequest();
 
-        dto.setAsRequestId(10L);
+        dto.setAsReceptionId(10L);
         dto.setTechnicianId(20L);
         dto.setDiagnosis("메인보드 점검");
         dto.setWorkNote("부품 교체");
@@ -101,10 +101,10 @@ class RepairServiceTest {
 
         RepairRequest dto = createRequestDto();
 
-        AsRequest asRequest = createAsRequest();
+        AsReception AsReception = createAsReception();
         Member technician = createTechnician();
 
-        when(asRequestRepository.findById(10L)).thenReturn(Optional.of(asRequest));
+        when(AsReceptionRepository.findById(10L)).thenReturn(Optional.of(AsReception));
 
         when(memberRepository.findById(20L)).thenReturn(Optional.of(technician));
 
@@ -112,7 +112,7 @@ class RepairServiceTest {
 
         assertEquals("수리 정보가 등록되었습니다.", response.get("message"));
 
-        verify(asRequestRepository, times(1)).findById(10L);
+        verify(AsReceptionRepository, times(1)).findById(10L);
         verify(memberRepository, times(1)).findById(20L);
         verify(repairRepository, times(1)).save(any(Repair.class));
     }
@@ -123,7 +123,7 @@ class RepairServiceTest {
 
         Repair repair = createRepair();
 
-        when(repair.getAsRequest().getId()).thenReturn(10L);
+        when(repair.getAsReception().getId()).thenReturn(10L);
         when(repair.getTechnician().getId()).thenReturn(20L);
 
         List<Repair> repairs = List.of(repair);
@@ -134,7 +134,7 @@ class RepairServiceTest {
 
         assertEquals(1, response.size());
         assertEquals(1L, response.get(0).getId());
-        assertEquals(10L, response.get(0).getAsRequestId());
+        assertEquals(10L, response.get(0).getAsReceptionId());
         assertEquals(20L, response.get(0).getTechnicianId());
 
         verify(repairRepository, times(1)).findAll();
@@ -146,7 +146,7 @@ class RepairServiceTest {
 
         Repair repair = createRepair();
 
-        when(repair.getAsRequest().getId()).thenReturn(10L);
+        when(repair.getAsReception().getId()).thenReturn(10L);
         when(repair.getTechnician().getId()).thenReturn(20L);
 
         when(repairRepository.findById(1L)).thenReturn(Optional.of(repair));
@@ -154,7 +154,7 @@ class RepairServiceTest {
         RepairResponse response = repairService.getRepair(1L);
 
         assertEquals(1L, response.getId());
-        assertEquals(10L, response.getAsRequestId());
+        assertEquals(10L, response.getAsReceptionId());
         assertEquals(20L, response.getTechnicianId());
 
         verify(repairRepository, times(1)).findById(1L);
@@ -170,12 +170,12 @@ class RepairServiceTest {
         dto.setDiagnosis("CPU 점검");
         dto.setWorkNote("CPU 교체");
 
-        AsRequest asRequest = createAsRequest();
+        AsReception AsReception = createAsReception();
         Member technician = createTechnician();
 
         when(repairRepository.findById(1L)).thenReturn(Optional.of(repair));
 
-        when(asRequestRepository.findById(10L)).thenReturn(Optional.of(asRequest));
+        when(AsReceptionRepository.findById(10L)).thenReturn(Optional.of(AsReception));
 
         when(memberRepository.findById(20L)).thenReturn(Optional.of(technician));
 
@@ -185,7 +185,7 @@ class RepairServiceTest {
         assertEquals("CPU 교체", response.getWorkNote());
 
         verify(repairRepository, times(1)).findById(1L);
-        verify(asRequestRepository, times(1)).findById(10L);
+        verify(AsReceptionRepository, times(1)).findById(10L);
         verify(memberRepository, times(1)).findById(20L);
     }
 

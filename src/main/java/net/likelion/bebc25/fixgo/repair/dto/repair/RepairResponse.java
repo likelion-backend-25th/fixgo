@@ -15,7 +15,7 @@ public class RepairResponse {
     private Long id;
 
     // A/S 접수 ID
-    private Long asRequestId;
+    private Long asReceptionId;
 
     // 담당 기사 ID
     private Long technicianId;

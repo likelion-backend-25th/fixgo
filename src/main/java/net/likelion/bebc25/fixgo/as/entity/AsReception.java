@@ -75,7 +75,7 @@ public class AsReception extends BaseEntity {
         this.technician = technician;
         this.symptom = symptom;
         this.symptomDetail = symptomDetail;
-        this.Memo = Memo;
+        this.Memo = requestMemo;
         this.attachment = attachment;
 
         if (returnMethod != null) {

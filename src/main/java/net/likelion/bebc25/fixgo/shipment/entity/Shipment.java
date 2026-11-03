@@ -18,8 +18,8 @@ public class Shipment {
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "as_requset_id", nullable = false, unique = true)
-    private AsReception asRequest;
+    @JoinColumn(name = "as_reception_id", nullable = false, unique = true)
+    private AsReception asReception;
 
 
     @Enumerated(EnumType.STRING)
