@@ -162,6 +162,27 @@ class RepairServiceTest {
         verify(repairRepository, times(1)).findById(1L);
     }
 
+    // A/S 접수번호로 수리 상세 조회 테스트
+    @Test
+    void getRepairByReceptionNumberTest() {
+
+        Repair repair = createRepair();
+        String receptionNumber = "AS-2026-1112";
+
+        when(repair.getAsReception().getId()).thenReturn(10L);
+        when(repair.getTechnician().getId()).thenReturn(20L);
+
+        when(repairRepository.findByReceptionNumber(receptionNumber)).thenReturn(Optional.of(repair));
+
+        RepairResponse response = repairService.getRepairByReceptionNumber(receptionNumber);
+
+        assertEquals(1L, response.getId());
+        assertEquals(10L, response.getAsReceptionId());
+        assertEquals(20L, response.getTechnicianId());
+
+        verify(repairRepository, times(1)).findByReceptionNumber(receptionNumber);
+    }
+
     // 수리 수정 테스트
     @Test
     void updateRepairTest() {
