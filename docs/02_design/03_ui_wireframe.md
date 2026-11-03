@@ -36,7 +36,7 @@ Blocked: No
 - A/S 진행 상세 (점검) `/as/{repairId}/inspection` , A/S 진행 상세 (수리) `/as/{repairId}/repair`
 - 프리셋 관리 `/preset/list`
 - A/S 목록 화면 `/as/list`
-- A/S 접수 등록 화면 `/as/new` , A/S 접수 상세 화면 `/as/details/{asRequestId}`
+- A/S 접수 등록 화면 `/as/new` , A/S 접수 상세 화면 `/as/details/{asReceptionId}`
 - 고객 관리 `/customer` , 고객 상세 `customer/{customerId}`
 - 결제 관리 `/payment/list` , 결제 상세 화면`/payment/{orderId}`
 - 배송 관리 `/shipment/list`
@@ -333,7 +333,7 @@ Blocked: No
 
 ![receptionist_02_as-request-details.png](../images/receptionist_02_as-request-details.png)
 
-2. A/S 접수 상세 화면 `/as/details/{asRequestId}`
+2. A/S 접수 상세 화면 `/as/details/{asReceptionId}`
 
 - 출력 데이터 항목 (Output Data):
     - 해당 A/S 접수 건에 대한 정보
