@@ -1,7 +1,7 @@
 package net.likelion.bebc25.fixgo.repair.repository;
 
-import net.likelion.bebc25.fixgo.as.entity.AsRequest;
-import net.likelion.bebc25.fixgo.as.repository.AsRequestRepository;
+import net.likelion.bebc25.fixgo.as.entity.AsReception;
+import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.entity.Role;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
@@ -44,7 +44,7 @@ class RepairRepositoryTest {
     private ProductRepository productRepository;
 
     @Autowired
-    private AsRequestRepository asRequestRepository;
+    private AsReceptionRepository asReceptionRepository;
 
     private Repair repair;
     private Member technician;
@@ -70,31 +70,31 @@ class RepairRepositoryTest {
         product = productRepository.save(product);
 
         // A/S 접수 생성
-        AsRequest asRequest = new AsRequest("AS-TEST-001", customer, product, technician, technician, "메인보드 이상", "전원이 켜지지 않는 증상", "테스트 접수", ReturnMethod.DELIVERY);
+        AsReception asReception = new AsReception("AS-TEST-001", customer, product, technician, technician, "메인보드 이상", "전원이 켜지지 않는 증상", "테스트 접수", ReturnMethod.DELIVERY, null);
 
-        asRequest = asRequestRepository.save(asRequest);
+        asReception = asReceptionRepository.save(asReception);
 
         // 수리 생성
-        repair = new Repair(asRequest, technician, WarrantyResult.FREE, RepairStatus.REQUESTED);
+        repair = new Repair(asReception, technician, WarrantyResult.FREE, RepairStatus.REQUESTED);
 
         repair = repairRepository.save(repair);
     }
 
     @Test
     @DisplayName("A/S 접수 ID로 수리 정보 조회")
-    void findByAsRequestIdTest() {
+    void findByAsReceptionIdTest() {
 
-        Optional<Repair> result = repairRepository.findByAsRequestID(repair.getAsRequest().getId());
+        Optional<Repair> result = repairRepository.findByAsReceptionId(repair.getAsReception().getId());
 
         assertThat(result).isPresent();
-        assertThat(result.get().getAsRequest().getId()).isEqualTo(repair.getAsRequest().getId());
+        assertThat(result.get().getAsReception().getId()).isEqualTo(repair.getAsReception().getId());
     }
 
     @Test
     @DisplayName("담당 기사별 수리 목록 조회")
     void findByTechnicianIdTest() {
 
-        List<Repair> result = repairRepository.findByTechnicianID(technician.getId());
+        List<Repair> result = repairRepository.findByTechnicianId(technician.getId());
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getTechnician().getId()).isEqualTo(technician.getId());

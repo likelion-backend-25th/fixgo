@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import net.likelion.bebc25.fixgo.as.entity.AsRequest;
+import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 
 import java.time.LocalDateTime;
@@ -21,7 +21,7 @@ public class Repair {
     // A/S 접수 정보 (1:1)
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "as_request_id", nullable = false, unique = true)
-    private AsRequest asRequest;
+    private AsReception asReception;
 
     // 담당 기사 정보 (N:1)
     @ManyToOne(fetch = FetchType.LAZY)
@@ -75,13 +75,13 @@ public class Repair {
 
 
     // 기본 생성자: 접수 정보 및 담당 기사 정보 포함
-    public Repair(AsRequest asRequest, Member technician, WarrantyResult warrantyResult, RepairStatus status) {
-        this(asRequest, technician, warrantyResult, status, LocalDateTime.now(), LocalDateTime.now(), "test", "test");
+    public Repair(AsReception asReception, Member technician, WarrantyResult warrantyResult, RepairStatus status) {
+        this(asReception, technician, warrantyResult, status, LocalDateTime.now(), LocalDateTime.now(), "test", "test");
     }
 
     // 감사 정보 포함 생성자
-    public Repair(AsRequest asRequest, Member technician, WarrantyResult warrantyResult, RepairStatus status, LocalDateTime createdAt, LocalDateTime updatedAt, String createdBy, String updatedBy) {
-        this.asRequest = asRequest;
+    public Repair(AsReception asReception, Member technician, WarrantyResult warrantyResult, RepairStatus status, LocalDateTime createdAt, LocalDateTime updatedAt, String createdBy, String updatedBy) {
+        this.asReception = asReception;
         this.technician = technician;
         this.warrantyResult = warrantyResult;
         this.status = status;
@@ -93,8 +93,8 @@ public class Repair {
 
 
     // 수리 정보 수정
-    public void updateRepairInfo(AsRequest asRequest, Member technician, String diagnosis, String workNote, String repairDecision, WarrantyResult warrantyResult, String reason, int laborRate, int inspectionCost, int finalAmount, String reasonForRejection) {
-        this.asRequest = asRequest;
+    public void updateRepairInfo(AsReception asReception, Member technician, String diagnosis, String workNote, String repairDecision, WarrantyResult warrantyResult, String reason, int laborRate, int inspectionCost, int finalAmount, String reasonForRejection) {
+        this.asReception = asReception;
         this.technician = technician;
         this.diagnosis = diagnosis;
         this.workNote = workNote;
