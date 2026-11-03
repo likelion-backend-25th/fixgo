@@ -7,16 +7,16 @@ erDiagram
  MEMBER ||--o{ REFRESH_TOKEN : issues
  PRODUCT_MODEL ||--o{ PRODUCT : defines
  CUSTOMER ||--o{ PRODUCT : owns
- CUSTOMER ||--o{ AS_REQUEST : requests
- PRODUCT ||--o{ AS_REQUEST : serviced
- MEMBER ||--o{ AS_REQUEST : receives
- MEMBER ||--o{ AS_REQUEST : assigned
- AS_REQUEST ||--o{ AS_ATTACHMENT : attachments
- AS_REQUEST ||--o{ AS_STATUS_HISTORY : transitions
+ CUSTOMER ||--o{ AS_RECEPTION : receptions
+ PRODUCT ||--o{ AS_RECEPTION : serviced
+ MEMBER ||--o{ AS_RECEPTION : receives
+ MEMBER ||--o{ AS_RECEPTION : assigned
+ AS_RECEPTION ||--o{ AS_ATTACHMENT : attachments
+ AS_RECEPTION ||--o{ AS_STATUS_HISTORY : transitions
  MEMBER ||--o{ AS_STATUS_HISTORY : changes
  SYMPTOM_PRESET ||--o{ REPAIR_SYMPTOM_RELATION : links
  REPAIR_PRESET ||--o{ REPAIR_SYMPTOM_RELATION : linked
- AS_REQUEST ||--o| REPAIR : repair
+ AS_RECEPTION ||--o| REPAIR : repair
  MEMBER ||--o{ REPAIR : performs
  REPAIR ||--o{ REPAIR_SYMPTOM_PRESET : symptoms
  REPAIR ||--o{ REPAIR_WORK : work
@@ -30,18 +30,18 @@ erDiagram
  PART ||--o{ PART_STOCK_HISTORY : movements
  REPAIR_PART_USAGE ||--o{ PART_STOCK_HISTORY : outbound
  MEMBER ||--o{ PART_STOCK_HISTORY : processed
- AS_REQUEST ||--o| PAYMENT_BILL : billed
+ AS_RECEPTION ||--o| PAYMENT_BILL : billed
  PAYMENT_BILL ||--o{ PAYMENT_ATTEMPT : attempts
  PAYMENT_ATTEMPT ||--o| VIRTUAL_ACCOUNT : account
  PAYMENT_ATTEMPT ||--o{ PAYMENT_REFUND : refunds
- AS_REQUEST ||--o| SHIPMENT : returns
+ AS_RECEPTION ||--o| SHIPMENT : returns
  SHIPMENT ||--o{ SHIPMENT_EVENT : events
- AS_REQUEST ||--o{ CUSTOMER_PORTAL_LINK : portal
- AS_REQUEST ||--o{ NOTIFICATION_LOG : notices
+ AS_RECEPTION ||--o{ CUSTOMER_PORTAL_LINK : portal
+ AS_RECEPTION ||--o{ NOTIFICATION_LOG : notices
  AS_ATTACHMENT ||--o{ RECEIPT_ANALYSIS : analyzed
- AS_REQUEST ||--o{ RECEIPT_ANALYSIS : analyzed
+ AS_RECEPTION ||--o{ RECEIPT_ANALYSIS : analyzed
  MEMBER ||--o{ RECEIPT_ANALYSIS : reviewed
- AS_REQUEST ||--o{ OUTBOX_EVENT : queued
+ AS_RECEPTION ||--o{ OUTBOX_EVENT : queued
 ```
 
 ## 테이블별 상세 컬럼
@@ -152,44 +152,44 @@ erDiagram
 | product_category | VARCHAR(255) | NOT NULL           | -   | -   | 적용 제품군    |
 | name             | VARCHAR(255) | NOT NULL           | -   | -   | 증상 프리셋명   |
 
-### 2) AS_REQUEST
+### 2) AS_RECEPTION
 
 - 테이블 설명: A/S 접수 건과 현재 업무 상태. 한 건은 하나의 고객 보유 제품을 대상으로 한다.
 
-| 컬럼명               | 데이터 타입        | 제약조건                               | 기본값               | 인덱스                  | 설명               |
-|-------------------|---------------|------------------------------------|-------------------|----------------------|------------------|
-| id                | BIGINT        | PK, AUTO_INCREMENT                 | -                 | PK                   | A/S ID           |
-| request_number    | VARCHAR(255)  | NOT NULL, UNIQUE                   | -                 | UK_AS_REQUEST_NUMBER | 접수번호             |
-| customer_id       | BIGINT        | NOT NULL, FK → CUSTOMER.id         | -                 | IDX_AS_CUSTOMER      | 고객 ID            |
-| product_id        | BIGINT        | NOT NULL, FK → CUSTOMER_PRODUCT.id | -                 | IDX_AS_PRODUCT       | 접수 실물 제품         |
-| receptionist_id   | BIGINT        | NOT NULL, FK → MEMBER.id           | -                 | IDX_AS_RECEPTIONIST  | 접수 직원            |
-| technician_id     | BIGINT        | NULL, FK → MEMBER.id               | -                 | IDX_AS_TECHNICIAN    | 현재 배정 기사         |
-| symptom           | VARCHAR(255)  | NOT NULL                           | -                 | -                    | 고장증상 요약          |
-| symptom_detail    | VARCHAR(255)  | NOT NULL                           | -                 | -                    | 고장 증상 상세         |
-| request_memo      | VARCHAR(1000) | NULL                               | -                 | -                    | 요청 메모            |
-| return_method     | VARCHAR(255)  | NOT NULL                           | DELIVERY          | -                    | DELIVERY, PICKUP |
-| status            | VARCHAR(255)  | NOT NULL                           | RECEIVED          | IDX_AS_STATUS        | 현재 A/S 상태        |
-| status_changed_at | DATETIME      | NOT NULL                           | CURRENT_TIMESTAMP | -                    | 마지막 상태 변경        |
-| closed_at         | DATETIME      | NULL                               | -                 | -                    | 종결 시각            |
-| created_at        | DATETIME      | NOT NULL                           | CURRENT_TIMESTAMP | IDX_AS_CREATED       | 접수 시각            |
-| updated_at        | DATETIME      | NOT NULL                           | CURRENT_TIMESTAMP | -                    | 수정 시각            |
-| created_by        | VARCHAR(255)  | NOT NULL                           | -                 | -                    | 생성자              |
-| updated_by        | VARCHAR(255)  | NOT NULL                           | -                 | -                    | 수정자              |
+| 컬럼명               | 데이터 타입        | 제약조건                               | 기본값               | 인덱스                    | 설명               |
+|-------------------|---------------|------------------------------------|-------------------|------------------------|------------------|
+| id                | BIGINT        | PK, AUTO_INCREMENT                 | -                 | PK                     | A/S ID           |
+| reception_number  | VARCHAR(255)  | NOT NULL, UNIQUE                   | -                 | UK_AS_RECEPTION_NUMBER | 접수번호             |
+| customer_id       | BIGINT        | NOT NULL, FK → CUSTOMER.id         | -                 | IDX_AS_CUSTOMER        | 고객 ID            |
+| product_id        | BIGINT        | NOT NULL, FK → CUSTOMER_PRODUCT.id | -                 | IDX_AS_PRODUCT         | 접수 실물 제품         |
+| receptionist_id   | BIGINT        | NOT NULL, FK → MEMBER.id           | -                 | IDX_AS_RECEPTIONIST    | 접수 직원            |
+| technician_id     | BIGINT        | NULL, FK → MEMBER.id               | -                 | IDX_AS_TECHNICIAN      | 현재 배정 기사         |
+| symptom           | VARCHAR(255)  | NOT NULL                           | -                 | -                      | 고장증상 요약          |
+| symptom_detail    | VARCHAR(255)  | NOT NULL                           | -                 | -                      | 고장 증상 상세         |
+| reception_memo    | VARCHAR(1000) | NULL                               | -                 | -                      | 요청 메모            |
+| return_method     | VARCHAR(255)  | NOT NULL                           | DELIVERY          | -                      | DELIVERY, PICKUP |
+| status            | VARCHAR(255)  | NOT NULL                           | RECEIVED          | IDX_AS_STATUS          | 현재 A/S 상태        |
+| status_changed_at | DATETIME      | NOT NULL                           | CURRENT_TIMESTAMP | -                      | 마지막 상태 변경        |
+| closed_at         | DATETIME      | NULL                               | -                 | -                      | 종결 시각            |
+| created_at        | DATETIME      | NOT NULL                           | CURRENT_TIMESTAMP | IDX_AS_CREATED         | 접수 시각            |
+| updated_at        | DATETIME      | NOT NULL                           | CURRENT_TIMESTAMP | -                      | 수정 시각            |
+| created_by        | VARCHAR(255)  | NOT NULL                           | -                 | -                      | 생성자              |
+| updated_by        | VARCHAR(255)  | NOT NULL                           | -                 | -                      | 수정자              |
 
 ### 3) AS_ATTACHMENT
 
 - 테이블 설명: 구매 증빙 첨부 파일 메타데이터.
 
-| 컬럼명           | 데이터 타입       | 제약조건                         | 기본값               | 인덱스                       | 설명     |
-|---------------|--------------|------------------------------|-------------------|---------------------------|--------|
-| id            | BIGINT       | PK, AUTO_INCREMENT           | -                 | PK                        | 첨부 ID  |
-| as_request_id | BIGINT       | NOT NULL, FK → AS_REQUEST.id | -                 | IDX_AS_ATTACHMENT_REQUEST | A/S ID |
-| file_url      | VARCHAR(500) | NOT NULL                     | -                 | -                         | 저장 경로  |
-| original_name | VARCHAR(255) | NULL                         | -                 | -                         | 원본 파일명 |
-| created_at    | DATETIME     | NOT NULL                     | CURRENT_TIMESTAMP | -                         | 등록 시각  |
-| updated_at    | DATETIME     | NOT NULL                     | CURRENT_TIMESTAMP | -                         | 수정 시각  |
-| created_by    | VARCHAR(255) | NOT NULL                     | -                 | -                         | 생성자    |
-| updated_by    | VARCHAR(255) | NOT NULL                     | -                 | -                         | 수정자    |
+| 컬럼명             | 데이터 타입       | 제약조건                           | 기본값               | 인덱스                         | 설명     |
+|-----------------|--------------|--------------------------------|-------------------|-----------------------------|--------|
+| id              | BIGINT       | PK, AUTO_INCREMENT             | -                 | PK                          | 첨부 ID  |
+| as_reception_id | BIGINT       | NOT NULL, FK → AS_RECEPTION.id | -                 | IDX_AS_ATTACHMENT_RECEPTION | A/S ID |
+| file_url        | VARCHAR(500) | NOT NULL                       | -                 | -                           | 저장 경로  |
+| original_name   | VARCHAR(255) | NULL                           | -                 | -                           | 원본 파일명 |
+| created_at      | DATETIME     | NOT NULL                       | CURRENT_TIMESTAMP | -                           | 등록 시각  |
+| updated_at      | DATETIME     | NOT NULL                       | CURRENT_TIMESTAMP | -                           | 수정 시각  |
+| created_by      | VARCHAR(255) | NOT NULL                       | -                 | -                           | 생성자    |
+| updated_by      | VARCHAR(255) | NOT NULL                       | -                 | -                           | 수정자    |
 
 ## 1.2.5 A/S 배정 및 진행 관리
 
@@ -197,15 +197,15 @@ erDiagram
 
 - 테이블 설명: A/S 상태 전이, 담당 기사 배정 및 재배정 및 사유 이력.
 
-| 컬럼명           | 데이터 타입        | 제약조건                         | 기본값               | 인덱스                  | 설명                |
-|---------------|---------------|------------------------------|-------------------|----------------------|-------------------|
-| id            | BIGINT        | PK, AUTO_INCREMENT           | -                 | PK                   | 이력 ID             |
-| as_request_id | BIGINT        | NOT NULL, FK → AS_REQUEST.id | -                 | IDX_ASH_REQUEST_TIME | A/S ID            |
-| from          | VARCHAR(255)  | NULL                         | -                 | -                    | 이전 상태             |
-| to            | VARCHAR(255)  | NOT NULL                     | -                 | -                    | 변경 상태             |
-| reason        | VARCHAR(1000) | NULL                         | -                 | -                    | 사유                |
-| changed_by    | BIGINT        | NULL, FK → MEMBER.id         | -                 | -                    | 처리 직원; 시스템이면 NULL |
-| created_at    | DATETIME      | NOT NULL                     | CURRENT_TIMESTAMP | -                    | 상태 변경 시각          |
+| 컬럼명             | 데이터 타입        | 제약조건                           | 기본값               | 인덱스                    | 설명                |
+|-----------------|---------------|--------------------------------|-------------------|------------------------|-------------------|
+| id              | BIGINT        | PK, AUTO_INCREMENT             | -                 | PK                     | 이력 ID             |
+| as_reception_id | BIGINT        | NOT NULL, FK → AS_RECEPTION.id | -                 | IDX_ASH_RECEPTION_TIME | A/S ID            |
+| from            | VARCHAR(255)  | NULL                           | -                 | -                      | 이전 상태             |
+| to              | VARCHAR(255)  | NOT NULL                       | -                 | -                      | 변경 상태             |
+| reason          | VARCHAR(1000) | NULL                           | -                 | -                      | 사유                |
+| changed_by      | BIGINT        | NULL, FK → MEMBER.id           | -                 | -                      | 처리 직원; 시스템이면 NULL |
+| created_at      | DATETIME      | NOT NULL                       | CURRENT_TIMESTAMP | -                      | 상태 변경 시각          |
 
 ## 1.2.6 수리 작업 및 비용 관리
 
@@ -256,20 +256,20 @@ erDiagram
 - 테이블 설명: A/S별 점검 및 수리 결과.
 - A/S 요청에 기사 배정되는 시점에 새 Row 생성
 
-| 컬럼명             | 데이터 타입       | 제약조건                                 | 기본값        | 인덱스             | 설명                         |
-|-----------------|--------------|--------------------------------------|------------|-----------------|----------------------------|
-| id              | BIGINT       | PK, AUTO_INCREMENT                   | -          | PK              | 수리 ID                      |
-| as_request_id   | BIGINT       | NOT NULL, UNIQUE, FK → AS_REQUEST.id | -          | UK_REPAIR_AS    | A/S 1:1                    |
-| technician_id   | BIGINT       | NOT NULL, FK → MEMBER.id             | -          | IDX_REPAIR_TECH | 담당 기사                      |
-| diagnosis       | VARCHAR(255) | NULL                                 | -          | -               | 점검 결과                      |
-| work_note       | VARCHAR(255) | NULL                                 | -          | -               | 수리 메모                      |
-| repair_decision | VARCHAR(255) | NULL                                 | -          | -               | REPAIRABLE, UNREPAIRABLE 등 |
-| warranty_result | VARCHAR(255) | NOT NULL                             | -          | -               | FREE, PAID                 |
-| reason          | VARCHAR(255) | NULL                                 | -          | -               | 보증 판정 사유                   |
-| labor_rate      | INT          | NULL                                 | -          | -               | 당시 적용된 공임 비용               |
-| inspection_cost | INT          | NULL                                 | -          | -               | 당시 적용된 점검 비용               |
-| final_amount    | INT          | NULL                                 | -          | -               | 최종 확정 수리비(원)               |
-| status          | VARCHAR(255) | NOT NULL                             | DIAGNOSING | -               | DIAGNOSING,                |
+| 컬럼명             | 데이터 타입       | 제약조건                                   | 기본값        | 인덱스             | 설명                         |
+|-----------------|--------------|----------------------------------------|------------|-----------------|----------------------------|
+| id              | BIGINT       | PK, AUTO_INCREMENT                     | -          | PK              | 수리 ID                      |
+| as_reception_id | BIGINT       | NOT NULL, UNIQUE, FK → AS_RECEPTION.id | -          | UK_REPAIR_AS    | A/S 1:1                    |
+| technician_id   | BIGINT       | NOT NULL, FK → MEMBER.id               | -          | IDX_REPAIR_TECH | 담당 기사                      |
+| diagnosis       | VARCHAR(255) | NULL                                   | -          | -               | 점검 결과                      |
+| work_note       | VARCHAR(255) | NULL                                   | -          | -               | 수리 메모                      |
+| repair_decision | VARCHAR(255) | NULL                                   | -          | -               | REPAIRABLE, UNREPAIRABLE 등 |
+| warranty_result | VARCHAR(255) | NOT NULL                               | -          | -               | FREE, PAID                 |
+| reason          | VARCHAR(255) | NULL                                   | -          | -               | 보증 판정 사유                   |
+| labor_rate      | INT          | NULL                                   | -          | -               | 당시 적용된 공임 비용               |
+| inspection_cost | INT          | NULL                                   | -          | -               | 당시 적용된 점검 비용               |
+| final_amount    | INT          | NULL                                   | -          | -               | 최종 확정 수리비(원)               |
+| status          | VARCHAR(255) | NOT NULL                               | DIAGNOSING | -               | DIAGNOSING,                |
 
 REQUESTED, APPROVED,
 REJECTED,
@@ -395,16 +395,16 @@ REPAIRING, COMPLETED |
 
 - 테이블 설명: A/S에 대한 확정 청구 금액과 최종 수납 상태. 결제 재시도 시 유지
 
-| 컬럼명                   | 데이터 타입       | 제약조건                                 | 기본값               | 인덱스 | 설명                                         |
-|-----------------------|--------------|--------------------------------------|-------------------|-----|--------------------------------------------|
-| id                    | BIGINT       | PK, AUTO_INCREMENT                   | -                 | PK  | 청구 ID                                      |
-| as_request_id         | BIGINT       | NOT NULL, UNIQUE, FK → AS_REQUEST.id | -                 | FK  | A/S당 청구 1건                                 |
-| amount                | BIGINT       | NOT NULL                             | -                 | -   | 수리비·점검비·반송비 총액(원)                          |
-| status                | VARCHAR(255) | NOT NULL                             | UNPAID            | -   | UNPAID, PAID, REFUNDED, PARTIALLY_REFUNDED |
-| successful_attempt_id | BIGINT       | NULL, FK → PAYMENT_ATTEMPT.id        | -                 | FK  | 성공 시도 ID                                   |
-| paid_at               | DATETIME     | NULL                                 | -                 | -   | 수납 확정 시각                                   |
-| created_at            | DATETIME     | NOT NULL                             | CURRENT_TIMESTAMP | -   | 생성 시각                                      |
-| updated_at            | DATETIME     | NOT NULL                             | CURRENT_TIMESTAMP | -   | 수정 시각                                      |
+| 컬럼명                   | 데이터 타입       | 제약조건                                   | 기본값               | 인덱스 | 설명                                         |
+|-----------------------|--------------|----------------------------------------|-------------------|-----|--------------------------------------------|
+| id                    | BIGINT       | PK, AUTO_INCREMENT                     | -                 | PK  | 청구 ID                                      |
+| as_reception_id       | BIGINT       | NOT NULL, UNIQUE, FK → AS_RECEPTION.id | -                 | FK  | A/S당 청구 1건                                 |
+| amount                | BIGINT       | NOT NULL                               | -                 | -   | 수리비·점검비·반송비 총액(원)                          |
+| status                | VARCHAR(255) | NOT NULL                               | UNPAID            | -   | UNPAID, PAID, REFUNDED, PARTIALLY_REFUNDED |
+| successful_attempt_id | BIGINT       | NULL, FK → PAYMENT_ATTEMPT.id          | -                 | FK  | 성공 시도 ID                                   |
+| paid_at               | DATETIME     | NULL                                   | -                 | -   | 수납 확정 시각                                   |
+| created_at            | DATETIME     | NOT NULL                               | CURRENT_TIMESTAMP | -   | 생성 시각                                      |
+| updated_at            | DATETIME     | NOT NULL                               | CURRENT_TIMESTAMP | -   | 수정 시각                                      |
 
 ### 2) PAYMENT_ATTEMPT
 
@@ -473,28 +473,28 @@ REPAIRING, COMPLETED |
 
 - 테이블 설명: 택배 배송 또는 방문 수령 정보.
 
-| 컬럼명                  | 데이터 타입       | 제약조건                                 | 기본값               | 인덱스                 | 설명                                    |
-|----------------------|--------------|--------------------------------------|-------------------|---------------------|---------------------------------------|
-| id                   | BIGINT       | PK, AUTO_INCREMENT                   | -                 | PK                  | 반환 ID                                 |
-| as_request_id        | BIGINT       | NOT NULL, UNIQUE, FK → AS_REQUEST.id | -                 | -                   | A/S 1:1                               |
-| return_method        | VARCHAR(255) | NOT NULL                             | DELIVERY          |                     | 반환 방법 (DELIVERY, PICKUP)              |
-| recipient_name       | VARCHAR(255) | NOT NULL                             |                   |                     | 수령인                                   |
-| recipient_phone      | VARCHAR(255) | NOT NULL                             |                   |                     | 수령인 연락처                               |
-| zipcode              | VARCHAR(255) | NULL                                 |                   |                     | 배송지 우편번호                              |
-| address              | VARCHAR(255) | NULL                                 |                   |                     | 배송지 기본 주소                             |
-| address_detail       | VARCHAR(255) | NULL                                 |                   |                     | 배송지 상세 주소                             |
-| courier              | VARCHAR(255) | NULL                                 | -                 | -                   | 택배사명                                  |
-| courier_code         | VARCHAR(255) | NULL                                 |                   |                     | 스마트택배 택배사 코드                          |
-| tracking_number      | VARCHAR(255) | NULL                                 | -                 |                     | 운송장번호                                 |
-| status               | VARCHAR(255) | NOT NULL                             | READY             | IDX_SHIPMENT_STATUS | READY, SHIPPING, DELIVERED, PICKED_UP |
-| shipped_at           | DATETIME     | NULL                                 |                   |                     | 배송 시작 시각                              |
-| completed_at         | DATETIME     | NULL                                 |                   |                     | 배송 또는 방문수령 완료 시각                      |
-| last_checked_at      | DATETIME     | NULL                                 |                   |                     | 스마트택배 API 마지막 조회 시각                   |
-| last_tracking_status | VARCHAR(255) | NULL                                 |                   |                     | 외부 API에서 받은 배송 상태                     |
-| created_at           | DATETIME     | NOT NULL                             | CURRENT_TIMESTAMP | -                   | 생성 시각                                 |
-| updated_at           | DATETIME     | NOT NULL                             | CURRENT_TIMESTAMP | -                   | 수정 시각                                 |
-| created_by           | VARCHAR(255) | NOT NULL                             |                   |                     | 배송 등록 직원 ID                           |
-| updated_by           | VARCHAR(255) | NOT NULL                             |                   |                     | 마지막 수정 직원 ID                          |
+| 컬럼명                  | 데이터 타입       | 제약조건                                   | 기본값               | 인덱스                 | 설명                                    |
+|----------------------|--------------|----------------------------------------|-------------------|---------------------|---------------------------------------|
+| id                   | BIGINT       | PK, AUTO_INCREMENT                     | -                 | PK                  | 반환 ID                                 |
+| as_reception_id      | BIGINT       | NOT NULL, UNIQUE, FK → AS_RECEPTION.id | -                 | -                   | A/S 1:1                               |
+| return_method        | VARCHAR(255) | NOT NULL                               | DELIVERY          |                     | 반환 방법 (DELIVERY, PICKUP)              |
+| recipient_name       | VARCHAR(255) | NOT NULL                               |                   |                     | 수령인                                   |
+| recipient_phone      | VARCHAR(255) | NOT NULL                               |                   |                     | 수령인 연락처                               |
+| zipcode              | VARCHAR(255) | NULL                                   |                   |                     | 배송지 우편번호                              |
+| address              | VARCHAR(255) | NULL                                   |                   |                     | 배송지 기본 주소                             |
+| address_detail       | VARCHAR(255) | NULL                                   |                   |                     | 배송지 상세 주소                             |
+| courier              | VARCHAR(255) | NULL                                   | -                 | -                   | 택배사명                                  |
+| courier_code         | VARCHAR(255) | NULL                                   |                   |                     | 스마트택배 택배사 코드                          |
+| tracking_number      | VARCHAR(255) | NULL                                   | -                 |                     | 운송장번호                                 |
+| status               | VARCHAR(255) | NOT NULL                               | READY             | IDX_SHIPMENT_STATUS | READY, SHIPPING, DELIVERED, PICKED_UP |
+| shipped_at           | DATETIME     | NULL                                   |                   |                     | 배송 시작 시각                              |
+| completed_at         | DATETIME     | NULL                                   |                   |                     | 배송 또는 방문수령 완료 시각                      |
+| last_checked_at      | DATETIME     | NULL                                   |                   |                     | 스마트택배 API 마지막 조회 시각                   |
+| last_tracking_status | VARCHAR(255) | NULL                                   |                   |                     | 외부 API에서 받은 배송 상태                     |
+| created_at           | DATETIME     | NOT NULL                               | CURRENT_TIMESTAMP | -                   | 생성 시각                                 |
+| updated_at           | DATETIME     | NOT NULL                               | CURRENT_TIMESTAMP | -                   | 수정 시각                                 |
+| created_by           | VARCHAR(255) | NOT NULL                               |                   |                     | 배송 등록 직원 ID                           |
+| updated_by           | VARCHAR(255) | NOT NULL                               |                   |                     | 마지막 수정 직원 ID                          |
 
 ### 2) SHIPMENT_EVENT
 
@@ -515,25 +515,25 @@ REPAIRING, COMPLETED |
 
 - 테이블 설명: 고객의 A/S 단일 통합 페이지 접근 링크.
 
-| 컬럼명           | 데이터 타입   | 제약조건                         | 기본값               | 인덱스 | 설명               |
-|---------------|----------|------------------------------|-------------------|-----|------------------|
-| id            | BIGINT   | PK, AUTO_INCREMENT           | -                 | PK  | 링크 ID            |
-| as_request_id | BIGINT   | NOT NULL, FK → AS_REQUEST.id | -                 | FK  | A/S 접수 ID        |
-| token_hash    | CHAR(64) | NOT NULL, UNIQUE             | -                 | -   | 난수 토큰 SHA-256 해시 |
-| expires_at    | DATETIME | NOT NULL                     | -                 | -   | 만료 시각            |
-| created_at    | DATETIME | NOT NULL                     | CURRENT_TIMESTAMP | -   | 발급 시각            |
-| updated_at    | DATETIME | NOT NULL                     | CURRENT_TIMESTAMP | -   | 수정 시각            |
+| 컬럼명             | 데이터 타입   | 제약조건                           | 기본값               | 인덱스 | 설명               |
+|-----------------|----------|--------------------------------|-------------------|-----|------------------|
+| id              | BIGINT   | PK, AUTO_INCREMENT             | -                 | PK  | 링크 ID            |
+| as_reception_id | BIGINT   | NOT NULL, FK → AS_RECEPTION.id | -                 | FK  | A/S 접수 ID        |
+| token_hash      | CHAR(64) | NOT NULL, UNIQUE               | -                 | -   | 난수 토큰 SHA-256 해시 |
+| expires_at      | DATETIME | NOT NULL                       | -                 | -   | 만료 시각            |
+| created_at      | DATETIME | NOT NULL                       | CURRENT_TIMESTAMP | -   | 발급 시각            |
+| updated_at      | DATETIME | NOT NULL                       | CURRENT_TIMESTAMP | -   | 수정 시각            |
 
 ### 2) NOTIFICATION_LOG
 
 - 테이블 설명: 알림톡 우선 발송 및 SMS 대체 발송 이력.
 
-| 컬럼명               | 데이터 타입       | 제약조건                     | 기본값 | 인덱스 | 설명                                                          |
-|-------------------|--------------|--------------------------|-----|-----|-------------------------------------------------------------|
-| id                | BIGINT       | PK, AUTO_INCREMENT       | -   | PK  | 알림 발송 ID                                                    |
-| as_request_id     | BIGINT       | NULL, FK → AS_REQUEST.id | -   | -   | 관련 A/S                                                      |
-| event_key         | VARCHAR(255) | NOT NULL, UNIQUE         | -   |     | 업무 이벤트 중복 발송 방지                                             |
-| notification_type | VARCHAR(255) | NOT NULL                 | -   | -   | 접수, 입금, 배송 알림 종류(RECEIVED(A/S 접수 완료), ESTIMATE(견적 발급 및 확인), 
+| 컬럼명               | 데이터 타입       | 제약조건                       | 기본값 | 인덱스 | 설명                                                          |
+|-------------------|--------------|----------------------------|-----|-----|-------------------------------------------------------------|
+| id                | BIGINT       | PK, AUTO_INCREMENT         | -   | PK  | 알림 발송 ID                                                    |
+| as_reception_id   | BIGINT       | NULL, FK → AS_RECEPTION.id | -   | -   | 관련 A/S                                                      |
+| event_key         | VARCHAR(255) | NOT NULL, UNIQUE           | -   |     | 업무 이벤트 중복 발송 방지                                             |
+| notification_type | VARCHAR(255) | NOT NULL                   | -   | -   | 접수, 입금, 배송 알림 종류(RECEIVED(A/S 접수 완료), ESTIMATE(견적 발급 및 확인), |
 
 REPAIR(수리 완료),
 PAYMENT(결제 요청)
@@ -555,7 +555,7 @@ SHIPPING(배송 시작) |
 
 ### 1) 통계 전용 테이블 없음
 
-- 테이블 설명: 초기 구현은 AS_REQUEST, REPAIR, PAYMENT_BILL, SHIPMENT, MEMBER, PRODUCT_MODEL을 집계 조회한다.
+- 테이블 설명: 초기 구현은 AS_RECEPTION, REPAIR, PAYMENT_BILL, SHIPMENT, MEMBER, PRODUCT_MODEL을 집계 조회한다.
 
 ## 1.2.14 AI 영수증 분석
 
@@ -567,7 +567,7 @@ SHIPPING(배송 시작) |
 |--------------------------|--------------|---------------------------------|-------------------|-------------------|--------------------------------------|
 | id                       | BIGINT       | PK, AUTO_INCREMENT              | -                 | PK                | 분석 ID                                |
 | attachment_id            | BIGINT       | NOT NULL, FK → AS_ATTACHMENT.id | -                 | IDX_RA_ATTACHMENT | 분석 대상 영수증                            |
-| as_request_id            | BIGINT       | NOT NULL, FK → AS_REQUEST.id    | -                 | IDX_RA_AS         | A/S ID                               |
+| as_reception_id          | BIGINT       | NOT NULL, FK → AS_RECEPTION.id  | -                 | IDX_RA_AS         | A/S ID                               |
 | extracted_manufacturer   | VARCHAR(255) | NULL                            | -                 | -                 | 추출 제조사                               |
 | extracted_product_name   | VARCHAR(255) | NULL                            | -                 | -                 | 추출 제품명                               |
 | extracted_model_name     | VARCHAR(255) | NULL                            | -                 | -                 | 추출 모델명                               |
@@ -585,15 +585,15 @@ SHIPPING(배송 시작) |
 
 - 테이블 설명: 알림 발송 요청의 유실 방지.
 
-| 컬럼명           | 데이터 타입       | 제약조건                     | 기본값               | 인덱스              | 설명                         |
-|---------------|--------------|--------------------------|-------------------|------------------|----------------------------|
-| id            | BIGINT       | PK, AUTO_INCREMENT       | -                 | PK               | 아웃박스 ID                    |
-| event_key     | VARCHAR(255) | NOT NULL, UNIQUE         | -                 | UK_OUTBOX_KEY    | 중복 방지 키                    |
-| as_request_id | BIGINT       | NULL, FK → AS_REQUEST.id | -                 | IDX_OUTBOX_AS    | 관련 A/S                     |
-| event_type    | VARCHAR(255) | NOT NULL                 | -                 | -                | 이벤트 유형                     |
-| payload       | JSON         | NOT NULL                 | -                 | -                | 전달할 데이터                    |
-| status        | VARCHAR(255) | NOT NULL                 | PENDING           | IDX_OUTBOX_RETRY | PENDING, PROCESSED, FAILED |
-| retry_count   | INT          | NOT NULL                 | 0                 | -                | 재시도 횟수                     |
-| next_retry_at | DATETIME     | NULL                     | -                 | IDX_OUTBOX_RETRY | 다음 처리 시각                   |
-| created_at    | DATETIME     | NOT NULL                 | CURRENT_TIMESTAMP | -                | 생성 시각                      |
-| processed_at  | DATETIME     | NULL                     | -                 | -                | 완료 시각                      |
+| 컬럼명             | 데이터 타입       | 제약조건                       | 기본값               | 인덱스              | 설명                         |
+|-----------------|--------------|----------------------------|-------------------|------------------|----------------------------|
+| id              | BIGINT       | PK, AUTO_INCREMENT         | -                 | PK               | 아웃박스 ID                    |
+| event_key       | VARCHAR(255) | NOT NULL, UNIQUE           | -                 | UK_OUTBOX_KEY    | 중복 방지 키                    |
+| as_reception_id | BIGINT       | NULL, FK → AS_RECEPTION.id | -                 | IDX_OUTBOX_AS    | 관련 A/S                     |
+| event_type      | VARCHAR(255) | NOT NULL                   | -                 | -                | 이벤트 유형                     |
+| payload         | JSON         | NOT NULL                   | -                 | -                | 전달할 데이터                    |
+| status          | VARCHAR(255) | NOT NULL                   | PENDING           | IDX_OUTBOX_RETRY | PENDING, PROCESSED, FAILED |
+| retry_count     | INT          | NOT NULL                   | 0                 | -                | 재시도 횟수                     |
+| next_retry_at   | DATETIME     | NULL                       | -                 | IDX_OUTBOX_RETRY | 다음 처리 시각                   |
+| created_at      | DATETIME     | NOT NULL                   | CURRENT_TIMESTAMP | -                | 생성 시각                      |
+| processed_at    | DATETIME     | NULL                       | -                 | -                | 완료 시각                      |
