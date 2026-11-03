@@ -2,17 +2,16 @@ package net.likelion.bebc25.fixgo.payment.service;
 
 import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
-import net.likelion.bebc25.fixgo.payment.entity.PaymentAttempt;
-import net.likelion.bebc25.fixgo.payment.entity.PaymentAttemptStatus;
-import net.likelion.bebc25.fixgo.payment.entity.PaymentBill;
-import net.likelion.bebc25.fixgo.payment.entity.PaymentBillStatus;
+import net.likelion.bebc25.fixgo.payment.entity.*;
 import net.likelion.bebc25.fixgo.payment.exception.PaymentErrorCode;
 import net.likelion.bebc25.fixgo.payment.exception.PaymentException;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentAttemptRepository;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentBillRepository;
+import net.likelion.bebc25.fixgo.payment.repository.VirtualAccountRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -21,6 +20,7 @@ import java.util.List;
 public class PaymentAttemptService {
     private final PaymentBillRepository paymentBillRepository;
     private final PaymentAttemptRepository paymentAttemptRepository;
+    private final VirtualAccountRepository virtualAccountRepository;
 
     /**
      * 결제를 시작한다. READY인 결제 시도가 이미 있으면 재사용한다.
@@ -94,7 +94,7 @@ public class PaymentAttemptService {
      * 같은 bill을 바꾸는 다른 경로(startPayment, prepareConfirm, 현금 결제)가 모두 거절되기 때문이다.
      */
     @Transactional
-    public PaymentDto.ConfirmPaymentResponse completeConfirm(String orderId, String paymentKey, OffsetDateTime approvedAt) {
+    public void completeConfirm(String orderId, String paymentKey, OffsetDateTime approvedAt) {
         PaymentAttempt attempt = paymentAttemptRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new IllegalStateException("Payment Attempt Not Found"));
 
@@ -102,8 +102,26 @@ public class PaymentAttemptService {
         PaymentBill bill = attempt.getPaymentBill();
 
         bill.markPaid(approvedAt);
+    }
 
-        return PaymentDto.ConfirmPaymentResponse.from(attempt);
+    /**
+     * 가상계좌 발급 반영: 토스 승인 응답이 WAITING_FOR_DEPOSIT일 때만 호출한다.
+     * attempt를 WAITING_FOR_DEPOSIT으로 바꾸고, 계좌 정보를 VirtualAccount에 저장한다.
+     * 아직 입금 전이므로 bill은 UNPAID 그대로 둔다. 입금 완료는 웹훅에서 처리한다.
+     * <p>
+     * 잠금을 걸지 않는 이유는 completeConfirm과 같다.
+     */
+    @Transactional
+    public void issueVirtualAccount(
+            String orderId, String paymentKey, String bankCode,
+            String accountNumber, String webhookSecret, LocalDateTime dueAt
+    ) {
+        PaymentAttempt attempt = paymentAttemptRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new IllegalStateException("Payment Attempt Not Found"));
+
+        attempt.markWaitingForDeposit(paymentKey);
+        VirtualAccount virtualAccount = VirtualAccount.issue(attempt, bankCode, accountNumber, webhookSecret, dueAt);
+        virtualAccountRepository.save(virtualAccount);
     }
 
     @Transactional

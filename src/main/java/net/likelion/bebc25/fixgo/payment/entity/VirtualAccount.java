@@ -31,7 +31,10 @@ public class VirtualAccount {
     @Column(nullable = false)
     private LocalDateTime dueAt;
 
-    public VirtualAccount(PaymentAttempt paymentAttempt, String bankCode, String accountNumber, String webhookSecret, LocalDateTime dueAt) {
+    public static VirtualAccount issue(
+            PaymentAttempt paymentAttempt, String bankCode,
+            String accountNumber, String webhookSecret, LocalDateTime dueAt
+    ) {
         if (paymentAttempt == null) {
             throw new IllegalArgumentException("결제 시도는 필수입니다.");
         }
@@ -47,11 +50,14 @@ public class VirtualAccount {
         if (dueAt == null) {
             throw new IllegalArgumentException("입금 기한은 필수입니다.");
         }
-        
-        this.paymentAttempt = paymentAttempt;
-        this.bankCode = bankCode;
-        this.accountNumber = accountNumber;
-        this.webhookSecret = webhookSecret;
-        this.dueAt = dueAt;
+
+        VirtualAccount virtualAccount = new VirtualAccount();
+        virtualAccount.paymentAttempt = paymentAttempt;
+        virtualAccount.bankCode = bankCode;
+        virtualAccount.accountNumber = accountNumber;
+        virtualAccount.webhookSecret = webhookSecret;
+        virtualAccount.dueAt = dueAt;
+
+        return virtualAccount;
     }
 }

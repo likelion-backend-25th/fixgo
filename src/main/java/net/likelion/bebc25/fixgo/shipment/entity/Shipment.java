@@ -5,6 +5,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import net.likelion.bebc25.fixgo.as.entity.AsRequest;
+import net.likelion.bebc25.fixgo.auth.entity.Member;
 
 import java.time.LocalDateTime;
 
@@ -58,10 +59,12 @@ public class Shipment {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    @Column(nullable = false)
-    private String createdBy;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by", nullable = false)
+    private Member createdBy;
 
-    @Column(nullable = false)
-    private String updatedBy;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "updated_by", nullable = false)
+    private Member updatedBy;
 
 }

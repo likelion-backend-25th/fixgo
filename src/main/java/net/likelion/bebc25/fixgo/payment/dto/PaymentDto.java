@@ -1,6 +1,9 @@
 package net.likelion.bebc25.fixgo.payment.dto;
 
 import net.likelion.bebc25.fixgo.payment.entity.PaymentAttempt;
+import net.likelion.bebc25.fixgo.payment.entity.PaymentBill;
+import net.likelion.bebc25.fixgo.payment.entity.PaymentMethod;
+import net.likelion.bebc25.fixgo.payment.entity.VirtualAccount;
 
 import java.time.LocalDateTime;
 
@@ -38,21 +41,85 @@ public class PaymentDto {
     ) {}
 
     /**
-     * 결제 승인 응답. 프론트는 결제 완료 화면에 이 값을 보여준다.
+     * 포털 결제 영역에 보여 줄 현재 결제 상태.
+     * 상태에 따라 채워지는 필드가 다르다. 프론트는 status로 화면을 고르고, 해당 화면에서 쓰는 필드만 읽는다.
      * <p>
-     * 토스 응답이 아니라 DB에 저장된 attempt로 만든다.
+     * NOT_ISSUED          : status
+     * UNPAID              : status, orderName, amount
+     * WAITING_FOR_DEPOSIT : status, orderName, amount, paymentMethod, virtualAccount
+     * PAID                : status, orderName, amount, paymentMethod, paidAt
+     * <p>
+     * 나머지 필드는 null이다. 필드 목록을 상태와 상관없이 같게 유지해 프론트가 하나의 타입으로 받을 수 있게 한다.
      */
-    public record ConfirmPaymentResponse(
+    public record PaymentSummaryResponse(
+            Status status,
             String orderName,
             Long amount,
-            LocalDateTime approvedAt
+            PaymentMethod paymentMethod,
+            LocalDateTime paidAt,
+            VirtualAccountInfo virtualAccount
     ) {
-        public static ConfirmPaymentResponse from(PaymentAttempt attempt) {
-            return new ConfirmPaymentResponse(
-                    attempt.getPaymentBill().getType().getOrderName(),
-                    attempt.getAmount(),
-                    attempt.getApprovedAt()
+        public static PaymentSummaryResponse notIssued() {
+            return new PaymentSummaryResponse(
+                    Status.NOT_ISSUED,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
             );
         }
+
+        public static PaymentSummaryResponse unpaid(PaymentBill bill) {
+            return new PaymentSummaryResponse(
+                    Status.UNPAID,
+                    bill.getType().getOrderName(),
+                    bill.getAmount(),
+                    null,
+                    null,
+                    null
+            );
+        }
+
+        public static PaymentSummaryResponse paid(PaymentBill bill, PaymentAttempt doneAttempt) {
+            return new PaymentSummaryResponse(
+                    Status.PAID,
+                    bill.getType().getOrderName(),
+                    bill.getAmount(),
+                    doneAttempt.getMethod(),
+                    bill.getPaidAt(),
+                    null
+            );
+        }
+
+        public static PaymentSummaryResponse waitingForDeposit(
+                PaymentBill bill,
+                PaymentAttempt attempt,
+                VirtualAccount virtualAccount
+        ) {
+            return new PaymentSummaryResponse(
+                    Status.WAITING_FOR_DEPOSIT,
+                    bill.getType().getOrderName(),
+                    bill.getAmount(),
+                    attempt.getMethod(),
+                    null,
+                    new VirtualAccountInfo(virtualAccount.getBankCode(),
+                                           virtualAccount.getAccountNumber(),
+                                           virtualAccount.getDueAt())
+            );
+        }
+
+        public enum Status {NOT_ISSUED, UNPAID, WAITING_FOR_DEPOSIT, PAID}
+
+        /**
+         * 가상계좌 입금 안내 정보. 고객이 입금할 때 필요한 값만 담는다.
+         */
+        public record VirtualAccountInfo(
+                String bankName,
+                String accountNumber,
+                LocalDateTime dueAt
+        ) {}
+
+
     }
 }

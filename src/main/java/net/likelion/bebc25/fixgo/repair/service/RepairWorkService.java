@@ -1,9 +1,9 @@
 package net.likelion.bebc25.fixgo.repair.service;
 
 import lombok.RequiredArgsConstructor;
-import net.likelion.bebc25.fixgo.repair.dto.repairWork.RepairWorkRequestDto;
-import net.likelion.bebc25.fixgo.repair.dto.repairWork.RepairWorkResponseDto;
-import net.likelion.bebc25.fixgo.repair.dto.repairWork.RepairWorkUpdateDto;
+import net.likelion.bebc25.fixgo.repair.dto.repairWork.RepairWorkRequest;
+import net.likelion.bebc25.fixgo.repair.dto.repairWork.RepairWorkResponse;
+import net.likelion.bebc25.fixgo.repair.dto.repairWork.RepairWorkUpdate;
 import net.likelion.bebc25.fixgo.repair.entity.RepairWork;
 import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
 import net.likelion.bebc25.fixgo.repair.mapper.RepairWorkMapper;
@@ -24,7 +24,7 @@ public class RepairWorkService {
 
     // 작업 내역 등록
     @Transactional
-    public RepairWorkResponseDto createRepairWork(RepairWorkRequestDto dto) {
+    public RepairWorkResponse createRepairWork(RepairWorkRequest dto) {
 
         Repair repair = repairRepository.findById(dto.getRepairId()).orElseThrow(() -> new IllegalArgumentException("해당 수리 내역을 찾을 수 없습니다."));
 
@@ -34,13 +34,13 @@ public class RepairWorkService {
     }
 
     // 작업 내역 전체 조회
-    public List<RepairWorkResponseDto> getAllRepairWorks() {
+    public List<RepairWorkResponse> getAllRepairWorks() {
 
         return repairWorkRepository.findAll().stream().map(repairWorkMapper::toResponseDto).toList();
     }
 
     // 작업 내역 단건 조회
-    public RepairWorkResponseDto getRepairWork(Long id) {
+    public RepairWorkResponse getRepairWork(Long id) {
 
         RepairWork repairWork = repairWorkRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("해당 작업 내역을 찾을 수 없습니다."));
 
@@ -48,20 +48,20 @@ public class RepairWorkService {
     }
 
     // 특정 수리 건의 작업 내역 조회
-    public List<RepairWorkResponseDto> getRepairWorksByRepairId(Long repairId) {
+    public List<RepairWorkResponse> getRepairWorksByRepairId(Long repairId) {
 
         return repairWorkRepository.findByRepairId(repairId).stream().map(repairWorkMapper::toResponseDto).toList();
     }
 
     // 작업명 검색
-    public List<RepairWorkResponseDto> searchRepairWorks(String workName) {
+    public List<RepairWorkResponse> searchRepairWorks(String workName) {
 
         return repairWorkRepository.findByWorkName(workName).stream().map(repairWorkMapper::toResponseDto).toList();
     }
 
     // 작업 내역 수정
     @Transactional
-    public RepairWorkResponseDto updateRepairWork(Long id, RepairWorkUpdateDto dto) {
+    public RepairWorkResponse updateRepairWork(Long id, RepairWorkUpdate dto) {
 
         RepairWork repairWork = repairWorkRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("해당 작업 내역을 찾을 수 없습니다."));
 

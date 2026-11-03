@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import net.likelion.bebc25.fixgo.as.entity.AsRequest;
+import net.likelion.bebc25.fixgo.auth.entity.Member;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -51,5 +53,61 @@ public class NotificationLog {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    private String createdBy;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by")
+    private Member createdBy;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "as_request_id")
+    private AsRequest asRequest;
+
+    // 이메일 발송 이력
+    public static NotificationLog create(
+            AsRequest asRequest,
+            Member createdBy,
+            String eventKey,
+            NotificationType notificationType,
+            String recipientEmail,
+            String messageTitle,
+            String message
+    ) {
+        NotificationLog notificationLog = new NotificationLog();
+
+        notificationLog.asRequest = asRequest;
+        notificationLog.createdBy = createdBy;
+        notificationLog.eventKey = eventKey;
+        notificationLog.notificationType = notificationType;
+        notificationLog.recipientEmail = recipientEmail;
+        notificationLog.messageTitle = messageTitle;
+        notificationLog.message = message;
+
+        return notificationLog;
+
+    }
+
+    // 이메일 발송 처리 중
+    public void markSending() {
+        this.status = NotificationStatus.SENDING;
+        this.errorMessage = null;
+    }
+
+    // 이메일 발송 성공
+    public void markSent() {
+        this.status = NotificationStatus.SENT;
+        this.errorMessage = errorMessage;
+        this.sentAt = LocalDateTime.now();
+    }
+
+    // 이메일 발송 실패
+    public void markFailed(String errorMessage) {
+        this.status = NotificationStatus.FAILED;
+        this.errorMessage = errorMessage;
+        this.sentAt = null;
+    }
+
+    // 재발송 횟수 추가
+    public void increaseRetryCount() {
+        this.retryCount++;
+    }
+
 }
