@@ -62,18 +62,6 @@ public class AsReceptionDto {
 
     }
 
-    public record AsAttachmentReception(
-
-            @NotBlank
-            @Size(max = 500)
-            String fileUrl,
-
-            @Size(max = 255)
-            String originalName
-
-    ) {
-    }
-
     public record ListResponse(
             Long id,
             String receptionNumber,

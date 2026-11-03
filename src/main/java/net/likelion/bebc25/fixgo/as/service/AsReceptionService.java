@@ -3,7 +3,6 @@ package net.likelion.bebc25.fixgo.as.service;
 import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.as.dto.AsReceptionDto;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
-import net.likelion.bebc25.fixgo.as.repository.AsAttachmentRepository;
 import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
 import net.likelion.bebc25.fixgo.as.repository.AsStatusHistoryRepository;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
@@ -25,7 +24,6 @@ import java.util.NoSuchElementException;
 public class AsReceptionService {
 
     private final AsReceptionRepository asReceptionRepository;
-    private final AsAttachmentRepository asAttachmentRepository;
     private final AsStatusHistoryRepository asStatusHistoryRepository;
 
     private final CustomerRepository customerRepository;
