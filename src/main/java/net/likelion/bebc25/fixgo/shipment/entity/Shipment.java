@@ -4,8 +4,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import net.likelion.bebc25.fixgo.as.entity.AsRequest;
-import net.likelion.bebc25.fixgo.auth.entity.Member;
+import net.likelion.bebc25.fixgo.as.entity.AsReception;
 
 import java.time.LocalDateTime;
 
@@ -19,8 +18,8 @@ public class Shipment {
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "as_requset_id", nullable = false, unique = true)
-    private AsRequest asRequest;
+    @JoinColumn(name = "as_reception_id", nullable = false, unique = true)
+    private AsReception asReception;
 
 
     @Enumerated(EnumType.STRING)
@@ -59,12 +58,10 @@ public class Shipment {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by", nullable = false)
-    private Member createdBy;
+    @Column(nullable = false)
+    private String createdBy;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "updated_by", nullable = false)
-    private Member updatedBy;
+    @Column(nullable = false)
+    private String updatedBy;
 
 }

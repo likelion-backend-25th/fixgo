@@ -1,8 +1,8 @@
 package net.likelion.bebc25.fixgo.repair.service;
 
 import lombok.RequiredArgsConstructor;
-import net.likelion.bebc25.fixgo.as.entity.AsRequest;
-import net.likelion.bebc25.fixgo.as.repository.AsRequestRepository;
+import net.likelion.bebc25.fixgo.as.entity.AsReception;
+import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairRequest;
@@ -26,7 +26,7 @@ public class RepairService {
 
     private final RepairRepository repairRepository;
     private final RepairMapper repairMapper;
-    private final AsRequestRepository asRequestRepository;
+    private final AsReceptionRepository asRequestRepository;
     private final MemberRepository memberRepository;
 
     // 수리 등록
@@ -34,15 +34,15 @@ public class RepairService {
     public Map<String, String> createRepair(RepairRequest dto) {
 
         // A/S 접수 정보 조회
-        AsRequest asRequest = asRequestRepository.findById(dto.getAsRequestId()).orElseThrow(() -> new IllegalArgumentException("A/S 접수 정보를 찾을 수 없습니다."));
+        AsReception asReception = asRequestRepository.findById(dto.getAsReceptionId()).orElseThrow(() -> new IllegalArgumentException("A/S 접수 정보를 찾을 수 없습니다."));
 
         // 담당 기사 정보 조회
         Member technician = memberRepository.findById(dto.getTechnicianId()).orElseThrow(() -> new IllegalArgumentException("담당 기사를 찾을 수 없습니다."));
 
         // 수리 생성 (초기 상태 DIAGNOSING)
-        Repair repair = new Repair(asRequest, technician, WarrantyResult.FREE, RepairStatus.DIAGNOSING);
+        Repair repair = new Repair(asReception, technician, WarrantyResult.FREE, RepairStatus.DIAGNOSING);
 
-        repairMapper.toRepairEntity(repair, dto, asRequest, technician);
+        repairMapper.toRepairEntity(repair, dto, asReception, technician);
 
         repairRepository.save(repair);
 
@@ -69,12 +69,12 @@ public class RepairService {
         Repair repair = findRepair(id);
 
         // A/S 접수 정보 조회
-        AsRequest asRequest = asRequestRepository.findById(dto.getAsRequestId()).orElseThrow(() -> new IllegalArgumentException("A/S 접수 정보를 찾을 수 없습니다."));
+        AsReception asReception = asRequestRepository.findById(dto.getAsReceptionId()).orElseThrow(() -> new IllegalArgumentException("A/S 접수 정보를 찾을 수 없습니다."));
 
         // 담당 기사 정보 조회
         Member technician = memberRepository.findById(dto.getTechnicianId()).orElseThrow(() -> new IllegalArgumentException("담당 기사를 찾을 수 없습니다."));
 
-        repairMapper.toRepairEntity(repair, dto, asRequest, technician);
+        repairMapper.toRepairEntity(repair, dto, asReception, technician);
         repair.updateAuditInfo("test");
 
         return repairMapper.toRepairResponseDto(repair);

@@ -11,7 +11,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(indexes = {@Index(name = "IDX_ASH_REQUEST_TIME", columnList = "as_request_id, created_at")})
+@Table(indexes = {@Index(name = "IDX_ASH_RECEPTION_TIME", columnList = "as_reception_id, created_at")})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AsStatusHistory extends BaseEntity {
@@ -21,8 +21,8 @@ public class AsStatusHistory extends BaseEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "as_request_id", nullable = false)
-    private AsRequest asRequest;
+    @JoinColumn(name = "as_reception_id", nullable = false)
+    private AsReception asReception;
 
     @Column
     private String fromStatus;
@@ -41,8 +41,8 @@ public class AsStatusHistory extends BaseEntity {
     @Column(nullable = false, updatable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
 
-    public AsStatusHistory(AsRequest asRequest, String fromStatus, String toStatus, String reason, Member changedBy) {
-        this.asRequest = asRequest;
+    public AsStatusHistory(AsReception asReception, String fromStatus, String toStatus, String reason, Member changedBy) {
+        this.asReception = asReception;
         this.fromStatus = fromStatus;
         this.toStatus = toStatus;
         this.reason = reason;
