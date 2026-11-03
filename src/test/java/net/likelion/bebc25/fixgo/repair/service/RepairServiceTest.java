@@ -1,7 +1,7 @@
 package net.likelion.bebc25.fixgo.repair.service;
 
 import net.likelion.bebc25.fixgo.as.entity.AsRequest;
-import net.likelion.bebc25.fixgo.as.repository.AsRequestRepository;
+import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairRequest;
@@ -34,7 +34,7 @@ class RepairServiceTest {
     private RepairRepository repairRepository;
 
     @Mock
-    private AsRequestRepository asRequestRepository;
+    private AsReceptionRepository asRequestRepository;
 
     @Mock
     private MemberRepository memberRepository;

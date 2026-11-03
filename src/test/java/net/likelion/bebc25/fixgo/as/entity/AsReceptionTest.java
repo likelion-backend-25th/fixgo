@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @Import(JpaConfig.class)
 @DataJpaTest
-public class AsRequestTest {
+public class AsReceptionTest {
 
     @Autowired
     private EntityManager em;
@@ -53,22 +53,22 @@ public class AsRequestTest {
     @DisplayName("접수 등록")
     void registration() {
 
-        AsRequest asRequest = new AsRequest("AS-2026-1030", customer, product, member, technician, "충전불량", "충전이 안 됩니다", "일주일 내로 수리 부탁드립니다.", ReturnMethod.DELIVERY);
+        AsReception asReception = new AsReception("AS-2026-1030", customer, product, member, technician, "충전불량", "충전이 안 됩니다", "일주일 내로 수리 부탁드립니다.", ReturnMethod.DELIVERY);
 
-        em.persist(asRequest); // insert 쿼리문이 실행되어 접수가 등록됨
+        em.persist(asReception); // insert 쿼리문이 실행되어 접수가 등록됨
         em.flush();
 
-        Long requestId = asRequest.getId();
+        Long requestId = asReception.getId();
         Long technicianId = technician.getId();
 
         // DB에서 다시 조회하도록 영속성 컨텍스트 초기화
         em.clear();
 
-        AsRequest findRequest = em.find(AsRequest.class, asRequest.getId());
+        AsReception findRequest = em.find(AsReception.class, asReception.getId());
 
         assertThat(findRequest).isNotNull();
-        assertThat(findRequest.getId()).isEqualTo(asRequest.getId());
-        assertThat(findRequest.getSymptom()).isEqualTo(asRequest.getSymptom());
+        assertThat(findRequest.getId()).isEqualTo(asReception.getId());
+        assertThat(findRequest.getSymptom()).isEqualTo(asReception.getSymptom());
         assertThat(findRequest.getTechnician().getId()).isEqualTo(technicianId);
 
     }
