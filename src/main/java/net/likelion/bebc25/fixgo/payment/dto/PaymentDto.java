@@ -1,5 +1,7 @@
 package net.likelion.bebc25.fixgo.payment.dto;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentAttempt;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentBill;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentMethod;
@@ -39,6 +41,44 @@ public class PaymentDto {
             String paymentKey,
             Long amount
     ) {}
+
+    /**
+     * 결제 완료된 청구서의 전액 환불 요청.
+     * 카드 환불은 refundAccount를 생략할 수 있다.
+     * 가상계좌 환불은 은행 코드, 계좌번호, 예금주가 필요하다.
+     * 환불 금액과 결제수단은 서버에 저장된 결제 정보를 사용한다.
+     */
+    public record RefundPaymentRequest(
+            @NotBlank(message = "환불 사유는 필수입니다.")
+            String cancelReason,
+
+            @Valid
+            RefundAccountRequest refundAccount
+    ) {}
+
+    /**
+     * 가상계좌 환불금을 받을 계좌 정보.
+     *
+     * @param bank          은행 코드
+     * @param accountNumber 환불받을 계좌번호
+     * @param holderName    예금주명
+     */
+    public record RefundAccountRequest(
+            @NotBlank(message = "은행 코드는 필수입니다.")
+            String bank,
+
+            @NotBlank(message = "계좌번호는 필수입니다.")
+            String accountNumber,
+
+            @NotBlank(message = "예금주명은 필수입니다.")
+            String holderName
+    ) {
+        public PaymentInternalDto.RefundAccount toInternal() {
+            return new PaymentInternalDto.RefundAccount(
+                    bank, accountNumber, holderName
+            );
+        }
+    }
 
     /**
      * 포털 결제 영역에 보여 줄 현재 결제 상태.
