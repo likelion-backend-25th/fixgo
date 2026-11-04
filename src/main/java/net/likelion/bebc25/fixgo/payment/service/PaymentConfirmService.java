@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientResponseException;
 
+// TODO: 예외처리 보완 필요
 @Service
 @RequiredArgsConstructor
 public class PaymentConfirmService {

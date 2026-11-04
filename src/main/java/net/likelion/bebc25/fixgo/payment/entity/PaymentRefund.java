@@ -20,12 +20,8 @@ public class PaymentRefund {
     private PaymentAttempt paymentAttempt;
 
     @Column(unique = true)
-    private String idempotencyKey;
-
-    @Column(unique = true)
     private String transactionKey;
 
-    @Column(nullable = false)
     private Long cancelAmount;
 
     @Column(nullable = false)
@@ -34,12 +30,6 @@ public class PaymentRefund {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PaymentRefundStatus status;
-
-    private String refundBankCode;
-
-    private String refundAccountNumber;
-
-    private String refundHolderName;
 
     private String failureCode;
 
@@ -50,12 +40,9 @@ public class PaymentRefund {
     @Column(nullable = false)
     private String createdBy;
 
-    public PaymentRefund(PaymentAttempt paymentAttempt, Long cancelAmount, String cancelReason, String requestedBy) {
+    public static PaymentRefund create(PaymentAttempt paymentAttempt, String cancelReason, String requestedBy) {
         if (paymentAttempt == null) {
             throw new IllegalArgumentException("결제 시도는 필수입니다.");
-        }
-        if (cancelAmount == null || cancelAmount <= 0) {
-            throw new IllegalArgumentException("환불 금액은 0보다 커야 합니다.");
         }
         if (cancelReason == null || cancelReason.isBlank()) {
             throw new IllegalArgumentException("환불 사유는 필수입니다.");
@@ -63,11 +50,13 @@ public class PaymentRefund {
         if (requestedBy == null || requestedBy.isBlank()) {
             throw new IllegalArgumentException("처리 직원은 필수입니다.");
         }
+        PaymentRefund refund = new PaymentRefund();
 
-        this.paymentAttempt = paymentAttempt;
-        this.cancelAmount = cancelAmount;
-        this.cancelReason = cancelReason;
-        this.createdBy = requestedBy;
-        this.status = PaymentRefundStatus.REQUESTED;
+        refund.paymentAttempt = paymentAttempt;
+        refund.cancelReason = cancelReason;
+        refund.createdBy = requestedBy;
+        refund.status = PaymentRefundStatus.IN_PROGRESS;
+
+        return refund;
     }
 }
