@@ -30,7 +30,7 @@ public class ProductModelController {
             @RequestBody ProductModelDto.CreateRequest request,
             @AuthenticationPrincipal CustomUserDetails user
     ) {
-        String createdBy = user.getMember().getCode();
+        Long createdBy = user.getMember().getId();
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(productModelService.create(request, createdBy));
@@ -54,7 +54,7 @@ public class ProductModelController {
             @RequestBody ProductModelDto.UpdateRequest request,
             @AuthenticationPrincipal CustomUserDetails user
     ) {
-        String updatedBy = user.getMember().getCode();
+        Long updatedBy = user.getMember().getId();
         return ResponseEntity.ok(productModelService.update(id, request, updatedBy));
     }
 }

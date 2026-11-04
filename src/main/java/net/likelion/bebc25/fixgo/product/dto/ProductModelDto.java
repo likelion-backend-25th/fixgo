@@ -14,7 +14,7 @@ public class ProductModelDto {
             Category category,
             Integer warrantyMonths
     ) {
-        public ProductModel toEntity(String createdBy) {
+        public ProductModel toEntity(Long createdBy) {
             return new ProductModel(
                     name,
                     modelName,
@@ -51,8 +51,8 @@ public class ProductModelDto {
             boolean isActive,
             LocalDateTime createdAt,
             LocalDateTime updatedAt,
-            String createdBy,
-            String updatedBy
+            Long createdBy,
+            Long updatedBy
     ) {
         public static ProductModelDto.Response from(ProductModel productModel) {
             return new ProductModelDto.Response(

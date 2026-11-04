@@ -30,7 +30,7 @@ public class ProductModelService {
 
     // 제품 등록
     @Transactional
-    public ProductModelDto.Response create(ProductModelDto.CreateRequest request, String createdBy) {
+    public ProductModelDto.Response create(ProductModelDto.CreateRequest request, Long createdBy) {
         // name/modelname duplication check?
 //        if (ProductModelDto.existsByName(request.name()) || ProductModelDto.existsByModelName(request.modelName())) {
 //            throw new IllegalArgumentException("이미 등록된 제품명/모델명입니다.");
@@ -60,7 +60,7 @@ public class ProductModelService {
 
     // 제품 정보 수정
     @Transactional
-    public ProductModelDto.Response update(Long id, ProductModelDto.UpdateRequest request, String updatedBy) {
+    public ProductModelDto.Response update(Long id, ProductModelDto.UpdateRequest request, Long updatedBy) {
         ProductModel productModel = findProductModel(id);
         productModel.update(
                 request.name(), request.modelName(), request.category(),

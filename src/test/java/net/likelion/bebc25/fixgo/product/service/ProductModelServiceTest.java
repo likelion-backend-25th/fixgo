@@ -28,7 +28,7 @@ public class ProductModelServiceTest {
 
     private ProductModel saveProductModel(String name, String modelName, Category category) {
         return productModelRepository.save(
-                new ProductModel(name, modelName, category, 12, "admin")
+                new ProductModel(name, modelName, category, 12, 1L)
         );
     }
 
@@ -45,7 +45,7 @@ public class ProductModelServiceTest {
         assertThat(response.category()).isEqualTo(Category.PHONE);
         assertThat(response.warrantyMonths()).isEqualTo(12);
         assertThat(response.isActive()).isTrue();
-        assertThat(response.createdBy()).isEqualTo("admin");
+        assertThat(response.createdBy()).isEqualTo(1L);
     }
 
     @Test
@@ -63,7 +63,7 @@ public class ProductModelServiceTest {
                 "노트북", "SZ-N16", Category.LAPTOP, 24
         );
 
-        ProductModelDto.Response response = productModelService.create(request, "admin");
+        ProductModelDto.Response response = productModelService.create(request, 1L);
 
         assertThat(response.id()).isNotNull();
         assertThat(response.name()).isEqualTo("노트북");
@@ -71,8 +71,8 @@ public class ProductModelServiceTest {
         assertThat(response.category()).isEqualTo(Category.LAPTOP);
         assertThat(response.warrantyMonths()).isEqualTo(24);
         assertThat(response.isActive()).isTrue();
-        assertThat(response.createdBy()).isEqualTo("admin");
-        assertThat(response.updatedBy()).isEqualTo("admin");
+        assertThat(response.createdBy()).isEqualTo(1L);
+        assertThat(response.updatedBy()).isEqualTo(1L);
         assertThat(productModelRepository.findById(response.id())).isPresent();
     }
 
@@ -143,19 +143,19 @@ public class ProductModelServiceTest {
                 "스마트폰 수정", "SZ-P24X", Category.PHONE, 36, false
         );
 
-        ProductModelDto.Response response = productModelService.update(saved.getId(), request, "updater");
+        ProductModelDto.Response response = productModelService.update(saved.getId(), request, 2L);
 
         assertThat(response.name()).isEqualTo("스마트폰 수정");
         assertThat(response.modelName()).isEqualTo("SZ-P24X");
         assertThat(response.category()).isEqualTo(Category.PHONE);
         assertThat(response.warrantyMonths()).isEqualTo(36);
         assertThat(response.isActive()).isFalse();
-        assertThat(response.updatedBy()).isEqualTo("updater");
+        assertThat(response.updatedBy()).isEqualTo(2L);
 
         ProductModel updated = productModelRepository.findById(saved.getId()).orElseThrow();
         assertThat(updated.getName()).isEqualTo("스마트폰 수정");
         assertThat(updated.isActive()).isFalse();
-        assertThat(updated.getUpdatedBy()).isEqualTo("updater");
+        assertThat(updated.getUpdatedBy()).isEqualTo(2L);
     }
 
     @Test
@@ -165,7 +165,7 @@ public class ProductModelServiceTest {
                 "이름", "MODEL-1", Category.PHONE, 12, true
         );
 
-        assertThatThrownBy(() -> productModelService.update(999L, request, "updater"))
+        assertThatThrownBy(() -> productModelService.update(999L, request, 2L))
                 .isInstanceOf(NoSuchElementException.class)
                 .hasMessage("존재하지 않는 모델입니다.");
     }
