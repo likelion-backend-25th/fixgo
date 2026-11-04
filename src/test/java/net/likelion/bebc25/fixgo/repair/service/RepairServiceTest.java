@@ -7,6 +7,7 @@ import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairRequest;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairResponse;
 import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
+import net.likelion.bebc25.fixgo.repair.entity.repair.RepairDecision;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
 import net.likelion.bebc25.fixgo.repair.entity.repair.WarrantyResult;
 import net.likelion.bebc25.fixgo.repair.mapper.RepairMapper;
@@ -70,7 +71,7 @@ class RepairServiceTest {
 
         Repair repair = new Repair(asReception, technician, WarrantyResult.FREE, RepairStatus.DIAGNOSING);
 
-        repair.updateRepairInfo(asReception, technician, "메인보드 점검", "부품 교체", "수리 진행", WarrantyResult.FREE, "보증 기간 내", 10000, 5000, 15000, null);
+        repair.updateRepairInfo(asReception, technician, "메인보드 점검", "부품 교체", RepairDecision.REPAIRABLE, WarrantyResult.FREE, "보증 기간 내", 10000, 5000, 15000, null);
 
         ReflectionTestUtils.setField(repair, "id", 1L);
 
@@ -86,7 +87,7 @@ class RepairServiceTest {
         dto.setTechnicianId(20L);
         dto.setDiagnosis("메인보드 점검");
         dto.setWorkNote("부품 교체");
-        dto.setRepairDecision("수리 진행");
+        dto.setRepairDecision(RepairDecision.REPAIRABLE);
         dto.setWarrantyResult("FREE");
         dto.setReason("보증 기간 내");
         dto.setLaborRate(10000);
