@@ -51,8 +51,8 @@ public class SecurityConfig {
                         // 고객 페이지
                         .requestMatchers("/api/v1/portal/**").permitAll()
 
-                        // 이메일 전송 테스트 (제거예정)
-                        .requestMatchers("/api/v1/notifications/**").permitAll()
+                        // 이메일 전송, 프리셋 테스트 (제거예정)
+                        .requestMatchers("/api/v1/notifications/**", "/api/v1/email-presets", "/api/v1/email-presets/**").permitAll()
 
                         // Swagger UI 및 API 문서
                         .requestMatchers(
@@ -74,7 +74,7 @@ public class SecurityConfig {
 
                 // 세션을 사용하지 않는 Stateless 방식
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                                           session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
                 // 커스텀 JWT 인증 필터를 UsernamePasswordAuthenticationFilter 바로 앞에 배치
