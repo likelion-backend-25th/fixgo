@@ -142,10 +142,11 @@ class LoginServiceTest {
 
     private Member createMember(Long id) {
         Member member = new Member(
-                "admin01",
                 "admin@test.com",
                 "encoded-password",
                 "관리자",
+                "010-1234-5678",
+                "서울시 강남구",
                 Role.ROLE_ADMIN,
                 ""
         );

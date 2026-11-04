@@ -5,34 +5,36 @@ import net.likelion.bebc25.fixgo.auth.entity.Role;
 import net.likelion.bebc25.fixgo.auth.entity.Status;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-
 public class MemberDto {
     public record CreateRequest(
             String email,
             String password,
             String name,
             String phone,
+            String address,
             Role role,
             String profileImgUrl
     ) {
-        public Member toEntity(PasswordEncoder passwordEncoder, int count) {
-            String code = String.format("EMP_%s_%03d", LocalDate.now().format(DateTimeFormatter.ofPattern("yyMMdd")), count);
+        public Member toEntity(PasswordEncoder passwordEncoder) {
             String passwordHash = passwordEncoder.encode(password);
-
-            return new Member(code, email, passwordHash, name, phone, role, profileImgUrl);
+            return new Member(email, passwordHash, name, phone, address, role, profileImgUrl);
         }
     }
 
     public record MemberSearchRequest(
             String keyword,
-            Role role
+            Role role,
+            Status status
     ) {}
 
     public record StatusChangeRequest(
             String email,
             Status status
+    ) {}
+
+    public record RoleChangeRequest(
+            String email,
+            Role role
     ) {}
 
     public record PasswordUpdateRequest(
@@ -44,27 +46,48 @@ public class MemberDto {
             String email,
             String name,
             String phone,
+            String address,
             String profileImgUrl
     ) {}
 
-    public record Response(
+    public record BriefResponse(
             Long id,
-            String code,
+            String email,
+            String name,
+            Role role,
+            Status status
+    ) {
+        public static BriefResponse from(Member member) {
+            return new BriefResponse(
+                    member.getId(),
+                    member.getEmail(),
+                    member.getName(),
+                    member.getRole(),
+                    member.getStatus()
+            );
+        }
+    }
+
+    public record DetailResponse(
+            Long id,
             String email,
             String name,
             String phone,
+            String address,
             Role role,
-            String profileImgUrl
+            String profileImgUrl,
+            Status status
     ) {
-        public static Response from(Member member) {
-            return new Response(
+        public static DetailResponse from(Member member) {
+            return new DetailResponse(
                     member.getId(),
-                    member.getCode(),
                     member.getEmail(),
                     member.getName(),
                     member.getPhone(),
+                    member.getAddress(),
                     member.getRole(),
-                    member.getProfileImgUrl()
+                    member.getProfileImgUrl(),
+                    member.getStatus()
             );
         }
     }

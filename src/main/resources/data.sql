@@ -1,31 +1,31 @@
 -- 관리자 계정 초기 데이터
 -- email: admin001@fixgo.com / password: admin1234 (BCrypt)
-INSERT IGNORE INTO member (code,
-                           email,
-                           password_hash,
-                           name,
-                           phone,
-                           role,
-                           profile_img_url,
-                           status,
-                           deleted_at,
-                           created_at,
-                           updated_at,
-                           created_by,
-                           updated_by)
-VALUES ('admin001',
-        'admin001@fixgo.com',
+INSERT INTO member (email,
+                    password_hash,
+                    name,
+                    phone,
+                    role,
+                    address,
+                    profile_img_url,
+                    status,
+                    deleted_at,
+                    created_at,
+                    updated_at,
+                    created_by,
+                    updated_by)
+VALUES ('admin001@fixgo.com',
         '$2a$10$vFJ1GvhwL8vQFOSGsKTjMeH7cQUItVadnGDGRHF1Q8xGefzmSlzMS',
         '관리자',
         '010-XXXX-XXXX',
         'ROLE_ADMIN',
+        '서울특별시 OO구 OO동 ~',
         '',
         'ACTIVE',
         NULL,
         NOW(),
         NOW(),
-        'system',
-        'system');
+        0,
+        0);
 
 
 # 이메일 관련 더미데이터

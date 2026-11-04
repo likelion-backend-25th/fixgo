@@ -15,7 +15,7 @@ public class CustomerDto {
             String basicAddress,
             String detailAddress
     ) {
-        public Customer toEntity(String createdBy) {
+        public Customer toEntity(Long createdBy) {
             return new Customer(
                     name,
                     phone,
@@ -63,8 +63,8 @@ public class CustomerDto {
             String detailAddress,
             LocalDateTime createdAt,
             LocalDateTime updatedAt,
-            String createdBy,
-            String updatedBy
+            Long createdBy,
+            Long updatedBy
     ) {
         public static Response from(Customer customer) {
             return new Response(

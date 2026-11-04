@@ -38,13 +38,15 @@ public class Customer {
     private LocalDateTime updatedAt;
 
     @Column(nullable = false)
-    private String createdBy;
+    private Long createdBy;
 
     @Column(nullable = false)
-    private String updatedBy;
+    private Long updatedBy;
 
-    public Customer(String name, String phone, String email, String zipcode,
-                    String basicAddress, String detailAddress, String createdBy) {
+    public Customer(
+            String name, String phone, String email, String zipcode,
+            String basicAddress, String detailAddress, Long createdBy
+    ) {
         this.name = name;
         this.phone = phone;
         this.email = email;
@@ -57,9 +59,11 @@ public class Customer {
         this.updatedBy = createdBy;
     }
 
-    public void update(String name, String phone, String email,
-                       String zipcode, String basicAddress, String detailAddress,
-                       String updatedBy) {
+    public void update(
+            String name, String phone, String email,
+            String zipcode, String basicAddress, String detailAddress,
+            Long updatedBy
+    ) {
         this.name = name;
         this.phone = phone;
         this.email = email;
