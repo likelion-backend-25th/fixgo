@@ -42,4 +42,12 @@ public class TossPaymentsClient {
                 .body(TossDto.ConfirmResponse.class);
     }
 
+    public TossDto.CancelResponse cancel(String paymentKey, String cancelReason, TossDto.CancelRequest.RefundReceiveAccount refundReceiveAccount) {
+        return restClient.post()
+                .uri("/{paymentKey}/cancel", paymentKey)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new TossDto.CancelRequest(cancelReason, refundReceiveAccount))
+                .retrieve()
+                .body(TossDto.CancelResponse.class);
+    }
 }

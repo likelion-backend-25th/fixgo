@@ -90,4 +90,11 @@ public class AsReception extends BaseEntity {
         }
     }
 
+    /**
+     * A/S 접수 상태 변경
+     */
+    public void changeStatus(AsReceptionStatus status) {
+        this.status = status;
+        this.statusChangedAt = LocalDateTime.now();
+    }
 }
