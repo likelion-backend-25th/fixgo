@@ -32,4 +32,12 @@ public interface RepairRepository extends JpaRepository<Repair, Long> {
 
 
     List<Repair> findByTechnicianIdAndStatusNot(Long technicianId, RepairStatus status);
+    // A/S 접수번호로 수리 정보 조회
+    @Query("""
+            SELECT r
+            FROM Repair r
+            JOIN r.asReception a
+            WHERE a.receptionNumber = :receptionNumber
+            """)
+    Optional<Repair> findByReceptionNumber(@Param("receptionNumber") String receptionNumber);
 }

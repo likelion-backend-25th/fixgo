@@ -94,7 +94,7 @@ public class NotificationLog {
     // 이메일 발송 성공
     public void markSent() {
         this.status = NotificationStatus.SENT;
-        this.errorMessage = errorMessage;
+        this.errorMessage = null;
         this.sentAt = LocalDateTime.now();
     }
 

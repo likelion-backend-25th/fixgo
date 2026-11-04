@@ -27,10 +27,12 @@ public class NotificationTransactionService {
 
         if (request.asReceptionId() != null) {
             asReception = entityManager.find(AsReception.class, request.asReceptionId());
+
+            if (asReception == null) {
+                throw new IllegalArgumentException("존재하지 않는 A/S접수입니다. id: " + request.asReceptionId());
+            }
         }
-//        if (asRequest == null) {
-//            throw new IllegalArgumentException("존재하지 않는 A/S접수입니다. id: " + request.asRequestId());
-//        }
+
 
         NotificationLog log = NotificationLog.create(
                 asReception,
@@ -41,10 +43,7 @@ public class NotificationTransactionService {
                 request.messageTitle(),
                 request.message());
 
-
-        NotificationLog savedLog = notificationLogRepository.save(log);
-
-        return savedLog.getId();
+        return notificationLogRepository.save(log).getId();
     }
 
     // 독립적으로 새로운 트랜잭션에서 실행하게 만들기 위함

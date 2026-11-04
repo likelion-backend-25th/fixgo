@@ -26,6 +26,8 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class RepairWorkServiceTest {
 
+    private static final String TEST_EMAIL = "test@example.com";
+
     @Mock
     private RepairWorkRepository repairWorkRepository;
 
@@ -59,20 +61,19 @@ class RepairWorkServiceTest {
         requestDto.setWorkName("메인보드 점검");
 
         when(repairRepository.findById(1L)).thenReturn(Optional.of(repair));
-
         when(repairWorkMapper.toEntity(requestDto, repair)).thenReturn(repairWork);
-
         when(repairWorkRepository.save(repairWork)).thenReturn(repairWork);
-
         when(repairWorkMapper.toResponseDto(repairWork)).thenReturn(responseDto);
 
         // when
-        RepairWorkResponse result = repairWorkService.createRepairWork(requestDto);
+        RepairWorkResponse result = repairWorkService.createRepairWork(requestDto, TEST_EMAIL);
 
         // then
         assertThat(result).isNotNull();
 
         verify(repairRepository).findById(1L);
+        verify(repairWorkMapper).toEntity(requestDto, repair);
+        verify(repairWork).setCreateAuditInfo(TEST_EMAIL);
         verify(repairWorkRepository).save(repairWork);
         verify(repairWorkMapper).toResponseDto(repairWork);
     }
@@ -84,7 +85,6 @@ class RepairWorkServiceTest {
         List<RepairWork> repairWorks = List.of(repairWork);
 
         when(repairWorkRepository.findAll()).thenReturn(repairWorks);
-
         when(repairWorkMapper.toResponseDto(repairWork)).thenReturn(responseDto);
 
         // when
@@ -101,7 +101,6 @@ class RepairWorkServiceTest {
     void getRepairWork() {
         // given
         when(repairWorkRepository.findById(1L)).thenReturn(Optional.of(repairWork));
-
         when(repairWorkMapper.toResponseDto(repairWork)).thenReturn(responseDto);
 
         // when
@@ -118,7 +117,6 @@ class RepairWorkServiceTest {
     void getRepairWorksByRepairId() {
         // given
         when(repairWorkRepository.findByRepairId(1L)).thenReturn(List.of(repairWork));
-
         when(repairWorkMapper.toResponseDto(repairWork)).thenReturn(responseDto);
 
         // when
@@ -135,7 +133,6 @@ class RepairWorkServiceTest {
     void searchRepairWorks() {
         // given
         when(repairWorkRepository.findByWorkName("점검")).thenReturn(List.of(repairWork));
-
         when(repairWorkMapper.toResponseDto(repairWork)).thenReturn(responseDto);
 
         // when
@@ -156,18 +153,17 @@ class RepairWorkServiceTest {
         updateDto.setWorkName("메인보드 교체");
 
         when(repairWorkRepository.findById(1L)).thenReturn(Optional.of(repairWork));
-
         when(repairWorkMapper.toResponseDto(repairWork)).thenReturn(responseDto);
 
         // when
-        RepairWorkResponse result = repairWorkService.updateRepairWork(1L, updateDto);
+        RepairWorkResponse result = repairWorkService.updateRepairWork(1L, updateDto, TEST_EMAIL);
 
         // then
         assertThat(result).isNotNull();
 
         verify(repairWorkRepository).findById(1L);
         verify(repairWorkMapper).updateEntity(repairWork, updateDto);
-        verify(repairWork).updateAuditInfo("test");
+        verify(repairWork).updateAuditInfo(TEST_EMAIL);
     }
 
     @Test
@@ -204,7 +200,7 @@ class RepairWorkServiceTest {
         when(repairRepository.findById(1L)).thenReturn(Optional.empty());
 
         // when & then
-        assertThatThrownBy(() -> repairWorkService.createRepairWork(requestDto)).isInstanceOf(IllegalArgumentException.class).hasMessage("해당 수리 내역을 찾을 수 없습니다.");
+        assertThatThrownBy(() -> repairWorkService.createRepairWork(requestDto, TEST_EMAIL)).isInstanceOf(IllegalArgumentException.class).hasMessage("해당 수리 내역을 찾을 수 없습니다.");
 
         verify(repairWorkRepository, never()).save(any());
     }

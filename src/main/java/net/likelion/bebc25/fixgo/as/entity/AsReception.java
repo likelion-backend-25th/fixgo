@@ -48,7 +48,7 @@ public class AsReception extends BaseEntity {
     private String symptomDetail;
 
     @Column(length = 1000)
-    private String Memo;
+    private String memo;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -64,10 +64,10 @@ public class AsReception extends BaseEntity {
     @Column
     private LocalDateTime closedAt;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    private AsAttachment attachment;
+    @Column
+    private String fileUrl;
 
-    public AsReception(String receptionNumber, Customer customer, Product product, Member receptionist, Member technician, String symptom, String symptomDetail, String requestMemo, ReturnMethod returnMethod, AsAttachment attachment) {
+    public AsReception(String receptionNumber, Customer customer, Product product, Member receptionist, Member technician, String symptom, String symptomDetail, String memo, ReturnMethod returnMethod, String fileUrl) {
         this.receptionNumber = receptionNumber;
         this.customer = customer;
         this.product = product;
@@ -75,8 +75,8 @@ public class AsReception extends BaseEntity {
         this.technician = technician;
         this.symptom = symptom;
         this.symptomDetail = symptomDetail;
-        this.Memo = requestMemo;
-        this.attachment = attachment;
+        this.memo = memo;
+        this.fileUrl = fileUrl;
 
         if (returnMethod != null) {
             this.returnMethod = returnMethod;

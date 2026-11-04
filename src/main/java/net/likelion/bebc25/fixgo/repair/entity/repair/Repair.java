@@ -33,8 +33,9 @@ public class Repair {
     @Column(name = "work_note")
     private String workNote;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "repair_decision")
-    private String repairDecision;
+    private RepairDecision repairDecision;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -42,12 +43,15 @@ public class Repair {
 
     private String reason;
 
+    // 고정 공임비
     @Column(name = "labor_rate")
     private int laborRate;
 
+    // 점검비
     @Column(name = "inspection_cost")
     private int inspectionCost;
 
+    // 최종 청구 금액
     @Column(name = "final_amount")
     private int finalAmount;
 
@@ -93,7 +97,7 @@ public class Repair {
 
 
     // 수리 정보 수정
-    public void updateRepairInfo(AsReception asReception, Member technician, String diagnosis, String workNote, String repairDecision, WarrantyResult warrantyResult, String reason, int laborRate, int inspectionCost, int finalAmount, String reasonForRejection) {
+    public void updateRepairInfo(AsReception asReception, Member technician, String diagnosis, String workNote, RepairDecision repairDecision, WarrantyResult warrantyResult, String reason, int laborRate, int inspectionCost, int finalAmount, String reasonForRejection) {
         this.asReception = asReception;
         this.technician = technician;
         this.diagnosis = diagnosis;
@@ -120,5 +124,20 @@ public class Repair {
     public void updateAuditInfo(String updatedBy) {
         this.updatedAt = LocalDateTime.now();
         this.updatedBy = updatedBy;
+    }
+
+    public void setCreateAuditInfo(String createdBy) {
+        LocalDateTime now = LocalDateTime.now();
+
+        this.createdAt = now;
+        this.updatedAt = now;
+        this.createdBy = createdBy;
+        this.updatedBy = createdBy;
+    }
+
+    public void updateRepairCost(int laborRate, int inspectionCost, int finalAmount) {
+        this.laborRate = laborRate;
+        this.inspectionCost = inspectionCost;
+        this.finalAmount = finalAmount;
     }
 }

@@ -29,4 +29,13 @@ public class PortalController {
     public ResponseEntity<PaymentDto.StartPaymentResponse> startPayment(@PathVariable String token) {
         return ResponseEntity.ok(portalService.startPayment(token));
     }
+
+    /**
+     * 발급된 가상계좌를 취소합니다.
+     */
+    @PostMapping("/payments/cancel")
+    public ResponseEntity<Void> cancelPayment(@PathVariable String token) {
+        portalService.cancelVirtualAccount(token);
+        return ResponseEntity.noContent().build();
+    }
 }

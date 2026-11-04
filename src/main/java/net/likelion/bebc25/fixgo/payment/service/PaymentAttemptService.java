@@ -1,6 +1,7 @@
 package net.likelion.bebc25.fixgo.payment.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
 import net.likelion.bebc25.fixgo.payment.entity.*;
 import net.likelion.bebc25.fixgo.payment.exception.PaymentErrorCode;
@@ -12,9 +13,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentAttemptService {
@@ -26,9 +27,9 @@ public class PaymentAttemptService {
      * 결제를 시작한다. READY인 결제 시도가 이미 있으면 재사용한다.
      */
     @Transactional
-    public PaymentDto.StartPaymentResponse startPayment(Long asRequestId) {
+    public PaymentDto.StartPaymentResponse startPayment(Long asReceptionId) {
         // 같은 청구에 대한 동시 요청을 방지한다. 잠금이 없으면 READY 없음을 확인한 후 시도한다.
-        PaymentBill paymentBill = paymentBillRepository.findByAsRequestIdForUpdate(asRequestId)
+        PaymentBill paymentBill = paymentBillRepository.findByAsReceptionIdForUpdate(asReceptionId)
                 .orElseThrow(() -> new PaymentException(PaymentErrorCode.BILL_NOT_FOUND, "청구서가 존재하지 않습니다."));
         Long billId = paymentBill.getId();
 
@@ -94,7 +95,7 @@ public class PaymentAttemptService {
      * 같은 bill을 바꾸는 다른 경로(startPayment, prepareConfirm, 현금 결제)가 모두 거절되기 때문이다.
      */
     @Transactional
-    public void completeConfirm(String orderId, String paymentKey, OffsetDateTime approvedAt) {
+    public void completeConfirm(String orderId, String paymentKey, LocalDateTime approvedAt) {
         PaymentAttempt attempt = paymentAttemptRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new IllegalStateException("Payment Attempt Not Found"));
 
@@ -130,5 +131,21 @@ public class PaymentAttemptService {
                 .orElseThrow(() -> new IllegalStateException("Payment Attempt Not Found"));
 
         attempt.markFailed(failureCode, failureMessage);
+    }
+
+    /**
+     * 가상계좌 입금 전 취소
+     * 취소 성공 시 attempt를 FAILED로 바꾼다.
+     */
+    @Transactional
+    public void cancelVirtualAccount(String orderId) {
+        PaymentAttempt attempt = paymentAttemptRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new IllegalStateException("Payment Attempt Not Found"));
+        switch (attempt.getStatus()) {
+            case WAITING_FOR_DEPOSIT -> attempt.markFailed("VIRTUAL_ACCOUNT_CANCELED", "가상계좌 입금전 취소");
+            case FAILED -> log.info("이미 가상계좌가 취소되어 있습니다. {}", attempt.getOrderId());
+            case DONE -> log.error("취소 처리된 결제에 입금이 들어옴 {}", attempt.getOrderId());
+            default -> log.warn("취소할 수 없는 상태 {}", attempt.getOrderId());
+        }
     }
 }

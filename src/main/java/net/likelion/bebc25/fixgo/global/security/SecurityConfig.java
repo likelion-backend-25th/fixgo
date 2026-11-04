@@ -48,11 +48,11 @@ public class SecurityConfig {
                         // 고객 결제는 로그인 없이 링크로 진입한다
                         .requestMatchers("/api/v1/payments/**").permitAll()
 
-                        // TODO: 로컬 결제 테스트용 페이지. 실제 프론트 연결 후 제거
-                        .requestMatchers("/payment.html", "/success.html", "/fail.html").permitAll()
+                        // 고객 페이지
+                        .requestMatchers("/api/v1/portal/**").permitAll()
 
-                        // 이메일 전송 테스트 (제거예정)
-                        .requestMatchers("/api/v1/notifications/**").permitAll()
+                        // 이메일 전송, 프리셋 테스트 (제거예정)
+                        .requestMatchers("/api/v1/notifications/**", "/api/v1/email-presets", "/api/v1/email-presets/**").permitAll()
 
                         // Swagger UI 및 API 문서
                         .requestMatchers(

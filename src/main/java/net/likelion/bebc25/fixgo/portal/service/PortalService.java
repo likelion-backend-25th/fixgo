@@ -3,6 +3,7 @@ package net.likelion.bebc25.fixgo.portal.service;
 import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
 import net.likelion.bebc25.fixgo.payment.service.PaymentAttemptService;
+import net.likelion.bebc25.fixgo.payment.service.PaymentCancelService;
 import net.likelion.bebc25.fixgo.payment.service.PaymentQueryService;
 import net.likelion.bebc25.fixgo.portal.dto.PortalResponse;
 import org.springframework.stereotype.Service;
@@ -17,14 +18,15 @@ public class PortalService {
     private final PaymentQueryService paymentQueryService;
     private final CustomerPortalLinkService customerPortalLinkService;
     private final PaymentAttemptService paymentAttemptService;
+    private final PaymentCancelService paymentCancelService;
 
     /**
      * 토큰이 없거나 만료되면 PortalException이 발생한다.
      */
     public PortalResponse getPortal(String token) {
-        Long asRequestId = customerPortalLinkService.resolveAsRequestId(token);
+        Long asReceptionId = customerPortalLinkService.resolveAsReceptionId(token);
 
-        PaymentDto.PaymentSummaryResponse paymentSummary = paymentQueryService.getSummary(asRequestId);
+        PaymentDto.PaymentSummaryResponse paymentSummary = paymentQueryService.getSummary(asReceptionId);
 
         return new PortalResponse(paymentSummary);
     }
@@ -33,7 +35,15 @@ public class PortalService {
      * 토큰으로 접수번호를 가져온 후 결제시작에 넘긴다.
      */
     public PaymentDto.StartPaymentResponse startPayment(String token) {
-        Long asRequestId = customerPortalLinkService.resolveAsRequestId(token);
-        return paymentAttemptService.startPayment(asRequestId);
+        Long asReceptionId = customerPortalLinkService.resolveAsReceptionId(token);
+        return paymentAttemptService.startPayment(asReceptionId);
+    }
+
+    /**
+     * 토큰으로 접수번호를 가져온 후 가상계좌 입금 전 취소로 넘긴다.
+     */
+    public void cancelVirtualAccount(String token) {
+        Long asReceptionId = customerPortalLinkService.resolveAsReceptionId(token);
+        paymentCancelService.cancelVirtualAccountBeforeDeposit(asReceptionId);
     }
 }

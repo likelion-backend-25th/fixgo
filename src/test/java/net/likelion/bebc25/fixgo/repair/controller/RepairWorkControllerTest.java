@@ -1,5 +1,8 @@
 package net.likelion.bebc25.fixgo.repair.controller;
 
+import net.likelion.bebc25.fixgo.auth.entity.Member;
+import net.likelion.bebc25.fixgo.auth.entity.Role;
+import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
 import net.likelion.bebc25.fixgo.repair.dto.repairWork.RepairWorkRequest;
 import net.likelion.bebc25.fixgo.repair.dto.repairWork.RepairWorkResponse;
 import net.likelion.bebc25.fixgo.repair.dto.repairWork.RepairWorkUpdate;
@@ -18,6 +21,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -31,10 +35,17 @@ class RepairWorkControllerTest {
     @MockitoBean
     private RepairWorkService repairWorkService;
 
+    private CustomUserDetails createUserDetails() {
+        Member member = new Member("TEST001", "test@example.com", "password", "테스트 직원", Role.ROLE_ADMIN, "profile.png");
+
+        return new CustomUserDetails(member);
+    }
+
     // 수리 작업 내역 등록 테스트
     @Test
-    @WithMockUser
     void createRepairWorkTest() throws Exception {
+
+        CustomUserDetails userDetails = createUserDetails();
 
         RepairWorkResponse response = new RepairWorkResponse();
         response.setId(1L);
@@ -42,17 +53,17 @@ class RepairWorkControllerTest {
         response.setRepairPresetName("기본 점검");
         response.setWorkName("메인보드 점검");
 
-        when(repairWorkService.createRepairWork(any(RepairWorkRequest.class))).thenReturn(response);
+        when(repairWorkService.createRepairWork(any(RepairWorkRequest.class), eq("test@example.com"))).thenReturn(response);
 
-        mockMvc.perform(post("/api/repair-works").with(csrf()).contentType(MediaType.APPLICATION_JSON).content("""
-                                                                                                                       {
-                                                                                                                           "repairId": 1,
-                                                                                                                           "repairPresetName": "기본 점검",
-                                                                                                                           "workName": "메인보드 점검"
-                                                                                                                       }
-                                                                                                                       """)).andExpect(status().isCreated()).andExpect(jsonPath("$.id").value(1)).andExpect(jsonPath("$.repairId").value(1)).andExpect(jsonPath("$.repairPresetName").value("기본 점검")).andExpect(jsonPath("$.workName").value("메인보드 점검"));
+        mockMvc.perform(post("/api/repair-works").with(csrf()).with(user(userDetails)).contentType(MediaType.APPLICATION_JSON).content("""
+                                                                                                                                               {
+                                                                                                                                                   "repairId": 1,
+                                                                                                                                                   "repairPresetName": "기본 점검",
+                                                                                                                                                   "workName": "메인보드 점검"
+                                                                                                                                               }
+                                                                                                                                               """)).andExpect(status().isCreated()).andExpect(jsonPath("$.id").value(1)).andExpect(jsonPath("$.repairId").value(1)).andExpect(jsonPath("$.repairPresetName").value("기본 점검")).andExpect(jsonPath("$.workName").value("메인보드 점검"));
 
-        verify(repairWorkService, times(1)).createRepairWork(any(RepairWorkRequest.class));
+        verify(repairWorkService, times(1)).createRepairWork(any(RepairWorkRequest.class), eq("test@example.com"));
     }
 
     // 전체 수리 작업 내역 조회 테스트
@@ -109,23 +120,24 @@ class RepairWorkControllerTest {
 
     // 수리 작업 내역 수정 테스트
     @Test
-    @WithMockUser
     void updateRepairWorkTest() throws Exception {
+
+        CustomUserDetails userDetails = createUserDetails();
 
         RepairWorkResponse response = new RepairWorkResponse();
         response.setRepairPresetName("부품 교체");
         response.setWorkName("메인보드 교체");
 
-        when(repairWorkService.updateRepairWork(eq(1L), any(RepairWorkUpdate.class))).thenReturn(response);
+        when(repairWorkService.updateRepairWork(eq(1L), any(RepairWorkUpdate.class), eq("test@example.com"))).thenReturn(response);
 
-        mockMvc.perform(put("/api/repair-works/1").with(csrf()).contentType(MediaType.APPLICATION_JSON).content("""
-                                                                                                                        {
-                                                                                                                            "repairPresetName": "부품 교체",
-                                                                                                                            "workName": "메인보드 교체"
-                                                                                                                        }
-                                                                                                                        """)).andExpect(status().isOk()).andExpect(jsonPath("$.repairPresetName").value("부품 교체")).andExpect(jsonPath("$.workName").value("메인보드 교체"));
+        mockMvc.perform(put("/api/repair-works/1").with(csrf()).with(user(userDetails)).contentType(MediaType.APPLICATION_JSON).content("""
+                                                                                                                                                {
+                                                                                                                                                    "repairPresetName": "부품 교체",
+                                                                                                                                                    "workName": "메인보드 교체"
+                                                                                                                                                }
+                                                                                                                                                """)).andExpect(status().isOk()).andExpect(jsonPath("$.repairPresetName").value("부품 교체")).andExpect(jsonPath("$.workName").value("메인보드 교체"));
 
-        verify(repairWorkService, times(1)).updateRepairWork(eq(1L), any(RepairWorkUpdate.class));
+        verify(repairWorkService, times(1)).updateRepairWork(eq(1L), any(RepairWorkUpdate.class), eq("test@example.com"));
     }
 
     // 수리 작업 내역 삭제 테스트
