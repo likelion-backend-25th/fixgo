@@ -38,6 +38,7 @@ public class RepairCostService {
     private final RepairPartUsageRepository repairPartUsageRepository;
     private final LaborRateRepository laborRateRepository;
     private final ProductModelRepository productModelRepository;
+    private final RepairStatusService repairStatusService;
 
     // 수리비 계산 및 저장
     @Transactional
@@ -140,9 +141,8 @@ public class RepairCostService {
         // 수리비 확정
         repair.confirmRepairCost(userDetails.getUsername());
 
-        // Repair 상태 변경
-        repair.changeStatus(RepairStatus.REQUESTED, userDetails.getUsername());
-
+        // 공통 수리 상태 변경
+        repairStatusService.changeStatus(repair, RepairStatus.REQUESTED, userDetails.getUsername());
         // A/S 접수 상태 변경
         AsReception asReception = repair.getAsReception();
         asReception.changeStatus(AsReceptionStatus.AWAITING_QUOTE_APPROVAL);
