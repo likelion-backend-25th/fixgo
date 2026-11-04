@@ -140,4 +140,15 @@ public class Repair {
         this.inspectionCost = inspectionCost;
         this.finalAmount = finalAmount;
     }
+
+    // 수리비 확정
+    public void confirmRepairCost(String updatedBy) {
+        if (this.confirmedAt != null) {
+            throw new IllegalArgumentException("이미 수리비가 확정되었습니다.");
+        }
+
+        this.confirmedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+        this.updatedBy = updatedBy;
+    }
 }

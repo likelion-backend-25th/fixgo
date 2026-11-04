@@ -4,6 +4,10 @@ import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.admin.entity.LaborRate;
 import net.likelion.bebc25.fixgo.admin.entity.RateType;
 import net.likelion.bebc25.fixgo.admin.repository.LaborRateRepository;
+import net.likelion.bebc25.fixgo.as.entity.AsReception;
+import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
+import net.likelion.bebc25.fixgo.auth.entity.Role;
+import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
 import net.likelion.bebc25.fixgo.product.entity.Category;
 import net.likelion.bebc25.fixgo.product.entity.Product;
 import net.likelion.bebc25.fixgo.product.entity.ProductModel;
@@ -13,6 +17,7 @@ import net.likelion.bebc25.fixgo.repair.entity.RepairPartUsage;
 import net.likelion.bebc25.fixgo.repair.entity.RepairWork;
 import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairDecision;
+import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
 import net.likelion.bebc25.fixgo.repair.repository.RepairPartUsageRepository;
 import net.likelion.bebc25.fixgo.repair.repository.RepairRepository;
 import net.likelion.bebc25.fixgo.repair.repository.RepairWorkRepository;
@@ -101,5 +106,45 @@ public class RepairCostService {
         LaborRate laborRate = laborRateRepository.findLatestRate(category, rateType, LocalDate.now(), PageRequest.of(0, 1)).stream().findFirst().orElseThrow(() -> new IllegalArgumentException("해당 제품군의 요금 정보를 찾을 수 없습니다."));
 
         return laborRate.getCost();
+    }
+
+    /**
+     * 수리비 확정
+     */
+    @Transactional
+    public void confirmRepairCost(Long repairId, CustomUserDetails userDetails) {
+
+        // 로그인 사용자 권한 확인
+        if (userDetails.getMember().getRole() != Role.ROLE_TECHNICIAN) {
+            throw new IllegalArgumentException("기사 권한이 필요합니다.");
+        }
+
+        // 수리 정보 조회
+        Repair repair = repairRepository.findById(repairId).orElseThrow(() -> new IllegalArgumentException("수리 정보를 찾을 수 없습니다."));
+
+        // 담당 기사 확인
+        if (!repair.getTechnician().getId().equals(userDetails.getId())) {
+            throw new IllegalArgumentException("담당 기사만 수리비를 확정할 수 있습니다.");
+        }
+
+        // 수리 상태 확인
+        if (repair.getStatus() != RepairStatus.DIAGNOSING) {
+            throw new IllegalArgumentException("점검 중인 건만 수리비를 확정할 수 있습니다.");
+        }
+
+        // 중복 확정 확인
+        if (repair.getConfirmedAt() != null) {
+            throw new IllegalArgumentException("이미 수리비가 확정되었습니다.");
+        }
+
+        // 수리비 확정
+        repair.confirmRepairCost(userDetails.getUsername());
+
+        // Repair 상태 변경
+        repair.changeStatus(RepairStatus.REQUESTED, userDetails.getUsername());
+
+        // A/S 접수 상태 변경
+        AsReception asReception = repair.getAsReception();
+        asReception.changeStatus(AsReceptionStatus.AWAITING_QUOTE_APPROVAL);
     }
 }
