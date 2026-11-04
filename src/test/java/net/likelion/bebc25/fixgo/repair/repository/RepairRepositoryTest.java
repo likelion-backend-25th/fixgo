@@ -55,7 +55,15 @@ class RepairRepositoryTest {
         LocalDateTime now = LocalDateTime.now();
 
         // 담당 기사 생성
-        technician = new Member("TEST-TECH-001", "technician@test.com", "testPassword", "테스트 기사", "010-1234-5678", Role.ROLE_TECHNICIAN, "default.png");
+        technician = new Member(
+                "technician@test.com",
+                "testPassword",
+                "테스트 기사",
+                "010-1234-5678",
+                "서울시 강남구",
+                Role.ROLE_TECHNICIAN,
+                "default.png"
+        );
 
         technician = memberRepository.save(technician);
 

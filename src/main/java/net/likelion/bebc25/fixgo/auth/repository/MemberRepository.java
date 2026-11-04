@@ -3,6 +3,8 @@ package net.likelion.bebc25.fixgo.auth.repository;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.entity.Role;
 import net.likelion.bebc25.fixgo.auth.entity.Status;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -29,14 +31,23 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
                     OR m.email LIKE CONCAT('%', :keyword, '%')
                 )
                 AND (:role IS NULL OR m.role = :role)
+                AND m.status <> :deleted
+                AND (:status IS NULL OR m.status = :status)
                 ORDER BY m.createdAt DESC
             """)
-    List<Member> searchMembers(
+    Page<Member> searchMembers(
             @Param("keyword") String keyword,
-            @Param("role") Role role
+            @Param("role") Role role,
+            @Param("status") Status status,
+            @Param("deleted") Status deleted,
+            Pageable pageable
     );
+
+    Page<Member> searchMembersByStatus(Status status, Pageable pageable);
 
     Optional<Member> findByEmail(String email);
 
     Optional<Member> findByEmailAndStatusNot(String email, Status status);
+
+    Optional<Member> findByIdAndStatusNot(Long id, Status status);
 }

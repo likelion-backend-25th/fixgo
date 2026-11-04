@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: "{{baseUrl}}/refresh"
+  url: "{{baseUrl}}/auth/refresh"
   body:
     type: json
     data: |-

@@ -37,8 +37,24 @@ public class AsReceptionTest {
         // 1. 접수 등록 사전 작업
         this.customer = new Customer("한소희", "010-5555-1212", "user@gamil.com", "12345", "00아파트 12동", "서울 강남구 양재동", "111");
         this.product = new Product(1L, "SN-1004", LocalDateTime.now(), "admin");
-        this.member = new Member("4008", "user01@abc.com", "@#$@%", "최미소", Role.ROLE_RECEPTIONIST, "asdfas");
-        this.technician = new Member("4009", "tech01@abc.com", "@#$@%", "김기사", Role.ROLE_TECHNICIAN, "technician01");
+        this.member = new Member(
+                "user01@abc.com",
+                "@#$@%",
+                "최미소",
+                "010-4008-4008",
+                "서울시 강남구",
+                Role.ROLE_RECEPTIONIST,
+                "asdfas"
+        );
+        this.technician = new Member(
+                "tech01@abc.com",
+                "@#$@%",
+                "김기사",
+                "010-4009-4009",
+                "서울시 서초구",
+                Role.ROLE_TECHNICIAN,
+                "technician01"
+        );
 
         em.persist(this.customer);
         em.persist(this.product);

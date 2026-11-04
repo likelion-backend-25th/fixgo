@@ -29,4 +29,7 @@ public interface RepairRepository extends JpaRepository<Repair, Long> {
             AND r.status = :status
             """)
     List<Repair> findByTechnicianIDAndStatus(@Param("technicianId") Long technicianId, @Param("status") RepairStatus status);
+
+
+    List<Repair> findByTechnicianIdAndStatusNot(Long technicianId, RepairStatus status);
 }
