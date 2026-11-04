@@ -54,4 +54,15 @@ public class ProductModel {
         this.createdBy = createdBy;
         this.updatedBy = createdBy;
     }
+
+    public void update(String name, String modelName, Category category,
+                       Integer warrantyMonths, boolean isActive, String updatedBy) {
+        this.name = name;
+        this.modelName = modelName;
+        this.category = category;
+        this.warrantyMonths = warrantyMonths;
+        this.isActive = isActive;
+        this.updatedAt = LocalDateTime.now();
+        this.updatedBy = updatedBy;
+    }
 }
