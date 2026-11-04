@@ -1,6 +1,7 @@
 package net.likelion.bebc25.fixgo.payment.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
 import net.likelion.bebc25.fixgo.payment.entity.*;
 import net.likelion.bebc25.fixgo.payment.exception.PaymentErrorCode;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentAttemptService {
@@ -129,5 +131,21 @@ public class PaymentAttemptService {
                 .orElseThrow(() -> new IllegalStateException("Payment Attempt Not Found"));
 
         attempt.markFailed(failureCode, failureMessage);
+    }
+
+    /**
+     * 가상계좌 입금 전 취소
+     * 취소 성공 시 attempt를 FAILED로 바꾼다.
+     */
+    @Transactional
+    public void cancelVirtualAccount(String orderId) {
+        PaymentAttempt attempt = paymentAttemptRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new IllegalStateException("Payment Attempt Not Found"));
+        switch (attempt.getStatus()) {
+            case WAITING_FOR_DEPOSIT -> attempt.markFailed("VIRTUAL_ACCOUNT_CANCELED", "가상계좌 입금전 취소");
+            case FAILED -> log.info("이미 가상계좌가 취소되어 있습니다. {}", attempt.getOrderId());
+            case DONE -> log.error("취소 처리된 결제에 입금이 들어옴 {}", attempt.getOrderId());
+            default -> log.warn("취소할 수 없는 상태 {}", attempt.getOrderId());
+        }
     }
 }
