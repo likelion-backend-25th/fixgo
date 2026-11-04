@@ -70,7 +70,7 @@ class RepairSymptomPresetRepositoryTest {
         technician = memberRepository.save(technician);
 
         // 테스트용 고객 생성
-        Customer customer = new Customer("테스트 고객", "010-1111-2222", "customer@test.com", "12345", "대구광역시", "중구", "tester");
+        Customer customer = new Customer("테스트 고객", "010-1111-2222", "customer@test.com", "12345", "대구광역시", "중구", 1L);
 
         customer = customerRepository.save(customer);
 

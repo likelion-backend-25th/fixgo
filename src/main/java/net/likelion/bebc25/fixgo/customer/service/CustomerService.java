@@ -35,7 +35,7 @@ public class CustomerService {
 
     // 고객 등록
     @Transactional
-    public CustomerDto.Response create(CustomerDto.CreateRequest request, String createdBy) {
+    public CustomerDto.Response create(CustomerDto.CreateRequest request, Long createdBy) {
         if (customerRepository.existsByPhone(request.phone())) {
             throw new IllegalArgumentException("이미 등록된 연락처입니다.");
         }
@@ -71,7 +71,7 @@ public class CustomerService {
 
     // 고객 정보 수정
     @Transactional
-    public CustomerDto.Response update(Long id, CustomerDto.UpdateRequest request, String updatedBy) {
+    public CustomerDto.Response update(Long id, CustomerDto.UpdateRequest request, Long updatedBy) {
         Customer customer = findCustomer(id);
         customer.update(
                 request.name(), request.phone(), request.email(),

@@ -74,7 +74,7 @@ class MemberServiceTest {
 
     private void saveActiveRepair(Member technician) {
         Customer customer = customerRepository.save(
-                new Customer("테스트 고객", "010-1111-2222", "customer@test.com", "12345", "서울시", "강남구", "tester")
+                new Customer("테스트 고객", "010-1111-2222", "customer@test.com", "12345", "서울시", "강남구", 1L)
         );
         Product product = productRepository.save(
                 new Product(1L, "TEST-SERIAL-001", LocalDateTime.now(), "tester")

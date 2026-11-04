@@ -42,7 +42,7 @@ public class CustomerController {
             @RequestBody CustomerDto.CreateRequest request,
             @AuthenticationPrincipal CustomUserDetails user
     ) {
-        String createdBy = user.getMember().getCode();
+        Long createdBy = user.getMember().getId();
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(customerService.create(request, createdBy));
@@ -67,7 +67,7 @@ public class CustomerController {
             @RequestBody CustomerDto.UpdateRequest request,
             @AuthenticationPrincipal CustomUserDetails user
     ) {
-        String updatedBy = user.getMember().getCode();
+        Long updatedBy = user.getMember().getId();
         return ResponseEntity.ok(customerService.update(id, request, updatedBy));
     }
 

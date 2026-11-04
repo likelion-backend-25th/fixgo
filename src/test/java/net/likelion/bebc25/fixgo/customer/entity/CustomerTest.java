@@ -13,7 +13,7 @@ class CustomerTest {
         // Customer(name, phone, email, zipcode, basicAddress, detailAddress, createdAt, updatedAt, createdBy, updatedBy)
         Customer customer = new Customer(
                 "홍길동", "010-1234-5678", "hong@gmail.com",
-                "12345", "OO시 OO구 OO대로 123", "OOO동 OOO호", "admin");
+                "12345", "OO시 OO구 OO대로 123", "OOO동 OOO호", 1L);
 
         assertThat(customer.getName()).isEqualTo("홍길동");
         assertThat(customer.getPhone()).isEqualTo("010-1234-5678");
@@ -23,8 +23,8 @@ class CustomerTest {
         assertThat(customer.getDetailAddress()).isEqualTo("OOO동 OOO호");
         assertThat(customer.getCreatedAt()).isNotNull();
         assertThat(customer.getUpdatedAt()).isEqualTo(customer.getCreatedAt());
-        assertThat(customer.getCreatedBy()).isEqualTo("admin");
-        assertThat(customer.getUpdatedBy()).isEqualTo("admin");
+        assertThat(customer.getCreatedBy()).isEqualTo(1L);
+        assertThat(customer.getUpdatedBy()).isEqualTo(1L);
     }
 
     @Test
@@ -32,7 +32,7 @@ class CustomerTest {
     void create_withoutAddress() {
         Customer customer = new Customer(
                 "홍길동", "010-1234-5678", "hong@gmail.com",
-                null, null, null, "admin");
+                null, null, null, 1L);
 
         assertThat(customer.getZipcode()).isNull();
         assertThat(customer.getBasicAddress()).isNull();

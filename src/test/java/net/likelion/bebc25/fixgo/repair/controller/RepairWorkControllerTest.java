@@ -36,7 +36,15 @@ class RepairWorkControllerTest {
     private RepairWorkService repairWorkService;
 
     private CustomUserDetails createUserDetails() {
-        Member member = new Member("TEST001", "test@example.com", "password", "테스트 직원", Role.ROLE_ADMIN, "profile.png");
+        Member member = new Member(
+                "test@example.com",
+                "password",
+                "테스트 직원",
+                "010-1234-5678",
+                "서울시 강남구",
+                Role.ROLE_ADMIN,
+                "profile.png"
+        );
 
         return new CustomUserDetails(member);
     }
