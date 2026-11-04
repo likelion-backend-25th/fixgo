@@ -58,15 +58,15 @@ class RepairControllerTest {
 
         when(repairService.createRepair(any(RepairRequest.class), eq("test@example.com"))).thenReturn(Map.of("message", "수리 정보가 등록되었습니다."));
 
-        mockMvc.perform(post("/api/as/repairs").with(csrf()).with(user(userDetails)).contentType(MediaType.APPLICATION_JSON).content("""
-                                                                                                                                             {
-                                                                                                                                                 "asRequestId": 10,
-                                                                                                                                                 "technicianId": 20,
-                                                                                                                                                 "diagnosis": "메인보드 점검",
-                                                                                                                                                 "warrantyResult": "FREE",
-                                                                                                                                                 "status": "REQUESTED"
-                                                                                                                                             }
-                                                                                                                                             """)).andExpect(status().isCreated()).andExpect(jsonPath("$.message").value("수리 정보가 등록되었습니다."));
+        mockMvc.perform(post("/api/v1/as/repairs").with(csrf()).with(user(userDetails)).contentType(MediaType.APPLICATION_JSON).content("""
+                                                                                                                                                {
+                                                                                                                                                    "asRequestId": 10,
+                                                                                                                                                    "technicianId": 20,
+                                                                                                                                                    "diagnosis": "메인보드 점검",
+                                                                                                                                                    "warrantyResult": "FREE",
+                                                                                                                                                    "status": "REQUESTED"
+                                                                                                                                                }
+                                                                                                                                                """)).andExpect(status().isCreated()).andExpect(jsonPath("$.message").value("수리 정보가 등록되었습니다."));
 
         verify(repairService, times(1)).createRepair(any(RepairRequest.class), eq("test@example.com"));
     }
@@ -78,7 +78,7 @@ class RepairControllerTest {
 
         when(repairService.getAllRepairs()).thenReturn(List.of(new RepairResponse()));
 
-        mockMvc.perform(get("/api/as/repairs")).andExpect(status().isOk()).andExpect(jsonPath("$").isArray());
+        mockMvc.perform(get("/api/v1/as/repairs")).andExpect(status().isOk()).andExpect(jsonPath("$").isArray());
 
         verify(repairService, times(1)).getAllRepairs();
     }
@@ -90,7 +90,7 @@ class RepairControllerTest {
 
         when(repairService.getRepair(1L)).thenReturn(new RepairResponse());
 
-        mockMvc.perform(get("/api/as/repairs/1")).andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/as/repairs/1")).andExpect(status().isOk());
 
         verify(repairService, times(1)).getRepair(1L);
     }
@@ -104,7 +104,7 @@ class RepairControllerTest {
 
         when(repairService.getRepairByReceptionNumber(receptionNumber)).thenReturn(new RepairResponse());
 
-        mockMvc.perform(get("/api/as/repairs/reception/{receptionNumber}", receptionNumber)).andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/as/repairs/reception/{receptionNumber}", receptionNumber)).andExpect(status().isOk());
 
         verify(repairService, times(1)).getRepairByReceptionNumber(receptionNumber);
     }
@@ -120,13 +120,13 @@ class RepairControllerTest {
 
         when(repairService.updateRepair(eq(1L), any(RepairRequest.class), eq("test@example.com"))).thenReturn(response);
 
-        mockMvc.perform(put("/api/as/repairs/1").with(csrf()).with(user(userDetails)).contentType(MediaType.APPLICATION_JSON).content("""
-                                                                                                                                              {
-                                                                                                                                                  "diagnosis": "CPU 점검",
-                                                                                                                                                  "warrantyResult": "FREE",
-                                                                                                                                                  "status": "REQUESTED"
-                                                                                                                                              }
-                                                                                                                                              """)).andExpect(status().isOk()).andExpect(jsonPath("$.diagnosis").value("CPU 점검"));
+        mockMvc.perform(put("/api/v1/as/repairs/1").with(csrf()).with(user(userDetails)).contentType(MediaType.APPLICATION_JSON).content("""
+                                                                                                                                                 {
+                                                                                                                                                     "diagnosis": "CPU 점검",
+                                                                                                                                                     "warrantyResult": "FREE",
+                                                                                                                                                     "status": "REQUESTED"
+                                                                                                                                                 }
+                                                                                                                                                 """)).andExpect(status().isOk()).andExpect(jsonPath("$.diagnosis").value("CPU 점검"));
 
         verify(repairService, times(1)).updateRepair(eq(1L), any(RepairRequest.class), eq("test@example.com"));
     }
@@ -139,11 +139,11 @@ class RepairControllerTest {
 
         doNothing().when(repairService).changeRepairStatus(1L, RepairStatus.REQUESTED, "test@example.com");
 
-        mockMvc.perform(patch("/api/as/repairs/1/status").with(csrf()).with(user(userDetails)).contentType(MediaType.APPLICATION_JSON).content("""
-                                                                                                                                                       {
-                                                                                                                                                           "status": "REQUESTED"
-                                                                                                                                                       }
-                                                                                                                                                       """)).andExpect(status().isOk()).andExpect(jsonPath("$.message").value("수리 상태가 변경되었습니다."));
+        mockMvc.perform(patch("/api/v1/as/repairs/1/status").with(csrf()).with(user(userDetails)).contentType(MediaType.APPLICATION_JSON).content("""
+                                                                                                                                                          {
+                                                                                                                                                              "status": "REQUESTED"
+                                                                                                                                                          }
+                                                                                                                                                          """)).andExpect(status().isOk()).andExpect(jsonPath("$.message").value("수리 상태가 변경되었습니다."));
 
         verify(repairService, times(1)).changeRepairStatus(1L, RepairStatus.REQUESTED, "test@example.com");
     }
@@ -155,7 +155,7 @@ class RepairControllerTest {
 
         doNothing().when(repairService).deleteRepair(1L);
 
-        mockMvc.perform(delete("/api/as/repairs/1").with(csrf())).andExpect(status().isOk()).andExpect(jsonPath("$.message").value("수리 정보가 삭제되었습니다."));
+        mockMvc.perform(delete("/api/v1/as/repairs/1").with(csrf())).andExpect(status().isOk()).andExpect(jsonPath("$.message").value("수리 정보가 삭제되었습니다."));
 
         verify(repairService, times(1)).deleteRepair(1L);
     }

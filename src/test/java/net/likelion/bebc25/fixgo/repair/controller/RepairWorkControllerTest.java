@@ -63,13 +63,13 @@ class RepairWorkControllerTest {
 
         when(repairWorkService.createRepairWork(any(RepairWorkRequest.class), eq("test@example.com"))).thenReturn(response);
 
-        mockMvc.perform(post("/api/repair-works").with(csrf()).with(user(userDetails)).contentType(MediaType.APPLICATION_JSON).content("""
-                                                                                                                                               {
-                                                                                                                                                   "repairId": 1,
-                                                                                                                                                   "repairPresetName": "기본 점검",
-                                                                                                                                                   "workName": "메인보드 점검"
-                                                                                                                                               }
-                                                                                                                                               """)).andExpect(status().isCreated()).andExpect(jsonPath("$.id").value(1)).andExpect(jsonPath("$.repairId").value(1)).andExpect(jsonPath("$.repairPresetName").value("기본 점검")).andExpect(jsonPath("$.workName").value("메인보드 점검"));
+        mockMvc.perform(post("/api/v1/as/repair-works").with(csrf()).with(user(userDetails)).contentType(MediaType.APPLICATION_JSON).content("""
+                                                                                                                                                     {
+                                                                                                                                                         "repairId": 1,
+                                                                                                                                                         "repairPresetName": "기본 점검",
+                                                                                                                                                         "workName": "메인보드 점검"
+                                                                                                                                                     }
+                                                                                                                                                     """)).andExpect(status().isCreated()).andExpect(jsonPath("$.id").value(1)).andExpect(jsonPath("$.repairId").value(1)).andExpect(jsonPath("$.repairPresetName").value("기본 점검")).andExpect(jsonPath("$.workName").value("메인보드 점검"));
 
         verify(repairWorkService, times(1)).createRepairWork(any(RepairWorkRequest.class), eq("test@example.com"));
     }
@@ -81,7 +81,7 @@ class RepairWorkControllerTest {
 
         when(repairWorkService.getAllRepairWorks()).thenReturn(List.of(new RepairWorkResponse()));
 
-        mockMvc.perform(get("/api/repair-works")).andExpect(status().isOk()).andExpect(jsonPath("$").isArray());
+        mockMvc.perform(get("/api/v1/as/repair-works")).andExpect(status().isOk()).andExpect(jsonPath("$").isArray());
 
         verify(repairWorkService, times(1)).getAllRepairWorks();
     }
@@ -97,7 +97,7 @@ class RepairWorkControllerTest {
 
         when(repairWorkService.getRepairWork(1L)).thenReturn(response);
 
-        mockMvc.perform(get("/api/repair-works/1")).andExpect(status().isOk()).andExpect(jsonPath("$.id").value(1)).andExpect(jsonPath("$.workName").value("메인보드 점검"));
+        mockMvc.perform(get("/api/v1/as/repair-works/1")).andExpect(status().isOk()).andExpect(jsonPath("$.id").value(1)).andExpect(jsonPath("$.workName").value("메인보드 점검"));
 
         verify(repairWorkService, times(1)).getRepairWork(1L);
     }
@@ -109,7 +109,7 @@ class RepairWorkControllerTest {
 
         when(repairWorkService.getRepairWorksByRepairId(1L)).thenReturn(List.of(new RepairWorkResponse()));
 
-        mockMvc.perform(get("/api/repair-works/repair/1")).andExpect(status().isOk()).andExpect(jsonPath("$").isArray());
+        mockMvc.perform(get("/api/v1/as/repair-works/repair/1")).andExpect(status().isOk()).andExpect(jsonPath("$").isArray());
 
         verify(repairWorkService, times(1)).getRepairWorksByRepairId(1L);
     }
@@ -121,7 +121,7 @@ class RepairWorkControllerTest {
 
         when(repairWorkService.searchRepairWorks("점검")).thenReturn(List.of(new RepairWorkResponse()));
 
-        mockMvc.perform(get("/api/repair-works/search").param("workName", "점검")).andExpect(status().isOk()).andExpect(jsonPath("$").isArray());
+        mockMvc.perform(get("/api/v1/as/repair-works/search").param("workName", "점검")).andExpect(status().isOk()).andExpect(jsonPath("$").isArray());
 
         verify(repairWorkService, times(1)).searchRepairWorks("점검");
     }
@@ -138,12 +138,12 @@ class RepairWorkControllerTest {
 
         when(repairWorkService.updateRepairWork(eq(1L), any(RepairWorkUpdate.class), eq("test@example.com"))).thenReturn(response);
 
-        mockMvc.perform(put("/api/repair-works/1").with(csrf()).with(user(userDetails)).contentType(MediaType.APPLICATION_JSON).content("""
-                                                                                                                                                {
-                                                                                                                                                    "repairPresetName": "부품 교체",
-                                                                                                                                                    "workName": "메인보드 교체"
-                                                                                                                                                }
-                                                                                                                                                """)).andExpect(status().isOk()).andExpect(jsonPath("$.repairPresetName").value("부품 교체")).andExpect(jsonPath("$.workName").value("메인보드 교체"));
+        mockMvc.perform(put("/api/v1/as/repair-works/1").with(csrf()).with(user(userDetails)).contentType(MediaType.APPLICATION_JSON).content("""
+                                                                                                                                                      {
+                                                                                                                                                          "repairPresetName": "부품 교체",
+                                                                                                                                                          "workName": "메인보드 교체"
+                                                                                                                                                      }
+                                                                                                                                                      """)).andExpect(status().isOk()).andExpect(jsonPath("$.repairPresetName").value("부품 교체")).andExpect(jsonPath("$.workName").value("메인보드 교체"));
 
         verify(repairWorkService, times(1)).updateRepairWork(eq(1L), any(RepairWorkUpdate.class), eq("test@example.com"));
     }
@@ -155,7 +155,7 @@ class RepairWorkControllerTest {
 
         doNothing().when(repairWorkService).deleteRepairWork(1L);
 
-        mockMvc.perform(delete("/api/repair-works/1").with(csrf())).andExpect(status().isNoContent());
+        mockMvc.perform(delete("/api/v1/as/repair-works/1").with(csrf())).andExpect(status().isNoContent());
 
         verify(repairWorkService, times(1)).deleteRepairWork(1L);
     }

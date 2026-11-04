@@ -15,7 +15,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/repair-works")
+@RequestMapping("/api/v1/as/repair-works")
 public class RepairWorkController {
 
     private final RepairWorkService repairWorkService;

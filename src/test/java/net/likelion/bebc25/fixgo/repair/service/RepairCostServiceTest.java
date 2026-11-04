@@ -4,6 +4,10 @@ import net.likelion.bebc25.fixgo.admin.entity.LaborRate;
 import net.likelion.bebc25.fixgo.admin.entity.RateType;
 import net.likelion.bebc25.fixgo.admin.repository.LaborRateRepository;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
+import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
+import net.likelion.bebc25.fixgo.auth.entity.Member;
+import net.likelion.bebc25.fixgo.auth.entity.Role;
+import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
 import net.likelion.bebc25.fixgo.product.entity.Category;
 import net.likelion.bebc25.fixgo.product.entity.Product;
 import net.likelion.bebc25.fixgo.product.entity.ProductModel;
@@ -13,6 +17,7 @@ import net.likelion.bebc25.fixgo.repair.entity.RepairPartUsage;
 import net.likelion.bebc25.fixgo.repair.entity.RepairWork;
 import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairDecision;
+import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
 import net.likelion.bebc25.fixgo.repair.repository.RepairPartUsageRepository;
 import net.likelion.bebc25.fixgo.repair.repository.RepairRepository;
 import net.likelion.bebc25.fixgo.repair.repository.RepairWorkRepository;
@@ -24,13 +29,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -147,5 +152,90 @@ class RepairCostServiceTest {
         when(repairRepository.findById(repairId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> repairCostService.calculateRepairCost(repairId, "tester")).isInstanceOf(IllegalArgumentException.class).hasMessage("수리 정보를 찾을 수 없습니다.");
+    }
+
+    @Test
+    @DisplayName("기사가 수리비를 확정하면 Repair와 AsReception 상태가 변경된다.")
+    void confirmRepairCostSuccess() {
+        Long repairId = 1L;
+        Long technicianId = 10L;
+        String username = "technician";
+
+        CustomUserDetails userDetails = mock(CustomUserDetails.class);
+        Member technician = mock(Member.class);
+
+        when(userDetails.getMember()).thenReturn(technician);
+        when(technician.getRole()).thenReturn(Role.ROLE_TECHNICIAN);
+        when(userDetails.getId()).thenReturn(technicianId);
+        when(userDetails.getUsername()).thenReturn(username);
+
+        Repair repair = mock(Repair.class);
+        AsReception asReception = mock(AsReception.class);
+
+        when(repairRepository.findById(repairId)).thenReturn(Optional.of(repair));
+        when(repair.getTechnician()).thenReturn(technician);
+        when(technician.getId()).thenReturn(technicianId);
+        when(repair.getStatus()).thenReturn(RepairStatus.DIAGNOSING);
+        when(repair.getAsReception()).thenReturn(asReception);
+
+        repairCostService.confirmRepairCost(repairId, userDetails);
+
+        verify(repair).confirmRepairCost(username);
+        verify(repair).changeStatus(RepairStatus.REQUESTED, username);
+        verify(asReception).changeStatus(AsReceptionStatus.AWAITING_QUOTE_APPROVAL);
+    }
+
+    @Test
+    @DisplayName("점검 중이 아닌 수리는 수리비를 확정할 수 없다.")
+    void confirmRepairCostInvalidStatus() {
+        Long repairId = 1L;
+        Long technicianId = 10L;
+
+        CustomUserDetails userDetails = mock(CustomUserDetails.class);
+        Member technician = mock(Member.class);
+
+        when(userDetails.getMember()).thenReturn(technician);
+        when(technician.getRole()).thenReturn(Role.ROLE_TECHNICIAN);
+        when(userDetails.getId()).thenReturn(technicianId);
+
+        Repair repair = mock(Repair.class);
+
+        when(repairRepository.findById(repairId)).thenReturn(Optional.of(repair));
+        when(repair.getTechnician()).thenReturn(technician);
+        when(technician.getId()).thenReturn(technicianId);
+        when(repair.getStatus()).thenReturn(RepairStatus.REPAIRING);
+
+        assertThatThrownBy(() -> repairCostService.confirmRepairCost(repairId, userDetails)).isInstanceOf(IllegalArgumentException.class).hasMessage("점검 중인 건만 수리비를 확정할 수 있습니다.");
+
+        verify(repair, never()).confirmRepairCost(anyString());
+        verify(repair, never()).changeStatus(any(), anyString());
+    }
+
+    @Test
+    @DisplayName("이미 수리비가 확정된 경우 재확정할 수 없다.")
+    void confirmRepairCostAlreadyConfirmed() {
+        Long repairId = 1L;
+        Long technicianId = 1L;
+
+        CustomUserDetails userDetails = mock(CustomUserDetails.class);
+        Member loginMember = mock(Member.class);
+        Member technician = mock(Member.class);
+        Repair repair = mock(Repair.class);
+
+        when(userDetails.getMember()).thenReturn(loginMember);
+        when(loginMember.getRole()).thenReturn(Role.ROLE_TECHNICIAN);
+        when(userDetails.getId()).thenReturn(technicianId);
+
+        when(repairRepository.findById(repairId)).thenReturn(Optional.of(repair));
+
+        when(repair.getTechnician()).thenReturn(technician);
+        when(technician.getId()).thenReturn(technicianId);
+        when(repair.getStatus()).thenReturn(RepairStatus.DIAGNOSING);
+        when(repair.getConfirmedAt()).thenReturn(LocalDateTime.now());
+
+        assertThatThrownBy(() -> repairCostService.confirmRepairCost(repairId, userDetails)).isInstanceOf(IllegalArgumentException.class).hasMessage("이미 수리비가 확정되었습니다.");
+
+        verify(repair, never()).confirmRepairCost(anyString());
+        verify(repair, never()).changeStatus(any(), anyString());
     }
 }
