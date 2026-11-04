@@ -17,6 +17,13 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    public ResponseEntity<ErrorResponse> handleStatus(
+            org.springframework.web.server.ResponseStatusException e
+    ) {
+        return ResponseEntity.status(e.getStatusCode())
+                .body(new ErrorResponse("REQUEST_ERROR", e.getReason()));
+    }
 
     /**
      * 의도해서 던진 예외. 에러 코드가 가진 상태 코드와 메시지를 그대로 응답한다.
