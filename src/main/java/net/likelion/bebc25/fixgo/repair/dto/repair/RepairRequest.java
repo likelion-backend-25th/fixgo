@@ -2,6 +2,7 @@ package net.likelion.bebc25.fixgo.repair.dto.repair;
 
 import lombok.Getter;
 import lombok.Setter;
+import net.likelion.bebc25.fixgo.repair.entity.repair.RepairDecision;
 
 @Getter
 @Setter
@@ -20,7 +21,7 @@ public class RepairRequest {
     private String workNote;
 
     // 수리 판정
-    private String repairDecision;
+    private RepairDecision repairDecision;
 
     // 보증 여부
     private String warrantyResult;
