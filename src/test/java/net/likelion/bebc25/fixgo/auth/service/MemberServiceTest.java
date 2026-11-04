@@ -77,7 +77,7 @@ class MemberServiceTest {
                 new Customer("테스트 고객", "010-1111-2222", "customer@test.com", "12345", "서울시", "강남구", 1L)
         );
         Product product = productRepository.save(
-                new Product(1L, "TEST-SERIAL-001", LocalDateTime.now(), "tester")
+                new Product(1L, "TEST-SERIAL-001", LocalDateTime.now(), 1L)
         );
         AsReception asReception = asReceptionRepository.save(new AsReception(
                 "AS-TEST-001",
