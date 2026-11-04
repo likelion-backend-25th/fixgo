@@ -46,11 +46,14 @@ class RepairServiceTest {
 
     private RepairService repairService;
 
+    @Mock
+    private RepairStatusService repairStatusService;
+
     @BeforeEach
     void setUp() {
         repairMapper = new RepairMapper();
 
-        repairService = new RepairService(repairRepository, repairMapper, asReceptionRepository, memberRepository);
+        repairService = new RepairService(repairRepository, repairMapper, asReceptionRepository, memberRepository, repairStatusService);
     }
 
     // 테스트용 A/S 접수 정보 생성
