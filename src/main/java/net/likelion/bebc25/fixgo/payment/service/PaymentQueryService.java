@@ -31,7 +31,7 @@ public class PaymentQueryService {
         // 1. 청구서와 접수 기본 정보를 조회한다.
         PaymentBill bill = paymentBillRepository.findById(billId)
                 .orElseThrow(() -> new PaymentException(PaymentErrorCode.BILL_NOT_FOUND, "결제 데이터가 없습니다."));
-        PaymentDto.ReceptionInfo reception = paymentBillRepository.findReceptionInfo(bill.getAsReceptionId())
+        PaymentDto.ReceptionInfo reception = paymentBillRepository.findReceptionInfo(bill.getAsReception().getId())
                 .orElseThrow(() -> new IllegalStateException("결제 데이터가 없습니다."));
 
         // 2. 결제와 환불 이력을 준비한다. 환불 후에도 성공한 결제 이력은 유지된다.
@@ -146,7 +146,7 @@ public class PaymentQueryService {
                 yield PaymentDto.PaymentSummaryResponse.paid(bill, doneAttempt);
             }
             // TODO: 환불 기능 구현 시 고객에게 보여줄 내용
-            case REFUNDED, PARTIALLY_REFUNDED -> throw new IllegalStateException("환불은 아직 미구현입니다.");
+            case REFUNDED -> throw new IllegalStateException("환불은 아직 미구현입니다.");
 
         };
 

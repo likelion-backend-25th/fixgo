@@ -1,5 +1,7 @@
 package net.likelion.bebc25.fixgo.statistics.service;
 
+import net.likelion.bebc25.fixgo.config.JpaConfig;
+import net.likelion.bebc25.fixgo.support.AsReceptionFixture;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentAttempt;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentBill;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentBillType;
@@ -23,9 +25,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
-@Import(PaymentStatisticsService.class)
+@Import({JpaConfig.class, AsReceptionFixture.class, PaymentStatisticsService.class})
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 class PaymentStatisticsServiceTest {
+    @Autowired
+    AsReceptionFixture asReceptionFixture;
 
     @Autowired
     PaymentStatisticsService paymentStatisticsService;
@@ -43,10 +47,12 @@ class PaymentStatisticsServiceTest {
     void cleanUp() {
         paymentAttemptRepository.deleteAll();
         paymentBillRepository.deleteAll();
+        asReceptionFixture.deleteAll();
     }
 
-    private PaymentBill issueBill(Long asRequestId, Long amount) {
-        return paymentBillRepository.save(PaymentBill.issue(asRequestId, amount, PaymentBillType.REPAIR));
+    // 접수마다 청구서는 하나뿐이므로 청구서마다 새 접수를 만든다.
+    private PaymentBill issueBill(Long amount) {
+        return paymentBillRepository.save(PaymentBill.create(asReceptionFixture.save(), amount, PaymentBillType.REPAIR));
     }
 
     private void createDoneAttempt(PaymentBill bill, String paymentKey, LocalDateTime approvedAt) {
@@ -64,8 +70,8 @@ class PaymentStatisticsServiceTest {
         LocalDate startDate = LocalDate.of(2026, 10, 1);
         LocalDate endDate = LocalDate.of(2026, 10, 26);
 
-        PaymentBill bill1 = issueBill(1L, 18_400_000L);
-        PaymentBill bill2 = issueBill(2L, 500_000L);
+        PaymentBill bill1 = issueBill(18_400_000L);
+        PaymentBill bill2 = issueBill(500_000L);
 
         createDoneAttempt(bill1, "payment_key_1", LocalDateTime.of(2026, 10, 10, 15, 30));
 

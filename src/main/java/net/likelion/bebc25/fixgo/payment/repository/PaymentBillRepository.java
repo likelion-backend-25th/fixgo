@@ -19,7 +19,7 @@ public interface PaymentBillRepository extends JpaRepository<PaymentBill, Long> 
     Optional<PaymentBill> findByIdForUpdate(@Param("id") Long id);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select b from PaymentBill b where b.asReceptionId = :asReceptionId")
+    @Query("select b from PaymentBill b where b.asReception.id = :asReceptionId")
     Optional<PaymentBill> findByAsReceptionIdForUpdate(@Param("asReceptionId") Long asReceptionId);
 
     Optional<PaymentBill> findByAsReceptionId(Long asReceptionId);
@@ -32,7 +32,7 @@ public interface PaymentBillRepository extends JpaRepository<PaymentBill, Long> 
                         b.id, r.receptionNumber, c.name, b.amount, b.status, a.method
                     )
                     from PaymentBill b
-                    join AsReception r on r.id = b.asReceptionId
+                    join b.asReception r
                     join r.customer c
                     left join PaymentAttempt a
                         on a.paymentBill = b
@@ -46,7 +46,7 @@ public interface PaymentBillRepository extends JpaRepository<PaymentBill, Long> 
             countQuery = """
                     select count(b)
                     from PaymentBill b
-                    join AsReception r on r.id = b.asReceptionId
+                    join b.asReception r
                     join r.customer c
                     where (:status is null or b.status = :status)
                       and (:keyword is null

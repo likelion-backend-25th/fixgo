@@ -1,12 +1,16 @@
 package net.likelion.bebc25.fixgo.payment.service;
 
 import jakarta.persistence.EntityManager;
+import net.likelion.bebc25.fixgo.config.JpaConfig;
+import net.likelion.bebc25.fixgo.support.AsReceptionFixture;
+import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentInternalDto;
 import net.likelion.bebc25.fixgo.payment.entity.*;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentAttemptRepository;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentBillRepository;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentRefundRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +22,20 @@ import java.time.LocalDateTime;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
-@Import({PaymentRefundService.class, PaymentAttemptService.class})
+@Import({JpaConfig.class, AsReceptionFixture.class, PaymentRefundService.class, PaymentAttemptService.class})
 class PaymentRefundServiceTest {
+    @Autowired
+    AsReceptionFixture asReceptionFixture;
 
-    private static final Long AS_RECEPTION_ID = 1L;
+    private AsReception reception;
+    private Long asReceptionId;
+
+    @BeforeEach
+    void setUpReception() {
+        reception = asReceptionFixture.save();
+        asReceptionId = reception.getId();
+    }
+
     private static final Long MEMBER_ID = 100L;
     private static final String PAYMENT_KEY = "test_payment_key";
     private static final String CANCEL_REASON = "수리 불가로 환불";
@@ -45,8 +59,8 @@ class PaymentRefundServiceTest {
      * 실제 흐름으로 카드 결제 완료(bill PAID)까지 진행하고 billId를 돌려준다
      */
     private Long paidByCard() {
-        PaymentBill bill = paymentBillRepository.save(PaymentBill.issue(AS_RECEPTION_ID, 30_000L, PaymentBillType.REPAIR));
-        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(AS_RECEPTION_ID);
+        PaymentBill bill = paymentBillRepository.save(PaymentBill.create(reception, 30_000L, PaymentBillType.REPAIR));
+        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(asReceptionId);
         paymentAttemptService.prepareConfirm(started.orderId(), started.amount());
         paymentAttemptService.completeConfirm(started.orderId(), PAYMENT_KEY, LocalDateTime.of(2026, 11, 4, 10, 0));
         em.flush();
