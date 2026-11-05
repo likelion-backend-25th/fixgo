@@ -3,6 +3,7 @@ package net.likelion.bebc25.fixgo.auth.principal;
 
 import lombok.Getter;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
+import net.likelion.bebc25.fixgo.auth.entity.Status;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -45,4 +46,8 @@ public class CustomUserDetails implements UserDetails {
         return member.getEmail();
     }
 
+    @Override
+    public boolean isEnabled() {
+        return member.getStatus() != Status.DELETED;
+    }
 }

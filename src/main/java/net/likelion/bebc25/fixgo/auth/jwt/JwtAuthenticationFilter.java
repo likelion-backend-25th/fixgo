@@ -1,11 +1,14 @@
 package net.likelion.bebc25.fixgo.auth.jwt;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
+import net.likelion.bebc25.fixgo.auth.exception.AuthErrorCode;
 import net.likelion.bebc25.fixgo.auth.service.CustomUserDetailsService;
+import net.likelion.bebc25.fixgo.global.exception.ErrorResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,6 +25,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtProvider jwtProvider;
     private final CustomUserDetailsService userDetailsService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public JwtAuthenticationFilter(JwtProvider jwtProvider, CustomUserDetailsService userDetailsService) {
         this.jwtProvider = jwtProvider;
@@ -36,6 +40,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = resolveToken(request);
 
         // 2. 토큰 유효성 검증
+        if (StringUtils.hasText(token) && !jwtProvider.validateToken(token)) {
+            ErrorResponse errorResponse = ErrorResponse.of(
+                    AuthErrorCode.INVALID_TOKEN,
+                    "유효하지 않은 토큰입니다."
+            );
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
+            return;
+        }
+
         if (StringUtils.hasText(token) && jwtProvider.validateToken(token)) {
             Long memberId = jwtProvider.getMemberId(token);
 

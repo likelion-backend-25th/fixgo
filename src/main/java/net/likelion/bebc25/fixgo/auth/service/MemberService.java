@@ -26,6 +26,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final RepairRepository repairRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RefreshTokenService refreshTokenService;
 
     // 회원가입
     @Transactional
@@ -71,6 +72,7 @@ public class MemberService {
         );
 
         member.changeStatus(request.status());
+        refreshTokenService.revokeRefreshTokens(member.getId());
 
         return MemberDto.BriefResponse.from(member);
     }
@@ -83,6 +85,7 @@ public class MemberService {
         );
 
         member.changeRole(request.role());
+        refreshTokenService.revokeRefreshTokens(member.getId());
 
         return MemberDto.BriefResponse.from(member);
     }
@@ -129,6 +132,6 @@ public class MemberService {
         }
 
         member.changeStatus(Status.DELETED);
-
+        refreshTokenService.revokeRefreshTokens(memberId);
     }
 }

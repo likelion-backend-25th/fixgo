@@ -3,6 +3,7 @@ package net.likelion.bebc25.fixgo.auth.service;
 import net.likelion.bebc25.fixgo.auth.dto.LoginDto;
 import net.likelion.bebc25.fixgo.auth.dto.TokenDto;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
+import net.likelion.bebc25.fixgo.auth.entity.RefreshToken;
 import net.likelion.bebc25.fixgo.auth.entity.Role;
 import net.likelion.bebc25.fixgo.auth.jwt.JwtProvider;
 import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
@@ -19,6 +20,8 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -138,6 +141,21 @@ class LoginServiceTest {
 
         then(userDetailsService).should(never()).loadUserById(any());
         then(refreshTokenService).should(never()).saveRefreshToken(any(), any());
+    }
+
+    @Test
+    @DisplayName("로그아웃하면 폐기되지 않은 Refresh Token을 모두 폐기한다")
+    void logout_revokesActiveTokens() {
+        Member member = createMember(1L);
+        RefreshToken first = new RefreshToken(member, "token-1");
+        RefreshToken second = new RefreshToken(member, "token-2");
+        given(refreshTokenRepository.findByMemberIdAndRevokedAtIsNull(1L))
+                .willReturn(List.of(first, second));
+
+        loginService.logout(new CustomUserDetails(member));
+
+        assertThat(first.getRevokedAt()).isNotNull();
+        assertThat(second.getRevokedAt()).isNotNull();
     }
 
     private Member createMember(Long id) {
