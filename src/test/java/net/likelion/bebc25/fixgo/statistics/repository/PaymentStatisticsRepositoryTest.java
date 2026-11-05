@@ -1,5 +1,7 @@
 package net.likelion.bebc25.fixgo.statistics.repository;
 
+import net.likelion.bebc25.fixgo.config.JpaConfig;
+import net.likelion.bebc25.fixgo.support.AsReceptionFixture;
 import net.likelion.bebc25.fixgo.payment.entity.*;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentAttemptRepository;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentBillRepository;
@@ -8,6 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,8 +19,11 @@ import java.time.LocalDateTime;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
+@Import({JpaConfig.class, AsReceptionFixture.class})
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 class PaymentStatisticsRepositoryTest {
+    @Autowired
+    AsReceptionFixture asReceptionFixture;
 
     @Autowired
     PaymentStatisticsRepository paymentStatisticsRepository;
@@ -32,10 +38,12 @@ class PaymentStatisticsRepositoryTest {
     void cleanUp() {
         paymentAttemptRepository.deleteAll();
         paymentBillRepository.deleteAll();
+        asReceptionFixture.deleteAll();
     }
 
-    private PaymentBill issueBill(Long asRequestId, Long amount) {
-        return paymentBillRepository.save(PaymentBill.issue(asRequestId, amount, PaymentBillType.REPAIR));
+    // 접수마다 청구서는 하나뿐이므로 청구서마다 새 접수를 만든다.
+    private PaymentBill issueBill(Long amount) {
+        return paymentBillRepository.save(PaymentBill.create(asReceptionFixture.save(), amount, PaymentBillType.REPAIR));
     }
 
     private PaymentAttempt createDoneAttempt(PaymentBill bill, String paymentKey, LocalDateTime approvedAt) {
@@ -54,9 +62,9 @@ class PaymentStatisticsRepositoryTest {
     @DisplayName("조회 기간 내 승인 완료된 결제 금액만 합산한다.")
     void sumApprovedAmount() {
         // given
-        PaymentBill bill1 = issueBill(1L, 30_000L);
-        PaymentBill bill2 = issueBill(2L, 50_000L);
-        PaymentBill bill3 = issueBill(3L, 70_000L);
+        PaymentBill bill1 = issueBill(30_000L);
+        PaymentBill bill2 = issueBill(50_000L);
+        PaymentBill bill3 = issueBill(70_000L);
 
         createDoneAttempt(bill1, "payment_key_1", LocalDateTime.of(2026, 10, 10, 15, 30));
 
@@ -81,9 +89,9 @@ class PaymentStatisticsRepositoryTest {
     @DisplayName("현재 UNPAID 상태인 청구서의 전체 건수를 조회한다.")
     void countUnpaidBills() {
         // given
-        PaymentBill bill1 = issueBill(1L, 30_000L);
-        PaymentBill bill2 = issueBill(2L, 50_000L);
-        issueBill(3L, 70_000L);
+        PaymentBill bill1 = issueBill(30_000L);
+        PaymentBill bill2 = issueBill(50_000L);
+        issueBill(70_000L);
 
         // bill1은 결제 완료 처리
         bill1.markPaid(LocalDateTime.of(2026, 10, 10, 15, 30));
