@@ -47,7 +47,7 @@ public class MemberController {
     }
 
     @GetMapping("/deleted_member")
-    @PreAuthorize("hasRole('Role.ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<MemberDto.BriefResponse>> getDeletedMember(
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable

@@ -3,6 +3,7 @@ package net.likelion.bebc25.fixgo.auth.controller;
 import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.auth.dto.MemberDto;
 import net.likelion.bebc25.fixgo.auth.service.MemberService;
+import net.likelion.bebc25.fixgo.auth.service.RefreshTokenService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,6 +14,7 @@ import java.net.URI;
 @RequiredArgsConstructor
 public class AdminController {
     private final MemberService memberService;
+    private final RefreshTokenService refreshTokenService;
 
     @PostMapping("/member")
     public ResponseEntity<MemberDto.DetailResponse> createMember(
@@ -26,6 +28,7 @@ public class AdminController {
     public ResponseEntity<MemberDto.BriefResponse> updateStatus(
             @RequestBody MemberDto.StatusChangeRequest request
     ) {
+
         return ResponseEntity.ok(memberService.changeStatus(request));
     }
 

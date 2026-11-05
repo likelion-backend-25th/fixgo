@@ -4,11 +4,14 @@ import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
 import net.likelion.bebc25.fixgo.auth.dto.MemberDto;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
+import net.likelion.bebc25.fixgo.auth.entity.RefreshToken;
 import net.likelion.bebc25.fixgo.auth.entity.Role;
 import net.likelion.bebc25.fixgo.auth.entity.Status;
+import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
 import net.likelion.bebc25.fixgo.auth.exception.AbnormalApproachException;
 import net.likelion.bebc25.fixgo.auth.exception.EmployeeHasActiveRepairsException;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
+import net.likelion.bebc25.fixgo.auth.repository.RefreshTokenRepository;
 import net.likelion.bebc25.fixgo.config.JpaConfig;
 import net.likelion.bebc25.fixgo.config.PasswordEncoderConfig;
 import net.likelion.bebc25.fixgo.customer.entity.Customer;
@@ -36,7 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
-@Import({MemberService.class, PasswordEncoderConfig.class, JpaConfig.class})
+@Import({MemberService.class, RefreshTokenService.class, PasswordEncoderConfig.class, JpaConfig.class})
 class MemberServiceTest {
 
     @Autowired
@@ -44,6 +47,9 @@ class MemberServiceTest {
 
     @Autowired
     private MemberRepository memberRepository;
+
+    @Autowired
+    private RefreshTokenRepository refreshTokenRepository;
 
     @Autowired
     private RepairRepository repairRepository;
@@ -251,6 +257,17 @@ class MemberServiceTest {
     }
 
     @Test
+    @DisplayName("상태를 변경하면 활성 Refresh Token을 폐기한다")
+    void changeStatus_revokesRefreshTokens() {
+        Member member = saveMember("tech@test.com", Role.ROLE_TECHNICIAN);
+        RefreshToken token = refreshTokenRepository.save(new RefreshToken(member, "status-token"));
+
+        memberService.changeStatus(new MemberDto.StatusChangeRequest("tech@test.com", Status.INACTIVE));
+
+        assertThat(refreshTokenRepository.findById(token.getId()).orElseThrow().getRevokedAt()).isNotNull();
+    }
+
+    @Test
     @DisplayName("존재하지 않는 계정의 상태를 변경하면 예외가 발생한다")
     void changeStatus_notFound() {
         assertThatThrownBy(() -> memberService.changeStatus(
@@ -290,6 +307,17 @@ class MemberServiceTest {
         assertThat(response.role()).isEqualTo(Role.ROLE_ADMIN);
         assertThat(memberRepository.findByEmail("tech@test.com").orElseThrow().getRole())
                 .isEqualTo(Role.ROLE_ADMIN);
+    }
+
+    @Test
+    @DisplayName("직책을 변경하면 활성 Refresh Token을 폐기한다")
+    void changeRole_revokesRefreshTokens() {
+        Member member = saveMember("tech@test.com", Role.ROLE_TECHNICIAN);
+        RefreshToken token = refreshTokenRepository.save(new RefreshToken(member, "role-token"));
+
+        memberService.changeRole(new MemberDto.RoleChangeRequest("tech@test.com", Role.ROLE_ADMIN));
+
+        assertThat(refreshTokenRepository.findById(token.getId()).orElseThrow().getRevokedAt()).isNotNull();
     }
 
     @Test
@@ -394,6 +422,18 @@ class MemberServiceTest {
         Member deleted = memberRepository.findById(member.getId()).orElseThrow();
         assertThat(deleted.getStatus()).isEqualTo(Status.DELETED);
         assertThat(deleted.getDeletedAt()).isNotNull();
+        assertThat(new CustomUserDetails(deleted).isEnabled()).isFalse();
+    }
+
+    @Test
+    @DisplayName("직원을 삭제하면 활성 Refresh Token을 폐기한다")
+    void deleteMember_revokesRefreshTokens() {
+        Member member = saveMember("tech@test.com", Role.ROLE_TECHNICIAN);
+        RefreshToken token = refreshTokenRepository.save(new RefreshToken(member, "delete-token"));
+
+        memberService.deleteMember(member.getId());
+
+        assertThat(refreshTokenRepository.findById(token.getId()).orElseThrow().getRevokedAt()).isNotNull();
     }
 
     @Test
@@ -419,10 +459,13 @@ class MemberServiceTest {
     @DisplayName("진행 중인 A/S가 있는 기사는 삭제할 수 없다")
     void deleteMember_technicianHasActiveRepairs() {
         Member technician = saveMember("tech@test.com", Role.ROLE_TECHNICIAN);
+        RefreshToken token = refreshTokenRepository.save(new RefreshToken(technician, "active-repair-token"));
         saveActiveRepair(technician);
 
         assertThatThrownBy(() -> memberService.deleteMember(technician.getId()))
                 .isInstanceOf(EmployeeHasActiveRepairsException.class)
                 .hasMessage("현재 진행 중인 A/S 건이 있어 삭제할 수 없습니다.");
+        assertThat(refreshTokenRepository.findById(token.getId()).orElseThrow().getRevokedAt()).isNull();
+        assertThat(new CustomUserDetails(technician).isEnabled()).isTrue();
     }
 }

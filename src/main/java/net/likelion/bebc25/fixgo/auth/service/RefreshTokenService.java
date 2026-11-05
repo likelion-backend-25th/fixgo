@@ -36,4 +36,11 @@ public class RefreshTokenService {
                 .map(RefreshToken::getTokenHash).toList()
                 .contains(tokenValue);
     }
+
+    public void revokeRefreshTokens(Long memberId) {
+        List<RefreshToken> refreshTokens = refreshTokenRepository.findByMemberIdAndRevokedAtIsNull(memberId);
+        for (RefreshToken refreshToken : refreshTokens) {
+            refreshToken.revokeToken();
+        }
+    }
 }
