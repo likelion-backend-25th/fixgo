@@ -5,7 +5,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
-import net.likelion.bebc25.fixgo.common.entity.BaseEntity;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -14,7 +13,7 @@ import java.time.LocalDateTime;
 @Table(indexes = {@Index(name = "IDX_ASH_RECEPTION_TIME", columnList = "as_reception_id, created_at")})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class AsStatusHistory extends BaseEntity {
+public class AsStatusHistory {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
