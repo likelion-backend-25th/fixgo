@@ -1,6 +1,6 @@
 package net.likelion.bebc25.fixgo.repair.repository;
 
-import net.likelion.bebc25.fixgo.repair.entity.RepairPartUsage;
+import net.likelion.bebc25.fixgo.repair.entity.part.RepairPartUsage;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
