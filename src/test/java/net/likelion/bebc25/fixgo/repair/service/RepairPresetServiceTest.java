@@ -211,4 +211,18 @@ class RepairPresetServiceTest {
         verify(query).setParameter(1, 1L);
         verify(repairPresetMapper).toResponse(preset, 75000L);
     }
+
+    @Test
+    @DisplayName("검색어가 공백이면 전체 프리셋 조회")
+    void searchPresetsBlankTest() {
+
+        when(repairPresetRepository.findAll()).thenReturn(List.of());
+
+        List<RepairPresetResponse> result = repairPresetService.searchPresets(" ");
+
+        assertThat(result).isEmpty();
+
+        verify(repairPresetRepository).findAll();
+        verify(repairPresetRepository, never()).findByNameContaining(anyString());
+    }
 }

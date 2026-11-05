@@ -48,4 +48,10 @@ public class RepairPresetController {
         repairPresetService.deletePreset(id);
         return ResponseEntity.noContent().build();
     }
+
+    // 프리셋 이름 검색
+    @GetMapping("/search")
+    public ResponseEntity<List<RepairPresetResponse>> searchPresets(@RequestParam String name) {
+        return ResponseEntity.ok(repairPresetService.searchPresets(name));
+    }
 }
