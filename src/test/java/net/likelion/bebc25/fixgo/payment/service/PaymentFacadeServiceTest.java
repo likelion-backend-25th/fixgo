@@ -35,15 +35,15 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
 @DataJpaTest
-@Import({PaymentConfirmService.class, PaymentAttemptService.class})
+@Import({PaymentFacadeService.class, PaymentAttemptService.class, PaymentRefundService.class})
 @Transactional(propagation = Propagation.NOT_SUPPORTED) // 테스트 전체를 감싸는 트랜잭션을 끈다 
-class PaymentConfirmServiceTest {
+class PaymentFacadeServiceTest {
     private static final Long AS_RECEPTION_ID = 1L;
     private static final String PAYMENT_KEY = "test_payment_key";
     private static final OffsetDateTime APPROVED_AT =
             OffsetDateTime.of(2026, 11, 1, 15, 30, 0, 0, ZoneOffset.ofHours(9));
     @Autowired
-    PaymentConfirmService paymentConfirmService;
+    PaymentFacadeService paymentFacadeService;
     @Autowired
     PaymentAttemptService paymentAttemptService;
     @Autowired
@@ -78,7 +78,7 @@ class PaymentConfirmServiceTest {
                 .willReturn(new TossDto.ConfirmResponse(PAYMENT_KEY, started.orderId(), "DONE", APPROVED_AT, null, null));
 
         // when
-        paymentConfirmService.confirmPayment(PAYMENT_KEY, started.orderId(), started.amount());
+        paymentFacadeService.confirmPayment(PAYMENT_KEY, started.orderId(), started.amount());
 
         // then: attempt
         PaymentAttempt attempt = findAttempt(started.orderId());
@@ -100,7 +100,7 @@ class PaymentConfirmServiceTest {
         PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(AS_RECEPTION_ID);
 
         // when & then
-        assertThatThrownBy(() -> paymentConfirmService.confirmPayment(PAYMENT_KEY, started.orderId(), 1_000L))
+        assertThatThrownBy(() -> paymentFacadeService.confirmPayment(PAYMENT_KEY, started.orderId(), 1_000L))
                 .isInstanceOf(PaymentException.class)
                 .extracting("errorCode")
                 .isEqualTo(PaymentErrorCode.AMOUNT_MISMATCH);
@@ -123,7 +123,7 @@ class PaymentConfirmServiceTest {
         paymentAttemptService.prepareConfirm(started.orderId(), started.amount());
 
         // when & then: 두 번째 요청
-        assertThatThrownBy(() -> paymentConfirmService.confirmPayment(PAYMENT_KEY, started.orderId(), started.amount()))
+        assertThatThrownBy(() -> paymentFacadeService.confirmPayment(PAYMENT_KEY, started.orderId(), started.amount()))
                 .isInstanceOf(PaymentException.class)
                 .extracting("errorCode")
                 .isEqualTo(PaymentErrorCode.ATTEMPT_NOT_READY);
@@ -147,7 +147,7 @@ class PaymentConfirmServiceTest {
         given(tossPaymentsClient.confirm(any(), any(), any())).willThrow(rejected);
 
         // when & then
-        assertThatThrownBy(() -> paymentConfirmService.confirmPayment(PAYMENT_KEY, started.orderId(), started.amount()))
+        assertThatThrownBy(() -> paymentFacadeService.confirmPayment(PAYMENT_KEY, started.orderId(), started.amount()))
                 .isInstanceOf(RestClientResponseException.class);
 
         // then
@@ -168,7 +168,7 @@ class PaymentConfirmServiceTest {
                 .willThrow(new ResourceAccessException("Read timed out"));
 
         // when & then
-        assertThatThrownBy(() -> paymentConfirmService.confirmPayment(PAYMENT_KEY, started.orderId(), started.amount()))
+        assertThatThrownBy(() -> paymentFacadeService.confirmPayment(PAYMENT_KEY, started.orderId(), started.amount()))
                 .isInstanceOf(ResourceAccessException.class);
 
         // then

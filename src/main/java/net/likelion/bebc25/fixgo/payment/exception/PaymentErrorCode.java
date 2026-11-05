@@ -11,7 +11,9 @@ public enum PaymentErrorCode implements ErrorCode {
     PAYMENT_IN_PROGRESS(false, HttpStatus.CONFLICT),
     BILL_NOT_FOUND(false, HttpStatus.NOT_FOUND),
     SECRET_MISMATCH(false, HttpStatus.CONFLICT),
-    VIRTUAL_ACCOUNT_NOT_FOUND(false, HttpStatus.NOT_FOUND);
+    VIRTUAL_ACCOUNT_NOT_FOUND(false, HttpStatus.NOT_FOUND),
+    VIRTUAL_ACCOUNT_NOT_CANCELABLE(false, HttpStatus.CONFLICT),
+    BILL_NOT_REFUNDABLE(false, HttpStatus.CONFLICT);
 
     // 이 실패가 발생하면 attempt를 FAILED로 기록해야 하는가
     private final boolean recordAsFailure;

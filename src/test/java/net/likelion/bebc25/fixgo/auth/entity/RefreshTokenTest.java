@@ -28,7 +28,15 @@ public class RefreshTokenTest {
     @BeforeEach
     void setup() {
         // 회원 등록
-        Member member = new Member("admin01", "test1@test.com", "1234", "test1", Role.ROLE_ADMIN, "");
+        Member member = new Member(
+                "test1@test.com",
+                "1234",
+                "test1",
+                "010-1234-5678",
+                "서울시 강남구",
+                Role.ROLE_ADMIN,
+                ""
+        );
         em.persist(member); // insert 쿼리문 생성 (실행은 안함)
 
         memberId = member.getId();
@@ -55,6 +63,6 @@ public class RefreshTokenTest {
         assertThat(refreshToken.getExpiresAt()).isEqualTo(refreshToken.getIssuedAt().plusDays(7));
         assertThat(refreshToken.getRevokedAt()).isNull();
         assertThat(refreshToken.getMember().getId()).isEqualTo(memberId);
-        assertThat(refreshToken.getMember().getCode()).isEqualTo("admin01");
+        assertThat(refreshToken.getMember().getEmail()).isEqualTo("test1@test.com");
     }
 }

@@ -28,6 +28,7 @@ public class RepairService {
     private final RepairMapper repairMapper;
     private final AsReceptionRepository asReceptionRepository;
     private final MemberRepository memberRepository;
+    private final RepairStatusService repairStatusService;
 
     // 수리 등록
     @Transactional
@@ -104,31 +105,9 @@ public class RepairService {
     }
 
     // 수리 상태 변경
-    @Transactional
     public void changeRepairStatus(Long id, RepairStatus status, String updatedBy) {
-
         Repair repair = findRepair(id);
 
-        RepairStatus currentStatus = repair.getStatus();
-
-        // 동일한 상태로 변경하는 경우
-        if (currentStatus == status) {
-            throw new IllegalArgumentException("이미 해당 상태로 처리되어 있습니다.");
-        }
-
-        // 상태 전이 검증
-        boolean isValidTransition = switch (currentStatus) {
-            case DIAGNOSING -> status == RepairStatus.REQUESTED;
-            case REQUESTED -> status == RepairStatus.APPROVED || status == RepairStatus.REJECTED;
-            case APPROVED -> status == RepairStatus.REPAIRING;
-            case REPAIRING -> status == RepairStatus.COMPLETED;
-            case REJECTED, COMPLETED -> false;
-        };
-
-        if (!isValidTransition) {
-            throw new IllegalArgumentException("허용되지 않은 상태 변경입니다. 현재 상태: " + currentStatus + ", 변경 요청 상태: " + status);
-        }
-
-        repair.changeStatus(status, updatedBy);
+        repairStatusService.changeStatus(repair, status, updatedBy);
     }
 }

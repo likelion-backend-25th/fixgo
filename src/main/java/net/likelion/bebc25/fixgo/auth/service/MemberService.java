@@ -3,15 +3,20 @@ package net.likelion.bebc25.fixgo.auth.service;
 import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.auth.dto.MemberDto;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
+import net.likelion.bebc25.fixgo.auth.entity.Role;
 import net.likelion.bebc25.fixgo.auth.entity.Status;
+import net.likelion.bebc25.fixgo.auth.exception.AbnormalApproachException;
+import net.likelion.bebc25.fixgo.auth.exception.AuthErrorCode;
+import net.likelion.bebc25.fixgo.auth.exception.EmployeeHasActiveRepairsException;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
+import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
+import net.likelion.bebc25.fixgo.repair.repository.RepairRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
@@ -19,78 +24,111 @@ import java.util.NoSuchElementException;
 @RequiredArgsConstructor
 public class MemberService {
     private final MemberRepository memberRepository;
+    private final RepairRepository repairRepository;
     private final PasswordEncoder passwordEncoder;
 
     // 회원가입
     @Transactional
-    public MemberDto.Response signup(MemberDto.CreateRequest request) {
+    public MemberDto.DetailResponse signup(MemberDto.CreateRequest request) {
         if (memberRepository.existsByEmail(request.email())) {
             throw new IllegalArgumentException("사용 불가능한 이메일입니다.");
         }
-        LocalDateTime start = LocalDate.now().atStartOfDay();
-        LocalDateTime end = LocalDate.now().plusDays(1).atStartOfDay();
-        int count = memberRepository.countByCreatedAtBetween(start, end);
-        Member member = memberRepository.save(request.toEntity(passwordEncoder, count));
+        Member member = memberRepository.save(request.toEntity(passwordEncoder));
 
-        return MemberDto.Response.from(member);
+        return MemberDto.DetailResponse.from(member);
     }
 
-    // 모든 직원 목록 조회
-    public List<MemberDto.Response> getAllMembers() {
-//         return memberRepository.findAllByStatusNotOrderByCreatedAtDesc(Status.DELETED)
-//         .stream().map(MemberDto.Response::from)
-//         .toList();
-        return memberRepository.findAllByOrderByCreatedAtDesc()
-                .stream().map(MemberDto.Response::from)
-                .toList();
+    // 직원 목록 조회
+    public Page<MemberDto.BriefResponse> getMembers(
+            MemberDto.MemberSearchRequest request,
+            Pageable pageable
+    ) {
+        return memberRepository
+                .searchMembers(request.keyword(), request.role(), request.status(), Status.DELETED, pageable)
+                .map(MemberDto.BriefResponse::from);
     }
 
-    // 조건별 직원 목록 조회
-    public List<MemberDto.Response> getMembersByCondition(MemberDto.MemberSearchRequest request) {
-        String keyword = request.keyword();
+    public Page<MemberDto.BriefResponse> getDeletedMembers(
+            Pageable pageable
+    ) {
+        return memberRepository
+                .searchMembersByStatus(Status.DELETED, pageable)
+                .map(MemberDto.BriefResponse::from);
+    }
 
-        if (keyword != null && keyword.isBlank()) {
-            keyword = null;
-        }
-
-        return memberRepository.searchMembers(keyword, request.role())
-                .stream().map(MemberDto.Response::from)
-                .toList();
+    // Id로 1건 조회
+    public MemberDto.DetailResponse getMemberById(Long id) {
+        return MemberDto.DetailResponse.from(memberRepository.findById(id).orElseThrow(
+                () -> new NoSuchElementException("존재하지 않는 계정입니다.")
+        ));
     }
 
     // 상태 변경
     @Transactional
-    public MemberDto.Response changeStatus(MemberDto.StatusChangeRequest request) {
-        Member member = memberRepository.findByEmailAndStatusNot(request.email(), Status.DELETED).orElseThrow(
+    public MemberDto.BriefResponse changeStatus(MemberDto.StatusChangeRequest request) {
+        Member member = memberRepository.findByEmail(request.email()).orElseThrow(
                 () -> new NoSuchElementException("존재하지 않는 계정입니다.")
         );
 
         member.changeStatus(request.status());
 
-        return MemberDto.Response.from(member);
+        return MemberDto.BriefResponse.from(member);
     }
 
-    // 비밀번호 변경
+    // 직책 변경
     @Transactional
-    public MemberDto.Response changePassword(MemberDto.PasswordUpdateRequest request) {
+    public MemberDto.BriefResponse changeRole(MemberDto.RoleChangeRequest request) {
         Member member = memberRepository.findByEmailAndStatusNot(request.email(), Status.DELETED).orElseThrow(
                 () -> new NoSuchElementException("존재하지 않는 계정입니다.")
         );
 
-        member.changePassword(passwordEncoder.encode(request.password()));
+        member.changeRole(request.role());
 
-        return MemberDto.Response.from(member);
+        return MemberDto.BriefResponse.from(member);
+    }
+
+    // 비밀번호 변경
+    @Transactional
+    public void changePassword(Long loginMemberId, MemberDto.PasswordUpdateRequest request) {
+        Member member = memberRepository.findById(loginMemberId).orElseThrow(
+                () -> new NoSuchElementException("존재하지 않는 계정입니다.")
+        );
+        if (!member.getEmail().equals(request.email())) {
+            throw new AbnormalApproachException(
+                    AuthErrorCode.ABNORMAL_APPROACH,
+                    "비정상적인 접근입니다."
+            );
+        }
+
+        member.changePassword(passwordEncoder.encode(request.password()));
     }
 
     // 프로필 정보 변경
     @Transactional
-    public MemberDto.Response updateProfile(MemberDto.ProfileUpdateRequest request) {
+    public MemberDto.DetailResponse updateProfile(MemberDto.ProfileUpdateRequest request) {
         Member member = memberRepository.findByEmailAndStatusNot(request.email(), Status.DELETED).orElseThrow(
                 () -> new NoSuchElementException("존재하지 않는 계정입니다.")
         );
 
         member.updateProfile(request);
 
-        return MemberDto.Response.from(member);
+        return MemberDto.DetailResponse.from(member);
+    }
+
+    @Transactional
+    public void deleteMember(Long memberId) {
+        Member member = memberRepository.findByIdAndStatusNot(memberId, Status.DELETED).orElseThrow(
+                () -> new NoSuchElementException("존재하지 않는 계정입니다.")
+        );
+
+        if (member.getRole().equals(Role.ROLE_TECHNICIAN) && !repairRepository.findByTechnicianIdAndStatusNot(memberId, RepairStatus.COMPLETED).isEmpty()) {
+            throw new EmployeeHasActiveRepairsException(
+                    AuthErrorCode.EMPLOYEE_HAS_ACTIVE_REPAIRS,
+                    "현재 진행 중인 A/S 건이 있어 삭제할 수 없습니다."
+            );
+        }
+
+        member.changeStatus(Status.DELETED);
+
     }
 }

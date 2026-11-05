@@ -34,7 +34,15 @@ public class RefreshTokenRepositoryTest {
     @BeforeEach
     void setup() {
         // 회원 등록
-        Member member = new Member("admin01", "test1@test.com", "1234", "test1", Role.ROLE_ADMIN, "");
+        Member member = new Member(
+                "test1@test.com",
+                "1234",
+                "test1",
+                "010-1234-5678",
+                "서울시 강남구",
+                Role.ROLE_ADMIN,
+                ""
+        );
         em.persist(member); // insert 쿼리문 생성 (실행은 안함)
 
         memberId = member.getId();
@@ -53,10 +61,11 @@ public class RefreshTokenRepositoryTest {
     @DisplayName("리프레시 토큰 등록 및 조회")
     void addNewRefreshToken() {
         Member member = new Member(
-                "tech01",
                 "tech1@test.com",
                 "1234",
                 "tech1",
+                "010-1234-5678",
+                "서울시 서초구",
                 Role.ROLE_TECHNICIAN,
                 ""
         );

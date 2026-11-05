@@ -17,7 +17,7 @@ import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/as/repairs")
+@RequestMapping("/api/v1/as/repairs")
 public class RepairController {
 
     private final RepairService repairService;

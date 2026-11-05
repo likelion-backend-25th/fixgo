@@ -55,17 +55,25 @@ class RepairRepositoryTest {
         LocalDateTime now = LocalDateTime.now();
 
         // 담당 기사 생성
-        technician = new Member("TEST-TECH-001", "technician@test.com", "testPassword", "테스트 기사", "010-1234-5678", Role.ROLE_TECHNICIAN, "default.png");
+        technician = new Member(
+                "technician@test.com",
+                "testPassword",
+                "테스트 기사",
+                "010-1234-5678",
+                "서울시 강남구",
+                Role.ROLE_TECHNICIAN,
+                "default.png"
+        );
 
         technician = memberRepository.save(technician);
 
         // 고객 생성
-        Customer customer = new Customer("테스트 고객", "010-1111-2222", "customer@test.com", "12345", "대구광역시", "중구", "tester");
+        Customer customer = new Customer("테스트 고객", "010-1111-2222", "customer@test.com", "12345", "대구광역시", "중구", 1L);
 
         customer = customerRepository.save(customer);
 
         // 제품 생성
-        Product product = new Product(1L, "TEST-SERIAL-001", now, "tester");
+        Product product = new Product(1L, "TEST-SERIAL-001", now, 1L);
 
         product = productRepository.save(product);
 

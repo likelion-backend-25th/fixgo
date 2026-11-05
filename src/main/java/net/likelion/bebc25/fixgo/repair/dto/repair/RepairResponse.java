@@ -1,6 +1,7 @@
 package net.likelion.bebc25.fixgo.repair.dto.repair;
 
 import lombok.*;
+import net.likelion.bebc25.fixgo.repair.entity.repair.RepairDecision;
 
 import java.time.LocalDateTime;
 
@@ -27,7 +28,7 @@ public class RepairResponse {
     private String workNote;
 
     // 수리 판정
-    private String repairDecision;
+    private RepairDecision repairDecision;
 
     // 보증 여부
     private String warrantyResult;

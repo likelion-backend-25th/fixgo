@@ -7,11 +7,13 @@ import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairRequest;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairResponse;
 import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
+import net.likelion.bebc25.fixgo.repair.entity.repair.RepairDecision;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
 import net.likelion.bebc25.fixgo.repair.entity.repair.WarrantyResult;
 import net.likelion.bebc25.fixgo.repair.mapper.RepairMapper;
 import net.likelion.bebc25.fixgo.repair.repository.RepairRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -45,11 +47,14 @@ class RepairServiceTest {
 
     private RepairService repairService;
 
+    @Mock
+    private RepairStatusService repairStatusService;
+
     @BeforeEach
     void setUp() {
         repairMapper = new RepairMapper();
 
-        repairService = new RepairService(repairRepository, repairMapper, asReceptionRepository, memberRepository);
+        repairService = new RepairService(repairRepository, repairMapper, asReceptionRepository, memberRepository, repairStatusService);
     }
 
     // 테스트용 A/S 접수 정보 생성
@@ -70,7 +75,7 @@ class RepairServiceTest {
 
         Repair repair = new Repair(asReception, technician, WarrantyResult.FREE, RepairStatus.DIAGNOSING);
 
-        repair.updateRepairInfo(asReception, technician, "메인보드 점검", "부품 교체", "수리 진행", WarrantyResult.FREE, "보증 기간 내", 10000, 5000, 15000, null);
+        repair.updateRepairInfo(asReception, technician, "메인보드 점검", "부품 교체", RepairDecision.REPAIRABLE, WarrantyResult.FREE, "보증 기간 내", 10000, 5000, 15000, null);
 
         ReflectionTestUtils.setField(repair, "id", 1L);
 
@@ -86,7 +91,7 @@ class RepairServiceTest {
         dto.setTechnicianId(20L);
         dto.setDiagnosis("메인보드 점검");
         dto.setWorkNote("부품 교체");
-        dto.setRepairDecision("수리 진행");
+        dto.setRepairDecision(RepairDecision.REPAIRABLE);
         dto.setWarrantyResult("FREE");
         dto.setReason("보증 기간 내");
         dto.setLaborRate(10000);
@@ -237,6 +242,7 @@ class RepairServiceTest {
     // 수리 상태 변경 테스트
     // DIAGNOSING -> REQUESTED
     @Test
+    @DisplayName("수리 상태 변경을 공통 상태 관리 서비스에 위임한다.")
     void changeRepairStatusTest() {
 
         Repair repair = createRepair();
@@ -245,19 +251,26 @@ class RepairServiceTest {
 
         repairService.changeRepairStatus(1L, RepairStatus.REQUESTED, TEST_EMAIL);
 
-        assertEquals(RepairStatus.REQUESTED, repair.getStatus());
+        verify(repairStatusService).changeStatus(repair, RepairStatus.REQUESTED, TEST_EMAIL);
+
+        assertEquals(RepairStatus.DIAGNOSING, repair.getStatus());
     }
 
     // 허용되지 않은 상태 변경 테스트
     // DIAGNOSING -> APPROVED
     @Test
+    @DisplayName("허용되지 않은 상태 변경 요청을 공통 상태 관리 서비스에 위임한다.")
     void changeRepairStatusInvalidTest() {
 
         Repair repair = createRepair();
 
         when(repairRepository.findById(1L)).thenReturn(Optional.of(repair));
 
+        doThrow(new IllegalArgumentException("허용되지 않은 상태 변경입니다.")).when(repairStatusService).changeStatus(repair, RepairStatus.APPROVED, TEST_EMAIL);
+
         assertThrows(IllegalArgumentException.class, () -> repairService.changeRepairStatus(1L, RepairStatus.APPROVED, TEST_EMAIL));
+
+        verify(repairStatusService).changeStatus(repair, RepairStatus.APPROVED, TEST_EMAIL);
 
         assertEquals(RepairStatus.DIAGNOSING, repair.getStatus());
     }

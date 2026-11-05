@@ -68,14 +68,21 @@
 
 ## 1.2 인증 및 회원 관리 API
 
-### 1.2.1 자체 회원가입
+### 1.2.1 직원 생성
 
-- 엔드포인트:
-- 접근 권한:
+- 엔드포인트:`Post /api/v1/admin/member/new`
+- 접근 권한: 관리자
 - Request Body:
 
 ```json
 {
+  "email": "admin001@fixgo.com",
+  "password": "password1234",
+  "name": "관리자",
+  "phone": "010-XXXX-XXXX",
+  "address": "서울특별시 OO구 OO동 ~",
+  "role": "ROLE_ADMIN",
+  "profileImgUrl": "https://amazonaws.com..."
 }
 ```
 
@@ -83,17 +90,26 @@
 
 ```json
 {
+  "id": 1,
+  "password": "password1234",
+  "name": "관리자",
+  "phone": "010-XXXX-XXXX",
+  "address": "서울특별시 OO구 OO동 ~",
+  "role": "ROLE_ADMIN",
+  "profileImgUrl": "https://amazonaws.com..."
 }
 ```
 
 ### 1.2.2 JWT 로그인
 
-- 엔드포인트:
-- 접근 권한
+- 엔드포인트: `POST /api/v1/auth/login`
+- 접근 권한: 전체 (직원)
 - Request Body:
 
 ```json
 {
+  "email": "admin001@fixgo.com",
+  "password": "password1234"
 }
 ```
 
@@ -101,18 +117,22 @@
 
 ```json
 {
+  "accessToken": "eyJhbGciOiJIUzM4NCJ9...",
+  "refreshToken": "eyJhbGciOiJIUzM4NCJ9...",
+  "tokenType": "Bearer",
+  "expiresIn": 3600
 }
 ```
 
 ### 1.2.3 토큰 갱신 (RTR)
 
 - 엔드포인트: `POST /api/v1/auth/refresh`
-- 접근 권한: 전체 (회원)
+- 접근 권한: 전체 (직원)
 - Request Body:
 
 ```json
 {
-  "refreshToken": "eyJhbGciOiJIUzI1NiIsIn..."
+  "refreshToken": "eyJhbGciOiJIUzM4NCJ9..."
 }
 ```
 
@@ -120,19 +140,31 @@
 
 ```json
 {
-  "accessToken": "eyJhbGciOiJIUzI1NiIsIn...newAccessToken",
-  "refreshToken": "eyJhbGciOiJIUzI1NiIsIn...newRefreshToken"
+  "accessToken": "eyJhbGciOiJIUzM4NCJ9...",
+  "refreshToken": "eyJhbGciOiJIUzM4NCJ9...",
+  "tokenType": "Bearer",
+  "expiresIn": 3600
 }
 ```
 
 ### 1.2.4 내 계정 프로필 조회 및 수정
 
-- 조회 엔드포인트:
-- 수정 엔드포인트:
+- 조회 엔드포인트: `GET /api/v1/member/me`
+- 수정 엔드포인트: `PATCH /api/v1/member/me/password`
+- Request Body: `@AuthenticationPrincipal`이용, 로그인 한 직원 정보 추출
+- Response Body (HTTP 200 OK): `void`
+
+### 1.2.5 직원 목록 조회
+
+- 엔드포인트
+- 접근 권한: 전체 (직원)
 - Request Body:
 
 ```json
 {
+  "keyword": "",
+  "role": "",
+  "status": ""
 }
 ```
 
@@ -140,8 +172,32 @@
 
 ```json
 {
+  "content": [
+    {
+      "id": 1,
+      "email": "admin001@fixgo.com",
+      "name": "관리자",
+      "role": "ROLE_ADMIN",
+      "status": "ACTIVE"
+    },
+    {
+      "id": 2,
+      "email": "receptionist001@fixgo.com",
+      "name": "최미소",
+      "role": "ROLE_RECEPTIONIST",
+      "status": "ACTIVE"
+    }
+  ],
+  "page": 0,
+  "size": 20,
+  "totalElements": 2,
+  "totalPages": 1,
+  "first": true,
+  "last": true
 }
 ```
+
+### 1.2.6 직원 프로필 수정
 
 ---
 

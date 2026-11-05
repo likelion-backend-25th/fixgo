@@ -1,13 +1,57 @@
 package net.likelion.bebc25.fixgo.payment.client;
 
+import net.likelion.bebc25.fixgo.payment.dto.PaymentInternalDto;
+
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.util.List;
 
 public class TossDto {
 
     public record ConfirmRequest(String paymentKey,
                                  String orderId,
                                  Long amount) {}
+
+    /**
+     * 토스 환불 요청. 카드와 가상계좌가 같은 형식이다.
+     * 카드, 가상계좌 입금 전: refundReceiveAccount가 null.
+     *
+     * @param cancelReason 환불 사유
+     */
+    public record CancelRequest(
+            String cancelReason,
+            RefundReceiveAccount refundReceiveAccount
+    ) {
+        public record RefundReceiveAccount(
+                String bank,
+                String accountNumber,
+                String holderName
+        ) {
+            public static RefundReceiveAccount from(
+                    PaymentInternalDto.RefundAccount account
+            ) {
+                if (account == null) {
+                    return null;
+                }
+
+                return new RefundReceiveAccount(
+                        account.bank(),
+                        account.accountNumber(),
+                        account.holderName()
+                );
+            }
+        }
+    }
+
+    public record CancelResponse(
+            List<Cancel> cancels
+    ) {
+        public record Cancel(
+                String transactionKey,
+                OffsetDateTime canceledAt,
+                String cancelStatus
+        ) {}
+    }
 
     /**
      * 토스 승인 응답(Payment 객체). 카드와 가상계좌가 같은 모양으로 온다.

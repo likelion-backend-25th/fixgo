@@ -59,7 +59,8 @@ erDiagram
 | email           | VARCHAR(255) | NOT NULL, UNIQUE          | -                 | -   | 로그인 이메일                   |
 | password_hash   | VARCHAR(255) | NOT NULL                  | -                 | -   | 암호 해시                     |
 | name            | VARCHAR(255) | NOT NULL                  | -                 | -   | 직원명                       |
-| phone           | VARCHAR(255) | NULL                      | -                 | -   | 연락처                       |
+| phone           | VARCHAR(255) | NOT NULL                  | -                 | -   | 연락처                       |
+| address         | VARCHAR(255) | NOT NULL                  | -                 | -   | 주소                        |
 | role            | VARCHAR(255) | NOT NULL                  | -                 | -   | 역할                        |
 | profile_img_url | VARCHAR(255) | NULL                      | -                 | -   | 프로필 이미지 URL               |
 | status          | VARCHAR(255) | NOT NULL                  | ACTIVE            | -   | ACTIVE, INACTIVE, DELETED |
