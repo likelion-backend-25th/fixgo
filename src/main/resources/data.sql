@@ -28,7 +28,7 @@ VALUES ('admin001@fixgo.com',
         0);
 
 
-# 이메일 관련 더미데이터
+-- 이메일 관련 더미데이터
 START TRANSACTION;
 
 -- fixgo-notification-demo-20261104-001 | PENDING | 2026-11-04 08:00

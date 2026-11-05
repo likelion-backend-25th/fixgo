@@ -2,10 +2,7 @@ package net.likelion.bebc25.fixgo.payment.dto;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import net.likelion.bebc25.fixgo.payment.entity.PaymentAttempt;
-import net.likelion.bebc25.fixgo.payment.entity.PaymentBill;
-import net.likelion.bebc25.fixgo.payment.entity.PaymentMethod;
-import net.likelion.bebc25.fixgo.payment.entity.VirtualAccount;
+import net.likelion.bebc25.fixgo.payment.entity.*;
 
 import java.time.LocalDateTime;
 
@@ -162,4 +159,14 @@ public class PaymentDto {
 
 
     }
+
+    public record PaymentListResponse(
+            String asReceptionNumber,
+            String customerName,
+            Long amount,
+            PaymentBillStatus status,
+            PaymentMethod paymentMethod
+
+    ) {}
+
 }
