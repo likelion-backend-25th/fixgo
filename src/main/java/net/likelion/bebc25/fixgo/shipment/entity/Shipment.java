@@ -24,7 +24,7 @@ public class Shipment {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private ReturnMethod returnMethod = ReturnMethod.DELIVERY;
+    private ReturnMethod returnMethod;
 
     @Column(nullable = false)
     private String recipientName;
@@ -39,6 +39,9 @@ public class Shipment {
     private String courier;
 
     private String courierCode;
+
+    @Column(length = 255)
+    private String trackingNumber;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -65,5 +68,107 @@ public class Shipment {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "updated_by", nullable = false)
     private Member updatedBy;
+
+    // 배송 및 방문 수령 내역 생성
+    public static Shipment create(
+            AsReception asReception,
+            Member member,
+            String recipientName,
+            String recipientPhone,
+            String address,
+            String addressDetail,
+            String courier,
+            String courierCode,
+            String trackingNumber
+    ) {
+        Shipment shipment = new Shipment();
+
+        shipment.asReception = asReception;
+        shipment.returnMethod = asReception.getReturnMethod();
+        shipment.recipientName = recipientName;
+        shipment.recipientPhone = recipientPhone;
+        shipment.address = address;
+        shipment.addressDetail = addressDetail;
+        shipment.courier = courier;
+        shipment.courierCode = courierCode;
+        shipment.trackingNumber = trackingNumber;
+        shipment.status = ShipmentStatus.READY;
+        shipment.createdBy = member;
+        shipment.updatedBy = member;
+
+        return shipment;
+    }
+
+    public void updateTrackingInfo(
+            String courier,
+            String courierCode,
+            String trackingNumber,
+            Member member
+    ) {
+        if (returnMethod != ReturnMethod.DELIVERY) {
+            throw new IllegalStateException("택배 배송만 운송장 정보를 수정할 수 있습니다.");
+        }
+
+        if (status != ShipmentStatus.READY) {
+            throw new IllegalStateException("배송 대기 상태일 때만 운송장 정보를 수정할 수 있습니다.");
+        }
+
+        this.courier = courier;
+        this.courierCode = courierCode;
+        this.trackingNumber = trackingNumber;
+        this.updatedBy = member;
+    }
+
+    // 배송 시작
+    public void markShipping(Member member) {
+        if (returnMethod != ReturnMethod.DELIVERY) {
+            throw new IllegalStateException("택배 배송만 발송할 수 있습니다.");
+        }
+        if (status != ShipmentStatus.READY) {
+            throw new IllegalStateException("배송 대기 상태일 때만 발송할 수 있습니다.");
+        }
+        if (courierCode == null || courierCode.isBlank() || trackingNumber == null || trackingNumber.isBlank()) {
+            throw new IllegalStateException("택배사와 운송장번호를 등록해야합니다.");
+        }
+        this.status = ShipmentStatus.SHIPPING;
+        this.shippedAt = LocalDateTime.now();
+        this.updatedBy = member;
+    }
+
+    // 택배 배송
+    public void markDelivered(Member member) {
+        if (returnMethod != ReturnMethod.DELIVERY) {
+            throw new IllegalStateException("택배 배송만 배송 완료 처리가 가능합니다.");
+        }
+        if (status != ShipmentStatus.SHIPPING) {
+            throw new IllegalStateException("배송 중인 건만 완료 처리할 수 있습니다.");
+        }
+        this.status = ShipmentStatus.DELIVERED;
+        this.completedAt = LocalDateTime.now();
+        this.updatedBy = member;
+    }
+
+    // 방문 수령
+    public void markPickedUp(Member member) {
+        if (returnMethod != ReturnMethod.PICKUP) {
+            throw new IllegalStateException("방문 수령 건만 수령완료 처리할 수 있습니다.");
+        }
+        if (status != ShipmentStatus.READY) {
+            throw new IllegalStateException("미수령 상태에서만 완료 처리할 수 있습니다.");
+        }
+        this.status = ShipmentStatus.PICKED_UP;
+        this.completedAt = LocalDateTime.now();
+        this.updatedBy = member;
+    }
+
+    // 스마트택배 배송 조회 결과
+    public void updateTrackingStatus(String trackingStatus, Member member) {
+        if (returnMethod != ReturnMethod.DELIVERY) {
+            throw new IllegalStateException("택배 배송만 조회가 가능합니다.");
+        }
+        this.lastTrackingStatus = trackingStatus;
+        this.lastCheckedAt = LocalDateTime.now();
+        this.updatedBy = member;
+    }
 
 }

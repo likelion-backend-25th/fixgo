@@ -1,4 +1,4 @@
-package net.likelion.bebc25.fixgo.repair.entity;
+package net.likelion.bebc25.fixgo.repair.entity.part;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -27,18 +27,32 @@ public class Part extends BaseEntity {
     private int stockQuantity;
 
     @Column(nullable = false)
-    private boolean isDiscontinued = false;
+    @Enumerated(EnumType.STRING)
+    PartStatus status;
 
-    @Column(nullable = false)
-    private boolean isActive = true;
-
-    @Column(nullable = false)
-    private int version = 0;
+    @Version
+    private Long version;
 
     public Part(String name, int unitPrice, int standardMinutes, int stockQuantity) {
         this.name = name;
         this.unitPrice = unitPrice;
         this.standardMinutes = standardMinutes;
         this.stockQuantity = stockQuantity;
+    }
+
+    public void updateUnitPrice(int newUnitPrice) {
+        this.unitPrice = newUnitPrice;
+    }
+
+    public void updateStandardMinutes(int newStandardMinutes) {
+        this.standardMinutes = newStandardMinutes;
+    }
+
+    public void updateStockQuantity(int newStockQuantity) {
+        this.stockQuantity = newStockQuantity;
+    }
+
+    public void updateStatus(PartStatus newStatus) {
+        this.status = newStatus;
     }
 }
