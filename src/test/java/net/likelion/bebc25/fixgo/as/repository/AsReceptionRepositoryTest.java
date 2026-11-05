@@ -64,6 +64,17 @@ class AsReceptionRepositoryTest {
     private AsReception alpha;
     private AsReception beta;
 
+    private static List<String> numbersOf(Page<AsReceptionDto.ListResponse> page) {
+        return page.getContent().stream().map(AsReceptionDto.ListResponse::receptionNumber).toList();
+    }
+
+    private static AsReceptionDto.ListResponse findByNumber(Page<AsReceptionDto.ListResponse> page, String receptionNumber) {
+        return page.getContent().stream()
+                .filter(response -> response.receptionNumber().equals(receptionNumber))
+                .findFirst()
+                .orElseThrow();
+    }
+
     @BeforeEach
     void setUp() {
         Member receptionist = memberRepository.save(
@@ -202,16 +213,5 @@ class AsReceptionRepositoryTest {
                 ReturnMethod.DELIVERY,
                 null
         ));
-    }
-
-    private static List<String> numbersOf(Page<AsReceptionDto.ListResponse> page) {
-        return page.getContent().stream().map(AsReceptionDto.ListResponse::receptionNumber).toList();
-    }
-
-    private static AsReceptionDto.ListResponse findByNumber(Page<AsReceptionDto.ListResponse> page, String receptionNumber) {
-        return page.getContent().stream()
-                .filter(response -> response.receptionNumber().equals(receptionNumber))
-                .findFirst()
-                .orElseThrow();
     }
 }

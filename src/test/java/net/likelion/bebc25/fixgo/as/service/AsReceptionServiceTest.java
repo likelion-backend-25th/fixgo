@@ -1,294 +1,411 @@
 package net.likelion.bebc25.fixgo.as.service;
 
+import jakarta.persistence.EntityManager;
 import net.likelion.bebc25.fixgo.as.dto.AsReceptionDto;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
 import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
+import net.likelion.bebc25.fixgo.as.repository.AsStatusHistoryRepository;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.entity.Role;
 import net.likelion.bebc25.fixgo.auth.entity.Status;
 import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
-import net.likelion.bebc25.fixgo.customer.entity.Customer;
-import net.likelion.bebc25.fixgo.customer.repository.CustomerRepository;
-import net.likelion.bebc25.fixgo.product.entity.Product;
-import net.likelion.bebc25.fixgo.product.repository.ProductRepository;
+import net.likelion.bebc25.fixgo.config.JpaConfig;
+import net.likelion.bebc25.fixgo.portal.repository.CustomerPortalLinkRepository;
+import net.likelion.bebc25.fixgo.portal.service.CustomerPortalLinkService;
 import net.likelion.bebc25.fixgo.shipment.entity.ReturnMethod;
+import net.likelion.bebc25.fixgo.support.AsReceptionFixture;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
-import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
-@DisplayName("A/S 접수 서비스 테스트")
+@DataJpaTest
+@Import({JpaConfig.class, AsReceptionFixture.class, AsReceptionService.class,
+        AsStatusHistoryService.class, CustomerPortalLinkService.class})
 class AsReceptionServiceTest {
 
-    @Mock
-    AsReceptionRepository receptionRepository;
-    @Mock
-    AsStatusHistoryService asStatusHistoryService;
-    @Mock
-    CustomerRepository customerRepository;
-    @Mock
-    ProductRepository productRepository;
-    @Mock
-    MemberRepository memberRepository;
-    @InjectMocks
-    AsReceptionService service;
+    @Autowired
+    private AsReceptionService asReceptionService;
+    @Autowired
+    private AsReceptionRepository asReceptionRepository;
+    @Autowired
+    private AsStatusHistoryRepository asStatusHistoryRepository;
+    @Autowired
+    private CustomerPortalLinkRepository customerPortalLinkRepository;
+    @Autowired
+    private MemberRepository memberRepository;
+    @Autowired
+    private AsReceptionFixture asReceptionFixture;
+    @Autowired
+    private EntityManager entityManager;
 
-    // 상태 변경 테스트에서 쓰는 mock
-    @Mock
-    CustomUserDetails mockUserDetails;
-    @Mock
-    Member mockReceptionist;
-    @Mock
-    AsReception mockAsReception;
+    private AsReception reception;
+    private CustomUserDetails receptionist;
+    private Member technician;
 
-    // ===== 접수 등록 / 조회 (develop) =====
-
-    @Test
-    void blankKeywordDoesNotRestrictSearchAndFiltersArePreserved() {
-        var pageable = PageRequest.of(0, 10);
-        when(receptionRepository.search(null, AsReceptionStatus.RECEIVED, 2L, pageable)).thenReturn(Page.empty(pageable));
-
-        var result = service.getReceptions(new AsReceptionDto.ReceptionSearchRequest("  ", AsReceptionStatus.RECEIVED, 2L), pageable);
-
-        assertThat(result.getContent()).isEmpty();
-        assertThat(result.getSize()).isEqualTo(10);
-        verify(receptionRepository).search(null, AsReceptionStatus.RECEIVED, 2L, pageable);
+    @BeforeEach
+    void setUpReception() {
+        reception = asReceptionFixture.save();
+        receptionist = new CustomUserDetails(reception.getReceptionist());
+        technician = memberRepository.save(new Member(
+                "technician@test.com", "password", "수리기사", "010-3333-4444",
+                "서울시", Role.ROLE_TECHNICIAN, "profile.png"));
     }
 
     @Test
-    void missingReceptionReturnsNotFound() {
-        when(receptionRepository.findById(999L)).thenReturn(Optional.empty());
+    @DisplayName("접수를 등록하면 RECEIVED 상태와 연관 정보가 저장되고 접수 ID를 돌려준다")
+    void create_success() {
+        // given
+        var request = request(reception.getCustomer().getId(), reception.getProduct().getId(), technician.getId());
 
-        assertThatThrownBy(() -> service.getReception(999L)).isInstanceOfSatisfying(ResponseStatusException.class, exception -> assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND));
+        // when
+        var response = asReceptionService.createReception(receptionist, request);
+        entityManager.flush();
+        entityManager.clear();
+
+        // then
+        AsReception saved = asReceptionRepository.findById(response.id()).orElseThrow();
+        assertThat(saved.getCustomer().getId()).isEqualTo(request.customerId());
+        assertThat(saved.getProduct().getId()).isEqualTo(request.productId());
+        assertThat(saved.getReceptionist().getId()).isEqualTo(receptionist.getId());
+        assertThat(saved.getTechnician().getId()).isEqualTo(technician.getId());
+        assertThat(saved.getSymptom()).isEqualTo("충전불량");
+        assertThat(saved.getSymptomDetail()).isEqualTo("충전이 안 됩니다");
+        assertThat(saved.getMemo()).isEqualTo("방문 수령 예정");
+        assertThat(saved.getReturnMethod()).isEqualTo(ReturnMethod.PICKUP);
+        assertThat(saved.getFileUrl()).isEqualTo("https://example.com/receipt.jpg");
+        assertThat(saved.getStatus()).isEqualTo(AsReceptionStatus.RECEIVED);
+        assertThat(saved.getCreatedAt()).isNotNull();
+        assertThat(saved.getStatusChangedAt()).isNotNull();
+        assertThat(response.receptionNumber()).isEqualTo(saved.getReceptionNumber());
+        assertThat(response.technicianId()).isEqualTo(technician.getId());
     }
 
     @Test
-    void technicianCannotCreateReception() {
-        CustomUserDetails technician = user(Role.ROLE_TECHNICIAN);
+    @DisplayName("접수를 등록하면 고객 포털 링크와 최초 접수 이력이 함께 저장된다")
+    void create_savesPortalLinkAndHistory() {
+        // when
+        var response = asReceptionService.createReception(receptionist,
+                                                          request(reception.getCustomer().getId(), reception.getProduct().getId(), technician.getId()));
 
-        assertThatThrownBy(() -> service.createReception(technician, receptionRequest())).isInstanceOf(IllegalArgumentException.class).hasMessage("권한이 없습니다.");
-        verify(receptionRepository, never()).save(any());
+        // then
+        assertThat(customerPortalLinkRepository.findByAsReceptionId(response.id())).isPresent();
+        var histories = asStatusHistoryRepository.findHistoryByReceptionId(response.id());
+        assertThat(histories).hasSize(1);
+        assertThat(histories.getFirst().getFromStatus()).isNull();
+        assertThat(histories.getFirst().getToStatus()).isEqualTo("RECEIVED");
+        assertThat(histories.getFirst().getReason()).isEqualTo("A/S 최초 접수");
+        assertThat(histories.getFirst().getChangedBy().getId()).isEqualTo(receptionist.getId());
     }
 
     @Test
-    void createReceptionRequiresExistingCustomerProductAndActiveTechnician() {
-        CustomUserDetails receptionist = user(Role.ROLE_RECEPTIONIST);
-        when(customerRepository.findById(1L)).thenReturn(Optional.empty());
+    @DisplayName("관리자도 접수를 등록할 수 있다")
+    void create_admin() {
+        // given
+        Member admin = memberRepository.save(new Member("admin@test.com", "password", "관리자",
+                                                        "010-5555-6666", "서울시", Role.ROLE_ADMIN, "profile.png"));
 
-        assertThatThrownBy(() -> service.createReception(receptionist, receptionRequest())).isInstanceOf(NoSuchElementException.class).hasMessage("존재하지 않는 고객입니다.");
+        // when
+        var response = asReceptionService.createReception(new CustomUserDetails(admin),
+                                                          request(reception.getCustomer().getId(), reception.getProduct().getId(), technician.getId()));
 
-        Customer customer = customer();
-        Product product = product();
-        Member activeTechnician = member(3L, "김기사", Role.ROLE_TECHNICIAN);
-        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
-        when(productRepository.findById(2L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> service.createReception(receptionist, receptionRequest())).isInstanceOf(NoSuchElementException.class).hasMessage("지원하지 않는 제품입니다.");
-
-        when(productRepository.findById(2L)).thenReturn(Optional.of(product));
-        when(memberRepository.findById(receptionist.getId())).thenReturn(Optional.of(receptionist.getMember()));
-        when(memberRepository.findById(3L)).thenReturn(Optional.of(member(3L, "접수직원", Role.ROLE_RECEPTIONIST)));
-        assertThatThrownBy(() -> service.createReception(receptionist, receptionRequest())).isInstanceOf(IllegalArgumentException.class).hasMessage("수리 기사만 담당자로 배정할 수 있습니다.");
-
-        activeTechnician.changeStatus(Status.INACTIVE);
-        when(memberRepository.findById(3L)).thenReturn(Optional.of(activeTechnician));
-        assertThatThrownBy(() -> service.createReception(receptionist, receptionRequest())).isInstanceOf(IllegalArgumentException.class).hasMessage("활성 상태의 기사만 배정할 수 있습니다.");
-        verify(receptionRepository, never()).save(any());
+        // then
+        assertThat(asReceptionRepository.findById(response.id()).orElseThrow().getReceptionist().getId())
+                .isEqualTo(admin.getId());
     }
 
     @Test
-    void createReceptionSavesReceptionForReceptionist() {
-        CustomUserDetails receptionist = user(Role.ROLE_RECEPTIONIST);
-        Member technician = member(3L, "김기사", Role.ROLE_TECHNICIAN);
-        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer()));
-        when(productRepository.findById(2L)).thenReturn(Optional.of(product()));
-        when(memberRepository.findById(receptionist.getId())).thenReturn(Optional.of(receptionist.getMember()));
-        when(memberRepository.findById(3L)).thenReturn(Optional.of(technician));
-        when(receptionRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+    @DisplayName("수리 기사는 접수를 등록할 수 없고 접수와 후속 데이터도 저장되지 않는다")
+    void create_forbidden() {
+        // given
+        long count = asReceptionRepository.count();
 
-        AsReceptionDto.CreateReceptionResponse response = service.createReception(receptionist, receptionRequest());
-
-        ArgumentCaptor<AsReception> captor = ArgumentCaptor.forClass(AsReception.class);
-        verify(receptionRepository).save(captor.capture());
-        assertThat(captor.getValue().getSymptom()).isEqualTo("충전불량");
-        assertThat(captor.getValue().getReturnMethod()).isEqualTo(ReturnMethod.PICKUP);
-        assertThat(captor.getValue().getTechnician()).isSameAs(technician);
-        assertThat(captor.getValue().getStatus()).isEqualTo(AsReceptionStatus.RECEIVED);
-        assertThat(response.receptionNumber()).startsWith("AS-");
-        assertThat(response.technicianId()).isEqualTo(3L);
+        // when & then
+        assertThatThrownBy(() -> asReceptionService.createReception(new CustomUserDetails(technician),
+                                                                    request(reception.getCustomer().getId(), reception.getProduct().getId(), technician.getId())))
+                .isInstanceOf(IllegalArgumentException.class).hasMessage("권한이 없습니다.");
+        assertThat(asReceptionRepository.count()).isEqualTo(count);
+        assertThat(asStatusHistoryRepository.count()).isZero();
+        assertThat(customerPortalLinkRepository.count()).isZero();
     }
 
     @Test
-    void updateTechnicianRejectsClosedReceptionAndMissingTechnician() {
-        when(receptionRepository.findByIdAndStatusNotIn(any(), any())).thenReturn(Optional.empty());
+    @DisplayName("존재하지 않는 고객이면 접수되지 않고 기존 접수는 유지된다")
+    void create_customerNotFound() {
+        // given
+        long count = asReceptionRepository.count();
 
-        assertThatThrownBy(() -> service.updateTechnician(10L, 3L)).isInstanceOf(NoSuchElementException.class).hasMessage("존재하지 않는 접수입니다.");
-
-        @SuppressWarnings("unchecked") ArgumentCaptor<List<AsReceptionStatus>> statuses = ArgumentCaptor.forClass(List.class);
-        verify(receptionRepository).findByIdAndStatusNotIn(eq(10L), statuses.capture());
-        assertThat(statuses.getValue()).containsExactly(AsReceptionStatus.AWAITING_PAYMENT, AsReceptionStatus.AWAITING_SHIPMENT, AsReceptionStatus.AWAITING_PICKUP, AsReceptionStatus.COMPLETED);
-
-        AsReception reception = reception();
-        when(receptionRepository.findByIdAndStatusNotIn(any(), any())).thenReturn(Optional.of(reception));
-        when(memberRepository.findById(9L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> service.updateTechnician(10L, 9L)).isInstanceOf(NoSuchElementException.class).hasMessage("존재하지 않는 직원입니다.");
-        assertThat(reception.getTechnician().getName()).isEqualTo("김기사");
+        // when & then
+        assertThatThrownBy(() -> asReceptionService.createReception(receptionist,
+                                                                    request(-1L, reception.getProduct().getId(), technician.getId())))
+                .isInstanceOf(NoSuchElementException.class).hasMessage("존재하지 않는 고객입니다.");
+        assertThat(asReceptionRepository.count()).isEqualTo(count);
     }
 
     @Test
-    void updateTechnicianChangesAssignedTechnician() {
-        AsReception reception = reception();
-        Member newTechnician = member(9L, "박기사", Role.ROLE_TECHNICIAN);
-        when(receptionRepository.findByIdAndStatusNotIn(any(), any())).thenReturn(Optional.of(reception));
-        when(memberRepository.findById(9L)).thenReturn(Optional.of(newTechnician));
+    @DisplayName("존재하지 않는 제품이면 접수되지 않는다")
+    void create_productNotFound() {
+        // given
+        long count = asReceptionRepository.count();
 
-        AsReceptionDto.DetailResponse response = service.updateTechnician(10L, 9L);
-
-        assertThat(reception.getTechnician()).isSameAs(newTechnician);
-        assertThat(response.technician().name()).isEqualTo("박기사");
-    }
-
-    // ===== 상태 이력 / 상태 변경 (내 작업) =====
-
-    @Test
-    @DisplayName("A/S 접수를 등록하고 최초 상태 이력을 저장한다.")
-    void createReception_recordsInitialStatusHistory() {
-        CustomUserDetails receptionist = user(Role.ROLE_RECEPTIONIST);
-        Member technician = member(3L, "김기사", Role.ROLE_TECHNICIAN);
-        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer()));
-        when(productRepository.findById(2L)).thenReturn(Optional.of(product()));
-        when(memberRepository.findById(receptionist.getId())).thenReturn(Optional.of(receptionist.getMember()));
-        when(memberRepository.findById(3L)).thenReturn(Optional.of(technician));
-        when(receptionRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-
-        service.createReception(receptionist, receptionRequest());
-
-        verify(asStatusHistoryService).record(any(AsReception.class), isNull(), eq(AsReceptionStatus.RECEIVED.name()), eq("A/S 최초 접수"), eq(receptionist.getMember()));
+        // when & then
+        assertThatThrownBy(() -> asReceptionService.createReception(receptionist,
+                                                                    request(reception.getCustomer().getId(), -1L, technician.getId())))
+                .isInstanceOf(NoSuchElementException.class).hasMessage("지원하지 않는 제품입니다.");
+        assertThat(asReceptionRepository.count()).isEqualTo(count);
     }
 
     @Test
-    @DisplayName("기술자는 A/S 접수를 등록할 수 없고 이력도 저장하지 않는다.")
-    void createReception_forbidden_noHistory() {
-        CustomUserDetails technician = user(Role.ROLE_TECHNICIAN);
+    @DisplayName("존재하지 않는 담당 기사이면 접수되지 않는다")
+    void create_technicianNotFound() {
+        // given
+        long count = asReceptionRepository.count();
 
-        assertThrows(IllegalArgumentException.class, () -> service.createReception(technician, receptionRequest()));
-
-        verifyNoInteractions(customerRepository, productRepository, receptionRepository, asStatusHistoryService);
+        // when & then
+        assertThatThrownBy(() -> asReceptionService.createReception(receptionist,
+                                                                    request(reception.getCustomer().getId(), reception.getProduct().getId(), -1L)))
+                .isInstanceOf(NoSuchElementException.class).hasMessage("존재하지 않는 직원입니다.");
+        assertThat(asReceptionRepository.count()).isEqualTo(count);
     }
 
     @Test
-    @DisplayName("존재하지 않는 고객이면 접수를 등록할 수 없고 이력도 저장하지 않는다.")
-    void createReception_customerNotFound_noHistory() {
-        CustomUserDetails receptionist = user(Role.ROLE_RECEPTIONIST);
-        when(customerRepository.findById(1L)).thenReturn(Optional.empty());
+    @DisplayName("등록을 요청한 직원이 없으면 접수와 후속 데이터가 저장되지 않는다")
+    void create_receptionistNotFound() {
+        // given
+        var missingUser = missingUser();
+        long count = asReceptionRepository.count();
 
-        assertThrows(NoSuchElementException.class, () -> service.createReception(receptionist, receptionRequest()));
-
-        verify(receptionRepository, never()).save(any());
-        verifyNoInteractions(asStatusHistoryService);
+        // when & then
+        assertThatThrownBy(() -> asReceptionService.createReception(missingUser,
+                                                                    request(reception.getCustomer().getId(), reception.getProduct().getId(), technician.getId())))
+                .isInstanceOf(NoSuchElementException.class).hasMessage("존재하지 않는 직원입니다.");
+        assertThat(asReceptionRepository.count()).isEqualTo(count);
+        assertThat(asStatusHistoryRepository.count()).isZero();
+        assertThat(customerPortalLinkRepository.count()).isZero();
     }
 
     @Test
-    @DisplayName("A/S 접수 상태를 변경하고 변경 이력을 저장한다.")
+    @DisplayName("수리 기사 역할이 아닌 직원을 배정하면 접수되지 않는다")
+    void create_invalidTechnicianRole() {
+        // given
+        long count = asReceptionRepository.count();
+
+        // when & then
+        assertThatThrownBy(() -> asReceptionService.createReception(receptionist,
+                                                                    request(reception.getCustomer().getId(), reception.getProduct().getId(), receptionist.getId())))
+                .isInstanceOf(IllegalArgumentException.class).hasMessage("수리 기사만 담당자로 배정할 수 있습니다.");
+        assertThat(asReceptionRepository.count()).isEqualTo(count);
+    }
+
+    @Test
+    @DisplayName("비활성 기사를 배정하면 접수되지 않는다")
+    void create_inactiveTechnician() {
+        // given
+        technician.changeStatus(Status.INACTIVE);
+        long count = asReceptionRepository.count();
+
+        // when & then
+        assertThatThrownBy(() -> asReceptionService.createReception(receptionist,
+                                                                    request(reception.getCustomer().getId(), reception.getProduct().getId(), technician.getId())))
+                .isInstanceOf(IllegalArgumentException.class).hasMessage("활성 상태의 기사만 배정할 수 있습니다.");
+        assertThat(asReceptionRepository.count()).isEqualTo(count);
+    }
+
+    @Test
+    @DisplayName("접수번호 검색에 상태와 담당 기사 필터를 함께 적용한다")
+    void getReceptions_filters() {
+        // given
+        reception.updateTechnician(technician);
+        entityManager.flush();
+        var search = new AsReceptionDto.ReceptionSearchRequest(
+                "  " + reception.getReceptionNumber() + "  ", AsReceptionStatus.RECEIVED, technician.getId());
+
+        // when
+        var result = asReceptionService.getReceptions(search, PageRequest.of(0, 20));
+
+        // then
+        assertThat(result.getContent()).extracting(AsReceptionDto.ListResponse::id).containsExactly(reception.getId());
+        assertThat(result.getTotalElements()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("검색어가 공백이면 검색어 제한 없이 접수 목록을 조회한다")
+    void getReceptions_blankKeyword() {
+        // when
+        var result = asReceptionService.getReceptions(
+                new AsReceptionDto.ReceptionSearchRequest("  ", null, null), PageRequest.of(0, 20));
+
+        // then
+        assertThat(result.getContent()).extracting(AsReceptionDto.ListResponse::id).containsExactly(reception.getId());
+    }
+
+    @Test
+    @DisplayName("접수 ID로 고객과 제품이 포함된 상세 정보를 조회한다")
+    void getReception_success() {
+        // when
+        var response = asReceptionService.getReception(reception.getId());
+
+        // then
+        assertThat(response.id()).isEqualTo(reception.getId());
+        assertThat(response.customer().getId()).isEqualTo(reception.getCustomer().getId());
+        assertThat(response.product().getId()).isEqualTo(reception.getProduct().getId());
+        assertThat(response.status()).isEqualTo(AsReceptionStatus.RECEIVED);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 접수 상세 조회는 404 예외를 반환한다")
+    void getReception_notFound() {
+        // when & then
+        assertThatThrownBy(() -> asReceptionService.getReception(-1L))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                                        exception -> assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND));
+    }
+
+    @Test
+    @DisplayName("접수 상태를 변경하면 이전 상태와 수행자 및 사유가 이력에 저장된다")
     void changeReceptionStatus_success() {
-        Long receptionId = 1L;
-        AsReceptionStatus currentStatus = AsReceptionStatus.RECEIVED;
-        AsReceptionStatus newStatus = AsReceptionStatus.INSPECTION;
-        String reason = "제품 점검 시작";
+        // when
+        asReceptionService.changeReceptionStatus(reception.getId(), AsReceptionStatus.INSPECTION, "점검 시작", receptionist);
+        entityManager.flush();
+        entityManager.clear();
 
-        when(receptionRepository.findById(receptionId)).thenReturn(Optional.of(mockAsReception));
-        when(mockAsReception.getStatus()).thenReturn(currentStatus);
-        when(mockUserDetails.getId()).thenReturn(1L);
-        when(memberRepository.findById(1L)).thenReturn(Optional.of(mockReceptionist));
-
-        service.changeReceptionStatus(receptionId, newStatus, reason, mockUserDetails);
-
-        verify(mockAsReception).changeStatus(newStatus);
-        verify(asStatusHistoryService).record(mockAsReception, currentStatus.name(), newStatus.name(), reason, mockReceptionist);
+        // then
+        assertThat(asReceptionRepository.findById(reception.getId()).orElseThrow().getStatus())
+                .isEqualTo(AsReceptionStatus.INSPECTION);
+        var history = asStatusHistoryRepository.findHistoryByReceptionId(reception.getId());
+        assertThat(history).hasSize(1);
+        assertThat(history.getFirst().getFromStatus()).isEqualTo("RECEIVED");
+        assertThat(history.getFirst().getToStatus()).isEqualTo("INSPECTION");
+        assertThat(history.getFirst().getReason()).isEqualTo("점검 시작");
+        assertThat(history.getFirst().getChangedBy().getId()).isEqualTo(receptionist.getId());
     }
 
     @Test
-    @DisplayName("존재하지 않는 A/S 접수이면 상태를 변경할 수 없다.")
-    void changeReceptionStatus_receptionNotFound() {
-        when(receptionRepository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThrows(NoSuchElementException.class, () -> service.changeReceptionStatus(1L, AsReceptionStatus.INSPECTION, "점검 시작", mockUserDetails));
-
-        verifyNoInteractions(memberRepository, asStatusHistoryService);
-    }
-
-    @Test
-    @DisplayName("현재와 동일한 상태로 변경할 수 없다.")
+    @DisplayName("같은 상태로 변경하면 예외가 발생하고 상태와 이력은 바뀌지 않는다")
     void changeReceptionStatus_sameStatus() {
-        when(receptionRepository.findById(1L)).thenReturn(Optional.of(mockAsReception));
-        when(mockAsReception.getStatus()).thenReturn(AsReceptionStatus.RECEIVED);
-
-        assertThrows(IllegalArgumentException.class, () -> service.changeReceptionStatus(1L, AsReceptionStatus.RECEIVED, "중복 변경", mockUserDetails));
-
-        verify(mockAsReception, never()).changeStatus(any());
-        verifyNoInteractions(memberRepository, asStatusHistoryService);
+        // when & then
+        assertThatThrownBy(() -> asReceptionService.changeReceptionStatus(
+                reception.getId(), AsReceptionStatus.RECEIVED, "중복 변경", receptionist))
+                .isInstanceOf(IllegalArgumentException.class).hasMessage("이미 해당 상태로 처리되어 있습니다.");
+        assertThat(asReceptionRepository.findById(reception.getId()).orElseThrow().getStatus())
+                .isEqualTo(AsReceptionStatus.RECEIVED);
+        assertThat(asStatusHistoryRepository.findHistoryByReceptionId(reception.getId())).isEmpty();
     }
 
     @Test
-    @DisplayName("변경한 직원이 존재하지 않으면 상태를 변경할 수 없다.")
+    @DisplayName("존재하지 않는 접수는 상태를 변경할 수 없다")
+    void changeReceptionStatus_notFound() {
+        // when & then
+        assertThatThrownBy(() -> asReceptionService.changeReceptionStatus(
+                -1L, AsReceptionStatus.INSPECTION, "점검 시작", receptionist))
+                .isInstanceOf(NoSuchElementException.class).hasMessage("존재하지 않는 A/S 접수입니다.");
+        assertThat(asStatusHistoryRepository.count()).isZero();
+    }
+
+    @Test
+    @DisplayName("담당 기사를 재배정하면 변경 내용이 DB에 저장된다")
+    void updateTechnician_success() {
+        // when
+        var response = asReceptionService.updateTechnician(reception.getId(), technician.getId());
+        entityManager.flush();
+        entityManager.clear();
+
+        // then
+        assertThat(response.technician().id()).isEqualTo(technician.getId());
+        assertThat(asReceptionRepository.findById(reception.getId()).orElseThrow().getTechnician().getId())
+                .isEqualTo(technician.getId());
+    }
+
+    @Test
+    @DisplayName("상태 변경을 요청한 직원이 없으면 기존 상태와 이력은 유지된다")
     void changeReceptionStatus_memberNotFound() {
-        when(receptionRepository.findById(1L)).thenReturn(Optional.of(mockAsReception));
-        when(mockAsReception.getStatus()).thenReturn(AsReceptionStatus.RECEIVED);
-        when(mockUserDetails.getId()).thenReturn(1L);
-        when(memberRepository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThrows(NoSuchElementException.class, () -> service.changeReceptionStatus(1L, AsReceptionStatus.INSPECTION, "점검 시작", mockUserDetails));
-
-        verify(mockAsReception, never()).changeStatus(any());
-        verifyNoInteractions(asStatusHistoryService);
+        // when & then
+        assertThatThrownBy(() -> asReceptionService.changeReceptionStatus(
+                reception.getId(), AsReceptionStatus.INSPECTION, "점검 시작", missingUser()))
+                .isInstanceOf(NoSuchElementException.class).hasMessage("존재하지 않는 직원입니다.");
+        assertThat(reception.getStatus()).isEqualTo(AsReceptionStatus.RECEIVED);
+        assertThat(asStatusHistoryRepository.findHistoryByReceptionId(reception.getId())).isEmpty();
     }
 
-    // ===== 공통 헬퍼 =====
+    @ParameterizedTest
+    @EnumSource(value = AsReceptionStatus.class, names = {
+            "AWAITING_PAYMENT", "AWAITING_SHIPMENT", "AWAITING_PICKUP", "COMPLETED"
+    })
+    @DisplayName("결제 대기 이후에는 기사를 재배정할 수 없고 기존 담당자는 유지된다")
+    void updateTechnician_closedReception(AsReceptionStatus status) {
+        // given
+        reception.changeStatus(status);
+        Long previousTechnicianId = reception.getTechnician().getId();
+        entityManager.flush();
 
-    private AsReceptionDto.CreateReceptionRequest receptionRequest() {
-        return new AsReceptionDto.CreateReceptionRequest(1L, 2L, 3L, "충전불량", "충전이 안 됩니다", "메모", ReturnMethod.PICKUP, null);
+        // when & then
+        assertThatThrownBy(() -> asReceptionService.updateTechnician(reception.getId(), technician.getId()))
+                .isInstanceOf(NoSuchElementException.class);
+        assertThat(asReceptionRepository.findById(reception.getId()).orElseThrow().getTechnician().getId())
+                .isEqualTo(previousTechnicianId);
     }
 
-    private CustomUserDetails user(Role role) {
-        return new CustomUserDetails(member(4L, "최접수", role));
+    @Test
+    @DisplayName("존재하지 않는 기사는 재배정할 수 없고 기존 담당자는 유지된다")
+    void updateTechnician_notFound() {
+        // given
+        Long previousTechnicianId = reception.getTechnician().getId();
+
+        // when & then
+        assertThatThrownBy(() -> asReceptionService.updateTechnician(reception.getId(), -1L))
+                .isInstanceOf(NoSuchElementException.class).hasMessage("존재하지 않는 직원입니다.");
+        assertThat(reception.getTechnician().getId()).isEqualTo(previousTechnicianId);
     }
 
-    private Member member(Long id, String name, Role role) {
-        Member member = new Member(name + "@test.com", "password", name, "010-0000-0001", "서울시 강남구", role, "profile.png");
-        ReflectionTestUtils.setField(member, "id", id);
-        return member;
+    @Test
+    @DisplayName("수리 기사가 아닌 직원으로 재배정하면 기존 담당자는 유지된다")
+    void updateTechnician_invalidRole() {
+        // given
+        Long previousTechnicianId = reception.getTechnician().getId();
+
+        // when & then
+        assertThatThrownBy(() -> asReceptionService.updateTechnician(reception.getId(), receptionist.getId()))
+                .isInstanceOf(IllegalArgumentException.class).hasMessage("수리 기사만 담당자로 배정할 수 있습니다.");
+        assertThat(reception.getTechnician().getId()).isEqualTo(previousTechnicianId);
     }
 
-    private Customer customer() {
-        return new Customer("한소희", "010-1111-2222", "hansohee@test.com", "12345", "서울", "강남구", 1L);
+    @Test
+    @DisplayName("비활성 기사로 재배정하면 기존 담당자는 유지된다")
+    void updateTechnician_inactive() {
+        // given
+        technician.changeStatus(Status.INACTIVE);
+        Long previousTechnicianId = reception.getTechnician().getId();
+
+        // when & then
+        assertThatThrownBy(() -> asReceptionService.updateTechnician(reception.getId(), technician.getId()))
+                .isInstanceOf(IllegalArgumentException.class).hasMessage("활성 상태의 기사만 배정할 수 있습니다.");
+        assertThat(reception.getTechnician().getId()).isEqualTo(previousTechnicianId);
     }
 
-    private Product product() {
-        return new Product(1L, "SN-1004", LocalDateTime.now(), 1L);
+    private CustomUserDetails missingUser() {
+        Member member = new Member("missing@test.com", "password", "없는직원", "010-0000-0000",
+                                   "서울시", Role.ROLE_RECEPTIONIST, "profile.png");
+        ReflectionTestUtils.setField(member, "id", -1L);
+        return new CustomUserDetails(member);
     }
 
-    private AsReception reception() {
-        return new AsReception("AS-100", customer(), product(), member(4L, "최접수", Role.ROLE_RECEPTIONIST), member(3L, "김기사", Role.ROLE_TECHNICIAN), "충전불량", "충전이 안 됩니다", "메모", ReturnMethod.DELIVERY, null);
+    private AsReceptionDto.CreateReceptionRequest request(Long customerId, Long productId, Long technicianId) {
+        return new AsReceptionDto.CreateReceptionRequest(customerId, productId, technicianId,
+                                                         "충전불량", "충전이 안 됩니다", "방문 수령 예정", ReturnMethod.PICKUP, "https://example.com/receipt.jpg");
     }
 }
