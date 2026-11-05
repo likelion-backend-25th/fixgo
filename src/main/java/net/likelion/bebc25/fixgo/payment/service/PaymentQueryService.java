@@ -3,8 +3,11 @@ package net.likelion.bebc25.fixgo.payment.service;
 import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
 import net.likelion.bebc25.fixgo.payment.entity.*;
+import net.likelion.bebc25.fixgo.payment.exception.PaymentErrorCode;
+import net.likelion.bebc25.fixgo.payment.exception.PaymentException;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentAttemptRepository;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentBillRepository;
+import net.likelion.bebc25.fixgo.payment.repository.PaymentRefundRepository;
 import net.likelion.bebc25.fixgo.payment.repository.VirtualAccountRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -22,6 +25,84 @@ public class PaymentQueryService {
     private final PaymentBillRepository paymentBillRepository;
     private final PaymentAttemptRepository paymentAttemptRepository;
     private final VirtualAccountRepository virtualAccountRepository;
+    private final PaymentRefundRepository paymentRefundRepository;
+
+    public PaymentDto.PaymentDetailResponse getDetail(Long billId) {
+        // 1. 청구서와 접수 기본 정보를 조회한다.
+        PaymentBill bill = paymentBillRepository.findById(billId)
+                .orElseThrow(() -> new PaymentException(PaymentErrorCode.BILL_NOT_FOUND, "결제 데이터가 없습니다."));
+        PaymentDto.ReceptionInfo reception = paymentBillRepository.findReceptionInfo(bill.getAsReceptionId())
+                .orElseThrow(() -> new IllegalStateException("결제 데이터가 없습니다."));
+
+        // 2. 결제와 환불 이력을 준비한다. 환불 후에도 성공한 결제 이력은 유지된다.
+        PaymentAttempt successfulPayment = paymentAttemptRepository
+                .findByPaymentBillIdAndStatus(billId, PaymentAttemptStatus.DONE)
+                .orElse(null);
+        // 실패하거나 진행 중인 환불은 완료 내역에 포함하지 않는다.
+        PaymentRefund completedRefund = paymentRefundRepository
+                .findByPaymentAttemptPaymentBillIdAndStatus(billId, PaymentRefundStatus.DONE)
+                .orElse(null);
+        PaymentDto.PaymentHistoryItem paymentHistory = successfulPayment == null
+                ? null : PaymentDto.PaymentHistoryItem.from(successfulPayment);
+        PaymentDto.RefundHistoryItem refundHistory = completedRefund == null
+                ? null : PaymentDto.RefundHistoryItem.from(completedRefund);
+
+        // 3. 화면에 보여줄 결제와 가상계좌를 확인한다.
+        PaymentAttempt currentPayment = findCurrentPayment(billId, successfulPayment);
+        PaymentDto.AccountInfo account = findAccountInfo(currentPayment);
+        boolean refundable = isRefundable(bill, currentPayment);
+
+        return new PaymentDto.PaymentDetailResponse(
+                bill.getId(),
+                reception,
+                bill.getAmount(),
+                bill.getStatus(),
+                currentPayment == null ? null : currentPayment.getStatus(),
+                currentPayment == null ? null : currentPayment.getMethod(),
+                account,
+                paymentHistory,
+                refundHistory,
+                refundable
+        );
+    }
+
+    private PaymentAttempt findCurrentPayment(Long billId, PaymentAttempt successfulPayment) {
+        // 성공한 결제가 있으면 해당 결제를 보여준다.
+        if (successfulPayment != null) {
+            return successfulPayment;
+        }
+
+        // 완료 이력이 없으면 입금 대기 결제를 조회한다. 둘 다 없으면 결제 전이다.
+        return paymentAttemptRepository
+                .findByPaymentBillIdAndStatus(billId, PaymentAttemptStatus.WAITING_FOR_DEPOSIT)
+                .orElse(null);
+    }
+
+    private PaymentDto.AccountInfo findAccountInfo(PaymentAttempt payment) {
+        if (payment == null || payment.getMethod() != PaymentMethod.VIRTUAL_ACCOUNT) {
+            return null;
+        }
+
+        VirtualAccount account = virtualAccountRepository.findByPaymentAttemptId(payment.getId())
+                .orElseThrow(() -> new IllegalStateException("결제 데이터가 없습니다."));
+        return new PaymentDto.AccountInfo(account.getBankCode(), account.getAccountNumber(), account.getDueAt());
+    }
+
+    private boolean isRefundable(PaymentBill bill, PaymentAttempt payment) {
+        if (bill.getStatus() != PaymentBillStatus.PAID || payment == null) {
+            return false;
+        }
+
+        // 현재 환불 서비스는 카드와 가상계좌 환불만 지원한다.
+        if (payment.getMethod() != PaymentMethod.CARD
+                && payment.getMethod() != PaymentMethod.VIRTUAL_ACCOUNT) {
+            return false;
+        }
+
+        // 처리 중인 환불이 있으면 중복 요청 버튼을 비활성화한다.
+        return !paymentRefundRepository.existsByPaymentAttemptPaymentBillIdAndStatus(
+                bill.getId(), PaymentRefundStatus.IN_PROGRESS);
+    }
 
     public Page<PaymentDto.PaymentListResponse> getPaymentList(
             String keyword,

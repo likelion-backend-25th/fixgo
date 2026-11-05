@@ -29,7 +29,7 @@ public interface PaymentBillRepository extends JpaRepository<PaymentBill, Long> 
     @Query(
             value = """
                     select new net.likelion.bebc25.fixgo.payment.dto.PaymentDto$PaymentListResponse(
-                        r.receptionNumber, c.name, b.amount, b.status, a.method
+                        b.id, r.receptionNumber, c.name, b.amount, b.status, a.method
                     )
                     from PaymentBill b
                     join AsReception r on r.id = b.asReceptionId
@@ -59,4 +59,16 @@ public interface PaymentBillRepository extends JpaRepository<PaymentBill, Long> 
             @Param("status") PaymentBillStatus status,
             Pageable pageable
     );
+
+    @Query("""
+            select new net.likelion.bebc25.fixgo.payment.dto.PaymentDto$ReceptionInfo(
+                r.receptionNumber, c.name, m.name, r.symptom, r.symptomDetail
+            )
+            from AsReception r
+            join r.customer c
+            join r.product p
+            left join ProductModel m on m.id = p.productModelId
+            where r.id = :asReceptionId
+            """)
+    Optional<PaymentDto.ReceptionInfo> findReceptionInfo(@Param("asReceptionId") Long asReceptionId);
 }

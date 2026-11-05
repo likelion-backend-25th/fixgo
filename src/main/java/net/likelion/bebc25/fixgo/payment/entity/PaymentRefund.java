@@ -54,6 +54,7 @@ public class PaymentRefund {
 
         refund.paymentAttempt = paymentAttempt;
         refund.cancelReason = cancelReason;
+        refund.cancelAmount = paymentAttempt.getAmount();
         refund.createdBy = requestedBy;
         refund.status = PaymentRefundStatus.IN_PROGRESS;
 
