@@ -13,7 +13,7 @@ INSERT INTO member (email,
                     updated_at,
                     created_by,
                     updated_by)
-VALUES ('admin001@fixgo.com',
+SELECT 'admin001@fixgo.com',
         '$2a$10$vFJ1GvhwL8vQFOSGsKTjMeH7cQUItVadnGDGRHF1Q8xGefzmSlzMS',
         '관리자',
         '010-XXXX-XXXX',
@@ -25,7 +25,8 @@ VALUES ('admin001@fixgo.com',
         NOW(),
         NOW(),
         0,
-        0);
+        0
+WHERE NOT EXISTS (SELECT 1 FROM member WHERE email = 'admin001@fixgo.com');
 
 
 -- 이메일 관련 더미데이터
@@ -981,3 +982,553 @@ VALUES ('접수 완료 안내',
         '안녕하세요. FixGo입니다.\n고객님의 A/S 처리가 최종 완료되었습니다.\nFixGo 서비스를 이용해 주셔서 감사합니다.',
         NOW(), NOW());
 
+
+-- A/S 접수 더미데이터 10건: 상태별 1건, 접수번호 AS-yyMMdd-UUID
+-- 연관 데이터는 고정 ID 대신 이메일/모델명/시리얼번호로 연결한다.
+-- 수동 실행 시 이 주석 아래 전체를 순서대로 실행한다.
+-- as_reception INSERT만 실행하면 선행 고객이 없어 customer_id가 NULL이 된다.
+
+INSERT INTO member (email, password_hash, name, phone, role, address, profile_img_url, status, created_at, updated_at,
+                    created_by, updated_by)
+SELECT 'reception.demo@fixgo.example',
+       '$2a$10$vFJ1GvhwL8vQFOSGsKTjMeH7cQUItVadnGDGRHF1Q8xGefzmSlzMS',
+       '접수담당 더미',
+       '010-0000-0000',
+       'ROLE_RECEPTIONIST',
+       '서울시 테스트센터',
+       '',
+       'ACTIVE',
+       NOW(),
+       NOW(),
+       0,
+       0
+WHERE NOT EXISTS (SELECT 1 FROM member WHERE email = 'reception.demo@fixgo.example');
+
+INSERT INTO member (email, password_hash, name, phone, role, address, profile_img_url, status, created_at, updated_at,
+                    created_by, updated_by)
+SELECT 'technician.demo@fixgo.example',
+       '$2a$10$vFJ1GvhwL8vQFOSGsKTjMeH7cQUItVadnGDGRHF1Q8xGefzmSlzMS',
+       '수리기사 더미',
+       '010-0000-0000',
+       'ROLE_TECHNICIAN',
+       '서울시 테스트센터',
+       '',
+       'ACTIVE',
+       NOW(),
+       NOW(),
+       0,
+       0
+WHERE NOT EXISTS (SELECT 1 FROM member WHERE email = 'technician.demo@fixgo.example');
+
+INSERT INTO product_model (name, model_name, category, warranty_months, is_active, created_at, updated_at, created_by,
+                           updated_by)
+SELECT '더미 노트북',
+       'FIXGO-DEMO-LAPTOP',
+       'LAPTOP',
+       24,
+       TRUE,
+       NOW(),
+       NOW(),
+       0,
+       0
+WHERE NOT EXISTS (SELECT 1 FROM product_model WHERE model_name = 'FIXGO-DEMO-LAPTOP');
+
+-- 01. 김하늘 / RECEIVED
+INSERT INTO customer (name, phone, email, zipcode, basic_address, detail_address, created_at, updated_at, created_by,
+                      updated_by)
+SELECT '김하늘',
+       '010-9000-0001',
+       'customer01@fixgo.example',
+       '06200',
+       '서울시 강남구 테스트로 1',
+       '1층',
+       '2026-11-05 09:00:00',
+       '2026-11-05 09:00:00',
+       0,
+       0
+WHERE NOT EXISTS (SELECT 1 FROM customer WHERE email = 'customer01@fixgo.example');
+
+INSERT INTO product (product_model_id, customer_id, serial_number, manufactured_at, purchased_at, created_at,
+                     updated_at, created_by, updated_by)
+SELECT (SELECT MIN(id) FROM product_model WHERE model_name = 'FIXGO-DEMO-LAPTOP'),
+       (SELECT MIN(id) FROM customer WHERE email = 'customer01@fixgo.example'),
+       'FIXGO-DEMO-SN-01',
+       '2026-01-01 00:00:00',
+       '2026-03-01 00:00:00',
+       '2026-11-05 09:00:00',
+       '2026-11-05 09:00:00',
+       0,
+       0
+WHERE NOT EXISTS (SELECT 1 FROM product WHERE serial_number = 'FIXGO-DEMO-SN-01');
+
+INSERT INTO as_reception (reception_number, customer_id, product_id, receptionist_id, technician_id,
+                          symptom, symptom_detail, memo, return_method, status, status_changed_at, closed_at,
+                          file_url, created_at, updated_at, created_by, updated_by)
+SELECT 'AS-261105-8f3a2c10-7b6e-4d90-a123-000000000001',
+       (SELECT MIN(id) FROM customer WHERE email = 'customer01@fixgo.example'),
+       (SELECT id FROM product WHERE serial_number = 'FIXGO-DEMO-SN-01'),
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
+       (SELECT id FROM member WHERE email = 'technician.demo@fixgo.example'),
+       '전원 불량',
+       '전원 불량 증상으로 점검을 요청합니다.',
+       'A/S 목록 확인용 더미데이터 01',
+       'DELIVERY',
+       'RECEIVED',
+       '2026-11-05 09:00:00',
+       NULL,
+       NULL,
+       '2026-11-05 09:00:00',
+       '2026-11-05 09:00:00',
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example')
+WHERE NOT EXISTS (SELECT 1 FROM as_reception WHERE reception_number = 'AS-261105-8f3a2c10-7b6e-4d90-a123-000000000001');
+
+-- 02. 이서준 / INSPECTION
+INSERT INTO customer (name, phone, email, zipcode, basic_address, detail_address, created_at, updated_at, created_by,
+                      updated_by)
+SELECT '이서준',
+       '010-9000-0002',
+       'customer02@fixgo.example',
+       '06200',
+       '서울시 강남구 테스트로 2',
+       '2층',
+       '2026-11-05 09:00:00',
+       '2026-11-05 15:00:00',
+       0,
+       0
+WHERE NOT EXISTS (SELECT 1 FROM customer WHERE email = 'customer02@fixgo.example');
+
+INSERT INTO product (product_model_id, customer_id, serial_number, manufactured_at, purchased_at, created_at,
+                     updated_at, created_by, updated_by)
+SELECT (SELECT MIN(id) FROM product_model WHERE model_name = 'FIXGO-DEMO-LAPTOP'),
+       (SELECT MIN(id) FROM customer WHERE email = 'customer02@fixgo.example'),
+       'FIXGO-DEMO-SN-02',
+       '2026-01-01 00:00:00',
+       '2026-03-01 00:00:00',
+       '2026-11-05 09:00:00',
+       '2026-11-05 15:00:00',
+       0,
+       0
+WHERE NOT EXISTS (SELECT 1 FROM product WHERE serial_number = 'FIXGO-DEMO-SN-02');
+
+INSERT INTO as_reception (reception_number, customer_id, product_id, receptionist_id, technician_id,
+                          symptom, symptom_detail, memo, return_method, status, status_changed_at, closed_at,
+                          file_url, created_at, updated_at, created_by, updated_by)
+SELECT 'AS-261105-8f3a2c10-7b6e-4d90-a123-000000000002',
+       (SELECT MIN(id) FROM customer WHERE email = 'customer02@fixgo.example'),
+       (SELECT id FROM product WHERE serial_number = 'FIXGO-DEMO-SN-02'),
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
+       (SELECT id FROM member WHERE email = 'technician.demo@fixgo.example'),
+       '충전 불량',
+       '충전 불량 증상으로 점검을 요청합니다.',
+       'A/S 목록 확인용 더미데이터 02',
+       'PICKUP',
+       'INSPECTION',
+       '2026-11-05 15:00:00',
+       NULL,
+       NULL,
+       '2026-11-05 09:00:00',
+       '2026-11-05 15:00:00',
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example')
+WHERE NOT EXISTS (SELECT 1 FROM as_reception WHERE reception_number = 'AS-261105-8f3a2c10-7b6e-4d90-a123-000000000002');
+
+-- 03. 박지민 / WARRANTY_REVIEW
+INSERT INTO customer (name, phone, email, zipcode, basic_address, detail_address, created_at, updated_at, created_by,
+                      updated_by)
+SELECT '박지민',
+       '010-9000-0003',
+       'customer03@fixgo.example',
+       '06200',
+       '서울시 강남구 테스트로 3',
+       '3층',
+       '2026-11-04 09:00:00',
+       '2026-11-04 15:00:00',
+       0,
+       0
+WHERE NOT EXISTS (SELECT 1 FROM customer WHERE email = 'customer03@fixgo.example');
+
+INSERT INTO product (product_model_id, customer_id, serial_number, manufactured_at, purchased_at, created_at,
+                     updated_at, created_by, updated_by)
+SELECT (SELECT MIN(id) FROM product_model WHERE model_name = 'FIXGO-DEMO-LAPTOP'),
+       (SELECT MIN(id) FROM customer WHERE email = 'customer03@fixgo.example'),
+       'FIXGO-DEMO-SN-03',
+       '2026-01-01 00:00:00',
+       '2026-03-01 00:00:00',
+       '2026-11-04 09:00:00',
+       '2026-11-04 15:00:00',
+       0,
+       0
+WHERE NOT EXISTS (SELECT 1 FROM product WHERE serial_number = 'FIXGO-DEMO-SN-03');
+
+INSERT INTO as_reception (reception_number, customer_id, product_id, receptionist_id, technician_id,
+                          symptom, symptom_detail, memo, return_method, status, status_changed_at, closed_at,
+                          file_url, created_at, updated_at, created_by, updated_by)
+SELECT 'AS-261104-8f3a2c10-7b6e-4d90-a123-000000000003',
+       (SELECT MIN(id) FROM customer WHERE email = 'customer03@fixgo.example'),
+       (SELECT id FROM product WHERE serial_number = 'FIXGO-DEMO-SN-03'),
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
+       (SELECT id FROM member WHERE email = 'technician.demo@fixgo.example'),
+       '화면 깜빡임',
+       '화면 깜빡임 증상으로 점검을 요청합니다.',
+       'A/S 목록 확인용 더미데이터 03',
+       'DELIVERY',
+       'WARRANTY_REVIEW',
+       '2026-11-04 15:00:00',
+       NULL,
+       NULL,
+       '2026-11-04 09:00:00',
+       '2026-11-04 15:00:00',
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example')
+WHERE NOT EXISTS (SELECT 1 FROM as_reception WHERE reception_number = 'AS-261104-8f3a2c10-7b6e-4d90-a123-000000000003');
+
+-- 04. 최유진 / AWAITING_QUOTE_APPROVAL
+INSERT INTO customer (name, phone, email, zipcode, basic_address, detail_address, created_at, updated_at, created_by,
+                      updated_by)
+SELECT '최유진',
+       '010-9000-0004',
+       'customer04@fixgo.example',
+       '06200',
+       '서울시 강남구 테스트로 4',
+       '4층',
+       '2026-11-04 09:00:00',
+       '2026-11-04 15:00:00',
+       0,
+       0
+WHERE NOT EXISTS (SELECT 1 FROM customer WHERE email = 'customer04@fixgo.example');
+
+INSERT INTO product (product_model_id, customer_id, serial_number, manufactured_at, purchased_at, created_at,
+                     updated_at, created_by, updated_by)
+SELECT (SELECT MIN(id) FROM product_model WHERE model_name = 'FIXGO-DEMO-LAPTOP'),
+       (SELECT MIN(id) FROM customer WHERE email = 'customer04@fixgo.example'),
+       'FIXGO-DEMO-SN-04',
+       '2026-01-01 00:00:00',
+       '2026-03-01 00:00:00',
+       '2026-11-04 09:00:00',
+       '2026-11-04 15:00:00',
+       0,
+       0
+WHERE NOT EXISTS (SELECT 1 FROM product WHERE serial_number = 'FIXGO-DEMO-SN-04');
+
+INSERT INTO as_reception (reception_number, customer_id, product_id, receptionist_id, technician_id,
+                          symptom, symptom_detail, memo, return_method, status, status_changed_at, closed_at,
+                          file_url, created_at, updated_at, created_by, updated_by)
+SELECT 'AS-261104-8f3a2c10-7b6e-4d90-a123-000000000004',
+       (SELECT MIN(id) FROM customer WHERE email = 'customer04@fixgo.example'),
+       (SELECT id FROM product WHERE serial_number = 'FIXGO-DEMO-SN-04'),
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
+       (SELECT id FROM member WHERE email = 'technician.demo@fixgo.example'),
+       '키보드 불량',
+       '키보드 불량 증상으로 점검을 요청합니다.',
+       'A/S 목록 확인용 더미데이터 04',
+       'PICKUP',
+       'AWAITING_QUOTE_APPROVAL',
+       '2026-11-04 15:00:00',
+       NULL,
+       NULL,
+       '2026-11-04 09:00:00',
+       '2026-11-04 15:00:00',
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example')
+WHERE NOT EXISTS (SELECT 1 FROM as_reception WHERE reception_number = 'AS-261104-8f3a2c10-7b6e-4d90-a123-000000000004');
+
+-- 05. 정민수 / AWAITING_REPAIR
+INSERT INTO customer (name, phone, email, zipcode, basic_address, detail_address, created_at, updated_at, created_by,
+                      updated_by)
+SELECT '정민수',
+       '010-9000-0005',
+       'customer05@fixgo.example',
+       '06200',
+       '서울시 강남구 테스트로 5',
+       '5층',
+       '2026-11-03 09:00:00',
+       '2026-11-03 15:00:00',
+       0,
+       0
+WHERE NOT EXISTS (SELECT 1 FROM customer WHERE email = 'customer05@fixgo.example');
+
+INSERT INTO product (product_model_id, customer_id, serial_number, manufactured_at, purchased_at, created_at,
+                     updated_at, created_by, updated_by)
+SELECT (SELECT MIN(id) FROM product_model WHERE model_name = 'FIXGO-DEMO-LAPTOP'),
+       (SELECT MIN(id) FROM customer WHERE email = 'customer05@fixgo.example'),
+       'FIXGO-DEMO-SN-05',
+       '2026-01-01 00:00:00',
+       '2026-03-01 00:00:00',
+       '2026-11-03 09:00:00',
+       '2026-11-03 15:00:00',
+       0,
+       0
+WHERE NOT EXISTS (SELECT 1 FROM product WHERE serial_number = 'FIXGO-DEMO-SN-05');
+
+INSERT INTO as_reception (reception_number, customer_id, product_id, receptionist_id, technician_id,
+                          symptom, symptom_detail, memo, return_method, status, status_changed_at, closed_at,
+                          file_url, created_at, updated_at, created_by, updated_by)
+SELECT 'AS-261103-8f3a2c10-7b6e-4d90-a123-000000000005',
+       (SELECT MIN(id) FROM customer WHERE email = 'customer05@fixgo.example'),
+       (SELECT id FROM product WHERE serial_number = 'FIXGO-DEMO-SN-05'),
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
+       (SELECT id FROM member WHERE email = 'technician.demo@fixgo.example'),
+       '배터리 소모',
+       '배터리 소모 증상으로 점검을 요청합니다.',
+       'A/S 목록 확인용 더미데이터 05',
+       'DELIVERY',
+       'AWAITING_REPAIR',
+       '2026-11-03 15:00:00',
+       NULL,
+       NULL,
+       '2026-11-03 09:00:00',
+       '2026-11-03 15:00:00',
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example')
+WHERE NOT EXISTS (SELECT 1 FROM as_reception WHERE reception_number = 'AS-261103-8f3a2c10-7b6e-4d90-a123-000000000005');
+
+-- 06. 강수빈 / REPAIR_IN_PROGRESS
+INSERT INTO customer (name, phone, email, zipcode, basic_address, detail_address, created_at, updated_at, created_by,
+                      updated_by)
+SELECT '강수빈',
+       '010-9000-0006',
+       'customer06@fixgo.example',
+       '06200',
+       '서울시 강남구 테스트로 6',
+       '6층',
+       '2026-11-03 09:00:00',
+       '2026-11-03 15:00:00',
+       0,
+       0
+WHERE NOT EXISTS (SELECT 1 FROM customer WHERE email = 'customer06@fixgo.example');
+
+INSERT INTO product (product_model_id, customer_id, serial_number, manufactured_at, purchased_at, created_at,
+                     updated_at, created_by, updated_by)
+SELECT (SELECT MIN(id) FROM product_model WHERE model_name = 'FIXGO-DEMO-LAPTOP'),
+       (SELECT MIN(id) FROM customer WHERE email = 'customer06@fixgo.example'),
+       'FIXGO-DEMO-SN-06',
+       '2026-01-01 00:00:00',
+       '2026-03-01 00:00:00',
+       '2026-11-03 09:00:00',
+       '2026-11-03 15:00:00',
+       0,
+       0
+WHERE NOT EXISTS (SELECT 1 FROM product WHERE serial_number = 'FIXGO-DEMO-SN-06');
+
+INSERT INTO as_reception (reception_number, customer_id, product_id, receptionist_id, technician_id,
+                          symptom, symptom_detail, memo, return_method, status, status_changed_at, closed_at,
+                          file_url, created_at, updated_at, created_by, updated_by)
+SELECT 'AS-261103-8f3a2c10-7b6e-4d90-a123-000000000006',
+       (SELECT MIN(id) FROM customer WHERE email = 'customer06@fixgo.example'),
+       (SELECT id FROM product WHERE serial_number = 'FIXGO-DEMO-SN-06'),
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
+       (SELECT id FROM member WHERE email = 'technician.demo@fixgo.example'),
+       '과열',
+       '과열 증상으로 점검을 요청합니다.',
+       'A/S 목록 확인용 더미데이터 06',
+       'PICKUP',
+       'REPAIR_IN_PROGRESS',
+       '2026-11-03 15:00:00',
+       NULL,
+       NULL,
+       '2026-11-03 09:00:00',
+       '2026-11-03 15:00:00',
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example')
+WHERE NOT EXISTS (SELECT 1 FROM as_reception WHERE reception_number = 'AS-261103-8f3a2c10-7b6e-4d90-a123-000000000006');
+
+-- 07. 조현우 / AWAITING_PAYMENT
+INSERT INTO customer (name, phone, email, zipcode, basic_address, detail_address, created_at, updated_at, created_by,
+                      updated_by)
+SELECT '조현우',
+       '010-9000-0007',
+       'customer07@fixgo.example',
+       '06200',
+       '서울시 강남구 테스트로 7',
+       '7층',
+       '2026-11-02 09:00:00',
+       '2026-11-02 15:00:00',
+       0,
+       0
+WHERE NOT EXISTS (SELECT 1 FROM customer WHERE email = 'customer07@fixgo.example');
+
+INSERT INTO product (product_model_id, customer_id, serial_number, manufactured_at, purchased_at, created_at,
+                     updated_at, created_by, updated_by)
+SELECT (SELECT MIN(id) FROM product_model WHERE model_name = 'FIXGO-DEMO-LAPTOP'),
+       (SELECT MIN(id) FROM customer WHERE email = 'customer07@fixgo.example'),
+       'FIXGO-DEMO-SN-07',
+       '2026-01-01 00:00:00',
+       '2026-03-01 00:00:00',
+       '2026-11-02 09:00:00',
+       '2026-11-02 15:00:00',
+       0,
+       0
+WHERE NOT EXISTS (SELECT 1 FROM product WHERE serial_number = 'FIXGO-DEMO-SN-07');
+
+INSERT INTO as_reception (reception_number, customer_id, product_id, receptionist_id, technician_id,
+                          symptom, symptom_detail, memo, return_method, status, status_changed_at, closed_at,
+                          file_url, created_at, updated_at, created_by, updated_by)
+SELECT 'AS-261102-8f3a2c10-7b6e-4d90-a123-000000000007',
+       (SELECT MIN(id) FROM customer WHERE email = 'customer07@fixgo.example'),
+       (SELECT id FROM product WHERE serial_number = 'FIXGO-DEMO-SN-07'),
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
+       (SELECT id FROM member WHERE email = 'technician.demo@fixgo.example'),
+       '소음 발생',
+       '소음 발생 증상으로 점검을 요청합니다.',
+       'A/S 목록 확인용 더미데이터 07',
+       'DELIVERY',
+       'AWAITING_PAYMENT',
+       '2026-11-02 15:00:00',
+       NULL,
+       NULL,
+       '2026-11-02 09:00:00',
+       '2026-11-02 15:00:00',
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example')
+WHERE NOT EXISTS (SELECT 1 FROM as_reception WHERE reception_number = 'AS-261102-8f3a2c10-7b6e-4d90-a123-000000000007');
+
+-- 08. 윤서연 / AWAITING_SHIPMENT
+INSERT INTO customer (name, phone, email, zipcode, basic_address, detail_address, created_at, updated_at, created_by,
+                      updated_by)
+SELECT '윤서연',
+       '010-9000-0008',
+       'customer08@fixgo.example',
+       '06200',
+       '서울시 강남구 테스트로 8',
+       '8층',
+       '2026-11-02 09:00:00',
+       '2026-11-02 15:00:00',
+       0,
+       0
+WHERE NOT EXISTS (SELECT 1 FROM customer WHERE email = 'customer08@fixgo.example');
+
+INSERT INTO product (product_model_id, customer_id, serial_number, manufactured_at, purchased_at, created_at,
+                     updated_at, created_by, updated_by)
+SELECT (SELECT MIN(id) FROM product_model WHERE model_name = 'FIXGO-DEMO-LAPTOP'),
+       (SELECT MIN(id) FROM customer WHERE email = 'customer08@fixgo.example'),
+       'FIXGO-DEMO-SN-08',
+       '2026-01-01 00:00:00',
+       '2026-03-01 00:00:00',
+       '2026-11-02 09:00:00',
+       '2026-11-02 15:00:00',
+       0,
+       0
+WHERE NOT EXISTS (SELECT 1 FROM product WHERE serial_number = 'FIXGO-DEMO-SN-08');
+
+INSERT INTO as_reception (reception_number, customer_id, product_id, receptionist_id, technician_id,
+                          symptom, symptom_detail, memo, return_method, status, status_changed_at, closed_at,
+                          file_url, created_at, updated_at, created_by, updated_by)
+SELECT 'AS-261102-8f3a2c10-7b6e-4d90-a123-000000000008',
+       (SELECT MIN(id) FROM customer WHERE email = 'customer08@fixgo.example'),
+       (SELECT id FROM product WHERE serial_number = 'FIXGO-DEMO-SN-08'),
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
+       (SELECT id FROM member WHERE email = 'technician.demo@fixgo.example'),
+       '와이파이 불량',
+       '와이파이 불량 증상으로 점검을 요청합니다.',
+       'A/S 목록 확인용 더미데이터 08',
+       'DELIVERY',
+       'AWAITING_SHIPMENT',
+       '2026-11-02 15:00:00',
+       NULL,
+       NULL,
+       '2026-11-02 09:00:00',
+       '2026-11-02 15:00:00',
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example')
+WHERE NOT EXISTS (SELECT 1 FROM as_reception WHERE reception_number = 'AS-261102-8f3a2c10-7b6e-4d90-a123-000000000008');
+
+-- 09. 장도윤 / AWAITING_PICKUP
+INSERT INTO customer (name, phone, email, zipcode, basic_address, detail_address, created_at, updated_at, created_by,
+                      updated_by)
+SELECT '장도윤',
+       '010-9000-0009',
+       'customer09@fixgo.example',
+       '06200',
+       '서울시 강남구 테스트로 9',
+       '9층',
+       '2026-11-01 09:00:00',
+       '2026-11-01 15:00:00',
+       0,
+       0
+WHERE NOT EXISTS (SELECT 1 FROM customer WHERE email = 'customer09@fixgo.example');
+
+INSERT INTO product (product_model_id, customer_id, serial_number, manufactured_at, purchased_at, created_at,
+                     updated_at, created_by, updated_by)
+SELECT (SELECT MIN(id) FROM product_model WHERE model_name = 'FIXGO-DEMO-LAPTOP'),
+       (SELECT MIN(id) FROM customer WHERE email = 'customer09@fixgo.example'),
+       'FIXGO-DEMO-SN-09',
+       '2026-01-01 00:00:00',
+       '2026-03-01 00:00:00',
+       '2026-11-01 09:00:00',
+       '2026-11-01 15:00:00',
+       0,
+       0
+WHERE NOT EXISTS (SELECT 1 FROM product WHERE serial_number = 'FIXGO-DEMO-SN-09');
+
+INSERT INTO as_reception (reception_number, customer_id, product_id, receptionist_id, technician_id,
+                          symptom, symptom_detail, memo, return_method, status, status_changed_at, closed_at,
+                          file_url, created_at, updated_at, created_by, updated_by)
+SELECT 'AS-261101-8f3a2c10-7b6e-4d90-a123-000000000009',
+       (SELECT MIN(id) FROM customer WHERE email = 'customer09@fixgo.example'),
+       (SELECT id FROM product WHERE serial_number = 'FIXGO-DEMO-SN-09'),
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
+       (SELECT id FROM member WHERE email = 'technician.demo@fixgo.example'),
+       '터치패드 불량',
+       '터치패드 불량 증상으로 점검을 요청합니다.',
+       'A/S 목록 확인용 더미데이터 09',
+       'PICKUP',
+       'AWAITING_PICKUP',
+       '2026-11-01 15:00:00',
+       NULL,
+       NULL,
+       '2026-11-01 09:00:00',
+       '2026-11-01 15:00:00',
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example')
+WHERE NOT EXISTS (SELECT 1 FROM as_reception WHERE reception_number = 'AS-261101-8f3a2c10-7b6e-4d90-a123-000000000009');
+
+-- 10. 임지우 / COMPLETED
+INSERT INTO customer (name, phone, email, zipcode, basic_address, detail_address, created_at, updated_at, created_by,
+                      updated_by)
+SELECT '임지우',
+       '010-9000-0010',
+       'customer10@fixgo.example',
+       '06200',
+       '서울시 강남구 테스트로 10',
+       '10층',
+       '2026-11-01 09:00:00',
+       '2026-11-01 15:00:00',
+       0,
+       0
+WHERE NOT EXISTS (SELECT 1 FROM customer WHERE email = 'customer10@fixgo.example');
+
+INSERT INTO product (product_model_id, customer_id, serial_number, manufactured_at, purchased_at, created_at,
+                     updated_at, created_by, updated_by)
+SELECT (SELECT MIN(id) FROM product_model WHERE model_name = 'FIXGO-DEMO-LAPTOP'),
+       (SELECT MIN(id) FROM customer WHERE email = 'customer10@fixgo.example'),
+       'FIXGO-DEMO-SN-10',
+       '2026-01-01 00:00:00',
+       '2026-03-01 00:00:00',
+       '2026-11-01 09:00:00',
+       '2026-11-01 15:00:00',
+       0,
+       0
+WHERE NOT EXISTS (SELECT 1 FROM product WHERE serial_number = 'FIXGO-DEMO-SN-10');
+
+INSERT INTO as_reception (reception_number, customer_id, product_id, receptionist_id, technician_id,
+                          symptom, symptom_detail, memo, return_method, status, status_changed_at, closed_at,
+                          file_url, created_at, updated_at, created_by, updated_by)
+SELECT 'AS-261101-8f3a2c10-7b6e-4d90-a123-000000000010',
+       (SELECT MIN(id) FROM customer WHERE email = 'customer10@fixgo.example'),
+       (SELECT id FROM product WHERE serial_number = 'FIXGO-DEMO-SN-10'),
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
+       (SELECT id FROM member WHERE email = 'technician.demo@fixgo.example'),
+       '화면 파손',
+       '화면 파손 증상으로 점검을 요청합니다.',
+       'A/S 목록 확인용 더미데이터 10',
+       'PICKUP',
+       'COMPLETED',
+       '2026-11-01 15:00:00',
+       '2026-11-01 15:00:00',
+       NULL,
+       '2026-11-01 09:00:00',
+       '2026-11-01 15:00:00',
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example')
+WHERE NOT EXISTS (SELECT 1 FROM as_reception WHERE reception_number = 'AS-261101-8f3a2c10-7b6e-4d90-a123-000000000010');
