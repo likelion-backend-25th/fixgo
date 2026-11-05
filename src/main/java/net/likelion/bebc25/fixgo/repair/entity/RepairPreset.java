@@ -40,4 +40,9 @@ public class RepairPreset {
         this.createdBy = createdBy;
         this.updatedBy = updatedBy;
     }
+
+    // 테스트용 ID 설정
+    public void setId(Long id) {
+        this.id = id;
+    }
 }

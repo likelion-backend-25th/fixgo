@@ -42,6 +42,12 @@ class PaymentQueryServiceTest {
     @Autowired
     EntityManager em;
 
+    @Test
+    void detailRejectsMissingBill() {
+        assertThatThrownBy(() -> paymentQueryService.getDetail(Long.MAX_VALUE))
+                .isInstanceOf(net.likelion.bebc25.fixgo.payment.exception.PaymentException.class);
+    }
+
     private PaymentBill issueBill() {
         return paymentBillRepository.save(PaymentBill.issue(AS_RECEPTION_ID, 30_000L, PaymentBillType.REPAIR));
     }

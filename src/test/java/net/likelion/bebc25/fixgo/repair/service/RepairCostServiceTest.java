@@ -56,6 +56,9 @@ class RepairCostServiceTest {
     @Mock
     private ProductModelRepository productModelRepository;
 
+    @Mock
+    private RepairStatusService repairStatusService;
+
     @InjectMocks
     private RepairCostService repairCostService;
 
@@ -155,7 +158,7 @@ class RepairCostServiceTest {
     }
 
     @Test
-    @DisplayName("기사가 수리비를 확정하면 Repair와 AsReception 상태가 변경된다.")
+    @DisplayName("기사가 수리비를 확정하면 Repair와 AsReception 상태 변경을 요청한다.")
     void confirmRepairCostSuccess() {
         Long repairId = 1L;
         Long technicianId = 10L;
@@ -181,8 +184,10 @@ class RepairCostServiceTest {
         repairCostService.confirmRepairCost(repairId, userDetails);
 
         verify(repair).confirmRepairCost(username);
-        verify(repair).changeStatus(RepairStatus.REQUESTED, username);
+        verify(repairStatusService).changeStatus(repair, RepairStatus.REQUESTED, username);
         verify(asReception).changeStatus(AsReceptionStatus.AWAITING_QUOTE_APPROVAL);
+
+        verify(repair, never()).changeStatus(any(), anyString());
     }
 
     @Test

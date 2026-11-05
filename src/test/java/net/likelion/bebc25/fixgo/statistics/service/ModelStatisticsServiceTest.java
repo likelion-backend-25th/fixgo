@@ -140,16 +140,16 @@ class ModelStatisticsServiceTest {
         return transactionTemplate.execute(status -> {
 
             // 모델 생성
-            ProductModel model = new ProductModel("Galaxy", PREFIX + "GALAXY", Category.PHONE, 24, PREFIX);
+            ProductModel model = new ProductModel("Galaxy", PREFIX + "GALAXY", Category.PHONE, 24, 1L);
 
-            ProductModel emptyModel = new ProductModel("Empty", PREFIX + "EMPTY", Category.LAPTOP, 12, PREFIX);
+            ProductModel emptyModel = new ProductModel("Empty", PREFIX + "EMPTY", Category.LAPTOP, 12, 1L);
 
             entityManager.persist(model);
             entityManager.persist(emptyModel);
             entityManager.flush();
 
             // 제품 생성
-            Product product = new Product(model.getId(), PREFIX + "SERIAL-1", LocalDateTime.now(), PREFIX);
+            Product product = new Product(model.getId(), PREFIX + "SERIAL-1", LocalDateTime.now(), 1L);
 
             entityManager.persist(product);
 

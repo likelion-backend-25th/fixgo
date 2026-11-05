@@ -38,25 +38,38 @@ public class PaymentRefund {
     private LocalDateTime canceledAt;
 
     @Column(nullable = false)
-    private String createdBy;
+    private Long createdBy;
 
-    public static PaymentRefund create(PaymentAttempt paymentAttempt, String cancelReason, String requestedBy) {
+    public static PaymentRefund create(PaymentAttempt paymentAttempt, String cancelReason, Long requestedBy) {
         if (paymentAttempt == null) {
             throw new IllegalArgumentException("결제 시도는 필수입니다.");
         }
         if (cancelReason == null || cancelReason.isBlank()) {
             throw new IllegalArgumentException("환불 사유는 필수입니다.");
         }
-        if (requestedBy == null || requestedBy.isBlank()) {
+        if (requestedBy == null) {
             throw new IllegalArgumentException("처리 직원은 필수입니다.");
         }
         PaymentRefund refund = new PaymentRefund();
 
         refund.paymentAttempt = paymentAttempt;
         refund.cancelReason = cancelReason;
+        refund.cancelAmount = paymentAttempt.getAmount();
         refund.createdBy = requestedBy;
         refund.status = PaymentRefundStatus.IN_PROGRESS;
 
         return refund;
+    }
+
+    public void markDone(String transactionKey, LocalDateTime canceledAt) {
+        this.transactionKey = transactionKey;
+        this.status = PaymentRefundStatus.DONE;
+        this.canceledAt = canceledAt;
+    }
+
+    public void markFailed(String errorCode, String errorMessage) {
+        this.status = PaymentRefundStatus.FAILED;
+        this.failureCode = errorCode;
+        this.failureMessage = errorMessage;
     }
 }

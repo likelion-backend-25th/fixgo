@@ -64,4 +64,8 @@ public class PaymentBill {
         changeStatus(PaymentBillStatus.PAID);
         this.paidAt = paidAt;
     }
+
+    public void markRefunded() {
+        changeStatus(PaymentBillStatus.REFUNDED);
+    }
 }

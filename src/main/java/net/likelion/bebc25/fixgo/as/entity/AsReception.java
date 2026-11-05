@@ -90,6 +90,10 @@ public class AsReception extends BaseEntity {
         }
     }
 
+    public void updateTechnician(Member newTechnician) {
+        this.technician = newTechnician;
+    }
+
     /**
      * A/S 접수 상태 변경
      */
