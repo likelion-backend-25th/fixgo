@@ -1,9 +1,10 @@
-package net.likelion.bebc25.fixgo.repair.entity;
+package net.likelion.bebc25.fixgo.repair.entity.part;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import net.likelion.bebc25.fixgo.repair.entity.MovementType;
 
 import java.time.LocalDateTime;
 
@@ -40,9 +41,9 @@ public class PartStockHistory {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column
-    private String createdBy;
+    private Long createdBy;
 
-    public PartStockHistory(Part part, MovementType movementType, int quantityDelta, String reason, String createdBy) {
+    public PartStockHistory(Part part, MovementType movementType, int quantityDelta, String reason, Long createdBy) {
         this.part = part;
         this.movementType = movementType;
         this.quantityDelta = quantityDelta;
@@ -50,7 +51,7 @@ public class PartStockHistory {
         this.createdBy = createdBy;
     }
 
-    public PartStockHistory(Part part, RepairPartUsage repairPartUsage, MovementType movementType, int quantityDelta, String reason, String createdBy) {
+    public PartStockHistory(Part part, RepairPartUsage repairPartUsage, MovementType movementType, int quantityDelta, String reason, Long createdBy) {
         this(part, movementType, quantityDelta, reason, createdBy);
         this.repairPartUsage = repairPartUsage;
     }
