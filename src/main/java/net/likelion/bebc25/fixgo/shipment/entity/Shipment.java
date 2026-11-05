@@ -55,7 +55,7 @@ public class Shipment {
 
     private String lastTrackingStatus;
 
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(nullable = false)
