@@ -36,7 +36,7 @@ public class PartController {
     }
 
     @PatchMapping("/unit_price")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> updateUnitPrice(
             @RequestBody PartDto.PriceUpdateRequest request
     ) {
@@ -45,7 +45,7 @@ public class PartController {
     }
 
     @PatchMapping("/standard_minutes")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> updateStandardMinutes(
             @RequestBody PartDto.StandardMinutesUpdateRequest request
     ) {

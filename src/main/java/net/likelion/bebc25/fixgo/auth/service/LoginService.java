@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.auth.dto.LoginDto;
 import net.likelion.bebc25.fixgo.auth.dto.TokenDto;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
+import net.likelion.bebc25.fixgo.auth.entity.RefreshToken;
 import net.likelion.bebc25.fixgo.auth.jwt.JwtProvider;
 import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
@@ -13,8 +14,12 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class LoginService {
     private final AuthenticationManager authenticationManager;
@@ -23,6 +28,7 @@ public class LoginService {
     private final RefreshTokenService refreshTokenService;
     private final MemberRepository memberRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+
 
     public TokenDto.Response login(LoginDto.LoginRequest request) {
         // 1. 클라이언트가 입력한 이메일과 비밀번호로 미인증 토큰 생성
@@ -69,5 +75,13 @@ public class LoginService {
         refreshTokenService.saveRefreshToken(memberId, newRefreshToken);
 
         return TokenDto.Response.of(newAccessToken, newRefreshToken);
+    }
+
+    public void logout(CustomUserDetails userDetails) {
+        Member member = userDetails.getMember();
+        List<RefreshToken> refreshTokens = refreshTokenRepository.findByMemberIdAndRevokedAtIsNull(member.getId());
+        for (RefreshToken refreshToken : refreshTokens) {
+            refreshToken.revokeToken();
+        }
     }
 }

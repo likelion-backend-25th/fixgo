@@ -1,12 +1,16 @@
 package net.likelion.bebc25.fixgo.payment.service;
 
 import jakarta.persistence.EntityManager;
+import net.likelion.bebc25.fixgo.config.JpaConfig;
+import net.likelion.bebc25.fixgo.support.AsReceptionFixture;
+import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.payment.client.TossPaymentsClient;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
 import net.likelion.bebc25.fixgo.payment.entity.*;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentAttemptRepository;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentBillRepository;
 import net.likelion.bebc25.fixgo.payment.repository.VirtualAccountRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,10 +25,20 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.then;
 
 @DataJpaTest
-@Import({PaymentFacadeService.class, PaymentAttemptService.class, PaymentRefundService.class})
+@Import({JpaConfig.class, AsReceptionFixture.class, PaymentFacadeService.class, PaymentAttemptService.class, PaymentRefundService.class})
 class PaymentCancelServiceTest {
+    @Autowired
+    AsReceptionFixture asReceptionFixture;
 
-    private static final Long AS_RECEPTION_ID = 1L;
+    private AsReception reception;
+    private Long asReceptionId;
+
+    @BeforeEach
+    void setUpReception() {
+        reception = asReceptionFixture.save();
+        asReceptionId = reception.getId();
+    }
+
     private static final String PAYMENT_KEY = "test_payment_key";
     private static final LocalDateTime DUE_AT = LocalDateTime.of(2026, 11, 10, 23, 59, 59);
 
@@ -48,8 +62,8 @@ class PaymentCancelServiceTest {
      * 실제 흐름으로 가상계좌 발급(입금 대기)까지 진행하고 orderId를 돌려준다
      */
     private String issueVirtualAccount() {
-        paymentBillRepository.save(PaymentBill.issue(AS_RECEPTION_ID, 30_000L, PaymentBillType.REPAIR));
-        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(AS_RECEPTION_ID);
+        paymentBillRepository.save(PaymentBill.create(reception, 30_000L, PaymentBillType.REPAIR));
+        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(asReceptionId);
         paymentAttemptService.prepareConfirm(started.orderId(), started.amount());
         paymentAttemptService.issueVirtualAccount(
                 started.orderId(), PAYMENT_KEY, "20", "12345678901234", "ps_test_secret", DUE_AT);
@@ -65,7 +79,7 @@ class PaymentCancelServiceTest {
         String orderId = issueVirtualAccount();
 
         // when
-        paymentFacadeService.cancelVirtualAccountBeforeDeposit(AS_RECEPTION_ID);
+        paymentFacadeService.cancelVirtualAccountBeforeDeposit(asReceptionId);
         em.flush();
         em.clear();
 
@@ -78,7 +92,7 @@ class PaymentCancelServiceTest {
         assertThat(attempt.getFailureCode()).isEqualTo("VIRTUAL_ACCOUNT_CANCELED");
 
         // then: 돈이 오간 적 없으므로 청구서는 그대로
-        assertThat(paymentBillRepository.findByAsReceptionId(AS_RECEPTION_ID).orElseThrow().getStatus())
+        assertThat(paymentBillRepository.findByAsReceptionId(asReceptionId).orElseThrow().getStatus())
                 .isEqualTo(PaymentBillStatus.UNPAID);
 
         // then: 가상계좌 기록은 지우지 않는다 (웹훅 검증, 추적용)
@@ -90,12 +104,12 @@ class PaymentCancelServiceTest {
     void canStartAgainAfterCancel() {
         // given: 가상계좌 발급 후 취소
         String canceledOrderId = issueVirtualAccount();
-        paymentFacadeService.cancelVirtualAccountBeforeDeposit(AS_RECEPTION_ID);
+        paymentFacadeService.cancelVirtualAccountBeforeDeposit(asReceptionId);
         em.flush();
         em.clear();
 
         // when: 다시 결제 시작 (예: 카드로 바꿔서)
-        PaymentDto.StartPaymentResponse restarted = paymentAttemptService.startPayment(AS_RECEPTION_ID);
+        PaymentDto.StartPaymentResponse restarted = paymentAttemptService.startPayment(asReceptionId);
 
         // then: 새 orderId의 READY attempt가 생긴다
         assertThat(restarted.orderId()).isNotEqualTo(canceledOrderId);

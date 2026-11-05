@@ -7,6 +7,7 @@ import net.likelion.bebc25.fixgo.payment.dto.PaymentInternalDto;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentAttempt;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentAttemptStatus;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentBill;
+import net.likelion.bebc25.fixgo.payment.exception.PaymentErrorCode;
 import net.likelion.bebc25.fixgo.payment.exception.PaymentException;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentAttemptRepository;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentBillRepository;
@@ -28,16 +29,10 @@ public class PaymentFacadeService {
     private final PaymentBillRepository paymentBillRepository;
 
     public void confirmPayment(String paymentKey, String orderId, Long amount) {
-        try {
-            paymentAttemptService.prepareConfirm(orderId, amount);
-        } catch (PaymentException e) {
-            // 금액 불일치, 청구서 결제 불가처럼 기록해야하는 실패만 FAILED로 남긴다.
-            // prepareConfirm은 롤백됐으므로 별도 트랜잭션인 failConfirm으로 기록한다.
-            if (e.getErrorCode().shouldRecordAsFailure()) {
-                paymentAttemptService.failConfirm(orderId, e.getErrorCode().name(), e.getMessage());
-            }
-            // 검증에 실패했으므로 토스 승인으로 넘어가지 않고 멈춘다.
-            throw e;
+        PaymentErrorCode failure = paymentAttemptService.prepareConfirm(orderId, amount);
+        if (failure != null) {
+            // prepareConfirm이 attempt를 FAILED로 변경했다. 토스 승인으로 넘어가지 않는다.
+            throw new PaymentException(failure, "결제를 진행할 수 없습니다.");
         }
 
         TossDto.ConfirmResponse response;

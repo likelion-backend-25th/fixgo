@@ -92,6 +92,22 @@ class RefreshTokenServiceTest {
         assertThat(refreshTokenService.isValid(1L, "other-token")).isFalse();
     }
 
+    @Test
+    @DisplayName("활성 Refresh Token을 모두 폐기한다")
+    void revokeRefreshTokens() {
+        Member member = createMember(1L);
+        RefreshToken first = new RefreshToken(member, "token-1");
+        RefreshToken second = new RefreshToken(member, "token-2");
+        given(refreshTokenRepository.findByMemberIdAndRevokedAtIsNull(1L))
+                .willReturn(List.of(first, second));
+
+        refreshTokenService.revokeRefreshTokens(1L);
+
+        assertThat(first.getRevokedAt()).isNotNull();
+        assertThat(second.getRevokedAt()).isNotNull();
+        then(refreshTokenRepository).should(never()).save(org.mockito.ArgumentMatchers.any());
+    }
+
     private Member createMember(Long id) {
         Member member = new Member(
                 "admin@test.com",

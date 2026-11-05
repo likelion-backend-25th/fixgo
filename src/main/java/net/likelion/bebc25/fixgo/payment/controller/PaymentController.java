@@ -27,7 +27,7 @@ public class PaymentController {
 
     @PostMapping("/confirm")
     public ResponseEntity<Void> confirmPayment(
-            @RequestBody PaymentDto.ConfirmPaymentRequest request
+            @Valid @RequestBody PaymentDto.ConfirmPaymentRequest request
     ) {
         paymentFacadeService.confirmPayment(request.paymentKey(), request.orderId(), request.amount());
         return ResponseEntity.noContent().build();

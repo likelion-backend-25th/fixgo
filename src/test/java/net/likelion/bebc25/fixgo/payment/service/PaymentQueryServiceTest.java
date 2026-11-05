@@ -1,6 +1,9 @@
 package net.likelion.bebc25.fixgo.payment.service;
 
 import jakarta.persistence.EntityManager;
+import net.likelion.bebc25.fixgo.config.JpaConfig;
+import net.likelion.bebc25.fixgo.support.AsReceptionFixture;
+import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentAttempt;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentBill;
@@ -9,6 +12,7 @@ import net.likelion.bebc25.fixgo.payment.entity.PaymentMethod;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentAttemptRepository;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentBillRepository;
 import net.likelion.bebc25.fixgo.payment.repository.VirtualAccountRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,10 +25,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
-@Import({PaymentQueryService.class, PaymentAttemptService.class})
+@Import({JpaConfig.class, AsReceptionFixture.class, PaymentQueryService.class, PaymentAttemptService.class})
 class PaymentQueryServiceTest {
+    @Autowired
+    AsReceptionFixture asReceptionFixture;
 
-    private static final Long AS_RECEPTION_ID = 1L;
+    private AsReception reception;
+    private Long asReceptionId;
+
+    @BeforeEach
+    void setUpReception() {
+        reception = asReceptionFixture.save();
+        asReceptionId = reception.getId();
+    }
+
     private static final LocalDateTime APPROVED_AT =
             LocalDateTime.of(2026, 11, 2, 15, 30);
     private static final LocalDateTime DUE_AT = LocalDateTime.of(2026, 11, 9, 23, 59, 59);
@@ -49,13 +63,13 @@ class PaymentQueryServiceTest {
     }
 
     private PaymentBill issueBill() {
-        return paymentBillRepository.save(PaymentBill.issue(AS_RECEPTION_ID, 30_000L, PaymentBillType.REPAIR));
+        return paymentBillRepository.save(PaymentBill.create(reception, 30_000L, PaymentBillType.REPAIR));
     }
 
     @Test
     @DisplayName("청구서가 없으면 NOT_ISSUED이고 나머지 값은 모두 비어 있다.")
     void notIssued() {
-        PaymentDto.PaymentSummaryResponse summary = paymentQueryService.getSummary(AS_RECEPTION_ID);
+        PaymentDto.PaymentSummaryResponse summary = paymentQueryService.getSummary(asReceptionId);
 
         assertThat(summary.status()).isEqualTo(PaymentDto.PaymentSummaryResponse.Status.NOT_ISSUED);
         assertThat(summary.amount()).isNull();
@@ -68,7 +82,7 @@ class PaymentQueryServiceTest {
     void unpaid() {
         issueBill();
 
-        PaymentDto.PaymentSummaryResponse summary = paymentQueryService.getSummary(AS_RECEPTION_ID);
+        PaymentDto.PaymentSummaryResponse summary = paymentQueryService.getSummary(asReceptionId);
 
         assertThat(summary.status()).isEqualTo(PaymentDto.PaymentSummaryResponse.Status.UNPAID);
         assertThat(summary.orderName()).isEqualTo("A/S 수리비");
@@ -81,9 +95,9 @@ class PaymentQueryServiceTest {
     @DisplayName("결제 시작만 하고 승인 전이면 여전히 UNPAID다.")
     void startedButNotPaid() {
         PaymentBill bill = issueBill();
-        paymentAttemptService.startPayment(AS_RECEPTION_ID);
+        paymentAttemptService.startPayment(asReceptionId);
 
-        PaymentDto.PaymentSummaryResponse summary = paymentQueryService.getSummary(AS_RECEPTION_ID);
+        PaymentDto.PaymentSummaryResponse summary = paymentQueryService.getSummary(asReceptionId);
 
         assertThat(summary.status()).isEqualTo(PaymentDto.PaymentSummaryResponse.Status.UNPAID);
     }
@@ -93,14 +107,14 @@ class PaymentQueryServiceTest {
     void paid() {
         // given: 실제 결제 흐름을 거쳐 결제 완료 상태를 만든다 (토스 호출 단계는 제외)
         PaymentBill bill = issueBill();
-        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(AS_RECEPTION_ID);
+        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(asReceptionId);
         paymentAttemptService.prepareConfirm(started.orderId(), started.amount());
         paymentAttemptService.completeConfirm(started.orderId(), "test_payment_key", APPROVED_AT);
         em.flush();
         em.clear();
 
         // when
-        PaymentDto.PaymentSummaryResponse summary = paymentQueryService.getSummary(AS_RECEPTION_ID);
+        PaymentDto.PaymentSummaryResponse summary = paymentQueryService.getSummary(asReceptionId);
 
         // then
         assertThat(summary.status()).isEqualTo(PaymentDto.PaymentSummaryResponse.Status.PAID);
@@ -119,7 +133,7 @@ class PaymentQueryServiceTest {
         em.clear();
 
         // when & then
-        assertThatThrownBy(() -> paymentQueryService.getSummary(AS_RECEPTION_ID))
+        assertThatThrownBy(() -> paymentQueryService.getSummary(asReceptionId))
                 .isInstanceOf(IllegalStateException.class);
     }
 
@@ -128,7 +142,7 @@ class PaymentQueryServiceTest {
     void waitingForDeposit() {
         // given: 실제 흐름으로 가상계좌 발급까지 진행 (토스 호출 단계는 제외)
         PaymentBill bill = issueBill();
-        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(AS_RECEPTION_ID);
+        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(asReceptionId);
         paymentAttemptService.prepareConfirm(started.orderId(), started.amount());
         paymentAttemptService.issueVirtualAccount(
                 started.orderId(), "test_payment_key", "20", "12345678901234", "ps_test_secret", DUE_AT);
@@ -136,7 +150,7 @@ class PaymentQueryServiceTest {
         em.clear();
 
         // when
-        PaymentDto.PaymentSummaryResponse summary = paymentQueryService.getSummary(AS_RECEPTION_ID);
+        PaymentDto.PaymentSummaryResponse summary = paymentQueryService.getSummary(asReceptionId);
 
         // then
         assertThat(summary.status()).isEqualTo(PaymentDto.PaymentSummaryResponse.Status.WAITING_FOR_DEPOSIT);
@@ -154,7 +168,7 @@ class PaymentQueryServiceTest {
     void waitingWithoutVirtualAccount() {
         // given: 계좌 저장 없이 attempt만 입금 대기로 바꿔 깨진 데이터를 만든다
         PaymentBill bill = issueBill();
-        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(AS_RECEPTION_ID);
+        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(asReceptionId);
         paymentAttemptService.prepareConfirm(started.orderId(), started.amount());
         PaymentAttempt attempt = paymentAttemptRepository.findByOrderId(started.orderId()).orElseThrow();
         attempt.markWaitingForDeposit("test_payment_key");
@@ -162,7 +176,7 @@ class PaymentQueryServiceTest {
         em.clear();
 
         // when & then
-        assertThatThrownBy(() -> paymentQueryService.getSummary(AS_RECEPTION_ID))
+        assertThatThrownBy(() -> paymentQueryService.getSummary(asReceptionId))
                 .isInstanceOf(IllegalStateException.class);
     }
 }

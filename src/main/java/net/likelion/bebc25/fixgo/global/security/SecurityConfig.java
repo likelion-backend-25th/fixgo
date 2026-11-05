@@ -1,6 +1,8 @@
 package net.likelion.bebc25.fixgo.global.security;
 
 import lombok.RequiredArgsConstructor;
+import net.likelion.bebc25.fixgo.auth.handler.CustomAccessDeniedHandler;
+import net.likelion.bebc25.fixgo.auth.handler.CustomAuthenticationEntryPoint;
 import net.likelion.bebc25.fixgo.auth.jwt.JwtAuthenticationFilter;
 import net.likelion.bebc25.fixgo.auth.jwt.JwtProvider;
 import net.likelion.bebc25.fixgo.auth.service.CustomUserDetailsService;
@@ -9,6 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -23,6 +26,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  */
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final JwtProvider jwtProvider;
@@ -35,7 +39,9 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(
-            HttpSecurity http
+            HttpSecurity http,
+            CustomAuthenticationEntryPoint customAuthenticationEntryPoint,
+            CustomAccessDeniedHandler customAccessDeniedHandler
     ) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
@@ -43,7 +49,7 @@ public class SecurityConfig {
                         .requestMatchers("/error").permitAll()
 
                         // 인증 API (login, refresh)
-                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/api/v1/auth/login", "/api/v1/auth/refresh").permitAll()
 
                         // 고객 결제는 로그인 없이 링크로 진입한다
                         .requestMatchers("/api/v1/payments/**").permitAll()
@@ -60,7 +66,7 @@ public class SecurityConfig {
                         ).permitAll()
 
                         // 관리자 기능
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
 
                         // 이외의 모든 요청
                         .anyRequest().authenticated()
@@ -86,6 +92,12 @@ public class SecurityConfig {
                 .addFilterBefore(
                         new JwtAuthenticationFilter(jwtProvider, userDetailsService),
                         UsernamePasswordAuthenticationFilter.class
+                )
+
+                // 미인증 요청은 401로 응답
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(customAuthenticationEntryPoint)
+                        .accessDeniedHandler(customAccessDeniedHandler)
                 )
         ;
 

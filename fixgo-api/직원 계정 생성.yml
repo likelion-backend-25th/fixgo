@@ -1,0 +1,29 @@
+info:
+  name: 직원 계정 생성
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: "{{baseUrl}}/admin/member"
+  body:
+    type: json
+    data: |-
+      {
+        "email": "test2@fixgo.com",
+        "password": "1234",
+        "name": "최미소",
+        "phone": "010-1234-5678",
+        "address": "123-4567",
+        "role": "ROLE_RECEPTIONIST",
+        "profileImgUrl": "asdf"
+        
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

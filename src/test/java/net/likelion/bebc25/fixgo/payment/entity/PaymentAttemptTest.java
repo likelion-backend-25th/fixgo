@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 
+import static net.likelion.bebc25.fixgo.support.AsReceptionFixture.transientReception;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -15,7 +16,7 @@ class PaymentAttemptTest {
     private static final LocalDateTime APPROVED_AT = LocalDateTime.of(2026, 11, 3, 15, 30);
 
     private PaymentBill bill() {
-        return PaymentBill.issue(1L, 30_000L, PaymentBillType.REPAIR);
+        return PaymentBill.create(transientReception(), 30_000L, PaymentBillType.REPAIR);
     }
 
     private PaymentAttempt ready() {
