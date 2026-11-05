@@ -66,26 +66,28 @@ class AsReceptionRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        ProductModel model = productModelRepository.save(
-                new ProductModel("그램", "Gram 15", Category.LAPTOP, 12, "tester")
-        );
-        Customer hansohee = customerRepository.save(
-                new Customer("한소희", "010-1111-2222", "hansohee@test.com", "12345", "서울", "강남구", "tester")
-        );
-        Customer kimcheolsu = customerRepository.save(
-                new Customer("김철수", "010-3333-4444", "kimcheolsu@test.com", "54321", "대구", "중구", "tester")
-        );
         Member receptionist = memberRepository.save(
-                new Member("REC-001", "receptionist@test.com", "password", "최접수", "010-0000-0001", Role.ROLE_RECEPTIONIST, "default.png")
+                new Member("receptionist@test.com", "password", "최접수", "010-0000-0001", "서울시 강남구", Role.ROLE_RECEPTIONIST, "default.png")
         );
         kim = memberRepository.save(
-                new Member("TECH-001", "kim@test.com", "password", "김기사", "010-0000-0002", Role.ROLE_TECHNICIAN, "default.png")
+                new Member("kim@test.com", "password", "김기사", "010-0000-0002", "서울시 강남구", Role.ROLE_TECHNICIAN, "default.png")
         );
         park = memberRepository.save(
-                new Member("TECH-002", "park@test.com", "password", "박기사", "010-0000-0003", Role.ROLE_TECHNICIAN, "default.png")
+                new Member("park@test.com", "password", "박기사", "010-0000-0003", "서울시 강남구", Role.ROLE_TECHNICIAN, "default.png")
         );
-        Product gram = productRepository.save(new Product(model.getId(), "SN-ALPHA", LocalDateTime.now(), "tester"));
-        Product phone = productRepository.save(new Product(model.getId(), "SN-BETA", LocalDateTime.now(), "tester"));
+        Long createdBy = receptionist.getId();
+
+        ProductModel model = productModelRepository.save(
+                new ProductModel("그램", "Gram 15", Category.LAPTOP, 12, createdBy)
+        );
+        Customer hansohee = customerRepository.save(
+                new Customer("한소희", "010-1111-2222", "hansohee@test.com", "12345", "서울", "강남구", createdBy)
+        );
+        Customer kimcheolsu = customerRepository.save(
+                new Customer("김철수", "010-3333-4444", "kimcheolsu@test.com", "54321", "대구", "중구", createdBy)
+        );
+        Product gram = productRepository.save(new Product(model.getId(), "SN-ALPHA", LocalDateTime.now(), createdBy));
+        Product phone = productRepository.save(new Product(model.getId(), "SN-BETA", LocalDateTime.now(), createdBy));
 
         alpha = saveReception("AS-ALPHA-001", hansohee, gram, receptionist, kim, "LCD불량");
         beta = saveReception("AS-BETA-002", kimcheolsu, phone, receptionist, park, "충전불가");
@@ -146,6 +148,28 @@ class AsReceptionRepositoryTest {
                 .containsExactly("AS-BETA-002");
         assertThat(asReceptionRepository.search(null, AsReceptionStatus.INSPECTION, kim.getId(), PageRequest.of(0, 10)).getContent())
                 .isEmpty();
+    }
+
+    @Test
+    @DisplayName("결제, 배송, 수령, 완료 상태는 기사 재배정 대상에서 빠진다")
+    void findByIdAndStatusNotIn_excludesClosedStatuses() {
+        List<AsReceptionStatus> closedStatuses = List.of(
+                AsReceptionStatus.AWAITING_PAYMENT,
+                AsReceptionStatus.AWAITING_SHIPMENT,
+                AsReceptionStatus.AWAITING_PICKUP,
+                AsReceptionStatus.COMPLETED
+        );
+
+        assertThat(asReceptionRepository.findByIdAndStatusNotIn(alpha.getId(), closedStatuses)).isPresent();
+
+        em.createQuery("update AsReception r set r.status = :status where r.id = :id")
+                .setParameter("status", AsReceptionStatus.COMPLETED)
+                .setParameter("id", alpha.getId())
+                .executeUpdate();
+        em.clear();
+
+        assertThat(asReceptionRepository.findByIdAndStatusNotIn(alpha.getId(), closedStatuses)).isEmpty();
+        assertThat(asReceptionRepository.findByIdAndStatusNotIn(999L, closedStatuses)).isEmpty();
     }
 
     @Test

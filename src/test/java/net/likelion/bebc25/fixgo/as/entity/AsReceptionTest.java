@@ -148,4 +148,34 @@ public class AsReceptionTest {
         assertThat(findReception.getFileUrl()).isEqualTo(fileUrl);
     }
 
+    @Test
+    @DisplayName("담당 기사를 다른 기사로 바꾼다")
+    void updateTechnician() {
+        Member newTechnician = new Member("tech02@abc.com", "@#$@%", "박기사", "010-0000-0001", "서울시 강남구", Role.ROLE_TECHNICIAN, "technician02");
+        em.persist(newTechnician);
+
+        AsReception asReception = new AsReception(
+                "AS-2026-1032",
+                customer,
+                product,
+                member,
+                technician,
+                "충전불량",
+                "충전이 안 됩니다",
+                "메모",
+                ReturnMethod.DELIVERY,
+                null
+        );
+        em.persist(asReception);
+        em.flush();
+
+        asReception.updateTechnician(newTechnician);
+        em.flush();
+        em.clear();
+
+        AsReception found = em.find(AsReception.class, asReception.getId());
+        assertThat(found.getTechnician().getId()).isEqualTo(newTechnician.getId());
+        assertThat(found.getTechnician().getName()).isEqualTo("박기사");
+    }
+
 }
