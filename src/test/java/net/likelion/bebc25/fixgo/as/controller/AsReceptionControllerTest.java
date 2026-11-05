@@ -66,7 +66,7 @@ class AsReceptionControllerTest {
 
     @Test
     void createReceptionDoesNotSaveWhenRequiredFieldsAreMissing() throws Exception {
-        mockMvc.perform(post("/api/v1/as-receptions").with(csrf()).with(user(receptionist())).contentType(MediaType.APPLICATION_JSON).content("{}")).andExpect(status().isInternalServerError()).andExpect(jsonPath("$.code").value("INTERNAL_ERROR"));
+        mockMvc.perform(post("/api/v1/as-receptions").with(csrf()).with(user(receptionist())).contentType(MediaType.APPLICATION_JSON).content("{}")).andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("INVALID_ARGUMENT"));
 
         verify(asReceptionService, never()).createReception(any(), any());
     }

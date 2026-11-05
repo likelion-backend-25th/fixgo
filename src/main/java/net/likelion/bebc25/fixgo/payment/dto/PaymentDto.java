@@ -2,6 +2,7 @@ package net.likelion.bebc25.fixgo.payment.dto;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import net.likelion.bebc25.fixgo.payment.entity.*;
 
 import java.time.LocalDateTime;
@@ -34,8 +35,11 @@ public class PaymentDto {
      * paymentKey는 토스 승인 응답의 값을 저장한다.
      */
     public record ConfirmPaymentRequest(
+            @NotBlank(message = "주문번호는 필수입니다.")
             String orderId,
+            @NotBlank(message = "결제키는 필수입니다.")
             String paymentKey,
+            @NotNull(message = "금액은 필수입니다.")
             Long amount
     ) {}
 
@@ -197,7 +201,7 @@ public class PaymentDto {
     ) {
         public static PaymentHistoryItem from(PaymentAttempt attempt) {
             return new PaymentHistoryItem(attempt.getId(), attempt.getOrderId(),
-                    attempt.getAmount(), attempt.getMethod(), attempt.getApprovedAt());
+                                          attempt.getAmount(), attempt.getMethod(), attempt.getApprovedAt());
         }
     }
 
@@ -207,7 +211,7 @@ public class PaymentDto {
     ) {
         public static RefundHistoryItem from(PaymentRefund refund) {
             return new RefundHistoryItem(refund.getId(), refund.getCancelAmount(),
-                    refund.getCancelReason(), refund.getStatus(), refund.getCanceledAt());
+                                         refund.getCancelReason(), refund.getStatus(), refund.getCanceledAt());
         }
     }
 
