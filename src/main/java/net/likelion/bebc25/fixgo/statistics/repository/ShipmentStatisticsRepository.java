@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
+
 public interface ShipmentStatisticsRepository extends Repository<Shipment, Long> {
 
     // 배송대기, 배송 중, 완료 건수
@@ -21,11 +23,14 @@ public interface ShipmentStatisticsRepository extends Repository<Shipment, Long>
                     case when s.status = :deliveredStatus or s.status = :pickedUpStatus then 1 else 0 end
                 ), 0) as long) as completedCount
             FROM Shipment s
+            WHERE s.createdAt >= :startDateTime
+              AND s.createdAt < :endDateTime
             """)
     ShipmentStatistics countByStatus(
             @Param("readyStatus") ShipmentStatus readyStatus, @Param("shippingStatus") ShipmentStatus shippingStatus,
             @Param("deliveredStatus") ShipmentStatus deliveredStatus,
-            @Param("pickedUpStatus") ShipmentStatus pickedUpStatus
+            @Param("pickedUpStatus") ShipmentStatus pickedUpStatus,
+            @Param("startDateTime") LocalDateTime startDateTime, @Param("endDateTime") LocalDateTime endDateTime
     );
 
     interface ShipmentStatistics {

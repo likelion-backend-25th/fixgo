@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -76,7 +77,11 @@ class ModelStatisticsServiceTest {
         createTestData();
 
         // when
-        List<ModelStatisticsDto.ModelStatisticsResponse> statistics = modelStatisticsService.getModelStatistics();
+        LocalDate startDate = LocalDate.now().minusDays(1);
+        LocalDate endDate = LocalDate.now();
+
+        List<ModelStatisticsDto.ModelStatisticsResponse> statistics = modelStatisticsService.getModelStatistics(
+                startDate, endDate);
 
         // then
         ModelStatisticsDto.ModelStatisticsResponse galaxy = statistics.stream().filter(item -> item.modelName()
@@ -100,7 +105,7 @@ class ModelStatisticsServiceTest {
 
         // when
         List<ModelStatisticsDto.ModelSymptomStatisticsResponse> symptoms = modelStatisticsService.getModelSymptomStatistics(
-                modelId);
+                modelId, LocalDate.now().minusDays(1), LocalDate.now());
 
         // then
         assertThat(symptoms).hasSize(2);
@@ -123,7 +128,11 @@ class ModelStatisticsServiceTest {
         createTestData();
 
         // when
-        List<ModelStatisticsDto.ModelStatisticsResponse> statistics = modelStatisticsService.getModelStatistics();
+        LocalDate startDate = LocalDate.now().minusDays(1);
+        LocalDate endDate = LocalDate.now();
+
+        List<ModelStatisticsDto.ModelStatisticsResponse> statistics = modelStatisticsService.getModelStatistics(
+                startDate, endDate);
 
         // then
         ModelStatisticsDto.ModelStatisticsResponse emptyModel = statistics.stream().filter(item -> item.modelName()
