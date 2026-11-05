@@ -1,4 +1,4 @@
-package net.likelion.bebc25.fixgo.repair.entity;
+package net.likelion.bebc25.fixgo.repair.entity.part;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
