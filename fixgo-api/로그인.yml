@@ -1,7 +1,7 @@
 info:
   name: 로그인
   type: http
-  seq: 1
+  seq: 4
 
 http:
   method: POST
@@ -10,8 +10,8 @@ http:
     type: json
     data: |-
       {
-        "email": "admin001@fixgo.com",
-        "password": "admin1234"
+        "email": "test2@fixgo.com",
+        "password": "1234"
       }
   auth: inherit
 

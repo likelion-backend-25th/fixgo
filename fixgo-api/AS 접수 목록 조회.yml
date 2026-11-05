@@ -1,0 +1,16 @@
+info:
+  name: AS 접수 목록 조회
+  type: http
+  seq: 3
+
+http:
+  method: GET
+  url: "{{baseUrl}}/as-receptions"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

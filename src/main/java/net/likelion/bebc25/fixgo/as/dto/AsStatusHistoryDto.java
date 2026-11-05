@@ -1,6 +1,5 @@
 package net.likelion.bebc25.fixgo.as.dto;
 
-
 import net.likelion.bebc25.fixgo.as.entity.AsStatusHistory;
 
 import java.time.LocalDateTime;
