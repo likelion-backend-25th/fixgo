@@ -5,8 +5,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.likelion.bebc25.fixgo.payment.client.TossDto;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
+import net.likelion.bebc25.fixgo.payment.entity.PaymentBillStatus;
 import net.likelion.bebc25.fixgo.payment.service.PaymentFacadeService;
+import net.likelion.bebc25.fixgo.payment.service.PaymentQueryService;
 import net.likelion.bebc25.fixgo.payment.service.PaymentWebhookService;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 public class PaymentController {
     private final PaymentFacadeService paymentFacadeService;
     private final PaymentWebhookService paymentWebhookService;
+    private final PaymentQueryService paymentQueryService;
 
     @PostMapping("/confirm")
     public ResponseEntity<Void> confirmPayment(
@@ -46,5 +53,14 @@ public class PaymentController {
         paymentFacadeService.refundPayment(billId, request.cancelReason(), 1L,
                                            account == null ? null : account.toInternal());
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping
+    public Page<PaymentDto.PaymentListResponse> getPaymentList(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) PaymentBillStatus status,
+            @PageableDefault(size = 20) Pageable pageable
+    ) {
+        return paymentQueryService.getPaymentList(keyword, status, pageable);
     }
 }
