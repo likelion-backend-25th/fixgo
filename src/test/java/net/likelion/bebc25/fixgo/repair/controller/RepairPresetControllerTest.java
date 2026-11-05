@@ -7,6 +7,7 @@ import net.likelion.bebc25.fixgo.repair.dto.preset.RepairPresetRequest;
 import net.likelion.bebc25.fixgo.repair.dto.preset.RepairPresetResponse;
 import net.likelion.bebc25.fixgo.repair.dto.preset.RepairPresetUpdate;
 import net.likelion.bebc25.fixgo.repair.service.RepairPresetService;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -24,8 +25,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(RepairPresetController.class)
 class RepairPresetControllerTest {
@@ -122,5 +122,17 @@ class RepairPresetControllerTest {
         mockMvc.perform(delete("/api/as/repair-presets/1").with(csrf())).andExpect(status().isNoContent());
 
         verify(repairPresetService, times(1)).deletePreset(1L);
+    }
+
+    @Test
+    @DisplayName("프리셋 이름 검색 API 성공")
+    @WithMockUser(roles = "USER")
+    void searchPresetsTest() throws Exception {
+
+        when(repairPresetService.searchPresets("배터리")).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/as/repair-presets/search").param("name", "배터리")).andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)).andExpect(jsonPath("$").isArray()).andExpect(jsonPath("$").isEmpty());
+
+        verify(repairPresetService).searchPresets("배터리");
     }
 }
