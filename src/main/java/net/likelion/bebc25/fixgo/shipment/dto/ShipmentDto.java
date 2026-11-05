@@ -2,10 +2,7 @@ package net.likelion.bebc25.fixgo.shipment.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import net.likelion.bebc25.fixgo.shipment.entity.ReturnMethod;
-import net.likelion.bebc25.fixgo.shipment.entity.Shipment;
-import net.likelion.bebc25.fixgo.shipment.entity.ShipmentEvent;
-import net.likelion.bebc25.fixgo.shipment.entity.ShipmentStatus;
+import net.likelion.bebc25.fixgo.shipment.entity.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -65,7 +62,7 @@ public class ShipmentDto {
         // 배송 이력 조회
         public record EventResponse(
                 Long id,
-                ShipmentStatus status,
+                ShipmentEventStatus status,
                 String description,
                 LocalDateTime occurredAt
         ) {
