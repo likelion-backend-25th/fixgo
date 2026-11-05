@@ -1,5 +1,7 @@
 package net.likelion.bebc25.fixgo.payment.client;
 
+import net.likelion.bebc25.fixgo.payment.dto.PaymentInternalDto;
+
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -24,7 +26,21 @@ public class TossDto {
                 String bank,
                 String accountNumber,
                 String holderName
-        ) {}
+        ) {
+            public static RefundReceiveAccount from(
+                    PaymentInternalDto.RefundAccount account
+            ) {
+                if (account == null) {
+                    return null;
+                }
+
+                return new RefundReceiveAccount(
+                        account.bank(),
+                        account.accountNumber(),
+                        account.holderName()
+                );
+            }
+        }
     }
 
     public record CancelResponse(

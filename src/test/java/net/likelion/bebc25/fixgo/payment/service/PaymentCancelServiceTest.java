@@ -21,7 +21,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.then;
 
 @DataJpaTest
-@Import({PaymentCancelService.class, PaymentAttemptService.class})
+@Import({PaymentFacadeService.class, PaymentAttemptService.class, PaymentRefundService.class})
 class PaymentCancelServiceTest {
 
     private static final Long AS_RECEPTION_ID = 1L;
@@ -29,7 +29,7 @@ class PaymentCancelServiceTest {
     private static final LocalDateTime DUE_AT = LocalDateTime.of(2026, 11, 10, 23, 59, 59);
 
     @Autowired
-    PaymentCancelService paymentCancelService;
+    PaymentFacadeService paymentFacadeService;
     @Autowired
     PaymentAttemptService paymentAttemptService;
     @Autowired
@@ -65,7 +65,7 @@ class PaymentCancelServiceTest {
         String orderId = issueVirtualAccount();
 
         // when
-        paymentCancelService.cancelVirtualAccountBeforeDeposit(AS_RECEPTION_ID);
+        paymentFacadeService.cancelVirtualAccountBeforeDeposit(AS_RECEPTION_ID);
         em.flush();
         em.clear();
 
@@ -90,7 +90,7 @@ class PaymentCancelServiceTest {
     void canStartAgainAfterCancel() {
         // given: 가상계좌 발급 후 취소
         String canceledOrderId = issueVirtualAccount();
-        paymentCancelService.cancelVirtualAccountBeforeDeposit(AS_RECEPTION_ID);
+        paymentFacadeService.cancelVirtualAccountBeforeDeposit(AS_RECEPTION_ID);
         em.flush();
         em.clear();
 

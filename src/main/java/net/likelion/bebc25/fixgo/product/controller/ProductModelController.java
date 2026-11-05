@@ -13,7 +13,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/products")
+@RequestMapping("/api/v1/admin/products")
 public class ProductModelController {
 
     private final ProductModelService productModelService;

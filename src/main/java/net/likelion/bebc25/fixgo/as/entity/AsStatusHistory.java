@@ -37,7 +37,7 @@ public class AsStatusHistory {
     private Member changedBy;
 
     @CreationTimestamp
-    @Column(nullable = false, updatable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     public AsStatusHistory(AsReception asReception, String fromStatus, String toStatus, String reason, Member changedBy) {
