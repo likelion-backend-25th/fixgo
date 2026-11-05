@@ -1,6 +1,9 @@
 package net.likelion.bebc25.fixgo.payment.service;
 
 import jakarta.persistence.EntityManager;
+import net.likelion.bebc25.fixgo.config.JpaConfig;
+import net.likelion.bebc25.fixgo.support.AsReceptionFixture;
+import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.payment.client.TossDto;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
 import net.likelion.bebc25.fixgo.payment.entity.*;
@@ -8,6 +11,7 @@ import net.likelion.bebc25.fixgo.payment.exception.PaymentErrorCode;
 import net.likelion.bebc25.fixgo.payment.exception.PaymentException;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentAttemptRepository;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentBillRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,10 +24,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
-@Import({PaymentWebhookService.class, PaymentAttemptService.class})
+@Import({JpaConfig.class, AsReceptionFixture.class, PaymentWebhookService.class, PaymentAttemptService.class})
 class PaymentWebhookServiceTest {
+    @Autowired
+    AsReceptionFixture asReceptionFixture;
 
-    private static final Long AS_RECEPTION_ID = 1L;
+    private AsReception reception;
+    private Long asReceptionId;
+
+    @BeforeEach
+    void setUpReception() {
+        reception = asReceptionFixture.save();
+        asReceptionId = reception.getId();
+    }
+
     private static final String PAYMENT_KEY = "test_payment_key";
     private static final String SECRET = "ps_test_secret";
     private static final LocalDateTime DUE_AT = LocalDateTime.of(2026, 11, 10, 23, 59, 59);
@@ -44,8 +58,8 @@ class PaymentWebhookServiceTest {
      * 실제 흐름으로 가상계좌 발급(입금 대기)까지 진행하고 orderId를 돌려준다
      */
     private String issueVirtualAccount() {
-        paymentBillRepository.save(PaymentBill.issue(AS_RECEPTION_ID, 30_000L, PaymentBillType.REPAIR));
-        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(AS_RECEPTION_ID);
+        paymentBillRepository.save(PaymentBill.create(reception, 30_000L, PaymentBillType.REPAIR));
+        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(asReceptionId);
         paymentAttemptService.prepareConfirm(started.orderId(), started.amount());
         paymentAttemptService.issueVirtualAccount(
                 started.orderId(), PAYMENT_KEY, "20", "12345678901234", SECRET, DUE_AT);
@@ -66,7 +80,7 @@ class PaymentWebhookServiceTest {
     }
 
     private PaymentBill findBill() {
-        return paymentBillRepository.findByAsReceptionId(AS_RECEPTION_ID).orElseThrow();
+        return paymentBillRepository.findByAsReceptionId(asReceptionId).orElseThrow();
     }
 
     @Test
@@ -142,8 +156,8 @@ class PaymentWebhookServiceTest {
     @DisplayName("가상계좌가 아닌 결제(카드)의 orderId로 오면 거절한다.")
     void notVirtualAccount() {
         // given: 카드 결제 완료된 attempt
-        paymentBillRepository.save(PaymentBill.issue(AS_RECEPTION_ID, 30_000L, PaymentBillType.REPAIR));
-        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(AS_RECEPTION_ID);
+        paymentBillRepository.save(PaymentBill.create(reception, 30_000L, PaymentBillType.REPAIR));
+        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(asReceptionId);
         paymentAttemptService.prepareConfirm(started.orderId(), started.amount());
         paymentAttemptService.completeConfirm(started.orderId(), PAYMENT_KEY, DEPOSITED_AT);
         em.flush();

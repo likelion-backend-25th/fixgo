@@ -89,4 +89,15 @@ public class RepairPresetService {
         Long basePrice = calculateBasePrice(preset.getId());
         return repairPresetMapper.toResponse(preset, basePrice);
     }
+
+    // 프리셋 이름 검색
+    public List<RepairPresetResponse> searchPresets(String name) {
+
+        // 검색어가 없으면 전체 조회
+        if (name == null || name.isBlank()) {
+            return getAllPresets();
+        }
+
+        return repairPresetRepository.findByNameContaining(name.trim()).stream().map(this::toResponseDto).toList();
+    }
 }

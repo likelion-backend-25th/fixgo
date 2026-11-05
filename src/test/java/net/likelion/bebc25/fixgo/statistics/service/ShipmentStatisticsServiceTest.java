@@ -109,6 +109,7 @@ class ShipmentStatisticsServiceTest {
         Shipment shipment = BeanUtils.instantiateClass(Shipment.class);
         LocalDateTime now = LocalDateTime.now();
         ReflectionTestUtils.setField(shipment, "asReception", reception);
+        ReflectionTestUtils.setField(shipment, "returnMethod", reception.getReturnMethod());
         ReflectionTestUtils.setField(shipment, "recipientName", "홍길동");
         ReflectionTestUtils.setField(shipment, "recipientPhone", "010-0000-0000");
         ReflectionTestUtils.setField(shipment, "status", shipmentStatus);

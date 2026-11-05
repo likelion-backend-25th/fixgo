@@ -27,7 +27,7 @@ public enum PaymentAttemptStatus {
     /**
      * 결제가 진행 중인 상태인지. 진행 중인 시도가 있으면 같은 청구서로 새 결제를 시작할 수 없다(이중 결제 방지).
      */
-    public boolean isInProgress() {
-        return this == IN_PROGRESS || this == WAITING_FOR_DEPOSIT;
+    public boolean blocksNewAttempt() {
+        return this == IN_PROGRESS || this == WAITING_FOR_DEPOSIT || this == DONE;
     }
 }

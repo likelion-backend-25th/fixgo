@@ -4,6 +4,7 @@ import net.likelion.bebc25.fixgo.global.exception.ErrorCode;
 import org.springframework.http.HttpStatus;
 
 public enum PaymentErrorCode implements ErrorCode {
+    BILL_ALREADY_EXISTS(false, HttpStatus.CONFLICT),
     ATTEMPT_NOT_FOUND(false, HttpStatus.NOT_FOUND),
     ATTEMPT_NOT_READY(false, HttpStatus.CONFLICT),
     BILL_NOT_PAYABLE(true, HttpStatus.CONFLICT),
