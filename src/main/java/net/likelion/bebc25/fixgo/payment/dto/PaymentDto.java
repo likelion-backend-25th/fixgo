@@ -146,7 +146,18 @@ public class PaymentDto {
             );
         }
 
-        public enum Status {NOT_ISSUED, UNPAID, WAITING_FOR_DEPOSIT, PAID}
+        public static PaymentSummaryResponse refunded(PaymentBill bill, PaymentAttempt doneAttempt) {
+            return new PaymentSummaryResponse(
+                    Status.REFUNDED,
+                    bill.getType().getOrderName(),
+                    bill.getAmount(),
+                    doneAttempt.getMethod(),
+                    bill.getPaidAt(),
+                    null
+            );
+        }
+
+        public enum Status {NOT_ISSUED, UNPAID, WAITING_FOR_DEPOSIT, PAID, REFUNDED}
 
         /**
          * 가상계좌 입금 안내 정보. 고객이 입금할 때 필요한 값만 담는다.
@@ -160,7 +171,48 @@ public class PaymentDto {
 
     }
 
+    public record PaymentDetailResponse(
+            Long billId,
+            ReceptionInfo reception,
+            Long amount,
+            PaymentBillStatus status,
+            PaymentAttemptStatus paymentStatus,
+            PaymentMethod paymentMethod,
+            AccountInfo virtualAccount,
+            PaymentHistoryItem paymentHistory,
+            RefundHistoryItem refundHistory,
+            boolean refundable
+    ) {}
+
+    public record ReceptionInfo(
+            String asReceptionNumber, String customerName,
+            String productName, String symptom, String symptomDetail
+    ) {}
+
+    public record AccountInfo(String bankCode, String accountNumber, LocalDateTime dueAt) {}
+
+    public record PaymentHistoryItem(
+            Long attemptId, String orderId, Long amount,
+            PaymentMethod paymentMethod, LocalDateTime approvedAt
+    ) {
+        public static PaymentHistoryItem from(PaymentAttempt attempt) {
+            return new PaymentHistoryItem(attempt.getId(), attempt.getOrderId(),
+                    attempt.getAmount(), attempt.getMethod(), attempt.getApprovedAt());
+        }
+    }
+
+    public record RefundHistoryItem(
+            Long refundId, Long amount, String cancelReason,
+            PaymentRefundStatus status, LocalDateTime canceledAt
+    ) {
+        public static RefundHistoryItem from(PaymentRefund refund) {
+            return new RefundHistoryItem(refund.getId(), refund.getCancelAmount(),
+                    refund.getCancelReason(), refund.getStatus(), refund.getCanceledAt());
+        }
+    }
+
     public record PaymentListResponse(
+            Long billId,
             String asReceptionNumber,
             String customerName,
             Long amount,
@@ -168,5 +220,6 @@ public class PaymentDto {
             PaymentMethod paymentMethod
 
     ) {}
+
 
 }

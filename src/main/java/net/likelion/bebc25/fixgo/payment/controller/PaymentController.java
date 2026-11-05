@@ -55,6 +55,11 @@ public class PaymentController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/{billId}")
+    public PaymentDto.PaymentDetailResponse getDetail(@PathVariable Long billId) {
+        return paymentQueryService.getDetail(billId);
+    }
+
     @GetMapping
     public Page<PaymentDto.PaymentListResponse> getPaymentList(
             @RequestParam(required = false) String keyword,
