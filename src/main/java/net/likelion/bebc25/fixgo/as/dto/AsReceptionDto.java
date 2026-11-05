@@ -8,6 +8,8 @@ import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.customer.entity.Customer;
 import net.likelion.bebc25.fixgo.product.entity.Product;
+import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
+import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
 import net.likelion.bebc25.fixgo.shipment.entity.ReturnMethod;
 
 import java.time.LocalDate;
@@ -53,7 +55,7 @@ public class AsReceptionDto {
                 Member technician
         ) {
             String receptionNumber = "AS-%s-%s".formatted(
-                    LocalDate.now().format(DateTimeFormatter.ofPattern("yyMMss")),
+                    LocalDate.now().format(DateTimeFormatter.ofPattern("yyMMdd")),
                     UUID.randomUUID()
             );
 
@@ -62,6 +64,12 @@ public class AsReceptionDto {
 
     }
 
+    public record ReceptionSearchRequest(
+            String keyword,
+            AsReceptionStatus status,
+            Long technicianId
+    ) {}
+
     public record ListResponse(
             Long id,
             String receptionNumber,
@@ -69,11 +77,13 @@ public class AsReceptionDto {
             String customerName,
             String customerPhone,
             String modelName,
-            AsReceptionStatus status,
+            AsReceptionStatus receptionStatus,
+            RepairStatus repairStatus,
             String technicianName
     ) {
         public static ListResponse from(
                 AsReception reception,
+                Repair repair,
                 String modelName
         ) {
             Member technician = reception.getTechnician();
@@ -86,7 +96,8 @@ public class AsReceptionDto {
                     reception.getCustomer().getPhone(),
                     modelName,
                     reception.getStatus(),
-                    technician == null ? null : technician.getName()
+                    repair.getStatus(),
+                    technician.getName()
             );
         }
     }
@@ -98,17 +109,14 @@ public class AsReceptionDto {
 
             Customer customer,
             Product product,
-            Member receptionist,
-            Member technician,
+            MemberInfo receptionist,
+            MemberInfo technician,
 
             AsReceptionStatus status,
-            LocalDateTime statusChangedAt,
-            LocalDateTime closedAt,
-
             String symptom,
             String symptomDetail,
-            String memo,
 
+            String memo,
             ReturnMethod returnMethod,
             String fileUrl
     ) {
@@ -121,19 +129,51 @@ public class AsReceptionDto {
 
                     asReception.getCustomer(),
                     asReception.getProduct(),
-                    asReception.getReceptionist(),
-                    asReception.getTechnician(),
+                    MemberInfo.from(asReception.getReceptionist()),
+                    MemberInfo.from(asReception.getTechnician()),
 
                     asReception.getStatus(),
-                    asReception.getStatusChangedAt(),
-                    asReception.getClosedAt(),
-
                     asReception.getSymptom(),
                     asReception.getSymptomDetail(),
+
                     asReception.getMemo(),
                     asReception.getReturnMethod(),
                     asReception.getFileUrl()
             );
         }
     }
+
+    public record MemberInfo(Long id, String name) {
+        public static MemberInfo from(Member member) {
+            return member == null ? null : new MemberInfo(member.getId(), member.getName());
+        }
+    }
+
+    // 등록 응답용 DTO (엔티티 대신 ID 와 필요한 값만 반환, 직원 비밀번호 해시 포함되지 않도록)
+    public record CreateReceptionResponse(
+            Long id,
+            String receptionNumber,
+            Long customerId,
+            Long productId,
+            Long receptionistId,
+            Long technicianId,
+            AsReceptionStatus status,
+            LocalDateTime createdAt
+    ) {
+        public static CreateReceptionResponse from(AsReception reception) {
+            return new CreateReceptionResponse(
+                    reception.getId(),
+                    reception.getReceptionNumber(),
+                    reception.getCustomer().getId(),
+                    reception.getProduct().getId(),
+                    reception.getReceptionist().getId(),
+                    reception.getTechnician() == null
+                            ? null
+                            : reception.getTechnician().getId(),
+                    reception.getStatus(),
+                    reception.getCreatedAt()
+            );
+        }
+    }
+
 }

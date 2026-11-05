@@ -59,7 +59,7 @@ class ModelStatisticsRepositoryTest {
             entityManager.createQuery("DELETE FROM Customer c WHERE c.email LIKE :prefix")
                          .setParameter("prefix", PREFIX + "%").executeUpdate();
 
-            entityManager.createQuery("DELETE FROM Member m WHERE m.code LIKE :prefix")
+            entityManager.createQuery("DELETE FROM Member m WHERE m.email LIKE :prefix")
                          .setParameter("prefix", PREFIX + "%").executeUpdate();
 
             entityManager.createQuery("DELETE FROM ProductModel pm WHERE pm.modelName LIKE :prefix")
@@ -124,31 +124,45 @@ class ModelStatisticsRepositoryTest {
         return transactionTemplate.execute(status -> {
 
             // 모델 생성
-            ProductModel model = new ProductModel("Galaxy", PREFIX + "GALAXY", Category.PHONE, 24, PREFIX);
+            ProductModel model = new ProductModel("Galaxy", PREFIX + "GALAXY", Category.PHONE, 24, 1L);
 
-            ProductModel emptyModel = new ProductModel("Empty", PREFIX + "EMPTY", Category.LAPTOP, 12, PREFIX);
+            ProductModel emptyModel = new ProductModel("Empty", PREFIX + "EMPTY", Category.LAPTOP, 12, 1L);
 
             entityManager.persist(model);
             entityManager.persist(emptyModel);
             entityManager.flush();
 
             // 제품 생성
-            Product product = new Product(model.getId(), PREFIX + "SERIAL-1", LocalDateTime.now(), PREFIX);
+            Product product = new Product(model.getId(), PREFIX + "SERIAL-1", LocalDateTime.now(), 1L);
 
             entityManager.persist(product);
 
             // 고객 생성
             Customer customer = new Customer("테스트 고객", "010-1234-5678", PREFIX + "customer@test.com", "12345", "서울시",
-                                             "테스트 주소", PREFIX);
+                                             "테스트 주소", 1L);
 
             entityManager.persist(customer);
 
             // 기사 및 접수 담당자 생성
-            Member receptionist = new Member(PREFIX + "ADMIN", PREFIX + "admin@test.com", "password", "접수 담당자",
-                                             Role.ROLE_ADMIN, "");
+            Member receptionist = new Member(
+                    PREFIX + "admin@test.com",
+                    "password",
+                    "접수 담당자",
+                    "010-1111-1111",
+                    "서울시 강남구",
+                    Role.ROLE_ADMIN,
+                    ""
+            );
 
-            Member technician = new Member(PREFIX + "TECH", PREFIX + "tech@test.com", "password", "테스트 기사",
-                                           Role.ROLE_TECHNICIAN, "");
+            Member technician = new Member(
+                    PREFIX + "tech@test.com",
+                    "password",
+                    "테스트 기사",
+                    "010-2222-2222",
+                    "서울시 서초구",
+                    Role.ROLE_TECHNICIAN,
+                    ""
+            );
 
             entityManager.persist(receptionist);
             entityManager.persist(technician);

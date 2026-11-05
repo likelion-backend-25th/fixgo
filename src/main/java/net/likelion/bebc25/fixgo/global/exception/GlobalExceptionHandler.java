@@ -6,6 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.NoSuchElementException;
+
 /**
  * 컨트롤러 밖으로 나온 예외를 HTTP 응답으로 바꾼다.
  * <p>
@@ -17,6 +19,13 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    public ResponseEntity<ErrorResponse> handleStatus(
+            org.springframework.web.server.ResponseStatusException e
+    ) {
+        return ResponseEntity.status(e.getStatusCode())
+                .body(new ErrorResponse("REQUEST_ERROR", e.getReason()));
+    }
 
     /**
      * 의도해서 던진 예외. 에러 코드가 가진 상태 코드와 메시지를 그대로 응답한다.
@@ -29,6 +38,19 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(errorCode, e.getMessage()));
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException e) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse("INVALID_ARGUMENT", e.getMessage()));
+    }
+
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<ErrorResponse> handleNoSuchElement(NoSuchElementException e) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse("NOT_FOUND", e.getMessage()));
+    }
 
     /**
      * 위에서 잡히지 않은 모든 예외. 데이터 이상(IllegalStateException) 등이 여기로 온다.

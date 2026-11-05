@@ -36,12 +36,12 @@ public class Product {
     private LocalDateTime updatedAt;
 
     @Column(nullable = false)
-    private String createdBy;
+    private Long createdBy;
 
     @Column(nullable = false)
-    private String updatedBy;
+    private Long updatedBy;
 
-    public Product(Long productModelId, String serialNumber, LocalDateTime manufacturedAt, String createdBy) {
+    public Product(Long productModelId, String serialNumber, LocalDateTime manufacturedAt, Long createdBy) {
         this.productModelId = productModelId;
         this.serialNumber = serialNumber;
         this.manufacturedAt = manufacturedAt;

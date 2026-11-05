@@ -27,7 +27,7 @@ public class CustomerServiceTest {
 
     private Customer saveCustomer(String name, String phone, String email) {
         return customerRepository.save(new Customer(name, phone, email, "12345",
-                "OO시 OO구 OO대로 123", "OOO동 OOO호", "admin"));
+                "OO시 OO구 OO대로 123", "OOO동 OOO호", 1L));
     }
 
     @Test
@@ -41,7 +41,7 @@ public class CustomerServiceTest {
         assertThat(response.name()).isEqualTo("홍길동");
         assertThat(response.phone()).isEqualTo("010-1234-5678");
         assertThat(response.email()).isEqualTo("hong@gmail.com");
-        assertThat(response.createdBy()).isEqualTo("admin");
+        assertThat(response.createdBy()).isEqualTo(1L);
     }
 
     @Test
@@ -82,14 +82,14 @@ public class CustomerServiceTest {
                 "12345", "OO시 OO구 OO대로 123", "OOO동 OOO호"
         );
 
-        CustomerDto.Response response = customerService.create(request, "admin");
+        CustomerDto.Response response = customerService.create(request, 1L);
 
         assertThat(response.id()).isNotNull();
         assertThat(response.name()).isEqualTo("홍길동");
         assertThat(response.phone()).isEqualTo("010-1234-5678");
         assertThat(response.email()).isEqualTo("hong@gmail.com");
-        assertThat(response.createdBy()).isEqualTo("admin");
-        assertThat(response.updatedBy()).isEqualTo("admin");
+        assertThat(response.createdBy()).isEqualTo(1L);
+        assertThat(response.updatedBy()).isEqualTo(1L);
         assertThat(customerRepository.existsByPhone("010-1234-5678")).isTrue();
     }
 
@@ -103,7 +103,7 @@ public class CustomerServiceTest {
                 null, null, null
         );
 
-        assertThatThrownBy(() -> customerService.create(request, "admin"))
+        assertThatThrownBy(() -> customerService.create(request, 1L))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("이미 등록된 연락처입니다.");
         assertThat(customerRepository.count()).isEqualTo(1);
@@ -193,7 +193,7 @@ public class CustomerServiceTest {
                 "54321", "변경된주소", "변경된상세"
         );
 
-        CustomerDto.Response response = customerService.update(saved.getId(), request, "updater");
+        CustomerDto.Response response = customerService.update(saved.getId(), request, 2L);
 
         assertThat(response.name()).isEqualTo("홍길동수정");
         assertThat(response.phone()).isEqualTo("010-9999-8888");
@@ -201,11 +201,11 @@ public class CustomerServiceTest {
         assertThat(response.zipcode()).isEqualTo("54321");
         assertThat(response.basicAddress()).isEqualTo("변경된주소");
         assertThat(response.detailAddress()).isEqualTo("변경된상세");
-        assertThat(response.updatedBy()).isEqualTo("updater");
+        assertThat(response.updatedBy()).isEqualTo(2L);
 
         Customer updated = customerRepository.findById(saved.getId()).orElseThrow();
         assertThat(updated.getName()).isEqualTo("홍길동수정");
-        assertThat(updated.getUpdatedBy()).isEqualTo("updater");
+        assertThat(updated.getUpdatedBy()).isEqualTo(2L);
     }
 
     @Test
@@ -216,7 +216,7 @@ public class CustomerServiceTest {
                 null, null, null
         );
 
-        assertThatThrownBy(() -> customerService.update(999L, request, "updater"))
+        assertThatThrownBy(() -> customerService.update(999L, request, 2L))
                 .isInstanceOf(NoSuchElementException.class)
                 .hasMessage("존재하지 않는 고객입니다.");
     }

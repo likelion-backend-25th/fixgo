@@ -51,7 +51,7 @@ class RepairCostControllerTest {
 
         when(repairCostService.calculateRepairCost(repairId, "tester")).thenThrow(new IllegalArgumentException("수리 정보를 찾을 수 없습니다."));
 
-        mockMvc.perform(post("/api/v1/as/repairs/{repairId}/cost", repairId).with(csrf())).andExpect(status().is5xxServerError());
+        mockMvc.perform(post("/api/v1/as/repairs/{repairId}/cost", repairId).with(csrf())).andExpect(status().isBadRequest());
 
         verify(repairCostService).calculateRepairCost(repairId, "tester");
     }
@@ -85,7 +85,7 @@ class RepairCostControllerTest {
 
         doThrow(new IllegalArgumentException("수리 정보를 찾을 수 없습니다.")).when(repairCostService).confirmRepairCost(repairId, userDetails);
 
-        mockMvc.perform(post("/api/v1/as/repairs/{repairId}/cost/confirm", repairId).with(authentication(authentication)).with(csrf())).andExpect(status().is5xxServerError());
+        mockMvc.perform(post("/api/v1/as/repairs/{repairId}/cost/confirm", repairId).with(authentication(authentication)).with(csrf())).andExpect(status().isBadRequest());
 
         verify(repairCostService).confirmRepairCost(repairId, userDetails);
     }

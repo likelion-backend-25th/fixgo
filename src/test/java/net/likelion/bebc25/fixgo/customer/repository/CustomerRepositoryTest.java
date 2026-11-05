@@ -31,13 +31,13 @@ class CustomerRepositoryTest {
     void setUp() {
         Customer customer1 = new Customer(
                 "홍길동", "010-1234-5678", "hong@gmail.com",
-                "12345", "OO시 OO구 OO대로 123", "OOO동 OOO호", "admin");
+                "12345", "OO시 OO구 OO대로 123", "OOO동 OOO호", 1L);
         Customer customer2 = new Customer(
                 "김철수", "010-1111-2222", "kim@naver.com",
-                "12345", "OO시 OO구 OO대로 123", "OOO동 OOO호", "admin");
+                "12345", "OO시 OO구 OO대로 123", "OOO동 OOO호", 1L);
         Customer customer3 = new Customer(
                 "박길동", "010-1234-4444", "park@gmail.com",
-                null, null, null, "admin");
+                null, null, null, 1L);
 
         customerRepository.save(customer1);
         customerRepository.save(customer2);

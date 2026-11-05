@@ -2,15 +2,16 @@ package net.likelion.bebc25.fixgo.payment.service;
 
 import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
-import net.likelion.bebc25.fixgo.payment.entity.PaymentAttempt;
-import net.likelion.bebc25.fixgo.payment.entity.PaymentAttemptStatus;
-import net.likelion.bebc25.fixgo.payment.entity.PaymentBill;
-import net.likelion.bebc25.fixgo.payment.entity.VirtualAccount;
+import net.likelion.bebc25.fixgo.payment.entity.*;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentAttemptRepository;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentBillRepository;
 import net.likelion.bebc25.fixgo.payment.repository.VirtualAccountRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.Optional;
 
@@ -21,6 +22,18 @@ public class PaymentQueryService {
     private final PaymentBillRepository paymentBillRepository;
     private final PaymentAttemptRepository paymentAttemptRepository;
     private final VirtualAccountRepository virtualAccountRepository;
+
+    public Page<PaymentDto.PaymentListResponse> getPaymentList(
+            String keyword,
+            PaymentBillStatus status,
+            Pageable pageable
+    ) {
+        String normalizedKeyword = StringUtils.hasText(keyword) ? keyword.trim() : null;
+        // 정렬은 쿼리의 order by(최신순)로 고정한다.
+        Pageable pageOnly = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+
+        return paymentBillRepository.findPaymentList(normalizedKeyword, status, pageOnly);
+    }
 
     public PaymentDto.PaymentSummaryResponse getSummary(Long asReceptionId) {
         PaymentBill bill = paymentBillRepository.findByAsReceptionId(asReceptionId).orElse(null);

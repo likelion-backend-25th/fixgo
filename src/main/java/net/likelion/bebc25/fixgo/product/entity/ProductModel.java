@@ -37,13 +37,13 @@ public class ProductModel {
     private LocalDateTime updatedAt;
 
     @Column(nullable = false)
-    private String createdBy;
+    private Long createdBy;
 
     @Column(nullable = false)
-    private String updatedBy;
+    private Long updatedBy;
 
     public ProductModel(String name, String modelName, Category category,
-                        Integer warrantyMonths, String createdBy) {
+                        Integer warrantyMonths, Long createdBy) {
         this.name = name;
         this.modelName = modelName;
         this.category = category;
@@ -53,5 +53,16 @@ public class ProductModel {
         this.updatedAt = this.createdAt;
         this.createdBy = createdBy;
         this.updatedBy = createdBy;
+    }
+
+    public void update(String name, String modelName, Category category,
+                       Integer warrantyMonths, boolean isActive, Long updatedBy) {
+        this.name = name;
+        this.modelName = modelName;
+        this.category = category;
+        this.warrantyMonths = warrantyMonths;
+        this.isActive = isActive;
+        this.updatedAt = LocalDateTime.now();
+        this.updatedBy = updatedBy;
     }
 }
