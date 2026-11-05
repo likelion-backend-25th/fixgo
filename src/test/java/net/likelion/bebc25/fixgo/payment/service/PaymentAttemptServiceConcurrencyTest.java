@@ -6,6 +6,8 @@ import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentAttemptStatus;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentBill;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentBillType;
+import net.likelion.bebc25.fixgo.payment.exception.PaymentErrorCode;
+import net.likelion.bebc25.fixgo.payment.exception.PaymentException;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentAttemptRepository;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentBillRepository;
 import net.likelion.bebc25.fixgo.support.AsReceptionFixture;
@@ -24,6 +26,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -96,5 +99,57 @@ class PaymentAttemptServiceConcurrencyTest {
         assertThat(paymentAttemptRepository.findAllByPaymentBillId(bill.getId()))
                 .singleElement()
                 .satisfies(a -> assertThat(a.getStatus()).isEqualTo(PaymentAttemptStatus.READY));
+    }
+
+    @Test
+    @DisplayName("같은 결제 시도에 승인 준비가 동시에 들어와도 하나만 통과하고 나머지는 ATTEMPT_NOT_READY로 거절된다.")
+    void prepareConfirm_concurrent() throws Exception {
+        // given: READY attempt
+        AsReception reception = asReceptionFixture.save();
+        paymentBillRepository.save(PaymentBill.create(reception, 30_000L, PaymentBillType.REPAIR));
+        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(reception.getId());
+
+        // when: 모든 스레드가 같은 orderId로 동시에 prepareConfirm을 호출한다
+        ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
+        CountDownLatch ready = new CountDownLatch(THREAD_COUNT);
+        CountDownLatch start = new CountDownLatch(1);
+        List<Future<PaymentErrorCode>> futures = new ArrayList<>();
+
+        int passed = 0;
+        int rejected = 0;
+        try {
+            for (int i = 0; i < THREAD_COUNT; i++) {
+                Callable<PaymentErrorCode> task = () -> {
+                    ready.countDown();
+                    start.await();
+                    return paymentAttemptService.prepareConfirm(started.orderId(), started.amount());
+                };
+                futures.add(executor.submit(task));
+            }
+            ready.await(5, TimeUnit.SECONDS);
+            start.countDown();
+
+            for (Future<PaymentErrorCode> future : futures) {
+                try {
+                    assertThat(future.get(10, TimeUnit.SECONDS)).isNull();
+                    passed++;
+                } catch (ExecutionException e) {
+                    // 잠금 대기 후 IN_PROGRESS를 본 요청은 상태를 건드리지 않고 거절돼야 한다
+                    assertThat(e.getCause())
+                            .isInstanceOf(PaymentException.class)
+                            .extracting("errorCode")
+                            .isEqualTo(PaymentErrorCode.ATTEMPT_NOT_READY);
+                    rejected++;
+                }
+            }
+        } finally {
+            executor.shutdownNow();
+        }
+
+        // then: 정확히 하나만 통과하고, attempt는 IN_PROGRESS로 남는다
+        assertThat(passed).isEqualTo(1);
+        assertThat(rejected).isEqualTo(THREAD_COUNT - 1);
+        assertThat(paymentAttemptRepository.findByOrderId(started.orderId()).orElseThrow().getStatus())
+                .isEqualTo(PaymentAttemptStatus.IN_PROGRESS);
     }
 }

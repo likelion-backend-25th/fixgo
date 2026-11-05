@@ -1,9 +1,8 @@
 package net.likelion.bebc25.fixgo.payment.service;
 
 import jakarta.persistence.EntityManager;
-import net.likelion.bebc25.fixgo.config.JpaConfig;
-import net.likelion.bebc25.fixgo.support.AsReceptionFixture;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
+import net.likelion.bebc25.fixgo.config.JpaConfig;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
 import net.likelion.bebc25.fixgo.payment.entity.*;
 import net.likelion.bebc25.fixgo.payment.exception.PaymentErrorCode;
@@ -11,7 +10,7 @@ import net.likelion.bebc25.fixgo.payment.exception.PaymentException;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentAttemptRepository;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentBillRepository;
 import net.likelion.bebc25.fixgo.payment.repository.VirtualAccountRepository;
-import org.junit.jupiter.api.Disabled;
+import net.likelion.bebc25.fixgo.support.AsReceptionFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -30,16 +29,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 public class PaymentAttemptServiceTest {
     @Autowired
     AsReceptionFixture asReceptionFixture;
-
-    private AsReception reception;
-    private Long asReceptionId;
-
-    @BeforeEach
-    void setUpReception() {
-        reception = asReceptionFixture.save();
-        asReceptionId = reception.getId();
-    }
-
     @Autowired
     PaymentAttemptService paymentAttemptService;
     @Autowired
@@ -50,7 +39,14 @@ public class PaymentAttemptServiceTest {
     VirtualAccountRepository virtualAccountRepository;
     @Autowired
     EntityManager em;
+    private AsReception reception;
+    private Long asReceptionId;
 
+    @BeforeEach
+    void setUpReception() {
+        reception = asReceptionFixture.save();
+        asReceptionId = reception.getId();
+    }
 
     private PaymentAttempt startAndFindAttempt(Long asReceptionId) {
         PaymentDto.StartPaymentResponse startPaymentResponse = paymentAttemptService.startPayment(asReceptionId);
@@ -252,11 +248,12 @@ public class PaymentAttemptServiceTest {
             PaymentAttempt attempt1 = startAndFindAttempt(asReceptionId);
 
             // when: 저장된 orderId와 amount로 prepareConfirm
-            paymentAttemptService.prepareConfirm(attempt1.getOrderId(), attempt1.getAmount());
+            PaymentErrorCode failure = paymentAttemptService.prepareConfirm(attempt1.getOrderId(), attempt1.getAmount());
             em.flush();
             em.clear();
 
-            // then: attempt가 IN_PROGRESS로 바뀌어 있다 (DB에서 다시 조회해서 확인)
+            // then: 실패 코드 없이 통과하고, attempt가 IN_PROGRESS로 바뀌어 있다 (DB에서 다시 조회해서 확인)
+            assertThat(failure).isNull();
             PaymentAttempt reloaded = paymentAttemptRepository.findById(attempt1.getId()).orElseThrow();
             assertThat(reloaded.getStatus()).isEqualTo(PaymentAttemptStatus.IN_PROGRESS);
         }
@@ -272,7 +269,7 @@ public class PaymentAttemptServiceTest {
         }
 
         @Test
-        @DisplayName("요청 금액이 저장된 금액과 다르면 승인을 준비할 수 없고 상태도 바뀌지 않는다.")
+        @DisplayName("요청 금액이 저장된 금액과 다르면 AMOUNT_MISMATCH를 반환하고 attempt를 FAILED로 기록한다.")
         void prepareConfirm_amountMismatch() {
             // given
             PaymentBill bill = paymentBillRepository.save(PaymentBill.create(reception, 30_000L, PaymentBillType.REPAIR));
@@ -280,16 +277,16 @@ public class PaymentAttemptServiceTest {
             em.flush();
             em.clear();
 
-            // when & then
-            assertThatThrownBy(() -> paymentAttemptService.prepareConfirm(attempt.getOrderId(), 1_000L))
-                    .isInstanceOf(PaymentException.class)
-                    .extracting("errorCode")
-                    .isEqualTo(PaymentErrorCode.AMOUNT_MISMATCH);
-
-            // then: prepareConfirm은 상태를 바꾸지 않는다 (FAILED 기록은 호출하는 쪽 책임)
+            // when
+            PaymentErrorCode failure = paymentAttemptService.prepareConfirm(attempt.getOrderId(), 1_000L);
+            em.flush();
             em.clear();
+
+            // then: 실패 코드를 돌려주고, 같은 트랜잭션에서 FAILED가 기록된다
+            assertThat(failure).isEqualTo(PaymentErrorCode.AMOUNT_MISMATCH);
             PaymentAttempt reloaded = paymentAttemptRepository.findById(attempt.getId()).orElseThrow();
-            assertThat(reloaded.getStatus()).isEqualTo(PaymentAttemptStatus.READY);
+            assertThat(reloaded.getStatus()).isEqualTo(PaymentAttemptStatus.FAILED);
+            assertThat(reloaded.getFailureCode()).isEqualTo(PaymentErrorCode.AMOUNT_MISMATCH.name());
         }
 
         @Test
@@ -307,10 +304,37 @@ public class PaymentAttemptServiceTest {
                     .isInstanceOf(PaymentException.class)
                     .extracting("errorCode")
                     .isEqualTo(PaymentErrorCode.ATTEMPT_NOT_READY);
+
+            // then: 진행 중인 attempt는 건드리지 않는다
+            em.clear();
+            PaymentAttempt reloaded = paymentAttemptRepository.findById(attempt.getId()).orElseThrow();
+            assertThat(reloaded.getStatus()).isEqualTo(PaymentAttemptStatus.IN_PROGRESS);
         }
 
         @Test
-        @DisplayName("청구서가 이미 결제 완료되었으면 승인을 준비할 수 없다.")
+        @DisplayName("READY가 아니면 금액이 달라도 FAILED로 바꾸지 않는다. (READY 검사가 먼저)")
+        void prepareConfirm_notReadyWithWrongAmount() {
+            // given: IN_PROGRESS attempt
+            PaymentBill bill = issueBill();
+            PaymentAttempt attempt = startAndFindAttempt(asReceptionId);
+            paymentAttemptService.prepareConfirm(attempt.getOrderId(), attempt.getAmount());
+            em.flush();
+            em.clear();
+
+            // when & then: 금액을 조작한 요청이 와도 ATTEMPT_NOT_READY로만 거절한다
+            assertThatThrownBy(() -> paymentAttemptService.prepareConfirm(attempt.getOrderId(), 1_000L))
+                    .isInstanceOf(PaymentException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(PaymentErrorCode.ATTEMPT_NOT_READY);
+
+            // then: 진행 중인 결제가 FAILED로 덮이지 않는다
+            em.clear();
+            PaymentAttempt reloaded = paymentAttemptRepository.findById(attempt.getId()).orElseThrow();
+            assertThat(reloaded.getStatus()).isEqualTo(PaymentAttemptStatus.IN_PROGRESS);
+        }
+
+        @Test
+        @DisplayName("청구서가 이미 결제 완료되었으면 BILL_NOT_PAYABLE을 반환하고 attempt를 FAILED로 기록한다.")
         void prepareConfirm_billAlreadyPaid() {
             // given: READY attempt가 있는 상태에서 bill이 PAID가 된다
             //        (현실에서는 카드 결제창을 띄워 둔 사이 현장에서 현금으로 결제된 경우)
@@ -320,27 +344,23 @@ public class PaymentAttemptServiceTest {
             em.flush();
             em.clear();
 
-            // when & then
-            assertThatThrownBy(() -> paymentAttemptService.prepareConfirm(attempt.getOrderId(), attempt.getAmount()))
-                    .isInstanceOf(PaymentException.class)
-                    .extracting("errorCode")
-                    .isEqualTo(PaymentErrorCode.BILL_NOT_PAYABLE);
+            // when
+            PaymentErrorCode failure = paymentAttemptService.prepareConfirm(attempt.getOrderId(), attempt.getAmount());
+            em.flush();
+            em.clear();
 
             // then
-            em.clear();
+            assertThat(failure).isEqualTo(PaymentErrorCode.BILL_NOT_PAYABLE);
             PaymentAttempt reloaded = paymentAttemptRepository.findById(attempt.getId()).orElseThrow();
-            assertThat(reloaded.getStatus()).isEqualTo(PaymentAttemptStatus.READY);
+            assertThat(reloaded.getStatus()).isEqualTo(PaymentAttemptStatus.FAILED);
+            assertThat(reloaded.getFailureCode()).isEqualTo(PaymentErrorCode.BILL_NOT_PAYABLE.name());
         }
 
-        @Test
-        @Disabled("동시성 테스트: @SpringBootTest + 스레드로 별도 작성")
-        @DisplayName("같은 결제 시도에 승인 준비가 동시에 들어와도 하나만 통과한다.")
-        void prepareConfirm_concurrent() {
-        }
+        // 동시 요청 테스트는 실제 커밋이 필요해서 PaymentAttemptServiceConcurrencyTest에 따로 둔다.
     }
 
     @Nested
-    @DisplayName("prepareConfirm")
+    @DisplayName("completeConfirm")
     class CompleteConfirm {
         private final LocalDateTime approvedAt =
                 LocalDateTime.of(2026, 10, 31, 15, 30);

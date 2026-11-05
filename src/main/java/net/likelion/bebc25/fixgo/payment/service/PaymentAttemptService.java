@@ -62,30 +62,34 @@ public class PaymentAttemptService {
      * 승인 준비: 승인 가능한 상태인지 검증하고 IN_PROGRESS로 바꾼다.
      */
     @Transactional
-    public void prepareConfirm(String orderId, Long amount) {
+    public PaymentErrorCode prepareConfirm(String orderId, Long amount) {
         PaymentAttempt attempt = paymentAttemptRepository.findByOrderIdForUpdate(orderId).orElseThrow(
                 () -> new PaymentException(PaymentErrorCode.ATTEMPT_NOT_FOUND, "해당 결제 시도가 없습니다.")
         );
 
         PaymentBill bill = paymentBillRepository.findByIdForUpdate(attempt.getPaymentBill().getId())
-                .orElseThrow(() -> new IllegalStateException("Payment Bill Not Found"));
+                .orElseThrow(() -> new IllegalStateException("attempt에 연결된 bill이 없습니다. orderId=" + orderId));
 
         // READY가 아니면 이미 승인 중이거나 끝난 시도다. 상태를 건드리면 안되므로 bill 검사보다 먼저 거른다.
         if (attempt.getStatus() != PaymentAttemptStatus.READY) {
             throw new PaymentException(PaymentErrorCode.ATTEMPT_NOT_READY, "해당 결제 시도 상태가 READY가 아닙니다.");
         }
 
-        // 한 bill에 활성 시도는 하나뿐이다.
+        PaymentErrorCode failure = null;
         if (bill.getStatus() != PaymentBillStatus.UNPAID) {
-            throw new PaymentException(PaymentErrorCode.BILL_NOT_PAYABLE, "결제할 수 없는 청구입니다.");
+            failure = PaymentErrorCode.BILL_NOT_PAYABLE; // bill이 이미 결제되거나 환불된 상태이면 결제를 할 수 없다.
+        } else if (!attempt.getAmount().equals(amount)) {
+            failure = PaymentErrorCode.AMOUNT_MISMATCH; // DB 금액과 프론트가 보낸 금액이 다르면 안 된다.
         }
 
-        // 프론트가 보낸 금액은 신뢰하지 않는다. DB 금액과 다르면 승인하지 않는다.
-        if (!attempt.getAmount().equals(amount)) {
-            throw new PaymentException(PaymentErrorCode.AMOUNT_MISMATCH, "금액이 다릅니다.");
+        if (failure != null) {
+            attempt.markFailed(failure.name(), "결제를 진행할 수 없습니다.");
+            return failure;
         }
 
+        // attempt를 IN_PROGRESS로 바꾸고 Facade에 null을 반환한다.
         attempt.markInProgress();
+        return null;
     }
 
     /**

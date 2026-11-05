@@ -121,7 +121,7 @@ class PaymentFacadeServiceTest {
                 .extracting("errorCode")
                 .isEqualTo(PaymentErrorCode.AMOUNT_MISMATCH);
 
-        // then: prepareConfirm은 롤백됐지만 failConfirm의 기록은 남아 있다
+        // then: prepareConfirm이 잠금을 쥔 채 FAILED를 기록하고 커밋했다
         PaymentAttempt attempt = findAttempt(started.orderId());
         assertThat(attempt.getStatus()).isEqualTo(PaymentAttemptStatus.FAILED);
         assertThat(attempt.getFailureCode()).isEqualTo("AMOUNT_MISMATCH");
