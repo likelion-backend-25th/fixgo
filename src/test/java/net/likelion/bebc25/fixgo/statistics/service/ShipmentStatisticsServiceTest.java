@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -83,8 +84,11 @@ class ShipmentStatisticsServiceTest {
             persistShipment(customer, product, member, "5", ShipmentStatus.PICKED_UP);
         });
 
-        ShipmentStatisticsDto statistics = shipmentStatisticsService.getShipmentStatistics();
+        LocalDate today = LocalDate.now();
+        ShipmentStatisticsDto statistics = shipmentStatisticsService.getShipmentStatistics(today, today);
 
+        assertThat(statistics.startDate()).isEqualTo(LocalDate.now());
+        assertThat(statistics.endDate()).isEqualTo(LocalDate.now());
         assertThat(statistics.readyCount()).isEqualTo(2L);
         assertThat(statistics.shippingCount()).isEqualTo(1L);
         assertThat(statistics.completedCount()).isEqualTo(2L);
@@ -93,7 +97,8 @@ class ShipmentStatisticsServiceTest {
     @Test
     @DisplayName("배송 건이 없으면 세 건수 모두 0이다.")
     void getShipmentStatisticsWhenEmpty() {
-        ShipmentStatisticsDto statistics = shipmentStatisticsService.getShipmentStatistics();
+        LocalDate today = LocalDate.now();
+        ShipmentStatisticsDto statistics = shipmentStatisticsService.getShipmentStatistics(today, today);
 
         assertThat(statistics.readyCount()).isZero();
         assertThat(statistics.shippingCount()).isZero();

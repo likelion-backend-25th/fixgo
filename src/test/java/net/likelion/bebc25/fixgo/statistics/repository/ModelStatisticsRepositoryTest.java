@@ -75,11 +75,14 @@ class ModelStatisticsRepositoryTest {
         Long modelId = createTestData();
 
         // when
+        LocalDateTime startDateTime = LocalDateTime.now().minusDays(1);
+        LocalDateTime endDateTime = LocalDateTime.now().plusDays(1);
+
         List<ModelStatisticsRepository.ModelStatistics> statistics = modelStatisticsRepository.findModelStatistics(
-                AsReceptionStatus.COMPLETED);
+                AsReceptionStatus.COMPLETED, startDateTime, endDateTime);
 
         List<ModelStatisticsRepository.ModelSymptomStatistics> symptoms = modelStatisticsRepository.findModelSymptomStatistics(
-                modelId);
+                modelId, startDateTime, endDateTime);
 
         // then
         ModelStatisticsRepository.ModelStatistics galaxy = statistics.stream().filter(item -> item.getModelName()
@@ -107,8 +110,11 @@ class ModelStatisticsRepositoryTest {
         createTestData();
 
         // when
+        LocalDateTime startDateTime = LocalDateTime.now().minusDays(1);
+        LocalDateTime endDateTime = LocalDateTime.now().plusDays(1);
+
         List<ModelStatisticsRepository.ModelStatistics> statistics = modelStatisticsRepository.findModelStatistics(
-                AsReceptionStatus.COMPLETED);
+                AsReceptionStatus.COMPLETED, startDateTime, endDateTime);
 
         // then
         ModelStatisticsRepository.ModelStatistics emptyModel = statistics.stream().filter(item -> item.getModelName()
