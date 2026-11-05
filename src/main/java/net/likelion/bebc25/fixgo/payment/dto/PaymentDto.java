@@ -1,9 +1,8 @@
 package net.likelion.bebc25.fixgo.payment.dto;
 
-import net.likelion.bebc25.fixgo.payment.entity.PaymentAttempt;
-import net.likelion.bebc25.fixgo.payment.entity.PaymentBill;
-import net.likelion.bebc25.fixgo.payment.entity.PaymentMethod;
-import net.likelion.bebc25.fixgo.payment.entity.VirtualAccount;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import net.likelion.bebc25.fixgo.payment.entity.*;
 
 import java.time.LocalDateTime;
 
@@ -39,6 +38,44 @@ public class PaymentDto {
             String paymentKey,
             Long amount
     ) {}
+
+    /**
+     * 결제 완료된 청구서의 전액 환불 요청.
+     * 카드 환불은 refundAccount를 생략할 수 있다.
+     * 가상계좌 환불은 은행 코드, 계좌번호, 예금주가 필요하다.
+     * 환불 금액과 결제수단은 서버에 저장된 결제 정보를 사용한다.
+     */
+    public record RefundPaymentRequest(
+            @NotBlank(message = "환불 사유는 필수입니다.")
+            String cancelReason,
+
+            @Valid
+            RefundAccountRequest refundAccount
+    ) {}
+
+    /**
+     * 가상계좌 환불금을 받을 계좌 정보.
+     *
+     * @param bank          은행 코드
+     * @param accountNumber 환불받을 계좌번호
+     * @param holderName    예금주명
+     */
+    public record RefundAccountRequest(
+            @NotBlank(message = "은행 코드는 필수입니다.")
+            String bank,
+
+            @NotBlank(message = "계좌번호는 필수입니다.")
+            String accountNumber,
+
+            @NotBlank(message = "예금주명은 필수입니다.")
+            String holderName
+    ) {
+        public PaymentInternalDto.RefundAccount toInternal() {
+            return new PaymentInternalDto.RefundAccount(
+                    bank, accountNumber, holderName
+            );
+        }
+    }
 
     /**
      * 포털 결제 영역에 보여 줄 현재 결제 상태.
@@ -109,7 +146,18 @@ public class PaymentDto {
             );
         }
 
-        public enum Status {NOT_ISSUED, UNPAID, WAITING_FOR_DEPOSIT, PAID}
+        public static PaymentSummaryResponse refunded(PaymentBill bill, PaymentAttempt doneAttempt) {
+            return new PaymentSummaryResponse(
+                    Status.REFUNDED,
+                    bill.getType().getOrderName(),
+                    bill.getAmount(),
+                    doneAttempt.getMethod(),
+                    bill.getPaidAt(),
+                    null
+            );
+        }
+
+        public enum Status {NOT_ISSUED, UNPAID, WAITING_FOR_DEPOSIT, PAID, REFUNDED}
 
         /**
          * 가상계좌 입금 안내 정보. 고객이 입금할 때 필요한 값만 담는다.
@@ -122,4 +170,56 @@ public class PaymentDto {
 
 
     }
+
+    public record PaymentDetailResponse(
+            Long billId,
+            ReceptionInfo reception,
+            Long amount,
+            PaymentBillStatus status,
+            PaymentAttemptStatus paymentStatus,
+            PaymentMethod paymentMethod,
+            AccountInfo virtualAccount,
+            PaymentHistoryItem paymentHistory,
+            RefundHistoryItem refundHistory,
+            boolean refundable
+    ) {}
+
+    public record ReceptionInfo(
+            String asReceptionNumber, String customerName,
+            String productName, String symptom, String symptomDetail
+    ) {}
+
+    public record AccountInfo(String bankCode, String accountNumber, LocalDateTime dueAt) {}
+
+    public record PaymentHistoryItem(
+            Long attemptId, String orderId, Long amount,
+            PaymentMethod paymentMethod, LocalDateTime approvedAt
+    ) {
+        public static PaymentHistoryItem from(PaymentAttempt attempt) {
+            return new PaymentHistoryItem(attempt.getId(), attempt.getOrderId(),
+                    attempt.getAmount(), attempt.getMethod(), attempt.getApprovedAt());
+        }
+    }
+
+    public record RefundHistoryItem(
+            Long refundId, Long amount, String cancelReason,
+            PaymentRefundStatus status, LocalDateTime canceledAt
+    ) {
+        public static RefundHistoryItem from(PaymentRefund refund) {
+            return new RefundHistoryItem(refund.getId(), refund.getCancelAmount(),
+                    refund.getCancelReason(), refund.getStatus(), refund.getCanceledAt());
+        }
+    }
+
+    public record PaymentListResponse(
+            Long billId,
+            String asReceptionNumber,
+            String customerName,
+            Long amount,
+            PaymentBillStatus status,
+            PaymentMethod paymentMethod
+
+    ) {}
+
+
 }

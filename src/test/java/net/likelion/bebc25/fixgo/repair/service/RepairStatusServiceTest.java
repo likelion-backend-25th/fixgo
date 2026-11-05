@@ -1,5 +1,9 @@
 package net.likelion.bebc25.fixgo.repair.service;
 
+import net.likelion.bebc25.fixgo.as.entity.AsReception;
+import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
+import net.likelion.bebc25.fixgo.auth.entity.Member;
+import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
 import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,6 +13,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
@@ -17,63 +23,94 @@ import static org.mockito.Mockito.*;
 class RepairStatusServiceTest {
 
     private final String updatedBy = "tester";
+
     @Mock
     private Repair repair;
+
+    @Mock
+    private AsReception asReception;
+
+    @Mock
+    private Member changedBy;
+
+    @Mock
+    private MemberRepository memberRepository;
+
+    @Mock
+    private AsStatusHistoryService asStatusHistoryService;
+
     private RepairStatusService repairStatusService;
 
     @BeforeEach
     void setUp() {
-        repairStatusService = new RepairStatusService();
+        repairStatusService = new RepairStatusService(asStatusHistoryService, memberRepository);
+    }
+
+    // 상태 변경 공통 준비
+    private void prepareStatusChange(RepairStatus currentStatus) {
+        when(repair.getStatus()).thenReturn(currentStatus);
+        when(repair.getAsReception()).thenReturn(asReception);
+        when(memberRepository.findByEmail(updatedBy)).thenReturn(Optional.of(changedBy));
     }
 
     @Test
     @DisplayName("점검 중 상태에서 견적 요청 상태로 변경할 수 있다.")
     void changeDiagnosingToRequested() {
-        when(repair.getStatus()).thenReturn(RepairStatus.DIAGNOSING);
+        prepareStatusChange(RepairStatus.DIAGNOSING);
 
         repairStatusService.changeStatus(repair, RepairStatus.REQUESTED, updatedBy);
 
         verify(repair).changeStatus(RepairStatus.REQUESTED, updatedBy);
+
+        verify(asStatusHistoryService).record(asReception, "DIAGNOSING", "REQUESTED", null, changedBy);
     }
 
     @Test
     @DisplayName("견적 요청 상태에서 승인 상태로 변경할 수 있다.")
     void changeRequestedToApproved() {
-        when(repair.getStatus()).thenReturn(RepairStatus.REQUESTED);
+        prepareStatusChange(RepairStatus.REQUESTED);
 
         repairStatusService.changeStatus(repair, RepairStatus.APPROVED, updatedBy);
 
         verify(repair).changeStatus(RepairStatus.APPROVED, updatedBy);
+
+        verify(asStatusHistoryService).record(asReception, "REQUESTED", "APPROVED", null, changedBy);
     }
 
     @Test
     @DisplayName("견적 요청 상태에서 거절 상태로 변경할 수 있다.")
     void changeRequestedToRejected() {
-        when(repair.getStatus()).thenReturn(RepairStatus.REQUESTED);
+        prepareStatusChange(RepairStatus.REQUESTED);
 
         repairStatusService.changeStatus(repair, RepairStatus.REJECTED, updatedBy);
 
         verify(repair).changeStatus(RepairStatus.REJECTED, updatedBy);
+
+        verify(asStatusHistoryService).record(asReception, "REQUESTED", "REJECTED", null, changedBy);
     }
 
     @Test
     @DisplayName("승인 상태에서 수리 중 상태로 변경할 수 있다.")
     void changeApprovedToRepairing() {
-        when(repair.getStatus()).thenReturn(RepairStatus.APPROVED);
+        prepareStatusChange(RepairStatus.APPROVED);
 
         repairStatusService.changeStatus(repair, RepairStatus.REPAIRING, updatedBy);
 
         verify(repair).changeStatus(RepairStatus.REPAIRING, updatedBy);
+
+        verify(asStatusHistoryService).record(asReception, "APPROVED", "REPAIRING", null, changedBy);
     }
 
     @Test
     @DisplayName("수리 중 상태에서 완료 상태로 변경할 수 있다.")
     void changeRepairingToCompleted() {
-        when(repair.getStatus()).thenReturn(RepairStatus.REPAIRING);
+        prepareStatusChange(RepairStatus.REPAIRING);
 
         repairStatusService.changeStatus(repair, RepairStatus.COMPLETED, updatedBy);
 
         verify(repair).changeStatus(RepairStatus.COMPLETED, updatedBy);
+
+        verify(asStatusHistoryService).record(asReception, "REPAIRING", "COMPLETED", null, changedBy);
     }
 
     @Test
@@ -84,6 +121,7 @@ class RepairStatusServiceTest {
         assertThrows(IllegalArgumentException.class, () -> repairStatusService.changeStatus(repair, RepairStatus.COMPLETED, updatedBy));
 
         verify(repair, never()).changeStatus(any(), anyString());
+        verifyNoInteractions(memberRepository, asStatusHistoryService);
     }
 
     @Test
@@ -94,6 +132,7 @@ class RepairStatusServiceTest {
         assertThrows(IllegalArgumentException.class, () -> repairStatusService.changeStatus(repair, RepairStatus.REQUESTED, updatedBy));
 
         verify(repair, never()).changeStatus(any(), anyString());
+        verifyNoInteractions(memberRepository, asStatusHistoryService);
     }
 
     @Test
@@ -104,6 +143,7 @@ class RepairStatusServiceTest {
         assertThrows(IllegalArgumentException.class, () -> repairStatusService.changeStatus(repair, RepairStatus.REQUESTED, updatedBy));
 
         verify(repair, never()).changeStatus(any(), anyString());
+        verifyNoInteractions(memberRepository, asStatusHistoryService);
     }
 
     @Test
@@ -114,5 +154,6 @@ class RepairStatusServiceTest {
         assertThrows(IllegalArgumentException.class, () -> repairStatusService.changeStatus(repair, RepairStatus.DIAGNOSING, updatedBy));
 
         verify(repair, never()).changeStatus(any(), anyString());
+        verifyNoInteractions(memberRepository, asStatusHistoryService);
     }
 }

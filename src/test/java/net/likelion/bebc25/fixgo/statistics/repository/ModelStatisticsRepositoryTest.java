@@ -133,7 +133,7 @@ class ModelStatisticsRepositoryTest {
             entityManager.flush();
 
             // 제품 생성
-            Product product = new Product(model.getId(), PREFIX + "SERIAL-1", LocalDateTime.now(), PREFIX);
+            Product product = new Product(model.getId(), PREFIX + "SERIAL-1", LocalDateTime.now(), 1L);
 
             entityManager.persist(product);
 

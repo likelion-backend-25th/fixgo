@@ -36,7 +36,7 @@ public class AsReceptionTest {
     void setUp() {
         // 1. 접수 등록 사전 작업
         this.customer = new Customer("한소희", "010-5555-1212", "user@gamil.com", "12345", "00아파트 12동", "서울 강남구 양재동", 1L);
-        this.product = new Product(1L, "SN-1004", LocalDateTime.now(), "admin");
+        this.product = new Product(1L, "SN-1004", LocalDateTime.now(), 1L);
         this.member = new Member(
                 "user01@abc.com",
                 "@#$@%",
@@ -146,6 +146,36 @@ public class AsReceptionTest {
 
         // then
         assertThat(findReception.getFileUrl()).isEqualTo(fileUrl);
+    }
+
+    @Test
+    @DisplayName("담당 기사를 다른 기사로 바꾼다")
+    void updateTechnician() {
+        Member newTechnician = new Member("tech02@abc.com", "@#$@%", "박기사", "010-0000-0001", "서울시 강남구", Role.ROLE_TECHNICIAN, "technician02");
+        em.persist(newTechnician);
+
+        AsReception asReception = new AsReception(
+                "AS-2026-1032",
+                customer,
+                product,
+                member,
+                technician,
+                "충전불량",
+                "충전이 안 됩니다",
+                "메모",
+                ReturnMethod.DELIVERY,
+                null
+        );
+        em.persist(asReception);
+        em.flush();
+
+        asReception.updateTechnician(newTechnician);
+        em.flush();
+        em.clear();
+
+        AsReception found = em.find(AsReception.class, asReception.getId());
+        assertThat(found.getTechnician().getId()).isEqualTo(newTechnician.getId());
+        assertThat(found.getTechnician().getName()).isEqualTo("박기사");
     }
 
 }

@@ -3,7 +3,7 @@ package net.likelion.bebc25.fixgo.portal.service;
 import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
 import net.likelion.bebc25.fixgo.payment.service.PaymentAttemptService;
-import net.likelion.bebc25.fixgo.payment.service.PaymentCancelService;
+import net.likelion.bebc25.fixgo.payment.service.PaymentFacadeService;
 import net.likelion.bebc25.fixgo.payment.service.PaymentQueryService;
 import net.likelion.bebc25.fixgo.portal.dto.PortalResponse;
 import org.springframework.stereotype.Service;
@@ -18,7 +18,7 @@ public class PortalService {
     private final PaymentQueryService paymentQueryService;
     private final CustomerPortalLinkService customerPortalLinkService;
     private final PaymentAttemptService paymentAttemptService;
-    private final PaymentCancelService paymentCancelService;
+    private final PaymentFacadeService paymentFacadeService;
 
     /**
      * 토큰이 없거나 만료되면 PortalException이 발생한다.
@@ -44,6 +44,6 @@ public class PortalService {
      */
     public void cancelVirtualAccount(String token) {
         Long asReceptionId = customerPortalLinkService.resolveAsReceptionId(token);
-        paymentCancelService.cancelVirtualAccountBeforeDeposit(asReceptionId);
+        paymentFacadeService.cancelVirtualAccountBeforeDeposit(asReceptionId);
     }
 }
