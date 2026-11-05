@@ -43,6 +43,6 @@ public interface RepairRepository extends JpaRepository<Repair, Long> {
     Optional<Repair> findByReceptionNumber(@Param("receptionNumber") String receptionNumber);
 
 
-    boolean existByIdAndStatus(Long repairId, RepairStatus status);
+    boolean existsByIdAndStatus(Long repairId, RepairStatus status);
 
 }

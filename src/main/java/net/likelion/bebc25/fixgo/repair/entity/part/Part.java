@@ -53,5 +53,6 @@ public class Part extends BaseEntity {
     }
 
     public void updateStatus(PartStatus newStatus) {
+        this.status = newStatus;
     }
 }

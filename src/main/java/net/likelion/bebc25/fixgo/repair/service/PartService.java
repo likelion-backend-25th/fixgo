@@ -112,7 +112,7 @@ public class PartService {
     // 재고 다량 수정 (수리 완료 이후 수리 과정에서 소모된 재고반영)
     @Transactional
     public void updateMultiStockQuantity(CustomUserDetails userDetails, Long repairId) {
-        if (repairRepository.existByIdAndStatus(repairId, RepairStatus.COMPLETED)) {
+        if (!repairRepository.existsByIdAndStatus(repairId, RepairStatus.COMPLETED)) {
             throw new NoSuchElementException("존재하지 않거나 아직 완료되지 않은 수리 건입니다.");
         }
 

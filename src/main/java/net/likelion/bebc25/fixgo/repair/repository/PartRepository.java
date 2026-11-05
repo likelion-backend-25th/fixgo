@@ -13,7 +13,7 @@ public interface PartRepository extends JpaRepository<Part, Long> {
     @Query("""
             SELECT p FROM Part p
             WHERE (:partName IS NULL OR p.name LIKE CONCAT('%', :partName, '%'))
-            AND (p.status IS NULL OR p.status = :status)
+            AND (:status IS NULL OR p.status = :status)
             """)
     Page<Part> searchParts(String partName, PartStatus status, Pageable pageable);
 
