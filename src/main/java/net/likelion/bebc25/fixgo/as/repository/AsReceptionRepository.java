@@ -1,11 +1,13 @@
 package net.likelion.bebc25.fixgo.as.repository;
 
+import jakarta.persistence.LockModeType;
 import net.likelion.bebc25.fixgo.as.dto.AsReceptionDto;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -45,13 +47,12 @@ public interface AsReceptionRepository extends JpaRepository<AsReception, Long> 
               and (:status is null or r.status = :status)
               and (:technicianId is null or t.id = :technicianId)
             """)
-    Page<AsReceptionDto.ListResponse> search(
-            @Param("keyword") String keyword,
-            @Param("status") AsReceptionStatus status,
-            @Param("technicianId") Long technicianId,
-            Pageable pageable
-    );
+    Page<AsReceptionDto.ListResponse> search(@Param("keyword") String keyword, @Param("status") AsReceptionStatus status, @Param("technicianId") Long technicianId, Pageable pageable);
 
     Optional<AsReception> findByIdAndStatusNotIn(Long id, List<AsReceptionStatus> statuses);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT a FROM AsReception a WHERE a.id = :id")
+    Optional<AsReception> findByIdWithLock(@Param("id") Long id);
 
 }

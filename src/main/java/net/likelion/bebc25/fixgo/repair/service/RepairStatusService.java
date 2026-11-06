@@ -7,6 +7,7 @@ import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
 import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
+import net.likelion.bebc25.fixgo.repair.repository.RepairRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +19,7 @@ public class RepairStatusService {
 
     private final AsStatusHistoryService asStatusHistoryService;
     private final MemberRepository memberRepository;
+    private final RepairRepository repairRepository;
 
     // 공통 수리 상태 변경
     @Transactional
@@ -28,6 +30,8 @@ public class RepairStatusService {
     // 변경 사유를 포함한 수리 상태 변경
     @Transactional
     public void changeStatus(Repair repair, RepairStatus newStatus, String updatedBy, String reason) {
+        repair = repairRepository.findByIdWithLock(repair.getId()).orElseThrow(() -> new NoSuchElementException("수리 정보를 찾을 수 없습니다."));
+
         RepairStatus currentStatus = repair.getStatus();
 
         if (currentStatus == newStatus) {

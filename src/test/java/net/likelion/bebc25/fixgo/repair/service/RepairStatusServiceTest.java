@@ -6,6 +6,7 @@ import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
 import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
+import net.likelion.bebc25.fixgo.repair.repository.RepairRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -39,17 +40,29 @@ class RepairStatusServiceTest {
     @Mock
     private AsStatusHistoryService asStatusHistoryService;
 
+    @Mock
+    private RepairRepository repairRepository;
+
     private RepairStatusService repairStatusService;
 
     @BeforeEach
     void setUp() {
-        repairStatusService = new RepairStatusService(asStatusHistoryService, memberRepository);
+        repairStatusService = new RepairStatusService(asStatusHistoryService, memberRepository, repairRepository);
     }
 
-    // 상태 변경 공통 준비
+    // 잠금 조회 및 현재 상태 설정
     private void prepareStatusChange(RepairStatus currentStatus) {
+        when(repair.getId()).thenReturn(1L);
+
+        when(repairRepository.findByIdWithLock(1L)).thenReturn(Optional.of(repair));
+
         when(repair.getStatus()).thenReturn(currentStatus);
+    }
+
+    // 정상 상태 변경에 필요한 추가 설정
+    private void prepareValidStatusChange() {
         when(repair.getAsReception()).thenReturn(asReception);
+
         when(memberRepository.findByEmail(updatedBy)).thenReturn(Optional.of(changedBy));
     }
 
@@ -57,8 +70,11 @@ class RepairStatusServiceTest {
     @DisplayName("점검 중 상태에서 견적 요청 상태로 변경할 수 있다.")
     void changeDiagnosingToRequested() {
         prepareStatusChange(RepairStatus.DIAGNOSING);
+        prepareValidStatusChange();
 
         repairStatusService.changeStatus(repair, RepairStatus.REQUESTED, updatedBy);
+
+        verify(repairRepository).findByIdWithLock(1L);
 
         verify(repair).changeStatus(RepairStatus.REQUESTED, updatedBy);
 
@@ -69,6 +85,7 @@ class RepairStatusServiceTest {
     @DisplayName("견적 요청 상태에서 승인 상태로 변경할 수 있다.")
     void changeRequestedToApproved() {
         prepareStatusChange(RepairStatus.REQUESTED);
+        prepareValidStatusChange();
 
         repairStatusService.changeStatus(repair, RepairStatus.APPROVED, updatedBy);
 
@@ -81,6 +98,7 @@ class RepairStatusServiceTest {
     @DisplayName("견적 요청 상태에서 거절 상태로 변경할 수 있다.")
     void changeRequestedToRejected() {
         prepareStatusChange(RepairStatus.REQUESTED);
+        prepareValidStatusChange();
 
         repairStatusService.changeStatus(repair, RepairStatus.REJECTED, updatedBy);
 
@@ -93,6 +111,7 @@ class RepairStatusServiceTest {
     @DisplayName("승인 상태에서 수리 중 상태로 변경할 수 있다.")
     void changeApprovedToRepairing() {
         prepareStatusChange(RepairStatus.APPROVED);
+        prepareValidStatusChange();
 
         repairStatusService.changeStatus(repair, RepairStatus.REPAIRING, updatedBy);
 
@@ -105,6 +124,7 @@ class RepairStatusServiceTest {
     @DisplayName("수리 중 상태에서 완료 상태로 변경할 수 있다.")
     void changeRepairingToCompleted() {
         prepareStatusChange(RepairStatus.REPAIRING);
+        prepareValidStatusChange();
 
         repairStatusService.changeStatus(repair, RepairStatus.COMPLETED, updatedBy);
 
@@ -116,7 +136,7 @@ class RepairStatusServiceTest {
     @Test
     @DisplayName("허용되지 않은 상태 변경을 요청하면 예외가 발생한다.")
     void changeInvalidStatus() {
-        when(repair.getStatus()).thenReturn(RepairStatus.DIAGNOSING);
+        prepareStatusChange(RepairStatus.DIAGNOSING);
 
         assertThrows(IllegalArgumentException.class, () -> repairStatusService.changeStatus(repair, RepairStatus.COMPLETED, updatedBy));
 
@@ -127,7 +147,7 @@ class RepairStatusServiceTest {
     @Test
     @DisplayName("거절된 상태에서는 다른 상태로 변경할 수 없다.")
     void changeRejectedStatus() {
-        when(repair.getStatus()).thenReturn(RepairStatus.REJECTED);
+        prepareStatusChange(RepairStatus.REJECTED);
 
         assertThrows(IllegalArgumentException.class, () -> repairStatusService.changeStatus(repair, RepairStatus.REQUESTED, updatedBy));
 
@@ -138,7 +158,7 @@ class RepairStatusServiceTest {
     @Test
     @DisplayName("완료된 상태에서는 다른 상태로 변경할 수 없다.")
     void changeCompletedStatus() {
-        when(repair.getStatus()).thenReturn(RepairStatus.COMPLETED);
+        prepareStatusChange(RepairStatus.COMPLETED);
 
         assertThrows(IllegalArgumentException.class, () -> repairStatusService.changeStatus(repair, RepairStatus.REQUESTED, updatedBy));
 
@@ -149,11 +169,23 @@ class RepairStatusServiceTest {
     @Test
     @DisplayName("현재 상태와 동일한 상태로 변경할 수 없다.")
     void changeSameStatus() {
-        when(repair.getStatus()).thenReturn(RepairStatus.DIAGNOSING);
+        prepareStatusChange(RepairStatus.DIAGNOSING);
 
         assertThrows(IllegalArgumentException.class, () -> repairStatusService.changeStatus(repair, RepairStatus.DIAGNOSING, updatedBy));
 
         verify(repair, never()).changeStatus(any(), anyString());
+        verifyNoInteractions(memberRepository, asStatusHistoryService);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 수리 정보는 상태 변경할 수 없다.")
+    void changeStatusWhenRepairNotFound() {
+        when(repair.getId()).thenReturn(1L);
+
+        when(repairRepository.findByIdWithLock(1L)).thenReturn(Optional.empty());
+
+        assertThrows(java.util.NoSuchElementException.class, () -> repairStatusService.changeStatus(repair, RepairStatus.REQUESTED, updatedBy));
+
         verifyNoInteractions(memberRepository, asStatusHistoryService);
     }
 }
