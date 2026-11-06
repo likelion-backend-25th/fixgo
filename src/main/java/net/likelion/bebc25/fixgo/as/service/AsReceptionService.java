@@ -20,6 +20,7 @@ import net.likelion.bebc25.fixgo.product.repository.ProductRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -106,6 +107,40 @@ public class AsReceptionService {
     // 접수 상세 조회
     public AsReceptionDto.DetailResponse getReception(Long id) {
         AsReception reception = asReceptionRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 접수입니다."));
+        return AsReceptionDto.DetailResponse.from(reception);
+    }
+
+    @Transactional
+    public AsReceptionDto.DetailResponse updateReception(
+            Long id,
+            CustomUserDetails userDetails,
+            AsReceptionDto.UpdateReceptionRequest request
+    ) {
+        Role role = userDetails.getMember().getRole();
+        if (role != Role.ROLE_ADMIN && role != Role.ROLE_RECEPTIONIST) {
+            throw new AccessDeniedException("접수 정보를 수정할 권한이 없습니다.");
+        }
+
+        AsReception reception = asReceptionRepository.findByIdWithLock(id)
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 A/S 접수입니다."));
+        if (role == Role.ROLE_RECEPTIONIST
+                && !reception.getReceptionist().getId().equals(userDetails.getId())) {
+            throw new AccessDeniedException("해당 건을 등록한 접수 담당자만 수정할 수 있습니다.");
+        }
+
+        switch (reception.getStatus()) {
+            case RECEIVED, INSPECTION, WARRANTY_REVIEW,
+                 AWAITING_QUOTE_APPROVAL, AWAITING_REPAIR -> reception.updateDetails(
+                    request.symptom(),
+                    request.symptomDetail(),
+                    request.memo(),
+                    request.returnMethod()
+            );
+            default -> throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, "수리 시작 전 접수만 수정할 수 있습니다."
+            );
+        }
+
         return AsReceptionDto.DetailResponse.from(reception);
     }
 

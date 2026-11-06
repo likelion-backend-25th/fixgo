@@ -47,6 +47,15 @@ public class AsReceptionController {
         return ResponseEntity.ok(asReceptionService.getReception(id));
     }
 
+    @PatchMapping("/{id}")
+    public ResponseEntity<AsReceptionDto.DetailResponse> updateReception(
+            @PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody AsReceptionDto.UpdateReceptionRequest request
+    ) {
+        return ResponseEntity.ok(asReceptionService.updateReception(id, userDetails, request));
+    }
+
     // 접수 상태 변경 (내 admin 컨트롤러에서 이동)
     @PatchMapping("/{receptionId}/status")   // ← 원래 admin 파일의 매핑 줄로 교체
     public void changeReceptionStatus(@PathVariable Long receptionId, @RequestParam AsReceptionStatus newStatus, @RequestParam(required = false) String reason, @AuthenticationPrincipal CustomUserDetails userDetails) {

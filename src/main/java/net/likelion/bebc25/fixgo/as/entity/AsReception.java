@@ -1,6 +1,7 @@
 package net.likelion.bebc25.fixgo.as.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -90,6 +91,31 @@ public class AsReception extends BaseEntity {
         }
     }
 
+    public void updateDetails(
+            String symptom,
+            String symptomDetail,
+            String memo,
+            ReturnMethod returnMethod
+    ) {
+        if ((symptom != null && symptom.isBlank())
+                || (symptomDetail != null && symptomDetail.isBlank())) {
+            throw new IllegalArgumentException("증상과 증상 상세는 비울 수 없습니다.");
+        }
+
+        if (symptom != null) {
+            this.symptom = symptom;
+        }
+        if (symptomDetail != null) {
+            this.symptomDetail = symptomDetail;
+        }
+        if (memo != null) {
+            this.memo = memo.isBlank() ? null : memo;
+        }
+        if (returnMethod != null) {
+            this.returnMethod = returnMethod;
+        }
+    }
+
     public void updateTechnician(Member newTechnician) {
         this.technician = newTechnician;
     }
@@ -101,4 +127,13 @@ public class AsReception extends BaseEntity {
         this.status = status;
         this.statusChangedAt = LocalDateTime.now();
     }
+
+    public record UpdateReceptionRequest(
+            @Size(max = 255) String symptom,
+            @Size(max = 255) String symptomDetail,
+            @Size(max = 1000) String memo,
+            ReturnMethod returnMethod
+    ) {
+    }
+
 }
