@@ -3,6 +3,7 @@ package net.likelion.bebc25.fixgo.global.exception;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -13,11 +14,8 @@ import java.util.NoSuchElementException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
-    public ResponseEntity<ErrorResponse> handleStatus(
-            org.springframework.web.server.ResponseStatusException e
-    ) {
-        return ResponseEntity.status(e.getStatusCode())
-                .body(new ErrorResponse("REQUEST_ERROR", e.getReason()));
+    public ResponseEntity<ErrorResponse> handleStatus(org.springframework.web.server.ResponseStatusException e) {
+        return ResponseEntity.status(e.getStatusCode()).body(new ErrorResponse("REQUEST_ERROR", e.getReason()));
     }
 
     /**
@@ -63,5 +61,13 @@ public class GlobalExceptionHandler {
         log.error("처리되지 않은 예외", e);
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("INTERNAL_ERROR", "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."));
+    }
+
+    /**
+     * 권한이 없는 사용자의 접근
+     */
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAuthorizationDenied(AuthorizationDeniedException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse("FORBIDDEN", "접근 권한이 없습니다."));
     }
 }

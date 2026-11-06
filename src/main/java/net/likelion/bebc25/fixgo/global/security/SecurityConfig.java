@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -24,6 +25,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
+@EnableMethodSecurity
 public class SecurityConfig {
     private final JwtProvider jwtProvider;
     private final CustomUserDetailsService userDetailsService;
@@ -34,11 +36,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(
-            HttpSecurity http
-    ) throws Exception {
-        http
-                .authorizeHttpRequests(auth -> auth
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.authorizeHttpRequests(auth -> auth
                         // 예외 포워딩이 403으로 가려지지 않도록 허용
                         .requestMatchers("/error").permitAll()
 
@@ -55,16 +54,13 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/notifications/**", "/api/v1/email-presets", "/api/v1/email-presets/**").permitAll()
 
                         // Swagger UI 및 API 문서
-                        .requestMatchers(
-                                "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/v3/api-docs"
-                        ).permitAll()
+                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/v3/api-docs").permitAll()
 
                         // 관리자 기능
                         .requestMatchers("/admin/**").hasRole("ADMIN")
 
                         // 이외의 모든 요청
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 // REST API 환경: CSRF 비활성화
                 .csrf(AbstractHttpConfigurer::disable)
 
@@ -78,16 +74,10 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
 
                 // 세션을 사용하지 않는 Stateless 방식
-                .sessionManagement(session ->
-                                           session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 // 커스텀 JWT 인증 필터를 UsernamePasswordAuthenticationFilter 바로 앞에 배치
-                .addFilterBefore(
-                        new JwtAuthenticationFilter(jwtProvider, userDetailsService),
-                        UsernamePasswordAuthenticationFilter.class
-                )
-        ;
+                .addFilterBefore(new JwtAuthenticationFilter(jwtProvider, userDetailsService), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

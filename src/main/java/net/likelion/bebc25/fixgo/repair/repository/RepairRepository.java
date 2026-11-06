@@ -45,4 +45,5 @@ public interface RepairRepository extends JpaRepository<Repair, Long> {
 
     boolean existsByIdAndStatus(Long repairId, RepairStatus status);
 
+    Optional<Repair> findByIdAndTechnicianId(Long id, Long technicianId);
 }

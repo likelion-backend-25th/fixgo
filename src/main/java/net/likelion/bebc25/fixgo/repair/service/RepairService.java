@@ -66,6 +66,19 @@ public class RepairService {
         return repairMapper.toRepairResponseDto(findRepair(id));
     }
 
+    // 로그인한 기사 본인에게 배정된 수리 목록 조회
+    public List<RepairResponse> getMyRepairs(Long technicianId) {
+        return repairMapper.toRepairResponseDtoList(repairRepository.findByTechnicianId(technicianId));
+    }
+
+    // 로그인한 기사 본인에게 배정된 수리 상세 조회
+    public RepairResponse getMyRepair(Long id, Long technicianId) {
+
+        Repair repair = repairRepository.findByIdAndTechnicianId(id, technicianId).orElseThrow(() -> new IllegalArgumentException("본인에게 배정된 수리 건이 아닙니다."));
+
+        return repairMapper.toRepairResponseDto(repair);
+    }
+
     // 요청번호로 수리 상세 조회
     public RepairResponse getRepairByReceptionNumber(String receptionNumber) {
         Repair repair = repairRepository.findByReceptionNumber(receptionNumber).orElseThrow(() -> new IllegalArgumentException("해당 접수번호의 수리 정보를 찾을 수 없습니다."));
@@ -105,6 +118,17 @@ public class RepairService {
     }
 
     // 수리 상태 변경
+    // 로그인한 기사가 담당하는 수리 건인지 확인한 후 수리 시작
+    @Transactional
+    public void startRepair(Long id, Long technicianId, String updatedBy) {
+
+        Repair repair = repairRepository.findByIdAndTechnicianId(id, technicianId).orElseThrow(() -> new IllegalArgumentException("본인에게 배정된 수리 건이 아닙니다."));
+
+        // 기존 상태 전이 로직 재사용
+        repairStatusService.changeStatus(repair, RepairStatus.REPAIRING, updatedBy);
+    }
+
+    @Transactional
     public void changeRepairStatus(Long id, RepairStatus status, String updatedBy) {
         Repair repair = findRepair(id);
 
