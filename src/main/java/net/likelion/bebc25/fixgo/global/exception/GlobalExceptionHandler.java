@@ -11,12 +11,12 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-
 import java.util.NoSuchElementException;
 
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
     @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
     public ResponseEntity<ErrorResponse> handleStatus(
             org.springframework.web.server.ResponseStatusException e
@@ -26,64 +26,101 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 의도해서 던진 예외. 에러 코드가 가진 상태 코드와 메시지를 그대로 응답한다.
+     * 의도해서 던진 예외
      */
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> handleBusiness(BusinessException e) {
         ErrorCode errorCode = e.getErrorCode();
 
-        return ResponseEntity.status(errorCode.getStatus()).body(ErrorResponse.of(errorCode, e.getMessage()));
+        return ResponseEntity.status(errorCode.getStatus())
+                .body(ErrorResponse.of(errorCode, e.getMessage()));
     }
 
     /**
      * 잘못된 요청 파라미터 값
      */
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse("INVALID_ARGUMENT", e.getMessage()));
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(
+            IllegalArgumentException e
+    ) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse("INVALID_ARGUMENT", e.getMessage()));
     }
 
     /**
      * 잘못된 파라미터 타입 또는 Enum 값
      */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException e) {
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse("INVALID_PARAMETER", "요청 파라미터 값이 올바르지 않습니다."));
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(
+            MethodArgumentTypeMismatchException e
+    ) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(
+                        "INVALID_PARAMETER",
+                        "요청 파라미터 값이 올바르지 않습니다."
+                ));
     }
 
     /**
      * 파라미터 검증 실패
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse("INVALID_ARGUMENT", "요청 파라미터 값이 올바르지 않습니다."));
+    public ResponseEntity<ErrorResponse> handleValidation(
+            MethodArgumentNotValidException e
+    ) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(
+                        "INVALID_ARGUMENT",
+                        "요청 파라미터 값이 올바르지 않습니다."
+                ));
     }
 
     /**
      * 존재하지 않는 데이터
      */
     @ExceptionHandler(NoSuchElementException.class)
-    public ResponseEntity<ErrorResponse> handleNoSuchElement(NoSuchElementException e) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse("NOT_FOUND", e.getMessage()));
+    public ResponseEntity<ErrorResponse> handleNoSuchElement(
+            NoSuchElementException e
+    ) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse("NOT_FOUND", e.getMessage()));
     }
 
     /**
-     * 삭제 상태의 직원 계정의 로그인 차단
+     * 삭제 상태의 직원 계정 로그인 차단
      */
     @ExceptionHandler(DisabledException.class)
-    public ResponseEntity<ErrorResponse> handleDisabledException(DisabledException e) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse("DISABLED", e.getMessage()));
+    public ResponseEntity<ErrorResponse> handleDisabledException(
+            DisabledException e
+    ) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ErrorResponse("DISABLED", e.getMessage()));
     }
 
+    /**
+     * 잘못된 로그인 정보
+     */
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ErrorResponse> handleBadCredentialException(BadCredentialsException e) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse("UNAUTHORIZED", e.getMessage()));
+    public ResponseEntity<ErrorResponse> handleBadCredentialException(
+            BadCredentialsException e
+    ) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ErrorResponse("UNAUTHORIZED", e.getMessage()));
     }
 
+    /**
+     * 권한이 없는 사용자의 접근
+     * AuthorizationDeniedException도 AccessDeniedException 계열이므로 함께 처리
+     */
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException e) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse("ACCESS_DENIED", e.getMessage()));
+    public ResponseEntity<ErrorResponse> handleAccessDeniedException(
+            AccessDeniedException e
+    ) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ErrorResponse(
+                        "ACCESS_DENIED",
+                        "접근 권한이 없습니다."
+                ));
     }
 
     /**
@@ -93,6 +130,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleUnexpected(Exception e) {
         log.error("처리되지 않은 예외", e);
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("INTERNAL_ERROR", "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."));
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErrorResponse(
+                        "INTERNAL_ERROR",
+                        "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
+                ));
     }
 }
