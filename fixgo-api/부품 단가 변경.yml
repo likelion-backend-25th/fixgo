@@ -1,0 +1,23 @@
+info:
+  name: 부품 단가 변경
+  type: http
+  seq: 18
+
+http:
+  method: PATCH
+  url: "{{baseUrl}}/part/unit_price"
+  body:
+    type: json
+    data: |-
+      {
+        "id":"2",
+        "unitPrice":"20000"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

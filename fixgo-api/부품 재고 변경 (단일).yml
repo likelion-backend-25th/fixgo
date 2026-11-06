@@ -1,0 +1,25 @@
+info:
+  name: 부품 재고 변경 (단일)
+  type: http
+  seq: 20
+
+http:
+  method: PATCH
+  url: "{{baseUrl}}/part/stock"
+  body:
+    type: json
+    data: |-
+      {
+        "id":"2",
+        "movementType":"IN",
+        "quantity":"10",
+        "reason":"201106 재고입고"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

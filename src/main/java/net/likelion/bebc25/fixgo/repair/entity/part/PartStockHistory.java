@@ -17,12 +17,10 @@ public class PartStockHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @MapsId
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "part_id")
     private Part part;
 
-    @MapsId
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "repair_part_usage_id")
     private RepairPartUsage repairPartUsage;

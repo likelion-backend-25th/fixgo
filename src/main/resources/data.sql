@@ -1532,3 +1532,277 @@ SELECT 'AS-261101-8f3a2c10-7b6e-4d90-a123-000000000010',
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example')
 WHERE NOT EXISTS (SELECT 1 FROM as_reception WHERE reception_number = 'AS-261101-8f3a2c10-7b6e-4d90-a123-000000000010');
+
+
+-- 노트북 부품 더미데이터
+-- 기존 product_model(FIXGO-DEMO-LAPTOP)만 참조한다.
+-- 재고 0은 LOW_QUANTITY, 재고가 있는 사용 부품은 ACTIVE, 단종 부품은 DISCONTINUED.
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '14인치 FHD IPS 노트북 LCD 패널 모듈 (1920x1080, 30핀 eDP, 무광, 슬림 베젤)',
+       189000, 50, 8, 'ACTIVE', 0, NOW(), NOW(), 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '14인치 FHD IPS 노트북 LCD 패널 모듈 (1920x1080, 30핀 eDP, 무광, 슬림 베젤)');
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '14인치 노트북 LCD 패널 연결용 30핀 eDP 디스플레이 플렉스 케이블',
+       18000, 35, 14, 'ACTIVE', 0, NOW(), NOW(), 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '14인치 노트북 LCD 패널 연결용 30핀 eDP 디스플레이 플렉스 케이블');
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '노트북 상판 내장 HD 웹캠 모듈 (720p, 듀얼 마이크 일체형, 상판 커버 고정 브라켓 포함)',
+       32000, 25, 11, 'ACTIVE', 0, NOW(), NOW(), 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '노트북 상판 내장 HD 웹캠 모듈 (720p, 듀얼 마이크 일체형, 상판 커버 고정 브라켓 포함)');
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '노트북 팜레스트 일체형 한국어 키보드 모듈 (펜타그래프, 화이트 백라이트, 스크류 고정형)',
+       76000, 40, 6, 'ACTIVE', 0, NOW(), NOW(), 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '노트북 팜레스트 일체형 한국어 키보드 모듈 (펜타그래프, 화이트 백라이트, 스크류 고정형)');
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '노트북 클릭패드 터치패드 모듈 (좌우 물리 버튼 일체형, 멀티터치, 팜레스트 케이블 포함)',
+       42000, 30, 9, 'ACTIVE', 0, NOW(), NOW(), 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '노트북 클릭패드 터치패드 모듈 (좌우 물리 버튼 일체형, 멀티터치, 팜레스트 케이블 포함)');
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '노트북 내장 리튬이온 배터리 팩 (11.55V, 50Wh, 3셀, 4핀 커넥터)',
+       98000, 20, 7, 'ACTIVE', 0, NOW(), NOW(), 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '노트북 내장 리튬이온 배터리 팩 (11.55V, 50Wh, 3셀, 4핀 커넥터)');
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '65W USB-C PD 노트북 전원 어댑터 (20V 3.25A, 1.8m 케이블, 한국형 플러그)',
+       39000, 10, 16, 'ACTIVE', 0, NOW(), NOW(), 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '65W USB-C PD 노트북 전원 어댑터 (20V 3.25A, 1.8m 케이블, 한국형 플러그)');
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '노트북 USB-C 충전 포트 도터보드 (DC-IN, 메인보드 연결 8핀 플렉스 케이블 포함)',
+       27000, 35, 5, 'ACTIVE', 0, NOW(), NOW(), 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '노트북 USB-C 충전 포트 도터보드 (DC-IN, 메인보드 연결 8핀 플렉스 케이블 포함)');
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '노트북 메인보드용 CMOS 코인 배터리 (CR2032, 2핀 와이어 하네스)',
+       6000, 15, 24, 'ACTIVE', 0, NOW(), NOW(), 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '노트북 메인보드용 CMOS 코인 배터리 (CR2032, 2핀 와이어 하네스)');
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT 'M.2 2280 NVMe SSD 512GB (PCIe 3.0 x4, 방열 라벨 포함)',
+       72000, 20, 10, 'ACTIVE', 0, NOW(), NOW(), 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = 'M.2 2280 NVMe SSD 512GB (PCIe 3.0 x4, 방열 라벨 포함)');
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '노트북 DDR4 3200MHz SO-DIMM 메모리 8GB (1.2V, 260핀)',
+       34000, 15, 18, 'ACTIVE', 0, NOW(), NOW(), 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '노트북 DDR4 3200MHz SO-DIMM 메모리 8GB (1.2V, 260핀)');
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '노트북 CPU 쿨링팬 (4핀 PWM, 좌측 배기, 방진 고무 마운트 포함)',
+       29000, 30, 4, 'ACTIVE', 0, NOW(), NOW(), 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '노트북 CPU 쿨링팬 (4핀 PWM, 좌측 배기, 방진 고무 마운트 포함)');
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '노트북 히트파이프 일체형 구리 방열판 모듈 (CPU 접촉면, 서멀패드 미포함)',
+       45000, 40, 3, 'ACTIVE', 0, NOW(), NOW(), 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '노트북 히트파이프 일체형 구리 방열판 모듈 (CPU 접촉면, 서멀패드 미포함)');
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT 'Intel AX201 Wi-Fi 6 / Bluetooth 5.2 무선랜 카드 (M.2 2230, CNVi)',
+       25000, 20, 12, 'ACTIVE', 0, NOW(), NOW(), 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = 'Intel AX201 Wi-Fi 6 / Bluetooth 5.2 무선랜 카드 (M.2 2230, CNVi)');
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '노트북 좌측 I/O 도터보드 (USB-A 3.0 2포트, HDMI, 3.5mm 콤보 잭)',
+       36000, 35, 0, 'LOW_QUANTITY', 0, NOW(), NOW(), 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '노트북 좌측 I/O 도터보드 (USB-A 3.0 2포트, HDMI, 3.5mm 콤보 잭)');
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '노트북 3.5mm 콤보 오디오 잭 기판 (헤드폰/마이크 공용, 4핀 하네스)',
+       14000, 25, 0, 'LOW_QUANTITY', 0, NOW(), NOW(), 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '노트북 3.5mm 콤보 오디오 잭 기판 (헤드폰/마이크 공용, 4핀 하네스)');
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '노트북 하단 커버 고정용 M2x3 접시머리 나사 세트 (10개입, 블랙)',
+       3000, 10, 40, 'ACTIVE', 0, NOW(), NOW(), 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '노트북 하단 커버 고정용 M2x3 접시머리 나사 세트 (10개입, 블랙)');
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '노트북 LCD 힌지 좌측 브라켓 (알루미늄, 상판-본체 연결, 나사 미포함)',
+       16000, 45, 6, 'ACTIVE', 0, NOW(), NOW(), 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '노트북 LCD 힌지 좌측 브라켓 (알루미늄, 상판-본체 연결, 나사 미포함)');
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '노트북 LCD 힌지 우측 브라켓 (알루미늄, 상판-본체 연결, 나사 미포함)',
+       16000, 45, 6, 'ACTIVE', 0, NOW(), NOW(), 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '노트북 LCD 힌지 우측 브라켓 (알루미늄, 상판-본체 연결, 나사 미포함)');
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '노트북 스테레오 스피커 모듈 좌우 세트 (2W x 2, 4핀 커넥터, 하판 고정 러버 포함)',
+       22000, 30, 8, 'ACTIVE', 0, NOW(), NOW(), 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '노트북 스테레오 스피커 모듈 좌우 세트 (2W x 2, 4핀 커넥터, 하판 고정 러버 포함)');
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '노트북 키보드 백라이트 LED 플렉스 케이블 (팜레스트-메인보드, 12핀)',
+       11000, 25, 13, 'ACTIVE', 0, NOW(), NOW(), 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '노트북 키보드 백라이트 LED 플렉스 케이블 (팜레스트-메인보드, 12핀)');
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '노트북 전원 버튼 보드 (지문 인식 센서 미포함, 파워 스위치·LED, 6핀 케이블)',
+       19000, 20, 9, 'ACTIVE', 0, NOW(), NOW(), 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '노트북 전원 버튼 보드 (지문 인식 센서 미포함, 파워 스위치·LED, 6핀 케이블)');
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '노트북 CPU/GPU 접촉면용 서멀 패드 세트 (1.0mm, 10x10mm 4매)',
+       5000, 15, 30, 'ACTIVE', 0, NOW(), NOW(), 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '노트북 CPU/GPU 접촉면용 서멀 패드 세트 (1.0mm, 10x10mm 4매)');
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '14인치 HD TN 노트북 LCD 패널 모듈 (1366x768, 40핀 LVDS, 구형 상판 전용)',
+       64000, 50, 2, 'DISCONTINUED', 0, NOW(), NOW(), 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '14인치 HD TN 노트북 LCD 패널 모듈 (1366x768, 40핀 LVDS, 구형 상판 전용)');
+
+-- 위 부품은 모두 기존 노트북 모델 FIXGO-DEMO-LAPTOP과 호환된다.
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id,
+       (SELECT MIN(id) FROM product_model WHERE model_name = 'FIXGO-DEMO-LAPTOP')
+FROM part p
+WHERE p.name IN (
+    '14인치 FHD IPS 노트북 LCD 패널 모듈 (1920x1080, 30핀 eDP, 무광, 슬림 베젤)',
+    '14인치 노트북 LCD 패널 연결용 30핀 eDP 디스플레이 플렉스 케이블',
+    '노트북 상판 내장 HD 웹캠 모듈 (720p, 듀얼 마이크 일체형, 상판 커버 고정 브라켓 포함)',
+    '노트북 팜레스트 일체형 한국어 키보드 모듈 (펜타그래프, 화이트 백라이트, 스크류 고정형)',
+    '노트북 클릭패드 터치패드 모듈 (좌우 물리 버튼 일체형, 멀티터치, 팜레스트 케이블 포함)',
+    '노트북 내장 리튬이온 배터리 팩 (11.55V, 50Wh, 3셀, 4핀 커넥터)',
+    '65W USB-C PD 노트북 전원 어댑터 (20V 3.25A, 1.8m 케이블, 한국형 플러그)',
+    '노트북 USB-C 충전 포트 도터보드 (DC-IN, 메인보드 연결 8핀 플렉스 케이블 포함)',
+    '노트북 메인보드용 CMOS 코인 배터리 (CR2032, 2핀 와이어 하네스)',
+    'M.2 2280 NVMe SSD 512GB (PCIe 3.0 x4, 방열 라벨 포함)',
+    '노트북 DDR4 3200MHz SO-DIMM 메모리 8GB (1.2V, 260핀)',
+    '노트북 CPU 쿨링팬 (4핀 PWM, 좌측 배기, 방진 고무 마운트 포함)',
+    '노트북 히트파이프 일체형 구리 방열판 모듈 (CPU 접촉면, 서멀패드 미포함)',
+    'Intel AX201 Wi-Fi 6 / Bluetooth 5.2 무선랜 카드 (M.2 2230, CNVi)',
+    '노트북 좌측 I/O 도터보드 (USB-A 3.0 2포트, HDMI, 3.5mm 콤보 잭)',
+    '노트북 3.5mm 콤보 오디오 잭 기판 (헤드폰/마이크 공용, 4핀 하네스)',
+    '노트북 하단 커버 고정용 M2x3 접시머리 나사 세트 (10개입, 블랙)',
+    '노트북 LCD 힌지 좌측 브라켓 (알루미늄, 상판-본체 연결, 나사 미포함)',
+    '노트북 LCD 힌지 우측 브라켓 (알루미늄, 상판-본체 연결, 나사 미포함)',
+    '노트북 스테레오 스피커 모듈 좌우 세트 (2W x 2, 4핀 커넥터, 하판 고정 러버 포함)',
+    '노트북 키보드 백라이트 LED 플렉스 케이블 (팜레스트-메인보드, 12핀)',
+    '노트북 전원 버튼 보드 (지문 인식 센서 미포함, 파워 스위치·LED, 6핀 케이블)',
+    '노트북 CPU/GPU 접촉면용 서멀 패드 세트 (1.0mm, 10x10mm 4매)',
+    '14인치 HD TN 노트북 LCD 패널 모듈 (1366x768, 40핀 LVDS, 구형 상판 전용)'
+)
+  AND NOT EXISTS (SELECT 1
+                  FROM part_compatibility pc
+                  WHERE pc.part_id = p.id
+                    AND pc.product_model_id = (SELECT MIN(id) FROM product_model WHERE model_name = 'FIXGO-DEMO-LAPTOP'));
+
+
+-- 다량 재고 수정 테스트용 완료 수리 1건
+-- 기존 완료 접수(화면 파손, AS-261101-...010)와 그 담당 기사에 연결한다.
+-- 사용 부품은 해당 노트북과 호환되고, 재고가 사용 수량 이상인 ACTIVE 부품만 넣는다.
+INSERT INTO repair (as_request_id, technician_id, diagnosis, work_note, repair_decision, warranty_result, reason,
+                    labor_rate, inspection_cost, final_amount, status, reason_for_rejection, confirmed_at,
+                    created_at, updated_at, created_by, updated_by)
+SELECT ar.id,
+       (SELECT id FROM member WHERE email = 'technician.demo@fixgo.example'),
+       '상판 LCD 패널 균열과 30핀 eDP 케이블 손상으로 화면이 출력되지 않음',
+       '14인치 FHD IPS 패널과 eDP 디스플레이 케이블을 교체하고 점등 및 화면 깜빡임을 확인함',
+       'REPAIRABLE',
+       'PAID',
+       '구매일 2026-03-01 기준 보증 기간 내이나, 화면 파손은 고객 과실로 유상 수리',
+       50000,
+       0,
+       257000,
+       'COMPLETED',
+       NULL,
+       '2026-11-01 14:30:00',
+       '2026-11-01 10:00:00',
+       '2026-11-01 15:00:00',
+       'technician.demo@fixgo.example',
+       'technician.demo@fixgo.example'
+FROM as_reception ar
+WHERE ar.reception_number = 'AS-261101-8f3a2c10-7b6e-4d90-a123-000000000010'
+  AND ar.status = 'COMPLETED'
+  AND NOT EXISTS (SELECT 1 FROM repair r WHERE r.as_request_id = ar.id);
+
+INSERT INTO repair_work (repair_id, repair_preset_name, work_name, created_at, updated_at, created_by, updated_by)
+SELECT r.id,
+       '화면 파손',
+       '14인치 FHD LCD 패널 및 eDP 케이블 교체',
+       '2026-11-01 11:00:00',
+       '2026-11-01 14:00:00',
+       'technician.demo@fixgo.example',
+       'technician.demo@fixgo.example'
+FROM repair r
+         JOIN as_reception ar ON ar.id = r.as_request_id
+WHERE ar.reception_number = 'AS-261101-8f3a2c10-7b6e-4d90-a123-000000000010'
+  AND NOT EXISTS (SELECT 1
+                  FROM repair_work rw
+                  WHERE rw.repair_id = r.id
+                    AND rw.work_name = '14인치 FHD LCD 패널 및 eDP 케이블 교체');
+
+INSERT INTO repair_part_usage (repair_work_id, part_id, quantity, unit_price, created_at)
+SELECT rw.id,
+       p.id,
+       1,
+       p.unit_price,
+       '2026-11-01 11:30:00'
+FROM repair_work rw
+         JOIN repair r ON r.id = rw.repair_id
+         JOIN as_reception ar ON ar.id = r.as_request_id
+         JOIN product pr ON pr.id = ar.product_id
+         JOIN part p ON p.name = '14인치 FHD IPS 노트북 LCD 패널 모듈 (1920x1080, 30핀 eDP, 무광, 슬림 베젤)'
+         JOIN part_compatibility pc ON pc.part_id = p.id AND pc.product_model_id = pr.product_model_id
+WHERE ar.reception_number = 'AS-261101-8f3a2c10-7b6e-4d90-a123-000000000010'
+  AND rw.work_name = '14인치 FHD LCD 패널 및 eDP 케이블 교체'
+  AND r.status = 'COMPLETED'
+  AND p.status = 'ACTIVE'
+  AND p.stock_quantity >= 1
+  AND NOT EXISTS (SELECT 1
+                  FROM repair_part_usage u
+                  WHERE u.repair_work_id = rw.id
+                    AND u.part_id = p.id);
+
+INSERT INTO repair_part_usage (repair_work_id, part_id, quantity, unit_price, created_at)
+SELECT rw.id,
+       p.id,
+       1,
+       p.unit_price,
+       '2026-11-01 11:40:00'
+FROM repair_work rw
+         JOIN repair r ON r.id = rw.repair_id
+         JOIN as_reception ar ON ar.id = r.as_request_id
+         JOIN product pr ON pr.id = ar.product_id
+         JOIN part p ON p.name = '14인치 노트북 LCD 패널 연결용 30핀 eDP 디스플레이 플렉스 케이블'
+         JOIN part_compatibility pc ON pc.part_id = p.id AND pc.product_model_id = pr.product_model_id
+WHERE ar.reception_number = 'AS-261101-8f3a2c10-7b6e-4d90-a123-000000000010'
+  AND rw.work_name = '14인치 FHD LCD 패널 및 eDP 케이블 교체'
+  AND r.status = 'COMPLETED'
+  AND p.status = 'ACTIVE'
+  AND p.stock_quantity >= 1
+  AND NOT EXISTS (SELECT 1
+                  FROM repair_part_usage u
+                  WHERE u.repair_work_id = rw.id
+                    AND u.part_id = p.id);

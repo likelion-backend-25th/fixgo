@@ -9,9 +9,13 @@ http:
   body:
     type: json
     data: |-
+      // {
+      //   "email": "admin001@fixgo.com",
+      //   "password": "admin1234"
+      // }
       {
-        "email": "admin001@fixgo.com",
-        "password": "admin1234"
+        "email": "technician.demo@fixgo.example",
+        "password": "1234"
       }
 
 runtime:

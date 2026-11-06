@@ -1,0 +1,30 @@
+info:
+  name: 부품목록조회
+  type: http
+  seq: 16
+
+http:
+  method: GET
+  url: "{{baseUrl}}/part?size=20&page=0"
+  params:
+    - name: size
+      value: "20"
+      type: query
+    - name: page
+      value: "0"
+      type: query
+  body:
+    type: json
+    data: |-
+      {
+        "partName":"",
+        "status":null
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

@@ -105,7 +105,7 @@ public class PartService {
         }
 
         // 수정 이력 저장
-        PartStockHistory partStockHistory = new PartStockHistory(part, request.movementType(), request.quantity(), request.reason(), userDetails.getId());
+        PartStockHistory partStockHistory = new PartStockHistory(part, null, request.movementType(), request.quantity(), request.reason(), userDetails.getId());
         partStockHistoryRepository.save(partStockHistory);
     }
 
