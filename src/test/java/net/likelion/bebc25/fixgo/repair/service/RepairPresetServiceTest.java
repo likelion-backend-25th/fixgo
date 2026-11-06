@@ -6,7 +6,6 @@ import net.likelion.bebc25.fixgo.repair.dto.preset.RepairPresetRequest;
 import net.likelion.bebc25.fixgo.repair.dto.preset.RepairPresetResponse;
 import net.likelion.bebc25.fixgo.repair.dto.preset.RepairPresetUpdate;
 import net.likelion.bebc25.fixgo.repair.entity.RepairPreset;
-import net.likelion.bebc25.fixgo.repair.mapper.RepairPresetMapper;
 import net.likelion.bebc25.fixgo.repair.repository.RepairPresetRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,7 +14,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,9 +29,6 @@ class RepairPresetServiceTest {
     private RepairPresetRepository repairPresetRepository;
 
     @Mock
-    private RepairPresetMapper repairPresetMapper;
-
-    @Mock
     private EntityManager entityManager;
 
     @Mock
@@ -43,26 +38,27 @@ class RepairPresetServiceTest {
     private RepairPresetService repairPresetService;
 
     private RepairPreset preset;
-    private RepairPresetResponse response;
 
-    // 공통 Entity 생성만 담당
+    // 공통 Entity 생성
     private void setUpPreset() {
-        LocalDateTime now = LocalDateTime.now();
-
-        preset = new RepairPreset("액정 교체", "액정 파손 수리", now, now, "tester", "tester");
+        preset = new RepairPreset(
+                "액정 교체",
+                "액정 파손 수리"
+        );
 
         preset.setId(1L);
-
-        response = mock(RepairPresetResponse.class);
     }
 
     // 단가 계산 Mock 설정
     private void setUpBasePrice(Long basePrice) {
-        when(entityManager.createNativeQuery(anyString())).thenReturn(query);
+        when(entityManager.createNativeQuery(anyString()))
+                .thenReturn(query);
 
-        when(query.setParameter(eq(1), any())).thenReturn(query);
+        when(query.setParameter(eq(1), any()))
+                .thenReturn(query);
 
-        when(query.getSingleResult()).thenReturn(basePrice);
+        when(query.getSingleResult())
+                .thenReturn(basePrice);
     }
 
     @Test
@@ -76,20 +72,22 @@ class RepairPresetServiceTest {
 
         when(request.getName()).thenReturn("액정 교체");
         when(request.getDescription()).thenReturn("액정 파손 수리");
-        when(request.getCreatedBy()).thenReturn("tester");
 
-        when(repairPresetRepository.save(any(RepairPreset.class))).thenReturn(preset);
-
-        when(repairPresetMapper.toResponse(preset, 50000L)).thenReturn(response);
+        when(repairPresetRepository.save(any(RepairPreset.class)))
+                .thenReturn(preset);
 
         // when
-        RepairPresetResponse result = repairPresetService.createPreset(request);
+        RepairPresetResponse result =
+                repairPresetService.createPreset(request);
 
         // then
-        assertThat(result).isEqualTo(response);
+        assertThat(result).isNotNull();
+        assertThat(result.name()).isEqualTo("액정 교체");
+        assertThat(result.description()).isEqualTo("액정 파손 수리");
+        assertThat(result.basePrice()).isEqualTo(50000L);
 
         verify(repairPresetRepository).save(any(RepairPreset.class));
-        verify(repairPresetMapper).toResponse(preset, 50000L);
+        verify(entityManager).createNativeQuery(anyString());
     }
 
     @Test
@@ -99,19 +97,20 @@ class RepairPresetServiceTest {
         setUpPreset();
         setUpBasePrice(50000L);
 
-        when(repairPresetRepository.findAll()).thenReturn(List.of(preset));
-
-        when(repairPresetMapper.toResponse(preset, 50000L)).thenReturn(response);
+        when(repairPresetRepository.findAll())
+                .thenReturn(List.of(preset));
 
         // when
-        List<RepairPresetResponse> result = repairPresetService.getAllPresets();
+        List<RepairPresetResponse> result =
+                repairPresetService.getAllPresets();
 
         // then
         assertThat(result).hasSize(1);
-        assertThat(result.get(0)).isEqualTo(response);
+        assertThat(result.get(0).name()).isEqualTo("액정 교체");
+        assertThat(result.get(0).basePrice()).isEqualTo(50000L);
 
         verify(repairPresetRepository).findAll();
-        verify(repairPresetMapper).toResponse(preset, 50000L);
+        verify(entityManager).createNativeQuery(anyString());
     }
 
     @Test
@@ -121,18 +120,19 @@ class RepairPresetServiceTest {
         setUpPreset();
         setUpBasePrice(50000L);
 
-        when(repairPresetRepository.findById(1L)).thenReturn(Optional.of(preset));
-
-        when(repairPresetMapper.toResponse(preset, 50000L)).thenReturn(response);
+        when(repairPresetRepository.findById(1L))
+                .thenReturn(Optional.of(preset));
 
         // when
-        RepairPresetResponse result = repairPresetService.getPreset(1L);
+        RepairPresetResponse result =
+                repairPresetService.getPreset(1L);
 
         // then
-        assertThat(result).isEqualTo(response);
+        assertThat(result).isNotNull();
+        assertThat(result.name()).isEqualTo("액정 교체");
+        assertThat(result.basePrice()).isEqualTo(50000L);
 
         verify(repairPresetRepository).findById(1L);
-        verify(repairPresetMapper).toResponse(preset, 50000L);
     }
 
     @Test
@@ -142,25 +142,26 @@ class RepairPresetServiceTest {
         setUpPreset();
         setUpBasePrice(50000L);
 
-        RepairPresetUpdate request = mock(RepairPresetUpdate.class);
+        RepairPresetUpdate request = new RepairPresetUpdate(
+                "배터리 교체",
+                "배터리 수리"
+        );
 
-        when(request.getName()).thenReturn("배터리 교체");
-        when(request.getDescription()).thenReturn("배터리 수리");
-        when(request.getUpdatedBy()).thenReturn("tester");
-
-        when(repairPresetRepository.findById(1L)).thenReturn(Optional.of(preset));
-
-        when(repairPresetMapper.toResponse(preset, 50000L)).thenReturn(response);
+        when(repairPresetRepository.findById(1L))
+                .thenReturn(Optional.of(preset));
 
         // when
-        RepairPresetResponse result = repairPresetService.updatePreset(1L, request);
+        RepairPresetResponse result =
+                repairPresetService.updatePreset(1L, request);
 
         // then
-        assertThat(result).isEqualTo(response);
+        assertThat(result).isNotNull();
+        assertThat(result.name()).isEqualTo("배터리 교체");
+        assertThat(result.description()).isEqualTo("배터리 수리");
+        assertThat(result.basePrice()).isEqualTo(50000L);
 
-        verify(repairPresetRepository).updatePreset(eq(1L), eq("배터리 교체"), eq("배터리 수리"), any(LocalDateTime.class), eq("tester"));
-
-        verify(repairPresetMapper).toResponse(preset, 50000L);
+        verify(repairPresetRepository).findById(1L);
+        verify(repairPresetRepository, never()).save(any(RepairPreset.class));
     }
 
     @Test
@@ -169,7 +170,8 @@ class RepairPresetServiceTest {
         // given
         setUpPreset();
 
-        when(repairPresetRepository.findById(1L)).thenReturn(Optional.of(preset));
+        when(repairPresetRepository.findById(1L))
+                .thenReturn(Optional.of(preset));
 
         // when
         repairPresetService.deletePreset(1L);
@@ -182,10 +184,15 @@ class RepairPresetServiceTest {
     @DisplayName("존재하지 않는 수리 프리셋 조회 시 예외가 발생한다.")
     void getPresetNotFound() {
         // given
-        when(repairPresetRepository.findById(999L)).thenReturn(Optional.empty());
+        when(repairPresetRepository.findById(999L))
+                .thenReturn(Optional.empty());
 
         // when & then
-        assertThatThrownBy(() -> repairPresetService.getPreset(999L)).isInstanceOf(org.springframework.web.server.ResponseStatusException.class).hasMessageContaining("해당 수리 프리셋을 찾을 수 없습니다.");
+        assertThatThrownBy(() -> repairPresetService.getPreset(999L))
+                .isInstanceOf(
+                        org.springframework.web.server.ResponseStatusException.class
+                )
+                .hasMessageContaining("해당 수리 프리셋을 찾을 수 없습니다.");
 
         verify(repairPresetRepository).findById(999L);
     }
@@ -197,32 +204,37 @@ class RepairPresetServiceTest {
         setUpPreset();
         setUpBasePrice(75000L);
 
-        when(repairPresetRepository.findById(1L)).thenReturn(Optional.of(preset));
-
-        when(repairPresetMapper.toResponse(preset, 75000L)).thenReturn(response);
+        when(repairPresetRepository.findById(1L))
+                .thenReturn(Optional.of(preset));
 
         // when
-        RepairPresetResponse result = repairPresetService.getPreset(1L);
+        RepairPresetResponse result =
+                repairPresetService.getPreset(1L);
 
         // then
-        assertThat(result).isEqualTo(response);
+        assertThat(result).isNotNull();
+        assertThat(result.basePrice()).isEqualTo(75000L);
 
         verify(entityManager).createNativeQuery(anyString());
         verify(query).setParameter(1, 1L);
-        verify(repairPresetMapper).toResponse(preset, 75000L);
     }
 
     @Test
     @DisplayName("검색어가 공백이면 전체 프리셋 조회")
     void searchPresetsBlankTest() {
+        // given
+        when(repairPresetRepository.findAll())
+                .thenReturn(List.of());
 
-        when(repairPresetRepository.findAll()).thenReturn(List.of());
+        // when
+        List<RepairPresetResponse> result =
+                repairPresetService.searchPresets(" ");
 
-        List<RepairPresetResponse> result = repairPresetService.searchPresets(" ");
-
+        // then
         assertThat(result).isEmpty();
 
         verify(repairPresetRepository).findAll();
-        verify(repairPresetRepository, never()).findByNameContaining(anyString());
+        verify(repairPresetRepository, never())
+                .findByNameContaining(anyString());
     }
 }

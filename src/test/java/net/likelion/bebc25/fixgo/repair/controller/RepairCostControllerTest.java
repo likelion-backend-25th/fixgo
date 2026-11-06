@@ -36,11 +36,17 @@ class RepairCostControllerTest {
         Long repairId = 1L;
         int finalAmount = 60000;
 
-        when(repairCostService.calculateRepairCost(repairId, "tester")).thenReturn(finalAmount);
+        when(repairCostService.calculateRepairCost(repairId))
+                .thenReturn(finalAmount);
 
-        mockMvc.perform(post("/api/v1/as/repairs/{repairId}/cost", repairId).with(csrf())).andExpect(status().isOk()).andExpect(content().string("60000"));
+        mockMvc.perform(
+                        post("/api/v1/as/repairs/{repairId}/cost", repairId)
+                                .with(csrf())
+                )
+                .andExpect(status().isOk())
+                .andExpect(content().string("60000"));
 
-        verify(repairCostService).calculateRepairCost(repairId, "tester");
+        verify(repairCostService).calculateRepairCost(repairId);
     }
 
     @Test
@@ -49,11 +55,16 @@ class RepairCostControllerTest {
     void calculateRepairCostFail() throws Exception {
         Long repairId = 999L;
 
-        when(repairCostService.calculateRepairCost(repairId, "tester")).thenThrow(new IllegalArgumentException("수리 정보를 찾을 수 없습니다."));
+        when(repairCostService.calculateRepairCost(repairId))
+                .thenThrow(new IllegalArgumentException("수리 정보를 찾을 수 없습니다."));
 
-        mockMvc.perform(post("/api/v1/as/repairs/{repairId}/cost", repairId).with(csrf())).andExpect(status().isBadRequest());
+        mockMvc.perform(
+                        post("/api/v1/as/repairs/{repairId}/cost", repairId)
+                                .with(csrf())
+                )
+                .andExpect(status().isBadRequest());
 
-        verify(repairCostService).calculateRepairCost(repairId, "tester");
+        verify(repairCostService).calculateRepairCost(repairId);
     }
 
     @Test
@@ -63,13 +74,23 @@ class RepairCostControllerTest {
 
         CustomUserDetails userDetails = createTechnicianUserDetails();
 
-        var authentication = new UsernamePasswordAuthenticationToken(userDetails, userDetails.getPassword(), userDetails.getAuthorities());
+        var authentication = new UsernamePasswordAuthenticationToken(
+                userDetails,
+                userDetails.getPassword(),
+                userDetails.getAuthorities()
+        );
 
-        mockMvc.perform(post("/api/v1/as/repairs/{repairId}/cost/confirm", repairId).with(authentication(authentication)).with(csrf())).andExpect(status().isOk()).andExpect(content().json("""
-                                                                                                                                                                                                    {
-                                                                                                                                                                                                        "message": "수리비가 확정되었습니다."
-                                                                                                                                                                                                    }
-                                                                                                                                                                                                    """));
+        mockMvc.perform(
+                        post("/api/v1/as/repairs/{repairId}/cost/confirm", repairId)
+                                .with(authentication(authentication))
+                                .with(csrf())
+                )
+                .andExpect(status().isOk())
+                .andExpect(content().json("""
+                                                  {
+                                                      "message": "수리비가 확정되었습니다."
+                                                  }
+                                                  """));
 
         verify(repairCostService).confirmRepairCost(repairId, userDetails);
     }
@@ -81,11 +102,22 @@ class RepairCostControllerTest {
 
         CustomUserDetails userDetails = createTechnicianUserDetails();
 
-        var authentication = new UsernamePasswordAuthenticationToken(userDetails, userDetails.getPassword(), userDetails.getAuthorities());
+        var authentication = new UsernamePasswordAuthenticationToken(
+                userDetails,
+                userDetails.getPassword(),
+                userDetails.getAuthorities()
+        );
 
-        doThrow(new IllegalArgumentException("수리 정보를 찾을 수 없습니다.")).when(repairCostService).confirmRepairCost(repairId, userDetails);
+        doThrow(new IllegalArgumentException("수리 정보를 찾을 수 없습니다."))
+                .when(repairCostService)
+                .confirmRepairCost(repairId, userDetails);
 
-        mockMvc.perform(post("/api/v1/as/repairs/{repairId}/cost/confirm", repairId).with(authentication(authentication)).with(csrf())).andExpect(status().isBadRequest());
+        mockMvc.perform(
+                        post("/api/v1/as/repairs/{repairId}/cost/confirm", repairId)
+                                .with(authentication(authentication))
+                                .with(csrf())
+                )
+                .andExpect(status().isBadRequest());
 
         verify(repairCostService).confirmRepairCost(repairId, userDetails);
     }

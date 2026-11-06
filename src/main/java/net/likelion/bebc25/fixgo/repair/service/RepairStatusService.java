@@ -7,11 +7,11 @@ import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
 import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
+import net.likelion.bebc25.fixgo.repair.exception.RepairErrorCode;
+import net.likelion.bebc25.fixgo.repair.exception.RepairException;
 import net.likelion.bebc25.fixgo.repair.repository.RepairRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
@@ -21,52 +21,73 @@ public class RepairStatusService {
     private final MemberRepository memberRepository;
     private final RepairRepository repairRepository;
 
-    // 공통 수리 상태 변경
     @Transactional
     public void changeStatus(Repair repair, RepairStatus newStatus, String updatedBy) {
         changeStatus(repair, newStatus, updatedBy, null);
     }
 
-    // 변경 사유를 포함한 수리 상태 변경
     @Transactional
-    public void changeStatus(Repair repair, RepairStatus newStatus, String updatedBy, String reason) {
-        repair = repairRepository.findByIdWithLock(repair.getId()).orElseThrow(() -> new NoSuchElementException("수리 정보를 찾을 수 없습니다."));
+    public void changeStatus(
+            Repair repair,
+            RepairStatus newStatus,
+            String updatedBy,
+            String reason
+    ) {
+        repair = repairRepository.findByIdWithLock(repair.getId())
+                .orElseThrow(() -> new RepairException(
+                        RepairErrorCode.REPAIR_NOT_FOUND,
+                        "수리 정보를 찾을 수 없습니다."
+                ));
 
         RepairStatus currentStatus = repair.getStatus();
 
         if (currentStatus == newStatus) {
-            throw new IllegalArgumentException("이미 해당 상태로 처리되어 있습니다.");
+            throw new RepairException(
+                    RepairErrorCode.ALREADY_SAME_REPAIR_STATUS,
+                    "이미 해당 상태로 처리되어 있습니다."
+            );
         }
 
         boolean isValidTransition = switch (currentStatus) {
             case DIAGNOSING -> newStatus == RepairStatus.REQUESTED;
-            case REQUESTED -> newStatus == RepairStatus.APPROVED || newStatus == RepairStatus.REJECTED;
+            case REQUESTED -> newStatus == RepairStatus.APPROVED
+                    || newStatus == RepairStatus.REJECTED;
             case APPROVED -> newStatus == RepairStatus.REPAIRING;
             case REPAIRING -> newStatus == RepairStatus.COMPLETED;
             case REJECTED, COMPLETED -> false;
         };
 
         if (!isValidTransition) {
-            throw new IllegalArgumentException("허용되지 않은 상태 변경입니다. 현재 상태: " + currentStatus + ", 변경 요청 상태: " + newStatus);
+            throw new RepairException(
+                    RepairErrorCode.INVALID_REPAIR_STATUS_TRANSITION,
+                    "허용되지 않은 상태 변경입니다. 현재 상태: "
+                            + currentStatus + ", 변경 요청 상태: " + newStatus
+            );
         }
 
         Member changedBy = null;
 
         if (updatedBy != null && !updatedBy.isBlank()) {
-            changedBy = memberRepository.findByEmail(updatedBy).orElseThrow(() -> new NoSuchElementException("변경한 직원을 찾을 수 없습니다."));
+            changedBy = memberRepository.findByEmail(updatedBy)
+                    .orElseThrow(() -> new RepairException(
+                            RepairErrorCode.CHANGED_BY_NOT_FOUND,
+                            "변경한 직원을 찾을 수 없습니다."
+                    ));
         }
 
-        // 기존 상태 저장
         String fromStatus = currentStatus.name();
         String toStatus = newStatus.name();
 
-        // 수리 상태 변경
-        repair.changeStatus(newStatus, updatedBy);
+        repair.changeStatus(newStatus);
 
-        // 연결된 A/S 접수 정보
         AsReception asReception = repair.getAsReception();
 
-        // 상태 변경 이력 저장
-        asStatusHistoryService.record(asReception, fromStatus, toStatus, reason, changedBy);
+        asStatusHistoryService.record(
+                asReception,
+                fromStatus,
+                toStatus,
+                reason,
+                changedBy
+        );
     }
 }

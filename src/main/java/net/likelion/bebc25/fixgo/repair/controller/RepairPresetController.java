@@ -1,12 +1,15 @@
 package net.likelion.bebc25.fixgo.repair.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
 import net.likelion.bebc25.fixgo.repair.dto.preset.RepairPresetRequest;
 import net.likelion.bebc25.fixgo.repair.dto.preset.RepairPresetResponse;
 import net.likelion.bebc25.fixgo.repair.dto.preset.RepairPresetUpdate;
 import net.likelion.bebc25.fixgo.repair.service.RepairPresetService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,8 +23,12 @@ public class RepairPresetController {
 
     // 프리셋 등록
     @PostMapping
-    public ResponseEntity<RepairPresetResponse> createPreset(@RequestBody RepairPresetRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(repairPresetService.createPreset(request));
+    public ResponseEntity<RepairPresetResponse> createPreset(
+            @Valid @RequestBody RepairPresetRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(repairPresetService.createPreset(request));
     }
 
     // 전체 프리셋 조회
@@ -38,7 +45,10 @@ public class RepairPresetController {
 
     // 프리셋 수정
     @PutMapping("/{id}")
-    public ResponseEntity<RepairPresetResponse> updatePreset(@PathVariable Long id, @RequestBody RepairPresetUpdate request) {
+    public ResponseEntity<RepairPresetResponse> updatePreset(
+            @PathVariable Long id,
+            @Valid @RequestBody RepairPresetUpdate request
+    ) {
         return ResponseEntity.ok(repairPresetService.updatePreset(id, request));
     }
 
@@ -51,7 +61,9 @@ public class RepairPresetController {
 
     // 프리셋 이름 검색
     @GetMapping("/search")
-    public ResponseEntity<List<RepairPresetResponse>> searchPresets(@RequestParam String name) {
+    public ResponseEntity<List<RepairPresetResponse>> searchPresets(
+            @RequestParam String name
+    ) {
         return ResponseEntity.ok(repairPresetService.searchPresets(name));
     }
 }

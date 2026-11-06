@@ -124,7 +124,7 @@ public class MemberService {
                 () -> new NoSuchElementException("존재하지 않는 계정입니다.")
         );
 
-        if (member.getRole().equals(Role.ROLE_TECHNICIAN) && !repairRepository.findByTechnicianIdAndStatusNot(memberId, RepairStatus.COMPLETED).isEmpty()) {
+        if (member.getRole().equals(Role.ROLE_TECHNICIAN) && !repairRepository.findByTechnician_IdAndStatusNot(memberId, RepairStatus.COMPLETED).isEmpty()) {
             throw new EmployeeHasActiveRepairsException(
                     AuthErrorCode.EMPLOYEE_HAS_ACTIVE_REPAIRS,
                     "현재 진행 중인 A/S 건이 있어 삭제할 수 없습니다."

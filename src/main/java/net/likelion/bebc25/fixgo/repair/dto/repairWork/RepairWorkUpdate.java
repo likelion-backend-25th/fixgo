@@ -1,15 +1,12 @@
 package net.likelion.bebc25.fixgo.repair.dto.repairWork;
 
-import lombok.Getter;
-import lombok.Setter;
+public record RepairWorkUpdate(
 
-@Getter
-@Setter
-public class RepairWorkUpdate {
+        // 수리 프리셋 이름
+        String repairPresetName,
 
-    // 수리 프리셋 이름
-    private String repairPresetName;
+        // 작업 내용
+        String workName
 
-    // 작업 내용
-    private String workName;
+) {
 }

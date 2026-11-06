@@ -1,68 +1,89 @@
 package net.likelion.bebc25.fixgo.repair.dto.repair;
 
-import lombok.*;
+import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairDecision;
 
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class RepairResponse {
+public record RepairResponse(
 
-    // 수리 ID
-    private Long id;
+        // 수리 ID
+        Long id,
 
-    // A/S 접수 ID
-    private Long asReceptionId;
+        // A/S 접수 ID
+        Long asReceptionId,
 
-    // 담당 기사 ID
-    private Long technicianId;
+        // 담당 기사 ID
+        Long technicianId,
 
-    // 진단 내용
-    private String diagnosis;
+        // 진단 내용
+        String diagnosis,
 
-    // 작업 내용
-    private String workNote;
+        // 작업 내용
+        String workNote,
 
-    // 수리 판정
-    private RepairDecision repairDecision;
+        // 수리 판정
+        RepairDecision repairDecision,
 
-    // 보증 여부
-    private String warrantyResult;
+        // 보증 여부
+        String warrantyResult,
 
-    // 수리 사유
-    private String reason;
+        // 수리 사유
+        String reason,
 
-    // 시간당 공임
-    private int laborRate;
+        // 시간당 공임
+        int laborRate,
 
-    // 점검 비용
-    private int inspectionCost;
+        // 점검 비용
+        int inspectionCost,
 
-    // 최종 수리 금액
-    private int finalAmount;
+        // 최종 수리 금액
+        int finalAmount,
 
-    // 수리 상태
-    private String status;
+        // 수리 상태
+        String status,
 
-    // 반려 사유
-    private String reasonForRejection;
+        // 반려 사유
+        String reasonForRejection,
 
-    // 승인 확정 일시
-    private LocalDateTime confirmedAt;
+        // 승인 확정 일시
+        LocalDateTime confirmedAt,
 
-    // 생성 일시
-    private LocalDateTime createdAt;
+        // 생성 일시
+        LocalDateTime createdAt,
 
-    // 수정 일시
-    private LocalDateTime updatedAt;
+        // 수정 일시
+        LocalDateTime updatedAt,
 
-    // 생성자
-    private String createdBy;
+        // 생성자 ID
+        Long createdBy,
 
-    // 수정자
-    private String updatedBy;
+        // 수정자 ID
+        Long updatedBy
+
+) {
+
+    // Repair Entity -> RepairResponse
+    public static RepairResponse from(Repair repair) {
+        return new RepairResponse(
+                repair.getId(),
+                repair.getAsReception().getId(),
+                repair.getTechnician().getId(),
+                repair.getDiagnosis(),
+                repair.getWorkNote(),
+                repair.getRepairDecision(),
+                repair.getWarrantyResult().name(),
+                repair.getReason(),
+                repair.getLaborRate(),
+                repair.getInspectionCost(),
+                repair.getFinalAmount(),
+                repair.getStatus().name(),
+                repair.getReasonForRejection(),
+                repair.getConfirmedAt(),
+                repair.getCreatedAt(),
+                repair.getUpdatedAt(),
+                repair.getCreatedBy(),
+                repair.getUpdatedBy()
+        );
+    }
 }

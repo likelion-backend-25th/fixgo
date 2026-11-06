@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,31 +23,41 @@ class RepairPresetRepositoryTest {
     @BeforeEach
     void setUp() {
 
-        LocalDateTime now = LocalDateTime.now();
+        repairPresetRepository.save(
+                new RepairPreset("메인보드 교체", "메인보드 불량으로 인한 교체")
+        );
 
-        repairPresetRepository.save(new RepairPreset("메인보드 교체", "메인보드 불량으로 인한 교체", now, now, "test", "test"));
+        repairPresetRepository.save(
+                new RepairPreset("메모리 교체", "메모리 불량으로 인한 교체")
+        );
 
-        repairPresetRepository.save(new RepairPreset("메모리 교체", "메모리 불량으로 인한 교체", now, now, "test", "test"));
-
-        repairPresetRepository.save(new RepairPreset("메인보드 점검", "메인보드 상태 점검", now, now, "test", "test"));
+        repairPresetRepository.save(
+                new RepairPreset("메인보드 점검", "메인보드 상태 점검")
+        );
     }
 
     @Test
     @DisplayName("프리셋 이름 일부로 검색")
     void findByNameContaining() {
+
         // when
-        List<RepairPreset> result = repairPresetRepository.findByNameContaining("메인보드");
+        List<RepairPreset> result =
+                repairPresetRepository.findByNameContaining("메인보드");
 
         // then
         assertThat(result).hasSize(2);
-        assertThat(result).extracting(RepairPreset::getName).containsExactlyInAnyOrder("메인보드 교체", "메인보드 점검");
+        assertThat(result)
+                .extracting(RepairPreset::getName)
+                .containsExactlyInAnyOrder("메인보드 교체", "메인보드 점검");
     }
 
     @Test
     @DisplayName("프리셋 이름으로 정확히 조회")
     void findByName() {
+
         // when
-        List<RepairPreset> result = repairPresetRepository.findByName("메모리 교체");
+        List<RepairPreset> result =
+                repairPresetRepository.findByName("메모리 교체");
 
         // then
         assertThat(result).hasSize(1);
@@ -58,8 +67,10 @@ class RepairPresetRepositoryTest {
     @Test
     @DisplayName("존재하지 않는 프리셋 이름 검색")
     void findByNameNotFound() {
+
         // when
-        List<RepairPreset> result = repairPresetRepository.findByName("그래픽카드 교체");
+        List<RepairPreset> result =
+                repairPresetRepository.findByName("그래픽카드 교체");
 
         // then
         assertThat(result).isEmpty();
