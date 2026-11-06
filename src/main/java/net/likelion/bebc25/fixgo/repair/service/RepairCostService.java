@@ -6,6 +6,7 @@ import net.likelion.bebc25.fixgo.admin.entity.RateType;
 import net.likelion.bebc25.fixgo.admin.repository.LaborRateRepository;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
+import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
 import net.likelion.bebc25.fixgo.auth.entity.Role;
 import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
 import net.likelion.bebc25.fixgo.product.entity.Category;
@@ -39,12 +40,13 @@ public class RepairCostService {
     private final LaborRateRepository laborRateRepository;
     private final ProductModelRepository productModelRepository;
     private final RepairStatusService repairStatusService;
+    private final AsReceptionRepository asReceptionRepository;
 
     // 수리비 계산 및 저장
     @Transactional
     public int calculateRepairCost(Long repairId, String updatedBy) {
 
-        Repair repair = repairRepository.findById(repairId).orElseThrow(() -> new IllegalArgumentException("수리 정보를 찾을 수 없습니다."));
+        Repair repair = repairRepository.findByIdWithLock(repairId).orElseThrow(() -> new IllegalArgumentException("수리 정보를 찾을 수 없습니다."));
 
         // A/S 접수 제품 조회
         Product product = repair.getAsReception().getProduct();
@@ -112,6 +114,10 @@ public class RepairCostService {
     /**
      * 수리비 확정
      */
+
+    /**
+     * 수리비 확정
+     */
     @Transactional
     public void confirmRepairCost(Long repairId, CustomUserDetails userDetails) {
 
@@ -120,8 +126,8 @@ public class RepairCostService {
             throw new IllegalArgumentException("기사 권한이 필요합니다.");
         }
 
-        // 수리 정보 조회
-        Repair repair = repairRepository.findById(repairId).orElseThrow(() -> new IllegalArgumentException("수리 정보를 찾을 수 없습니다."));
+        // 수리 정보 잠금 조회
+        Repair repair = repairRepository.findByIdWithLock(repairId).orElseThrow(() -> new IllegalArgumentException("수리 정보를 찾을 수 없습니다."));
 
         // 담당 기사 확인
         if (!repair.getTechnician().getId().equals(userDetails.getId())) {
@@ -138,13 +144,17 @@ public class RepairCostService {
             throw new IllegalArgumentException("이미 수리비가 확정되었습니다.");
         }
 
+        // A/S 접수 정보 잠금 조회
+        AsReception asReception = asReceptionRepository.findByIdWithLock(repair.getAsReception().getId()).orElseThrow(() -> new IllegalArgumentException("A/S 접수 정보를 찾을 수 없습니다."));
+
         // 수리비 확정
         repair.confirmRepairCost(userDetails.getUsername());
 
         // 공통 수리 상태 변경
         repairStatusService.changeStatus(repair, RepairStatus.REQUESTED, userDetails.getUsername());
+
         // A/S 접수 상태 변경
-        AsReception asReception = repair.getAsReception();
         asReception.changeStatus(AsReceptionStatus.AWAITING_QUOTE_APPROVAL);
     }
+
 }

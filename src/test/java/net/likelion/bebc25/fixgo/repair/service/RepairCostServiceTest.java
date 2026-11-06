@@ -5,6 +5,7 @@ import net.likelion.bebc25.fixgo.admin.entity.RateType;
 import net.likelion.bebc25.fixgo.admin.repository.LaborRateRepository;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
+import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.entity.Role;
 import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
@@ -59,6 +60,9 @@ class RepairCostServiceTest {
     @Mock
     private RepairStatusService repairStatusService;
 
+    @Mock
+    private AsReceptionRepository asReceptionRepository;
+
     @InjectMocks
     private RepairCostService repairCostService;
 
@@ -74,7 +78,7 @@ class RepairCostServiceTest {
         Product product = mock(Product.class);
         ProductModel productModel = mock(ProductModel.class);
 
-        when(repairRepository.findById(repairId)).thenReturn(Optional.of(repair));
+        when(repairRepository.findByIdWithLock(repairId)).thenReturn(Optional.of(repair));
         when(repair.getAsReception()).thenReturn(asReception);
         when(asReception.getProduct()).thenReturn(product);
         when(product.getProductModelId()).thenReturn(1L);
@@ -108,6 +112,7 @@ class RepairCostServiceTest {
 
         verify(repair).updateRepairCost(20000, 0, 60000);
         verify(repair).updateAuditInfo(updatedBy);
+        verify(repairRepository).findByIdWithLock(repairId);
     }
 
     @Test
@@ -122,7 +127,7 @@ class RepairCostServiceTest {
         Product product = mock(Product.class);
         ProductModel productModel = mock(ProductModel.class);
 
-        when(repairRepository.findById(repairId)).thenReturn(Optional.of(repair));
+        when(repairRepository.findByIdWithLock(repairId)).thenReturn(Optional.of(repair));
         when(repair.getAsReception()).thenReturn(asReception);
         when(asReception.getProduct()).thenReturn(product);
         when(product.getProductModelId()).thenReturn(1L);
@@ -152,7 +157,7 @@ class RepairCostServiceTest {
     void calculateRepairCostNotFound() {
         Long repairId = 999L;
 
-        when(repairRepository.findById(repairId)).thenReturn(Optional.empty());
+        when(repairRepository.findByIdWithLock(repairId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> repairCostService.calculateRepairCost(repairId, "tester")).isInstanceOf(IllegalArgumentException.class).hasMessage("수리 정보를 찾을 수 없습니다.");
     }
@@ -162,6 +167,7 @@ class RepairCostServiceTest {
     void confirmRepairCostSuccess() {
         Long repairId = 1L;
         Long technicianId = 10L;
+        Long receptionId = 100L;
         String username = "technician";
 
         CustomUserDetails userDetails = mock(CustomUserDetails.class);
@@ -175,17 +181,23 @@ class RepairCostServiceTest {
         Repair repair = mock(Repair.class);
         AsReception asReception = mock(AsReception.class);
 
-        when(repairRepository.findById(repairId)).thenReturn(Optional.of(repair));
+        when(repairRepository.findByIdWithLock(repairId)).thenReturn(Optional.of(repair));
         when(repair.getTechnician()).thenReturn(technician);
         when(technician.getId()).thenReturn(technicianId);
         when(repair.getStatus()).thenReturn(RepairStatus.DIAGNOSING);
+        when(repair.getConfirmedAt()).thenReturn(null);
         when(repair.getAsReception()).thenReturn(asReception);
+
+        when(asReception.getId()).thenReturn(receptionId);
+        when(asReceptionRepository.findByIdWithLock(receptionId)).thenReturn(Optional.of(asReception));
 
         repairCostService.confirmRepairCost(repairId, userDetails);
 
         verify(repair).confirmRepairCost(username);
         verify(repairStatusService).changeStatus(repair, RepairStatus.REQUESTED, username);
         verify(asReception).changeStatus(AsReceptionStatus.AWAITING_QUOTE_APPROVAL);
+        verify(repairRepository).findByIdWithLock(repairId);
+        verify(asReceptionRepository).findByIdWithLock(receptionId);
 
         verify(repair, never()).changeStatus(any(), anyString());
     }
@@ -205,7 +217,7 @@ class RepairCostServiceTest {
 
         Repair repair = mock(Repair.class);
 
-        when(repairRepository.findById(repairId)).thenReturn(Optional.of(repair));
+        when(repairRepository.findByIdWithLock(repairId)).thenReturn(Optional.of(repair));
         when(repair.getTechnician()).thenReturn(technician);
         when(technician.getId()).thenReturn(technicianId);
         when(repair.getStatus()).thenReturn(RepairStatus.REPAIRING);
@@ -214,6 +226,7 @@ class RepairCostServiceTest {
 
         verify(repair, never()).confirmRepairCost(anyString());
         verify(repair, never()).changeStatus(any(), anyString());
+        verifyNoInteractions(asReceptionRepository);
     }
 
     @Test
@@ -231,7 +244,7 @@ class RepairCostServiceTest {
         when(loginMember.getRole()).thenReturn(Role.ROLE_TECHNICIAN);
         when(userDetails.getId()).thenReturn(technicianId);
 
-        when(repairRepository.findById(repairId)).thenReturn(Optional.of(repair));
+        when(repairRepository.findByIdWithLock(repairId)).thenReturn(Optional.of(repair));
 
         when(repair.getTechnician()).thenReturn(technician);
         when(technician.getId()).thenReturn(technicianId);
@@ -242,5 +255,6 @@ class RepairCostServiceTest {
 
         verify(repair, never()).confirmRepairCost(anyString());
         verify(repair, never()).changeStatus(any(), anyString());
+        verifyNoInteractions(asReceptionRepository);
     }
 }

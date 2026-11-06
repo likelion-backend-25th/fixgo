@@ -1,8 +1,10 @@
 package net.likelion.bebc25.fixgo.repair.repository;
 
+import jakarta.persistence.LockModeType;
 import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -45,4 +47,8 @@ public interface RepairRepository extends JpaRepository<Repair, Long> {
 
     boolean existsByIdAndStatus(Long repairId, RepairStatus status);
 
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT r FROM Repair r WHERE r.id = :id")
+    Optional<Repair> findByIdWithLock(@Param("id") Long id);
 }
