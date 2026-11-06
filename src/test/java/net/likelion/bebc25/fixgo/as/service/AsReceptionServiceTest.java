@@ -27,6 +27,7 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -70,6 +71,75 @@ class AsReceptionServiceTest {
         technician = memberRepository.save(new Member(
                 "technician@test.com", "password", "수리기사", "010-3333-4444",
                 "서울시", Role.ROLE_TECHNICIAN, "profile.png"));
+    }
+
+    @Test
+    @DisplayName("접수 담당자가 수정한 필드가 저장되고 생략한 증상 상세는 유지된다")
+    void updateReception_ownerPersistsPartialUpdate() {
+        Long id = reception.getId();
+        String originalDetail = reception.getSymptomDetail();
+        var request = new AsReceptionDto.UpdateReceptionRequest("전원 불량", null, "고객 확인 완료",
+                ReturnMethod.PICKUP);
+
+        var response = asReceptionService.updateReception(id, receptionist, request);
+        entityManager.flush();
+        entityManager.clear();
+
+        AsReception saved = asReceptionRepository.findById(id).orElseThrow();
+        assertThat(response.symptom()).isEqualTo("전원 불량");
+        assertThat(saved.getSymptom()).isEqualTo("전원 불량");
+        assertThat(saved.getSymptomDetail()).isEqualTo(originalDetail);
+        assertThat(saved.getMemo()).isEqualTo("고객 확인 완료");
+        assertThat(saved.getReturnMethod()).isEqualTo(ReturnMethod.PICKUP);
+    }
+
+    @Test
+    @DisplayName("관리자는 다른 담당자가 등록한 접수의 메모를 지울 수 있다")
+    void updateReception_adminCanClearMemo() {
+        var admin = new CustomUserDetails(memberRepository.save(new Member(
+                "edit-admin@test.com", "password", "관리자", "010-5555-6666",
+                "서울시", Role.ROLE_ADMIN, "profile.png")));
+        Long id = reception.getId();
+        asReceptionService.updateReception(id, receptionist,
+                new AsReceptionDto.UpdateReceptionRequest(null, null, "기존 메모", null));
+
+        asReceptionService.updateReception(id, admin,
+                new AsReceptionDto.UpdateReceptionRequest(null, null, "", null));
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(asReceptionRepository.findById(id).orElseThrow().getMemo()).isNull();
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = Role.class, names = {"ROLE_RECEPTIONIST", "ROLE_TECHNICIAN"})
+    @DisplayName("다른 접수 담당자와 수리 기사의 수정은 거절된다")
+    void updateReception_deniesUnauthorizedEmployee(Role role) {
+        var employee = new CustomUserDetails(memberRepository.save(new Member(
+                "edit-employee@test.com", "password", "직원", "010-5555-7777",
+                "서울시", role, "profile.png")));
+        String originalMemo = reception.getMemo();
+        var request = new AsReceptionDto.UpdateReceptionRequest(null, null, "수정 메모", null);
+
+        assertThatThrownBy(() -> asReceptionService.updateReception(reception.getId(), employee, request))
+                .isInstanceOf(AccessDeniedException.class);
+        assertThat(reception.getMemo()).isEqualTo(originalMemo);
+    }
+
+    @Test
+    @DisplayName("수리가 시작된 접수는 관리자도 수정할 수 없다")
+    void updateReception_rejectsWhenRepairHasStarted() {
+        var admin = new CustomUserDetails(memberRepository.save(new Member(
+                "edit-admin@test.com", "password", "관리자", "010-5555-6666",
+                "서울시", Role.ROLE_ADMIN, "profile.png")));
+        reception.changeStatus(AsReceptionStatus.REPAIR_IN_PROGRESS);
+        String originalMemo = reception.getMemo();
+        var request = new AsReceptionDto.UpdateReceptionRequest(null, null, "수정 메모", null);
+
+        assertThatThrownBy(() -> asReceptionService.updateReception(reception.getId(), admin, request))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        exception -> assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.CONFLICT));
+        assertThat(reception.getMemo()).isEqualTo(originalMemo);
     }
 
     @Test

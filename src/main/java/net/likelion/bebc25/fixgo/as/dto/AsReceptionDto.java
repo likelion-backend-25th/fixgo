@@ -20,6 +20,14 @@ import java.util.UUID;
 
 public class AsReceptionDto {
 
+    public record UpdateReceptionRequest(
+            @Size(max = 255) String symptom,
+            @Size(max = 255) String symptomDetail,
+            @Size(max = 1000) String memo,
+            ReturnMethod returnMethod
+    ) {
+    }
+
     public record CreateReceptionRequest(
 
             @NotNull
