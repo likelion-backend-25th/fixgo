@@ -17,5 +17,5 @@ public class RepairPresetPartId implements Serializable {
     private Long repairPresetId;
 
     @Column
-    private Long partsId;
+    private Long partId;
 }
