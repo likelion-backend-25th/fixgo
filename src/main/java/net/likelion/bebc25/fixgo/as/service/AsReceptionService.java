@@ -79,7 +79,7 @@ public class AsReceptionService {
     // A/S 접수 상태 변경
     @Transactional
     public void changeReceptionStatus(Long receptionId, AsReceptionStatus newStatus, String reason, CustomUserDetails userDetails) {
-        AsReception asReception = asReceptionRepository.findById(receptionId).orElseThrow(() -> new NoSuchElementException("존재하지 않는 A/S 접수입니다."));
+        AsReception asReception = asReceptionRepository.findByIdWithLock(receptionId).orElseThrow(() -> new NoSuchElementException("존재하지 않는 A/S 접수입니다."));
 
         AsReceptionStatus currentStatus = asReception.getStatus();
 
