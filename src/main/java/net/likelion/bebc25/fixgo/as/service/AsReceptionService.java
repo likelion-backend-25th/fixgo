@@ -4,7 +4,9 @@ import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.as.dto.AsReceptionDto;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
+import net.likelion.bebc25.fixgo.as.entity.AsTechnicianAssignmentHistory;
 import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
+import net.likelion.bebc25.fixgo.as.repository.AsTechnicianAssignmentHistoryRepository;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.entity.Role;
 import net.likelion.bebc25.fixgo.auth.entity.Status;
@@ -38,6 +40,7 @@ public class AsReceptionService {
     private final ProductRepository productRepository;
     private final MemberRepository memberRepository;
     private final CustomerPortalLinkService customerPortalLinkService;
+    private final AsTechnicianAssignmentHistoryRepository assignmentHistoryRepository;
 
     // 접수 등록
     @Transactional
@@ -108,7 +111,7 @@ public class AsReceptionService {
 
     // 담당 기사 재배정
     @Transactional
-    public AsReceptionDto.DetailResponse updateTechnician(Long receptionId, Long technicianId) {
+    public AsReceptionDto.DetailResponse updateTechnician(Long receptionId, Long technicianId, String reason, Member changedBy) {
         List<AsReceptionStatus> statuses = new ArrayList<>();
         statuses.add(AsReceptionStatus.AWAITING_PAYMENT);
         statuses.add(AsReceptionStatus.AWAITING_SHIPMENT);
@@ -129,7 +132,28 @@ public class AsReceptionService {
             throw new IllegalArgumentException("활성 상태의 기사만 배정할 수 있습니다.");
         }
 
+        Member previousTechnician = reception.getTechnician();
         reception.updateTechnician(technician);
+
+        assignmentHistoryRepository.save(new AsTechnicianAssignmentHistory(
+                reception,
+                previousTechnician,
+                technician,
+                reason,
+                changedBy
+        ));
+
         return AsReceptionDto.DetailResponse.from(reception);
     }
+
+    @Transactional(readOnly = true)
+    public List<AsReceptionDto.TechnicianAssignmentHistoryResponse>
+    getTechnicianAssignmentHistory(Long receptionId) {
+        return assignmentHistoryRepository
+                .findByAsReception_IdOrderByCreatedAtDescIdDesc(receptionId)
+                .stream()
+                .map(AsReceptionDto.TechnicianAssignmentHistoryResponse::from)
+                .toList();
+    }
+
 }

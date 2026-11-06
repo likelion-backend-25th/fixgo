@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
+import net.likelion.bebc25.fixgo.as.entity.AsTechnicianAssignmentHistory;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.customer.entity.Customer;
 import net.likelion.bebc25.fixgo.product.entity.Product;
@@ -174,6 +175,46 @@ public class AsReceptionDto {
                     reception.getCreatedAt()
             );
         }
+    }
+
+    public record updateTechnicianRequest(
+            @NotNull Long technicianId,
+            @NotBlank @Size(max = 1000) String reason
+    ) {}
+
+    public record AssignmentHistoryMember(Long id, String name) {}
+
+
+    public record TechnicianAssignmentHistoryResponse(
+            Long receptionId,
+            AssignmentHistoryMember previousTechnician,
+            AssignmentHistoryMember newTechnician,
+            String reason,
+            LocalDateTime createdAt,
+            AssignmentHistoryMember changedBy
+    ) {
+
+        public static TechnicianAssignmentHistoryResponse from(
+                AsTechnicianAssignmentHistory history
+        ) {
+
+            return new TechnicianAssignmentHistoryResponse(
+                    history.getAsReception().getId(),
+                    toMember(history.getPreviousTechnician()),
+                    toMember(history.getNewTechnician()),
+                    history.getReason(),
+                    history.getCreatedAt(),
+                    toMember(history.getChangedBy())
+            );
+        }
+
+        private static AssignmentHistoryMember toMember(Member member) {
+            if (member == null) {
+                return null;
+            }
+            return new AssignmentHistoryMember(member.getId(), member.getName());
+        }
+
     }
 
 }
