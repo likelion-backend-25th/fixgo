@@ -127,10 +127,12 @@ class ShipmentStatisticsRepositoryTest {
         ReflectionTestUtils.setField(shipment, "recipientName", "홍길동");
         ReflectionTestUtils.setField(shipment, "recipientPhone", "010-0000-0000");
         ReflectionTestUtils.setField(shipment, "status", shipmentStatus);
-        ReflectionTestUtils.setField(shipment, "createdAt", createdAt);
-        ReflectionTestUtils.setField(shipment, "updatedAt", createdAt);
-        ReflectionTestUtils.setField(shipment, "createdBy", member);
-        ReflectionTestUtils.setField(shipment, "updatedBy", member);
         entityManager.persist(shipment);
+        entityManager.flush();
+        entityManager.createNativeQuery("UPDATE shipment SET created_at = :createdAt WHERE id = :id")
+                     .setParameter("createdAt", createdAt)
+                     .setParameter("id", shipment.getId())
+                     .executeUpdate();
+        entityManager.refresh(shipment);
     }
 }
