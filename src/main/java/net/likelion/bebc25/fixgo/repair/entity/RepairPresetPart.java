@@ -9,17 +9,17 @@ import net.likelion.bebc25.fixgo.repair.entity.part.Part;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(indexes = {@Index(name = "IDX_RPP_PART", columnList = "product_model_id")})
+@Table(indexes = {@Index(name = "IDX_RPP_PART", columnList = "repair_preset_id, part_id")})
 public class RepairPresetPart {
     @EmbeddedId
     RepairPresetPartId id;
 
-    @MapsId
+    @MapsId("repairPresetId")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "repair_preset_id", nullable = false)
     RepairPreset repairPreset;
 
-    @MapsId
+    @MapsId("partId")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "part_id", nullable = false)
     Part part;

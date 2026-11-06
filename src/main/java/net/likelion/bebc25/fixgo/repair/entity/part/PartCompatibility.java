@@ -19,12 +19,12 @@ public class PartCompatibility {
     @EmbeddedId
     PartCompatibilityId id;
 
-    @MapsId
+    @MapsId("partId")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "part_id", nullable = false)
     Part part;
 
-    @MapsId
+    @MapsId("productModelId")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_model_id", nullable = false)
     ProductModel productModel;

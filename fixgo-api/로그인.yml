@@ -10,10 +10,9 @@ http:
     type: json
     data: |-
       {
-        "email": "test2@fixgo.com",
-        "password": "1234"
+        "email": "admin001@fixgo.com",
+        "password": "admin1234"
       }
-  auth: inherit
 
 runtime:
   actions:
