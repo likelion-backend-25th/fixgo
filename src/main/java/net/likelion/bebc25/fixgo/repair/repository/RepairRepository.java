@@ -30,10 +30,15 @@ public interface RepairRepository extends JpaRepository<Repair, Long> {
             WHERE r.technician.id = :technicianId
             AND r.status = :status
             """)
-    List<Repair> findByTechnicianIDAndStatus(@Param("technicianId") Long technicianId, @Param("status") RepairStatus status);
+    List<Repair> findByTechnicianIDAndStatus(
+            @Param("technicianId") Long technicianId,
+            @Param("status") RepairStatus status
+    );
 
-
-    List<Repair> findByTechnicianIdAndStatusNot(Long technicianId, RepairStatus status);
+    List<Repair> findByTechnicianIdAndStatusNot(
+            Long technicianId,
+            RepairStatus status
+    );
 
     // A/S 접수번호로 수리 정보 조회
     @Query("""
@@ -42,17 +47,17 @@ public interface RepairRepository extends JpaRepository<Repair, Long> {
             JOIN r.asReception a
             WHERE a.receptionNumber = :receptionNumber
             """)
-    Optional<Repair> findByReceptionNumber(@Param("receptionNumber") String receptionNumber);
-
+    Optional<Repair> findByReceptionNumber(
+            @Param("receptionNumber") String receptionNumber
+    );
 
     boolean existsByIdAndStatus(Long repairId, RepairStatus status);
 
-<<<<<<< HEAD
+    // 수리 ID와 담당 기사 ID로 수리 정보 조회
     Optional<Repair> findByIdAndTechnicianId(Long id, Long technicianId);
-=======
 
+    // 수리 정보 비관적 쓰기 잠금 조회
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT r FROM Repair r WHERE r.id = :id")
     Optional<Repair> findByIdWithLock(@Param("id") Long id);
->>>>>>> develop
 }
