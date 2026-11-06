@@ -47,4 +47,5 @@ public class AsStatusHistory {
         this.reason = reason;
         this.changedBy = changedBy;
     }
+
 }

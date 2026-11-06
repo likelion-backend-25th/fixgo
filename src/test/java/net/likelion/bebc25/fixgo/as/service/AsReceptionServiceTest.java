@@ -6,6 +6,7 @@ import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
 import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
 import net.likelion.bebc25.fixgo.as.repository.AsStatusHistoryRepository;
+import net.likelion.bebc25.fixgo.as.repository.AsTechnicianAssignmentHistoryRepository;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.entity.Role;
 import net.likelion.bebc25.fixgo.auth.entity.Status;
@@ -46,6 +47,8 @@ class AsReceptionServiceTest {
     @Autowired
     private AsStatusHistoryRepository asStatusHistoryRepository;
     @Autowired
+    private AsTechnicianAssignmentHistoryRepository assignmentHistoryRepository;
+    @Autowired
     private CustomerPortalLinkRepository customerPortalLinkRepository;
     @Autowired
     private MemberRepository memberRepository;
@@ -53,6 +56,8 @@ class AsReceptionServiceTest {
     private AsReceptionFixture asReceptionFixture;
     @Autowired
     private EntityManager entityManager;
+
+    private static final String REASSIGNMENT_REASON = "Schedule change";
 
     private AsReception reception;
     private CustomUserDetails receptionist;
@@ -320,8 +325,11 @@ class AsReceptionServiceTest {
     @Test
     @DisplayName("담당 기사를 재배정하면 변경 내용이 DB에 저장된다")
     void updateTechnician_success() {
+        Long previousTechnicianId = reception.getTechnician().getId();
+
         // when
-        var response = asReceptionService.updateTechnician(reception.getId(), technician.getId());
+        var response = asReceptionService.updateTechnician(
+                reception.getId(), technician.getId(), REASSIGNMENT_REASON, receptionist.getMember());
         entityManager.flush();
         entityManager.clear();
 
@@ -329,6 +337,20 @@ class AsReceptionServiceTest {
         assertThat(response.technician().id()).isEqualTo(technician.getId());
         assertThat(asReceptionRepository.findById(reception.getId()).orElseThrow().getTechnician().getId())
                 .isEqualTo(technician.getId());
+
+        var history = assignmentHistoryRepository.findAll();
+        assertThat(history).singleElement().satisfies(entry -> {
+            assertThat(((AsReception) ReflectionTestUtils.getField(entry, "asReception")).getId())
+                    .isEqualTo(reception.getId());
+            assertThat(((Member) ReflectionTestUtils.getField(entry, "previousTechnician")).getId())
+                    .isEqualTo(previousTechnicianId);
+            assertThat(((Member) ReflectionTestUtils.getField(entry, "newTechnician")).getId())
+                    .isEqualTo(technician.getId());
+            assertThat(ReflectionTestUtils.getField(entry, "reason")).isEqualTo(REASSIGNMENT_REASON);
+            assertThat(ReflectionTestUtils.getField(entry, "createdAt")).isNotNull();
+            assertThat(((Member) ReflectionTestUtils.getField(entry, "changedBy")).getId())
+                    .isEqualTo(receptionist.getId());
+        });
     }
 
     @Test
@@ -354,10 +376,12 @@ class AsReceptionServiceTest {
         entityManager.flush();
 
         // when & then
-        assertThatThrownBy(() -> asReceptionService.updateTechnician(reception.getId(), technician.getId()))
+        assertThatThrownBy(() -> asReceptionService.updateTechnician(
+                reception.getId(), technician.getId(), REASSIGNMENT_REASON, receptionist.getMember()))
                 .isInstanceOf(NoSuchElementException.class);
         assertThat(asReceptionRepository.findById(reception.getId()).orElseThrow().getTechnician().getId())
                 .isEqualTo(previousTechnicianId);
+        assertThat(assignmentHistoryRepository.count()).isZero();
     }
 
     @Test
@@ -367,9 +391,11 @@ class AsReceptionServiceTest {
         Long previousTechnicianId = reception.getTechnician().getId();
 
         // when & then
-        assertThatThrownBy(() -> asReceptionService.updateTechnician(reception.getId(), -1L))
+        assertThatThrownBy(() -> asReceptionService.updateTechnician(
+                reception.getId(), -1L, REASSIGNMENT_REASON, receptionist.getMember()))
                 .isInstanceOf(NoSuchElementException.class).hasMessage("존재하지 않는 직원입니다.");
         assertThat(reception.getTechnician().getId()).isEqualTo(previousTechnicianId);
+        assertThat(assignmentHistoryRepository.count()).isZero();
     }
 
     @Test
@@ -379,9 +405,11 @@ class AsReceptionServiceTest {
         Long previousTechnicianId = reception.getTechnician().getId();
 
         // when & then
-        assertThatThrownBy(() -> asReceptionService.updateTechnician(reception.getId(), receptionist.getId()))
+        assertThatThrownBy(() -> asReceptionService.updateTechnician(
+                reception.getId(), receptionist.getId(), REASSIGNMENT_REASON, receptionist.getMember()))
                 .isInstanceOf(IllegalArgumentException.class).hasMessage("수리 기사만 담당자로 배정할 수 있습니다.");
         assertThat(reception.getTechnician().getId()).isEqualTo(previousTechnicianId);
+        assertThat(assignmentHistoryRepository.count()).isZero();
     }
 
     @Test
@@ -392,9 +420,11 @@ class AsReceptionServiceTest {
         Long previousTechnicianId = reception.getTechnician().getId();
 
         // when & then
-        assertThatThrownBy(() -> asReceptionService.updateTechnician(reception.getId(), technician.getId()))
+        assertThatThrownBy(() -> asReceptionService.updateTechnician(
+                reception.getId(), technician.getId(), REASSIGNMENT_REASON, receptionist.getMember()))
                 .isInstanceOf(IllegalArgumentException.class).hasMessage("활성 상태의 기사만 배정할 수 있습니다.");
         assertThat(reception.getTechnician().getId()).isEqualTo(previousTechnicianId);
+        assertThat(assignmentHistoryRepository.count()).isZero();
     }
 
     private CustomUserDetails missingUser() {

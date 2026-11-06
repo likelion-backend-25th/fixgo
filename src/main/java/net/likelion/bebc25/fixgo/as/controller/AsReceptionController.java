@@ -14,6 +14,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,7 +26,7 @@ import java.util.List;
 public class AsReceptionController {
 
     private final AsReceptionService asReceptionService;
-    
+
     private final AsStatusHistoryService asStatusHistoryService;
 
     // 접수 등록
@@ -57,4 +58,21 @@ public class AsReceptionController {
     public List<AsStatusHistoryDto> getHistory(@PathVariable Long id) {
         return asStatusHistoryService.getHistory(id);
     }
+
+    // 기사 재배정
+    @PreAuthorize("hasAnyRole('RECEPTIONIST', 'ADMIN')")
+    @PatchMapping("/{receptionId}/technician")
+    public ResponseEntity<Void> updateTechnician(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long receptionId, @Valid @RequestBody AsReceptionDto.updateTechnicianRequest request) {
+
+        asReceptionService.updateTechnician(receptionId, request.technicianId(), request.reason(), userDetails.getMember());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasAnyRole('RECEPTIONIST', 'ADMIN')")
+    @GetMapping("/{receptionId}/technician-history")
+    public List<AsReceptionDto.TechnicianAssignmentHistoryResponse>
+    getTechnicianAssignmentHistory(@PathVariable Long receptionId) {
+        return asReceptionService.getTechnicianAssignmentHistory(receptionId);
+    }
+
 }
