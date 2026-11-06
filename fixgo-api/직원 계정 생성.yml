@@ -1,7 +1,7 @@
 info:
   name: 직원 계정 생성
   type: http
-  seq: 6
+  seq: 7
 
 http:
   method: POST
@@ -17,7 +17,6 @@ http:
         "address": "123-4567",
         "role": "ROLE_RECEPTIONIST",
         "profileImgUrl": "asdf"
-        
       }
   auth: inherit
 

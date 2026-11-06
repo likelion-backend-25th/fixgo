@@ -188,6 +188,69 @@ class RepairServiceTest {
         verify(repairRepository, times(1)).findByReceptionNumber(receptionNumber);
     }
 
+    // 본인 담당 수리 목록 조회 테스트
+    @Test
+    @DisplayName("로그인한 기사에게 배정된 수리 목록을 조회한다.")
+    void getMyRepairsTest() {
+
+        Long technicianId = 20L;
+
+        Repair repair = createRepair();
+
+        when(repair.getAsReception().getId()).thenReturn(10L);
+        when(repair.getTechnician().getId()).thenReturn(technicianId);
+
+        when(repairRepository.findByTechnicianId(technicianId)).thenReturn(List.of(repair));
+
+        List<RepairResponse> response = repairService.getMyRepairs(technicianId);
+
+        assertEquals(1, response.size());
+        assertEquals(1L, response.get(0).getId());
+        assertEquals(10L, response.get(0).getAsReceptionId());
+        assertEquals(technicianId, response.get(0).getTechnicianId());
+
+        verify(repairRepository, times(1)).findByTechnicianId(technicianId);
+    }
+
+    // 본인 담당 수리 상세 조회 테스트
+    @Test
+    @DisplayName("로그인한 기사에게 배정된 수리 상세 정보를 조회한다.")
+    void getMyRepairTest() {
+
+        Long repairId = 1L;
+        Long technicianId = 20L;
+
+        Repair repair = createRepair();
+
+        when(repair.getAsReception().getId()).thenReturn(10L);
+        when(repair.getTechnician().getId()).thenReturn(technicianId);
+
+        when(repairRepository.findByIdAndTechnicianId(repairId, technicianId)).thenReturn(Optional.of(repair));
+
+        RepairResponse response = repairService.getMyRepair(repairId, technicianId);
+
+        assertEquals(repairId, response.getId());
+        assertEquals(10L, response.getAsReceptionId());
+        assertEquals(technicianId, response.getTechnicianId());
+
+        verify(repairRepository, times(1)).findByIdAndTechnicianId(repairId, technicianId);
+    }
+
+    // 다른 기사 담당 수리 상세 조회 차단 테스트
+    @Test
+    @DisplayName("본인에게 배정되지 않은 수리 건은 조회할 수 없다.")
+    void getMyRepairNotAssignedTest() {
+
+        Long repairId = 1L;
+        Long technicianId = 30L;
+
+        when(repairRepository.findByIdAndTechnicianId(repairId, technicianId)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class, () -> repairService.getMyRepair(repairId, technicianId));
+
+        verify(repairRepository, times(1)).findByIdAndTechnicianId(repairId, technicianId);
+    }
+
     // 수리 수정 테스트
     @Test
     void updateRepairTest() {
@@ -240,7 +303,6 @@ class RepairServiceTest {
     }
 
     // 수리 상태 변경 테스트
-    // DIAGNOSING -> REQUESTED
     @Test
     @DisplayName("수리 상태 변경을 공통 상태 관리 서비스에 위임한다.")
     void changeRepairStatusTest() {
@@ -257,7 +319,6 @@ class RepairServiceTest {
     }
 
     // 허용되지 않은 상태 변경 테스트
-    // DIAGNOSING -> APPROVED
     @Test
     @DisplayName("허용되지 않은 상태 변경 요청을 공통 상태 관리 서비스에 위임한다.")
     void changeRepairStatusInvalidTest() {
@@ -273,5 +334,23 @@ class RepairServiceTest {
         verify(repairStatusService).changeStatus(repair, RepairStatus.APPROVED, TEST_EMAIL);
 
         assertEquals(RepairStatus.DIAGNOSING, repair.getStatus());
+    }
+
+    // ==========================================
+    // REQ-REPAIR-05 수리 시작 테스트
+    // ==========================================
+
+    // 담당 기사의 수리 시작 성공 테스트
+    @Test
+    @DisplayName("담당 기사가 수리를 시작한다.")
+    void startRepairSuccessTest() {
+        Repair repair = createRepair();
+
+        when(repairRepository.findByIdAndTechnicianId(1L, 1L)).thenReturn(Optional.of(repair));
+
+        repairService.startRepair(1L, 1L, "technician");
+
+        verify(repairRepository).findByIdAndTechnicianId(1L, 1L);
+        verify(repairStatusService).changeStatus(repair, RepairStatus.REPAIRING, "technician");
     }
 }
