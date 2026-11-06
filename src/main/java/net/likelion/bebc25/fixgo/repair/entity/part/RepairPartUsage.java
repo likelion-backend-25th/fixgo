@@ -17,12 +17,12 @@ public class RepairPartUsage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @MapsId
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "part_id", nullable = false)
+    @JoinColumn(name = "repair_work_id", nullable = false)
     private RepairWork repairWork;
 
-    @MapsId
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "part_id", nullable = false)
     private Part part;
