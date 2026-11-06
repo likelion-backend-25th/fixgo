@@ -1,0 +1,27 @@
+info:
+  name: 고객 등록
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{baseUrl}}/customers"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "홍길동",
+        "phone": "010-1234-5678",
+        "email": "hong@gmail.com",
+        "zipcode": "12345",
+        "basicAddress": "OO시 OO구 OO대로 123",
+        "detailAddress": "OOO동 OOO호"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

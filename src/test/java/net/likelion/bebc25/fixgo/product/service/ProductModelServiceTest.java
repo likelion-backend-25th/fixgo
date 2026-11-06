@@ -9,8 +9,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
-import java.util.List;
 import java.util.NoSuchElementException;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
@@ -77,61 +79,81 @@ public class ProductModelServiceTest {
     }
 
     @Test
-    @DisplayName("제품명으로 검색한다")
-    void search_byName() {
+    @DisplayName("keyword로 제품명을 검색한다")
+    void search_byNameKeyword() {
         saveProductModel("스마트폰", "SZ-P24", Category.PHONE);
         saveProductModel("스마트폰 프로", "SZ-P25", Category.PHONE);
         saveProductModel("노트북", "SZ-N16", Category.LAPTOP);
 
-        List<ProductModelDto.Response> responses = productModelService.search(
-                new ProductModelDto.SearchRequest("스마트", null)
+        Page<ProductModelDto.Response> page = productModelService.search(
+                "스마트", PageRequest.of(0, 20, Sort.by("modelName").ascending())
         );
 
-        assertThat(responses).hasSize(2);
-        assertThat(responses).extracting(ProductModelDto.Response::name)
+        assertThat(page.getTotalElements()).isEqualTo(2);
+        assertThat(page.getContent()).extracting(ProductModelDto.Response::name)
                 .containsExactlyInAnyOrder("스마트폰", "스마트폰 프로");
     }
 
     @Test
-    @DisplayName("모델명으로 검색한다")
-    void search_byModelName() {
+    @DisplayName("keyword로 모델명을 검색한다")
+    void search_byModelNameKeyword() {
         saveProductModel("스마트폰", "SZ-P24", Category.PHONE);
         saveProductModel("스마트폰 프로", "SZ-P25", Category.PHONE);
         saveProductModel("노트북", "SZ-N16", Category.LAPTOP);
 
-        List<ProductModelDto.Response> responses = productModelService.search(
-                new ProductModelDto.SearchRequest(null, "SZ-P")
+        Page<ProductModelDto.Response> page = productModelService.search(
+                "SZ-P", PageRequest.of(0, 20, Sort.by("modelName").ascending())
         );
 
-        assertThat(responses).hasSize(2);
-        assertThat(responses).extracting(ProductModelDto.Response::modelName)
+        assertThat(page.getTotalElements()).isEqualTo(2);
+        assertThat(page.getContent()).extracting(ProductModelDto.Response::modelName)
                 .containsExactlyInAnyOrder("SZ-P24", "SZ-P25");
     }
 
     @Test
-    @DisplayName("검색 조건이 모두 비어 있으면 빈 목록을 반환한다")
-    void search_allBlank_returnsEmpty() {
+    @DisplayName("keyword가 없으면 전체 목록을 페이징하여 반환한다")
+    void search_withoutKeyword_returnsAllPaged() {
         saveProductModel("스마트폰", "SZ-P24", Category.PHONE);
+        saveProductModel("스마트폰 프로", "SZ-P25", Category.PHONE);
+        saveProductModel("노트북", "SZ-N16", Category.LAPTOP);
 
-        List<ProductModelDto.Response> responses = productModelService.search(
-                new ProductModelDto.SearchRequest("  ", "  ")
+        Page<ProductModelDto.Response> page = productModelService.search(
+                null, PageRequest.of(0, 2, Sort.by("modelName").ascending())
         );
 
-        assertThat(responses).isEmpty();
+        assertThat(page.getTotalElements()).isEqualTo(3);
+        assertThat(page.getTotalPages()).isEqualTo(2);
+        assertThat(page.getContent()).hasSize(2);
+        assertThat(page.getContent()).extracting(ProductModelDto.Response::modelName)
+                .containsExactly("SZ-N16", "SZ-P24");
     }
 
     @Test
-    @DisplayName("제품명이 있으면 모델명 조건보다 제품명 검색을 우선한다")
-    void search_nameTakesPriority() {
+    @DisplayName("keyword가 빈 문자열이면 전체 목록을 페이징하여 반환한다")
+    void search_emptyKeyword_returnsAllPaged() {
         saveProductModel("스마트폰", "SZ-P24", Category.PHONE);
         saveProductModel("노트북", "SZ-N16", Category.LAPTOP);
 
-        List<ProductModelDto.Response> responses = productModelService.search(
-                new ProductModelDto.SearchRequest("스마트폰", "SZ-N")
+        Page<ProductModelDto.Response> page = productModelService.search(
+                "", PageRequest.of(0, 20)
         );
 
-        assertThat(responses).hasSize(1);
-        assertThat(responses.getFirst().name()).isEqualTo("스마트폰");
+        assertThat(page.getTotalElements()).isEqualTo(2);
+        assertThat(page.getContent()).extracting(ProductModelDto.Response::name)
+                .containsExactlyInAnyOrder("스마트폰", "노트북");
+    }
+
+    @Test
+    @DisplayName("keyword에 해당하는 모델이 없으면 빈 페이지를 반환한다")
+    void search_noMatch_returnsEmptyPage() {
+        saveProductModel("스마트폰", "SZ-P24", Category.PHONE);
+
+        Page<ProductModelDto.Response> page = productModelService.search(
+                "없는키워드", PageRequest.of(0, 20)
+        );
+
+        assertThat(page.getTotalElements()).isZero();
+        assertThat(page.getContent()).isEmpty();
     }
 
     @Test
