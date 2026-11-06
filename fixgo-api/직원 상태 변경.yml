@@ -1,0 +1,23 @@
+info:
+  name: 직원 상태 변경
+  type: http
+  seq: 13
+
+http:
+  method: PATCH
+  url: "{{baseUrl}}/admin/member/status"
+  body:
+    type: json
+    data: |-
+      {
+        "email":"test2@fixgo.com",
+        "status":"INACTIVE"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

@@ -14,13 +14,13 @@ import java.time.LocalDate;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/admin/statistics/payment")
+@RequestMapping("/api/v1/admin/statistics")
 @PreAuthorize("hasRole('ADMIN')")
 public class PaymentStatisticsController {
 
     private final PaymentStatisticsService paymentStatisticsService;
 
-    @GetMapping
+    @GetMapping("/payments")
     public PaymentStatisticsDto getPaymentStatistics(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
 

@@ -3,18 +3,20 @@ package net.likelion.bebc25.fixgo.auth.controller;
 import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.auth.dto.MemberDto;
 import net.likelion.bebc25.fixgo.auth.service.MemberService;
+import net.likelion.bebc25.fixgo.auth.service.RefreshTokenService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 
 @RestController
-@RequestMapping("/api/v1/admin")
+@RequestMapping("/api/v1/admin/member")
 @RequiredArgsConstructor
 public class AdminController {
     private final MemberService memberService;
+    private final RefreshTokenService refreshTokenService;
 
-    @PostMapping("/member")
+    @PostMapping()
     public ResponseEntity<MemberDto.DetailResponse> createMember(
             @RequestBody MemberDto.CreateRequest request
     ) {
@@ -22,21 +24,22 @@ public class AdminController {
         return ResponseEntity.created(URI.create("/api/v1/member" + response.id())).body(response);
     }
 
-    @PatchMapping("/member/status")
+    @PatchMapping("/status")
     public ResponseEntity<MemberDto.BriefResponse> updateStatus(
             @RequestBody MemberDto.StatusChangeRequest request
     ) {
+
         return ResponseEntity.ok(memberService.changeStatus(request));
     }
 
-    @PatchMapping("/member/role")
+    @PatchMapping("/role")
     public ResponseEntity<MemberDto.BriefResponse> updateRole(
             @RequestBody MemberDto.RoleChangeRequest request
     ) {
         return ResponseEntity.ok(memberService.changeRole(request));
     }
 
-    @PatchMapping("/member/profile")
+    @PatchMapping("/profile")
     public ResponseEntity<MemberDto.DetailResponse> updateProfile(
             @RequestBody MemberDto.ProfileUpdateRequest request
     ) {

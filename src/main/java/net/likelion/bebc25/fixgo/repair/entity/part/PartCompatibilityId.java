@@ -14,7 +14,7 @@ import java.io.Serializable;
 @EqualsAndHashCode
 public class PartCompatibilityId implements Serializable {
     @Column
-    private Long partsId;
+    private Long partId;
 
     @Column
     private Long productModelId;

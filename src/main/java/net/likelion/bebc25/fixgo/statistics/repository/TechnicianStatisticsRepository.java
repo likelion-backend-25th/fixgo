@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface TechnicianStatisticsRepository extends Repository<AsReception, Long> {
@@ -33,13 +34,17 @@ public interface TechnicianStatisticsRepository extends Repository<AsReception, 
             FROM Member m
             LEFT JOIN AsReception ar
                 ON ar.technician = m
+                AND ar.createdAt >= :startDateTime
+                AND ar.createdAt < :endDateTime
             WHERE m.role = :technicianRole
             GROUP BY m.id, m.name
             ORDER BY m.name
             """)
     List<TechnicianStatistics> findTechnicianStatistics(
             @Param("technicianRole") Role technicianRole,
-            @Param("completedStatus") AsReceptionStatus completedStatus
+            @Param("completedStatus") AsReceptionStatus completedStatus,
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime
     );
 
     @Query("""
@@ -48,14 +53,18 @@ public interface TechnicianStatisticsRepository extends Repository<AsReception, 
                 COALESCE(SUM(pa.amount), 0) AS revenue
             FROM AsReception ar
             JOIN PaymentBill pb
-                ON pb.asReceptionId = ar.id
+                ON pb.asReception.id = ar.id
             JOIN PaymentAttempt pa
                 ON pa.paymentBill = pb
             WHERE pa.status = :paymentStatus
+              AND pa.approvedAt >= :startDateTime
+              AND pa.approvedAt < :endDateTime
             GROUP BY ar.technician.id
             """)
     List<TechnicianRevenue> findTechnicianRevenue(
-            @Param("paymentStatus") PaymentAttemptStatus paymentStatus
+            @Param("paymentStatus") PaymentAttemptStatus paymentStatus,
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime
     );
 
     // 기사별 평균 수리 소요 시간 (초)
@@ -78,6 +87,8 @@ public interface TechnicianStatisticsRepository extends Repository<AsReception, 
                 AND start_history.created_at < complete_history.created_at
             WHERE complete_history.from_status = 'REPAIRING'
               AND complete_history.to_status = 'COMPLETED'
+              AND complete_history.created_at >= :startDateTime
+              AND complete_history.created_at < :endDateTime
               AND start_history.created_at = (
                   SELECT MAX(previous_history.created_at)
                   FROM as_status_history previous_history
@@ -87,7 +98,10 @@ public interface TechnicianStatisticsRepository extends Repository<AsReception, 
               )
             GROUP BY r.technician_id
             """, nativeQuery = true)
-    List<TechnicianAverageDuration> findTechnicianAverageDurations();
+    List<TechnicianAverageDuration> findTechnicianAverageDurations(
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime
+    );
 
     // 기사별 건수 조회 결과
     interface TechnicianStatistics {

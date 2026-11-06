@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ModelStatisticsRepository extends Repository<ProductModel, Long> {
@@ -25,11 +26,15 @@ public interface ModelStatisticsRepository extends Repository<ProductModel, Long
             FROM ProductModel pm
             LEFT JOIN Product p ON p.productModelId = pm.id
             LEFT JOIN AsReception ar ON ar.product = p
+                AND ar.createdAt >= :startDateTime
+                AND ar.createdAt < :endDateTime
             GROUP BY pm.id, pm.modelName, pm.category
             ORDER BY pm.modelName
             """)
     List<ModelStatistics> findModelStatistics(
-            @Param("completedStatus") AsReceptionStatus completedStatus
+            @Param("completedStatus") AsReceptionStatus completedStatus,
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime
     );
 
     @Query("""
@@ -40,11 +45,15 @@ public interface ModelStatisticsRepository extends Repository<ProductModel, Long
             JOIN Product p ON p.productModelId = pm.id
             JOIN AsReception ar ON ar.product = p
             WHERE pm.id = :modelId
+              AND ar.createdAt >= :startDateTime
+              AND ar.createdAt < :endDateTime
             GROUP BY ar.symptom
             ORDER BY COUNT(ar) DESC, ar.symptom ASC
             """)
     List<ModelSymptomStatistics> findModelSymptomStatistics(
-            @Param("modelId") Long modelId
+            @Param("modelId") Long modelId,
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime
     );
 
     interface ModelStatistics {

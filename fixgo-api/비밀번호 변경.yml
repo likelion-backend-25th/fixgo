@@ -1,0 +1,23 @@
+info:
+  name: 비밀번호 변경
+  type: http
+  seq: 9
+
+http:
+  method: PATCH
+  url: "{{baseUrl}}/member/me/password"
+  body:
+    type: json
+    data: |-
+      {
+        "email":"admin001@fixgo.com",
+        "password":"admin123"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

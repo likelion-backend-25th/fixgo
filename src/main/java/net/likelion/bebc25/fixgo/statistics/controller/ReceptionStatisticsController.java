@@ -14,7 +14,7 @@ import java.time.LocalDate;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/statistics")
+@RequestMapping("/api/v1/admin/statistics")
 @PreAuthorize("hasRole('ADMIN')")
 public class ReceptionStatisticsController {
 

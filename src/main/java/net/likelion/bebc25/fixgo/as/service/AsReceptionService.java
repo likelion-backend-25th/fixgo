@@ -12,6 +12,7 @@ import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
 import net.likelion.bebc25.fixgo.customer.entity.Customer;
 import net.likelion.bebc25.fixgo.customer.repository.CustomerRepository;
+import net.likelion.bebc25.fixgo.portal.service.CustomerPortalLinkService;
 import net.likelion.bebc25.fixgo.product.entity.Product;
 import net.likelion.bebc25.fixgo.product.repository.ProductRepository;
 import org.springframework.data.domain.Page;
@@ -36,6 +37,7 @@ public class AsReceptionService {
     private final CustomerRepository customerRepository;
     private final ProductRepository productRepository;
     private final MemberRepository memberRepository;
+    private final CustomerPortalLinkService customerPortalLinkService;
 
     // 접수 등록
     @Transactional
@@ -65,6 +67,9 @@ public class AsReceptionService {
         // A/S 접수 등록
         AsReception asReception = asReceptionRepository.save(request.toEntity(customer, product, receptionist, technician));
 
+        // 고객 포털 링크 발급
+        String customerLink = customerPortalLinkService.issueLink(asReception.getId());
+
         // 최초 접수 상태 이력 저장
         asStatusHistoryService.record(asReception, null, AsReceptionStatus.RECEIVED.name(), "A/S 최초 접수", receptionist);
 
@@ -74,7 +79,7 @@ public class AsReceptionService {
     // A/S 접수 상태 변경
     @Transactional
     public void changeReceptionStatus(Long receptionId, AsReceptionStatus newStatus, String reason, CustomUserDetails userDetails) {
-        AsReception asReception = asReceptionRepository.findById(receptionId).orElseThrow(() -> new NoSuchElementException("존재하지 않는 A/S 접수입니다."));
+        AsReception asReception = asReceptionRepository.findByIdWithLock(receptionId).orElseThrow(() -> new NoSuchElementException("존재하지 않는 A/S 접수입니다."));
 
         AsReceptionStatus currentStatus = asReception.getStatus();
 
@@ -111,10 +116,20 @@ public class AsReceptionService {
         statuses.add(AsReceptionStatus.COMPLETED);
         AsReception reception = asReceptionRepository.findByIdAndStatusNotIn(receptionId, statuses).orElseThrow(() -> new NoSuchElementException("존재하지 않는 접수입니다."));
 
-        Member technician = memberRepository.findById(technicianId).orElseThrow(() -> new NoSuchElementException("존재하지 않는 직원입니다."));
+        Member technician = memberRepository.findById(technicianId).
+                orElseThrow(() -> new NoSuchElementException(
+                        "존재하지 않는 직원입니다."
+                ));
+
+        if (technician.getRole() != Role.ROLE_TECHNICIAN) {
+            throw new IllegalArgumentException("수리 기사만 담당자로 배정할 수 있습니다.");
+        }
+
+        if (technician.getStatus() != Status.ACTIVE) {
+            throw new IllegalArgumentException("활성 상태의 기사만 배정할 수 있습니다.");
+        }
 
         reception.updateTechnician(technician);
-
         return AsReceptionDto.DetailResponse.from(reception);
     }
 }

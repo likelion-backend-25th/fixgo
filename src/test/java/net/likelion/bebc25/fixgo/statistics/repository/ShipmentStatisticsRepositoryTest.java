@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -80,10 +81,15 @@ class ShipmentStatisticsRepositoryTest {
             persistShipment(customer, product, member, "3", ShipmentStatus.SHIPPING);
             persistShipment(customer, product, member, "4", ShipmentStatus.DELIVERED);
             persistShipment(customer, product, member, "5", ShipmentStatus.PICKED_UP);
+            persistShipment(customer, product, member, "6", ShipmentStatus.READY, LocalDateTime.now().minusYears(1));
         });
 
+        LocalDateTime startDateTime = LocalDate.now().atStartOfDay();
+        LocalDateTime endDateTime = LocalDate.now().plusDays(1).atStartOfDay();
+
         ShipmentStatisticsRepository.ShipmentStatistics statistics = shipmentStatisticsRepository.countByStatus(
-                ShipmentStatus.READY, ShipmentStatus.SHIPPING, ShipmentStatus.DELIVERED, ShipmentStatus.PICKED_UP);
+                ShipmentStatus.READY, ShipmentStatus.SHIPPING, ShipmentStatus.DELIVERED, ShipmentStatus.PICKED_UP,
+                startDateTime, endDateTime);
 
         assertThat(statistics.getReadyCount()).isEqualTo(2L);
         assertThat(statistics.getShippingCount()).isEqualTo(1L);
@@ -94,7 +100,8 @@ class ShipmentStatisticsRepositoryTest {
     @DisplayName("배송 건이 없으면 세 건수 모두 0이다.")
     void countByStatusWhenEmpty() {
         ShipmentStatisticsRepository.ShipmentStatistics statistics = shipmentStatisticsRepository.countByStatus(
-                ShipmentStatus.READY, ShipmentStatus.SHIPPING, ShipmentStatus.DELIVERED, ShipmentStatus.PICKED_UP);
+                ShipmentStatus.READY, ShipmentStatus.SHIPPING, ShipmentStatus.DELIVERED, ShipmentStatus.PICKED_UP,
+                LocalDate.now().atStartOfDay(), LocalDate.now().plusDays(1).atStartOfDay());
 
         assertThat(statistics.getReadyCount()).isZero();
         assertThat(statistics.getShippingCount()).isZero();
@@ -103,19 +110,25 @@ class ShipmentStatisticsRepositoryTest {
 
     private void persistShipment(
             Customer customer, Product product, Member member, String number, ShipmentStatus shipmentStatus) {
+        persistShipment(customer, product, member, number, shipmentStatus, LocalDateTime.now());
+    }
+
+    private void persistShipment(
+            Customer customer, Product product, Member member, String number, ShipmentStatus shipmentStatus,
+            LocalDateTime createdAt
+    ) {
         AsReception reception = new AsReception(PREFIX + "RECEPTION-" + number, customer, product, member, member,
                                                 "배터리", "배터리 상세", null, ReturnMethod.DELIVERY, null);
         entityManager.persist(reception);
 
         Shipment shipment = BeanUtils.instantiateClass(Shipment.class);
-        LocalDateTime now = LocalDateTime.now();
         ReflectionTestUtils.setField(shipment, "asReception", reception);
         ReflectionTestUtils.setField(shipment, "returnMethod", reception.getReturnMethod());
         ReflectionTestUtils.setField(shipment, "recipientName", "홍길동");
         ReflectionTestUtils.setField(shipment, "recipientPhone", "010-0000-0000");
         ReflectionTestUtils.setField(shipment, "status", shipmentStatus);
-        ReflectionTestUtils.setField(shipment, "createdAt", now);
-        ReflectionTestUtils.setField(shipment, "updatedAt", now);
+        ReflectionTestUtils.setField(shipment, "createdAt", createdAt);
+        ReflectionTestUtils.setField(shipment, "updatedAt", createdAt);
         ReflectionTestUtils.setField(shipment, "createdBy", member);
         ReflectionTestUtils.setField(shipment, "updatedBy", member);
         entityManager.persist(shipment);

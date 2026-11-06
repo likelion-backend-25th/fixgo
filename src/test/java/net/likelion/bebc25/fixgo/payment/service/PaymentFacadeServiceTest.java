@@ -1,5 +1,8 @@
 package net.likelion.bebc25.fixgo.payment.service;
 
+import net.likelion.bebc25.fixgo.config.JpaConfig;
+import net.likelion.bebc25.fixgo.support.AsReceptionFixture;
+import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.payment.client.TossDto;
 import net.likelion.bebc25.fixgo.payment.client.TossPaymentsClient;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
@@ -9,6 +12,7 @@ import net.likelion.bebc25.fixgo.payment.exception.PaymentException;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentAttemptRepository;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentBillRepository;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,10 +39,21 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
 @DataJpaTest
-@Import({PaymentFacadeService.class, PaymentAttemptService.class, PaymentRefundService.class})
+@Import({JpaConfig.class, AsReceptionFixture.class, PaymentFacadeService.class, PaymentAttemptService.class, PaymentRefundService.class})
 @Transactional(propagation = Propagation.NOT_SUPPORTED) // 테스트 전체를 감싸는 트랜잭션을 끈다 
 class PaymentFacadeServiceTest {
-    private static final Long AS_RECEPTION_ID = 1L;
+    @Autowired
+    AsReceptionFixture asReceptionFixture;
+
+    private AsReception reception;
+    private Long asReceptionId;
+
+    @BeforeEach
+    void setUpReception() {
+        reception = asReceptionFixture.save();
+        asReceptionId = reception.getId();
+    }
+
     private static final String PAYMENT_KEY = "test_payment_key";
     private static final OffsetDateTime APPROVED_AT =
             OffsetDateTime.of(2026, 11, 1, 15, 30, 0, 0, ZoneOffset.ofHours(9));
@@ -58,10 +73,11 @@ class PaymentFacadeServiceTest {
     void cleanUp() {
         paymentAttemptRepository.deleteAll();
         paymentBillRepository.deleteAll();
+        asReceptionFixture.deleteAll();
     }
 
     private PaymentBill issueBill() {
-        return paymentBillRepository.save(PaymentBill.issue(AS_RECEPTION_ID, 30_000L, PaymentBillType.REPAIR));
+        return paymentBillRepository.save(PaymentBill.create(reception, 30_000L, PaymentBillType.REPAIR));
     }
 
     private PaymentAttempt findAttempt(String orderId) {
@@ -73,7 +89,7 @@ class PaymentFacadeServiceTest {
     void success() {
         // given
         PaymentBill bill = issueBill();
-        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(AS_RECEPTION_ID);
+        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(asReceptionId);
         given(tossPaymentsClient.confirm(PAYMENT_KEY, started.orderId(), started.amount()))
                 .willReturn(new TossDto.ConfirmResponse(PAYMENT_KEY, started.orderId(), "DONE", APPROVED_AT, null, null));
 
@@ -97,7 +113,7 @@ class PaymentFacadeServiceTest {
     void amountMismatch() {
         // given
         PaymentBill bill = issueBill();
-        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(AS_RECEPTION_ID);
+        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(asReceptionId);
 
         // when & then
         assertThatThrownBy(() -> paymentFacadeService.confirmPayment(PAYMENT_KEY, started.orderId(), 1_000L))
@@ -105,7 +121,7 @@ class PaymentFacadeServiceTest {
                 .extracting("errorCode")
                 .isEqualTo(PaymentErrorCode.AMOUNT_MISMATCH);
 
-        // then: prepareConfirm은 롤백됐지만 failConfirm의 기록은 남아 있다
+        // then: prepareConfirm이 잠금을 쥔 채 FAILED를 기록하고 커밋했다
         PaymentAttempt attempt = findAttempt(started.orderId());
         assertThat(attempt.getStatus()).isEqualTo(PaymentAttemptStatus.FAILED);
         assertThat(attempt.getFailureCode()).isEqualTo("AMOUNT_MISMATCH");
@@ -119,7 +135,7 @@ class PaymentFacadeServiceTest {
     void alreadyInProgress() {
         // given: 첫 번째 요청이 승인 준비까지 마친 상태
         PaymentBill bill = issueBill();
-        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(AS_RECEPTION_ID);
+        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(asReceptionId);
         paymentAttemptService.prepareConfirm(started.orderId(), started.amount());
 
         // when & then: 두 번째 요청
@@ -138,7 +154,7 @@ class PaymentFacadeServiceTest {
     void tossRejected() {
         // given
         PaymentBill bill = issueBill();
-        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(AS_RECEPTION_ID);
+        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(asReceptionId);
 
         HttpClientErrorException rejected = HttpClientErrorException.create(
                 HttpStatus.BAD_REQUEST, "Bad Request", HttpHeaders.EMPTY, new byte[0], StandardCharsets.UTF_8);
@@ -163,7 +179,7 @@ class PaymentFacadeServiceTest {
     void tossTimeout() {
         // given
         PaymentBill bill = issueBill();
-        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(AS_RECEPTION_ID);
+        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(asReceptionId);
         given(tossPaymentsClient.confirm(any(), any(), any()))
                 .willThrow(new ResourceAccessException("Read timed out"));
 
