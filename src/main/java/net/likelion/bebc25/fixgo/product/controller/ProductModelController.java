@@ -4,12 +4,14 @@ import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
 import net.likelion.bebc25.fixgo.product.dto.ProductModelDto;
 import net.likelion.bebc25.fixgo.product.service.ProductModelService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -36,15 +38,14 @@ public class ProductModelController {
                 .body(productModelService.create(request, createdBy));
     }
 
-    // 제품 검색시 해당되는 결과 반환
-    @GetMapping
-    public ResponseEntity<List<ProductModelDto.Response>> search(
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) String modelName
+    // 검색 결과 pagination
+    @GetMapping("/list")
+    public ResponseEntity<Page<ProductModelDto.Response>> list(
+            @RequestParam(required = false) String keyword,
+            @PageableDefault(size = 20, sort = "modelName", direction = Sort.Direction.ASC)
+            Pageable pageable
     ) {
-        return ResponseEntity.ok(
-                productModelService.search(new ProductModelDto.SearchRequest(name, modelName))
-        );
+        return ResponseEntity.ok(productModelService.search(keyword, pageable));
     }
 
     // 고객 정보 수정

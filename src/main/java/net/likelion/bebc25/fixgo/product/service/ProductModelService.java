@@ -4,10 +4,11 @@ import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.product.dto.ProductModelDto;
 import net.likelion.bebc25.fixgo.product.entity.ProductModel;
 import net.likelion.bebc25.fixgo.product.repository.ProductModelRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
@@ -31,36 +32,31 @@ public class ProductModelService {
     // 제품 등록
     @Transactional
     public ProductModelDto.Response create(ProductModelDto.CreateRequest request, Long createdBy) {
-        // name/modelname duplication check?
-//        if (ProductModelDto.existsByName(request.name()) || ProductModelDto.existsByModelName(request.modelName())) {
-//            throw new IllegalArgumentException("이미 등록된 제품명/모델명입니다.");
-//        }
+        // 제품명/모델명 중복 체크
+        if (productModelRepository.existsByName((request.name()))) {
+            throw new IllegalArgumentException("이미 등록된 제품명입니다.");
+        } else if (productModelRepository.existsByModelName((request.modelName()))) {
+            throw new IllegalArgumentException("이미 등록된 모델명입니다.");
+        }
         ProductModel productModel = productModelRepository.save(request.toEntity(createdBy));
         return ProductModelDto.Response.from(productModel);
     }
 
-    public List<ProductModelDto.Response> search(ProductModelDto.SearchRequest request) {
-        // 제품명 검색
-        if (request.name() != null && !request.name().isBlank()) {
-            return productModelRepository.findByNameContaining(request.name())
-                    .stream()
-                    .map(ProductModelDto.Response::from)
-                    .toList();
-        }
-        // 모델명 검색
-        else if (request.modelName() != null && !request.modelName().isBlank()) {
-            return productModelRepository.findByModelNameContaining(request.modelName())
-                    .stream()
-                    .map(ProductModelDto.Response::from)
-                    .toList();
-        } else {
-            return List.of();
-        }
+    // 검색 결과 및 pagination
+    public Page<ProductModelDto.Response> search(String keyword, Pageable pageable) {
+        return productModelRepository.search(keyword, pageable)
+                .map(ProductModelDto.Response::from);
     }
 
     // 제품 정보 수정
     @Transactional
     public ProductModelDto.Response update(Long id, ProductModelDto.UpdateRequest request, Long updatedBy) {
+        // 제품명/모델명 중복 체크
+        if (productModelRepository.existsByNameAndIdNot(request.name(), id)) {
+            throw new IllegalArgumentException("이미 등록된 제품명입니다.");
+        } else if (productModelRepository.existsByModelNameAndIdNot(request.modelName(), id)) {
+            throw new IllegalArgumentException("이미 등록된 모델명입니다.");
+        }
         ProductModel productModel = findProductModel(id);
         productModel.update(
                 request.name(), request.modelName(), request.category(),
