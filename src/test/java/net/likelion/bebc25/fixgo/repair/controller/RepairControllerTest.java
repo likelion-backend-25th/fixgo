@@ -3,6 +3,8 @@ package net.likelion.bebc25.fixgo.repair.controller;
 
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.entity.Role;
+import net.likelion.bebc25.fixgo.auth.handler.CustomAccessDeniedHandler;
+import net.likelion.bebc25.fixgo.auth.handler.CustomAuthenticationEntryPoint;
 import net.likelion.bebc25.fixgo.auth.jwt.JwtProvider;
 import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
 import net.likelion.bebc25.fixgo.auth.service.CustomUserDetailsService;
@@ -47,6 +49,12 @@ class RepairControllerTest {
 
     @MockitoBean
     private CustomUserDetailsService userDetailsService;
+
+    @MockitoBean
+    private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+
+    @MockitoBean
+    private CustomAccessDeniedHandler customAccessDeniedHandler;
 
     // 테스트용 기사 계정 생성
     private CustomUserDetails createUserDetails() {
