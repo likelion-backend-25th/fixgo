@@ -1,0 +1,28 @@
+info:
+  name: AS 수리 등록
+  type: http
+  seq: 29
+
+http:
+  method: POST
+  url: "{{baseUrl}}/as/repairs"
+  auth: inherit
+  body:
+    type: json
+    data: |-
+      {
+        "asReceptionId": 1,
+        "technicianId": 3,
+        "warrantyResult": "PAID",
+        "laborRate": 0,
+        "inspectionCost": 0,
+        "finalAmount": 0,
+        "status": "DIAGNOSING"
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

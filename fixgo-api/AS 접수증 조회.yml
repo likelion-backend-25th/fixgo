@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: "{{baseUrl}}/as-receptions/1/documents/reception-receipt"
+  url: "{{baseUrl}}/as-receptions/11/documents/reception-receipt"
   auth: inherit
 
 settings:

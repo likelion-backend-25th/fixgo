@@ -21,6 +21,7 @@ public enum RepairErrorCode implements ErrorCode {
     NOT_ASSIGNED_TECHNICIAN(HttpStatus.FORBIDDEN),
     REPAIR_COST_NOT_DIAGNOSING(HttpStatus.CONFLICT),
     REPAIR_COST_ALREADY_CONFIRMED(HttpStatus.CONFLICT),
+    REPAIR_COST_NOT_CONFIRMED(HttpStatus.CONFLICT),
 
     // A/S 접수 예외
     AS_RECEPTION_NOT_FOUND(HttpStatus.NOT_FOUND);

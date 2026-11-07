@@ -1,7 +1,7 @@
 info:
   name: 비밀번호 변경
   type: http
-  seq: 9
+  seq: 12
 
 http:
   method: PATCH
