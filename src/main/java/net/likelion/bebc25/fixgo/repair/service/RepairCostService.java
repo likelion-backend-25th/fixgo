@@ -13,6 +13,7 @@ import net.likelion.bebc25.fixgo.product.entity.Category;
 import net.likelion.bebc25.fixgo.product.entity.Product;
 import net.likelion.bebc25.fixgo.product.entity.ProductModel;
 import net.likelion.bebc25.fixgo.product.repository.ProductModelRepository;
+import net.likelion.bebc25.fixgo.repair.dto.repair.EstimateResponse;
 import net.likelion.bebc25.fixgo.repair.entity.RepairWork;
 import net.likelion.bebc25.fixgo.repair.entity.part.Part;
 import net.likelion.bebc25.fixgo.repair.entity.part.RepairPartUsage;
@@ -43,6 +44,24 @@ public class RepairCostService {
     private final ProductModelRepository productModelRepository;
     private final RepairStatusService repairStatusService;
     private final AsReceptionRepository asReceptionRepository;
+
+    // 접수 ID로 수리비가 확정된 견적서를 조회
+    public EstimateResponse getEstimate(Long receptionId) {
+        Repair repair = repairRepository.findByAsReception_Id(receptionId)
+                .orElseThrow(() -> new RepairException(
+                        RepairErrorCode.REPAIR_NOT_FOUND,
+                        "수리 정보를 찾을 수 없습니다."
+                ));
+
+        if (repair.getConfirmedAt() == null) {
+            throw new RepairException(
+                    RepairErrorCode.REPAIR_COST_NOT_CONFIRMED,
+                    "아직 수리비가 확정되지 않았습니다."
+            );
+        }
+
+        return EstimateResponse.from(repair);
+    }
 
     // 수리비 계산 및 저장
     @Transactional

@@ -8,6 +8,8 @@ import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
 import net.likelion.bebc25.fixgo.as.service.AsReceptionService;
 import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
 import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
+import net.likelion.bebc25.fixgo.repair.dto.repair.EstimateResponse;
+import net.likelion.bebc25.fixgo.repair.service.RepairCostService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -29,6 +31,8 @@ public class AsReceptionController {
 
     private final AsStatusHistoryService asStatusHistoryService;
 
+    private final RepairCostService repairCostService;
+
     // 접수 등록
     @PostMapping
     public ResponseEntity<AsReceptionDto.CreateReceptionResponse> createReception(@AuthenticationPrincipal CustomUserDetails userDetails, @Valid @RequestBody AsReceptionDto.CreateReceptionRequest request) {
@@ -47,6 +51,7 @@ public class AsReceptionController {
         return ResponseEntity.ok(asReceptionService.getReception(id));
     }
 
+    // 접수 수정
     @PatchMapping("/{id}")
     public ResponseEntity<AsReceptionDto.DetailResponse> updateReception(
             @PathVariable Long id,
@@ -77,11 +82,19 @@ public class AsReceptionController {
         return ResponseEntity.noContent().build();
     }
 
+    // 기사 배정 이력 조회
     @PreAuthorize("hasAnyRole('RECEPTIONIST', 'ADMIN')")
     @GetMapping("/{receptionId}/technician-history")
     public List<AsReceptionDto.TechnicianAssignmentHistoryResponse>
     getTechnicianAssignmentHistory(@PathVariable Long receptionId) {
         return asReceptionService.getTechnicianAssignmentHistory(receptionId);
+    }
+
+    // 견적서 조회
+    @PreAuthorize("hasAnyRole('RECEPTIONIST', 'ADMIN')")
+    @GetMapping("/{id}/documents/estimate")
+    public ResponseEntity<EstimateResponse> getEstimate(@PathVariable Long id) {
+        return ResponseEntity.ok(repairCostService.getEstimate(id));
     }
 
 }

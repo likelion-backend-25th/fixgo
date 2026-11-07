@@ -1,7 +1,7 @@
 info:
   name: 직원삭제
   type: http
-  seq: 15
+  seq: 21
 
 http:
   method: DELETE

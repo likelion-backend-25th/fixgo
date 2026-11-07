@@ -1,7 +1,7 @@
 info:
   name: 직원 역할 변경
   type: http
-  seq: 13
+  seq: 20
 
 http:
   method: PATCH

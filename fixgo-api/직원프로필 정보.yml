@@ -1,7 +1,7 @@
 info:
   name: 직원프로필 정보
   type: http
-  seq: 12
+  seq: 18
 
 http:
   method: GET

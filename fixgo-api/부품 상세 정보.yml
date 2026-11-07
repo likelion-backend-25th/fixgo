@@ -1,7 +1,7 @@
 info:
   name: 부품 상세 정보
   type: http
-  seq: 17
+  seq: 24
 
 http:
   method: GET
