@@ -79,6 +79,13 @@ public class PaymentAttempt {
         this.failureMessage = message;
     }
 
+    public void cancelBeforeDeposit() {
+        if (this.status == PaymentAttemptStatus.FAILED) {
+            return;
+        }
+        markFailed("VIRTUAL_ACCOUNT_CANCELED", "가상계좌 입금 전 취소");
+    }
+
     /**
      * 상태 전이 규칙을 검증하고 paymentAttempt를 IN_PROGRESS로 바꾼다.
      */

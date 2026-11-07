@@ -5,13 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import net.likelion.bebc25.fixgo.payment.client.TossDto;
 import net.likelion.bebc25.fixgo.payment.client.TossPaymentsClient;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentInternalDto;
-import net.likelion.bebc25.fixgo.payment.entity.PaymentAttempt;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentAttemptStatus;
-import net.likelion.bebc25.fixgo.payment.entity.PaymentBill;
 import net.likelion.bebc25.fixgo.payment.exception.PaymentErrorCode;
 import net.likelion.bebc25.fixgo.payment.exception.PaymentException;
-import net.likelion.bebc25.fixgo.payment.repository.PaymentAttemptRepository;
-import net.likelion.bebc25.fixgo.payment.repository.PaymentBillRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -28,10 +24,6 @@ public class PaymentFacadeService {
     private final PaymentRefundService paymentRefundService;
 
     private final TossPaymentsClient tossPaymentsClient;
-
-    // 삭제 예정
-    private final PaymentAttemptRepository paymentAttemptRepository;
-    private final PaymentBillRepository paymentBillRepository;
 
     /**
      * 온라인 결제를 승인한다.
@@ -110,29 +102,35 @@ public class PaymentFacadeService {
         paymentRefundService.completeRefund(prepared.refundId(), cancel.transactionKey(), cancel.canceledAt().toLocalDateTime());
     }
 
+    /**
+     * 입금 대기 중인 가상계좌를 취소한다.
+     * 흐름: 취소할 paymentKey 조회 → 토스 취소 호출(트랜잭션 밖) → 성공 시 attempt를 FAILED로 반영
+     */
     public void cancelVirtualAccountBeforeDeposit(Long asReceptionId) {
-        PaymentBill bill = paymentBillRepository.findByAsReceptionId(asReceptionId)
-                .orElseThrow(() -> new IllegalStateException("Payment Bill Not Found"));
-        PaymentAttempt attempt = paymentAttemptRepository.findByPaymentBillIdAndStatus(bill.getId(), PaymentAttemptStatus.WAITING_FOR_DEPOSIT)
-                .orElseThrow(() -> new IllegalStateException("Payment attempt not found"));
-        TossDto.CancelResponse response;
+        String paymentKey = paymentAttemptService.getCancelablePaymentKey(asReceptionId);
 
         try {
-            response = tossPaymentsClient.cancel(attempt.getPaymentKey(), "가상계좌 입금 전 취소", null);
-        } catch (RestClientResponseException e) {
-            // 토스가 명확히 거절했다. 취소 되지 않았으므로 attempt 상태를 그대로 유지한다.
+            tossPaymentsClient.cancel(paymentKey, "가상계좌 입금 전 취소", null);
+        } catch (HttpClientErrorException e) {
+            // 4xx: 토스가 요청을 거절했다.
             TossDto.ErrorResponse error = e.getResponseBodyAs(TossDto.ErrorResponse.class);
             String code = (error != null) ? error.code() : "TOSS_HTTP_" + e.getStatusCode().value();
             String message = (error != null) ? error.message() : e.getMessage();
-            throw e;
-        } catch (ResourceAccessException e) {
-            // 응답을 받지 못했다(타임아웃, 연결 실패).
-            // TODO: 토스 결제 조회 API로 실제 상태를 확인해 정리
-            throw e;
+
+            // 이전 요청이 타임아웃됐지만 토스에서는 취소된 경우. 성공으로 반영한다.
+            if ("ALREADY_CANCELED_PAYMENT".equals(code)) {
+                paymentAttemptService.cancelVirtualAccount(paymentKey);
+                return;
+            }
+            // attempt는 상태를 유지한다.
+            throw new PaymentException(PaymentErrorCode.TOSS_REJECTED, message);
+        } catch (HttpServerErrorException | ResourceAccessException e) {
+            // 5xx(토스 서버 오류), 타임아웃/연결 실패: 취소됐는지 알 수 없다. 상태를 바꾸지 않고 사용자 재시도로 정리한다.
+            throw new PaymentException(PaymentErrorCode.PAYMENT_PENDING, "취소 확인 중입니다.");
         }
 
         // 취소 반영
-        paymentAttemptService.cancelVirtualAccount(attempt.getOrderId());
+        paymentAttemptService.cancelVirtualAccount(paymentKey);
     }
 
 

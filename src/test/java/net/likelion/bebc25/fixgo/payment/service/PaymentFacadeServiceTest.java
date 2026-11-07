@@ -10,12 +10,9 @@ import net.likelion.bebc25.fixgo.payment.exception.PaymentErrorCode;
 import net.likelion.bebc25.fixgo.payment.exception.PaymentException;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentAttemptRepository;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentBillRepository;
+import net.likelion.bebc25.fixgo.payment.repository.VirtualAccountRepository;
 import net.likelion.bebc25.fixgo.support.AsReceptionFixture;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
@@ -33,10 +30,8 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
@@ -58,6 +53,8 @@ class PaymentFacadeServiceTest {
     PaymentAttemptRepository paymentAttemptRepository;
     @Autowired
     PaymentBillRepository paymentBillRepository;
+    @Autowired
+    VirtualAccountRepository virtualAccountRepository;
     @MockitoBean
     TossPaymentsClient tossPaymentsClient; // 진짜 토스 대신 가짜
     private AsReception reception;
@@ -69,9 +66,10 @@ class PaymentFacadeServiceTest {
         asReceptionId = reception.getId();
     }
 
-    // 테스트 트랜잭션이 없어서 데이터가 실제로 커밋된다. 테스트끼리 섞이지 않게 매번 지운다. (FK 때문에 attempt 먼저)
+    // 테스트 트랜잭션이 없어서 데이터가 실제로 커밋된다. 테스트끼리 섞이지 않게 매번 지운다. (FK 때문에 가상계좌, attempt 순서로)
     @AfterEach
     void cleanUp() {
+        virtualAccountRepository.deleteAll();
         paymentAttemptRepository.deleteAll();
         paymentBillRepository.deleteAll();
         asReceptionFixture.deleteAll();
@@ -273,7 +271,9 @@ class PaymentFacadeServiceTest {
     class ReconcileStuckAttempts {
         private final LocalDateTime cutoffIncludingNow = LocalDateTime.now().plusMinutes(1);
 
-        /** 토스 응답을 받지 못해 IN_PROGRESS로 남은 attempt를 만들고 orderId를 돌려준다. */
+        /**
+         * 토스 응답을 받지 못해 IN_PROGRESS로 남은 attempt를 만들고 orderId를 돌려준다.
+         */
         private String stuckOrderId(AsReception target) {
             paymentBillRepository.save(PaymentBill.create(target, 30_000L, PaymentBillType.REPAIR));
             PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(target.getId());
@@ -401,6 +401,145 @@ class PaymentFacadeServiceTest {
 
             // then
             then(tossPaymentsClient).should(never()).getByOrderId(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("cancelVirtualAccountBeforeDeposit")
+    class CancelVirtualAccountBeforeDeposit {
+        private static final OffsetDateTime DUE_AT =
+                OffsetDateTime.of(2026, 11, 10, 23, 59, 59, 0, ZoneOffset.ofHours(9));
+
+        /**
+         * 실제 흐름으로 가상계좌 발급(입금 대기)까지 진행하고 orderId를 돌려준다.
+         */
+        private String issueVirtualAccount() {
+            issueBill();
+            PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(asReceptionId);
+            paymentAttemptService.prepareConfirm(started.orderId(), started.amount());
+            paymentAttemptService.reconcile(new TossDto.ConfirmResponse(
+                    PAYMENT_KEY, started.orderId(), "WAITING_FOR_DEPOSIT", "가상계좌", null, "ps_test_secret",
+                    new TossDto.ConfirmResponse.VirtualAccount("12345678901234", "20", DUE_AT), null));
+            return started.orderId();
+        }
+
+        /**
+         * 토스가 에러 코드와 함께 4xx로 거절한 응답
+         */
+        private HttpClientErrorException tossClientError(String code, String message) {
+            HttpClientErrorException e = HttpClientErrorException.create(
+                    HttpStatus.BAD_REQUEST, "Bad Request", HttpHeaders.EMPTY, new byte[0], StandardCharsets.UTF_8);
+            e.setBodyConvertFunction(type -> new TossDto.ErrorResponse(code, message));
+            return e;
+        }
+
+        @Test
+        @DisplayName("취소에 성공하면 attempt는 FAILED, bill은 UNPAID로 남고 가상계좌 기록은 지우지 않는다.")
+        void success() {
+            // given
+            String orderId = issueVirtualAccount();
+
+            // when
+            paymentFacadeService.cancelVirtualAccountBeforeDeposit(asReceptionId);
+
+            // then: 토스에 그 결제의 paymentKey로, 환불 계좌 없이 취소를 요청했다
+            then(tossPaymentsClient).should().cancel(eq(PAYMENT_KEY), anyString(), isNull());
+
+            // then: attempt
+            PaymentAttempt attempt = findAttempt(orderId);
+            assertThat(attempt.getStatus()).isEqualTo(PaymentAttemptStatus.FAILED);
+            assertThat(attempt.getFailureCode()).isEqualTo("VIRTUAL_ACCOUNT_CANCELED");
+
+            // then: 돈이 오간 적 없으므로 청구서는 그대로
+            assertThat(paymentBillRepository.findByAsReceptionId(asReceptionId).orElseThrow().getStatus())
+                    .isEqualTo(PaymentBillStatus.UNPAID);
+
+            // then: 가상계좌 기록은 남긴다 (웹훅 검증, 추적용)
+            assertThat(virtualAccountRepository.findByPaymentAttemptId(attempt.getId())).isPresent();
+        }
+
+        @Test
+        @DisplayName("취소 후에는 같은 청구서로 다시 결제를 시작할 수 있고, 새 결제 시도가 만들어진다.")
+        void canStartAgainAfterCancel() {
+            // given
+            String canceledOrderId = issueVirtualAccount();
+            paymentFacadeService.cancelVirtualAccountBeforeDeposit(asReceptionId);
+
+            // when: 다시 결제 시작 (예: 카드로 바꿔서)
+            PaymentDto.StartPaymentResponse restarted = paymentAttemptService.startPayment(asReceptionId);
+
+            // then
+            assertThat(restarted.orderId()).isNotEqualTo(canceledOrderId);
+            assertThat(findAttempt(restarted.orderId()).getStatus()).isEqualTo(PaymentAttemptStatus.READY);
+        }
+
+        @Test
+        @DisplayName("토스가 취소를 거절하면(4xx) TOSS_REJECTED로 응답하고 attempt는 입금 대기 그대로 둔다.")
+        void tossRejected() {
+            // given
+            String orderId = issueVirtualAccount();
+            given(tossPaymentsClient.cancel(any(), any(), any()))
+                    .willThrow(tossClientError("NOT_CANCELABLE_PAYMENT", "취소 할 수 없는 결제 입니다."));
+
+            // when & then
+            assertThatThrownBy(() -> paymentFacadeService.cancelVirtualAccountBeforeDeposit(asReceptionId))
+                    .isInstanceOf(PaymentException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(PaymentErrorCode.TOSS_REJECTED);
+
+            assertThat(findAttempt(orderId).getStatus()).isEqualTo(PaymentAttemptStatus.WAITING_FOR_DEPOSIT);
+        }
+
+        @Test
+        @DisplayName("토스에서 이미 취소된 결제(ALREADY_CANCELED_PAYMENT)면 성공으로 보고 FAILED로 반영한다.")
+        void alreadyCanceledInToss() {
+            // given: 이전 취소 요청이 타임아웃됐지만 토스에서는 취소된 상황
+            String orderId = issueVirtualAccount();
+            given(tossPaymentsClient.cancel(any(), any(), any()))
+                    .willThrow(tossClientError("ALREADY_CANCELED_PAYMENT", "이미 취소된 결제 입니다."));
+
+            // when & then
+            assertThatCode(() -> paymentFacadeService.cancelVirtualAccountBeforeDeposit(asReceptionId))
+                    .doesNotThrowAnyException();
+
+            PaymentAttempt attempt = findAttempt(orderId);
+            assertThat(attempt.getStatus()).isEqualTo(PaymentAttemptStatus.FAILED);
+            assertThat(attempt.getFailureCode()).isEqualTo("VIRTUAL_ACCOUNT_CANCELED");
+        }
+
+        @Test
+        @DisplayName("토스 응답을 받지 못하면 취소 여부를 알 수 없으므로 PAYMENT_PENDING으로 응답하고 입금 대기 그대로 둔다.")
+        void tossTimeout() {
+            // given
+            String orderId = issueVirtualAccount();
+            given(tossPaymentsClient.cancel(any(), any(), any()))
+                    .willThrow(new ResourceAccessException("Read timed out"));
+
+            // when & then
+            assertThatThrownBy(() -> paymentFacadeService.cancelVirtualAccountBeforeDeposit(asReceptionId))
+                    .isInstanceOf(PaymentException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(PaymentErrorCode.PAYMENT_PENDING);
+
+            assertThat(findAttempt(orderId).getStatus()).isEqualTo(PaymentAttemptStatus.WAITING_FOR_DEPOSIT);
+        }
+
+        @Test
+        @DisplayName("토스 서버 오류(5xx)는 취소 여부를 알 수 없으므로 PAYMENT_PENDING으로 응답하고 입금 대기 그대로 둔다.")
+        void tossServerError() {
+            // given
+            String orderId = issueVirtualAccount();
+            given(tossPaymentsClient.cancel(any(), any(), any()))
+                    .willThrow(HttpServerErrorException.create(
+                            HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", HttpHeaders.EMPTY, new byte[0], StandardCharsets.UTF_8));
+
+            // when & then
+            assertThatThrownBy(() -> paymentFacadeService.cancelVirtualAccountBeforeDeposit(asReceptionId))
+                    .isInstanceOf(PaymentException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(PaymentErrorCode.PAYMENT_PENDING);
+
+            assertThat(findAttempt(orderId).getStatus()).isEqualTo(PaymentAttemptStatus.WAITING_FOR_DEPOSIT);
         }
     }
 }
