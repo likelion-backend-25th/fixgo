@@ -5,6 +5,7 @@ import net.likelion.bebc25.fixgo.support.AsReceptionFixture;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentAttempt;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentBill;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentBillType;
+import net.likelion.bebc25.fixgo.payment.entity.PaymentMethod;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentAttemptRepository;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentBillRepository;
 import net.likelion.bebc25.fixgo.statistics.dto.PaymentStatisticsDto;
@@ -58,7 +59,7 @@ class PaymentStatisticsServiceTest {
     private void createDoneAttempt(PaymentBill bill, String paymentKey, LocalDateTime approvedAt) {
         PaymentAttempt attempt = PaymentAttempt.create(bill);
         attempt.markInProgress();
-        attempt.markCardDone(paymentKey, approvedAt);
+        attempt.markOnlineDone(paymentKey, PaymentMethod.CARD, approvedAt);
 
         paymentAttemptRepository.save(attempt);
     }

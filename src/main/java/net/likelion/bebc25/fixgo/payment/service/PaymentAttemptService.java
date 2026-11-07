@@ -2,6 +2,7 @@ package net.likelion.bebc25.fixgo.payment.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.likelion.bebc25.fixgo.payment.client.TossDto;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
 import net.likelion.bebc25.fixgo.payment.entity.*;
 import net.likelion.bebc25.fixgo.payment.exception.PaymentErrorCode;
@@ -92,44 +93,6 @@ public class PaymentAttemptService {
         return null;
     }
 
-    /**
-     * 승인 성공 반영: 토스 승인이 성공한 뒤에만 호출한다.
-     * attempt를 DONE으로, bill을 PAID로 한 트랜잭션에서 바꾼다.
-     * <p>
-     * 잠금을 걸지 않는다. attempt가 IN_PROGRESS인 동안에는
-     * 같은 bill을 바꾸는 다른 경로(startPayment, prepareConfirm, 현금 결제)가 모두 거절되기 때문이다.
-     */
-    @Transactional
-    public void completeConfirm(String orderId, String paymentKey, LocalDateTime approvedAt) {
-        PaymentAttempt attempt = paymentAttemptRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new IllegalStateException("Payment Attempt Not Found"));
-
-        attempt.markCardDone(paymentKey, approvedAt);
-        PaymentBill bill = attempt.getPaymentBill();
-
-        bill.markPaid(approvedAt);
-    }
-
-    /**
-     * 가상계좌 발급 반영: 토스 승인 응답이 WAITING_FOR_DEPOSIT일 때만 호출한다.
-     * attempt를 WAITING_FOR_DEPOSIT으로 바꾸고, 계좌 정보를 VirtualAccount에 저장한다.
-     * 아직 입금 전이므로 bill은 UNPAID 그대로 둔다. 입금 완료는 웹훅에서 처리한다.
-     * <p>
-     * 잠금을 걸지 않는 이유는 completeConfirm과 같다.
-     */
-    @Transactional
-    public void issueVirtualAccount(
-            String orderId, String paymentKey, String bankCode,
-            String accountNumber, String webhookSecret, LocalDateTime dueAt
-    ) {
-        PaymentAttempt attempt = paymentAttemptRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new IllegalStateException("Payment Attempt Not Found"));
-
-        attempt.markWaitingForDeposit(paymentKey);
-        VirtualAccount virtualAccount = VirtualAccount.issue(attempt, bankCode, accountNumber, webhookSecret, dueAt);
-        virtualAccountRepository.save(virtualAccount);
-    }
-
     @Transactional
     public void failConfirm(String orderId, String failureCode, String failureMessage) {
         PaymentAttempt attempt = paymentAttemptRepository.findByOrderId(orderId)
@@ -152,5 +115,62 @@ public class PaymentAttemptService {
             case DONE -> log.error("취소 처리된 결제에 입금이 들어옴 {}", attempt.getOrderId());
             default -> log.warn("취소할 수 없는 상태 {}", attempt.getOrderId());
         }
+    }
+
+    /**
+     * 토스 결제 상태를 attempt에 반영한다.
+     * <p>
+     * 호출하는 곳은 두 군데다.
+     * 승인 스레드: 토스 승인 응답을 받은 직후 (PaymentFacadeService.confirmPayment)
+     * 스케줄러: 응답을 받지 못해 IN_PROGRESS로 남은 결제를 토스에 조회한 뒤 (PaymentFacadeService.reconcileStuckAttempts)
+     */
+    @Transactional
+    public PaymentAttemptStatus reconcile(TossDto.ConfirmResponse response) {
+        // 1. attempt 잠금 조회. 승인 스레드와 스케줄러가 동시에 반영하지 못하게 한다
+        PaymentAttempt attempt = paymentAttemptRepository.findByOrderIdForUpdate(response.orderId())
+                .orElseThrow(() -> new IllegalStateException("attempt가 존재하지 않습니다."));
+
+        // 2. IN_PROGRESS가 아니면 이미 다른 쪽에서 반영했거나, 승인 준비를 거치지 않은 결제다. 현재 상태를 그대로 돌려준다
+        if (attempt.getStatus() != PaymentAttemptStatus.IN_PROGRESS) {
+            return attempt.getStatus();
+        }
+        PaymentBill bill = attempt.getPaymentBill();
+
+        // 3. 토스 상태에 따라 반영한다.
+        switch (response.status()) {
+            case "DONE" -> {
+                attempt.markOnlineDone(response.paymentKey(), PaymentMethod.fromToss(response.method()), response.approvedAt().toLocalDateTime());
+                bill.markPaid(response.approvedAt().toLocalDateTime());
+            }
+            case "ABORTED", "EXPIRED" -> {
+                // ABORTED는 failure에 거절 사유가 있다.
+                TossDto.ConfirmResponse.Failure failure = response.failure();
+                String code = (failure != null) ? failure.code() : "TOSS_" + response.status();
+                String message = (failure != null) ? failure.message() : "토스 결제 상태: " + response.status();
+                attempt.markFailed(code, message);
+            }
+            case "WAITING_FOR_DEPOSIT" -> {
+                // 입금 웹훅의 위조 여부를 secret으로 검증하므로 계좌 정보와 함께 저장한다
+                TossDto.ConfirmResponse.VirtualAccount account = response.virtualAccount();
+                attempt.markWaitingForDeposit(response.paymentKey());
+                virtualAccountRepository.save(VirtualAccount.issue(
+                        attempt, account.bankCode(), account.accountNumber(),
+                        response.secret(), account.dueDate().toLocalDateTime()));
+            }
+            case "IN_PROGRESS", "READY" -> {
+                log.info("토스 결제가 아직 확정 전이라 보류함. orderId={}, tossStatus={}", response.orderId(), response.status());
+            }
+            default -> {
+                log.error("예상하지 못한 토스 결제 상태. orderId={}, tossStatus={}", response.orderId(), response.status());
+            }
+        }
+
+        return attempt.getStatus();
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> findStuckOrderIds(LocalDateTime cutoff) {
+        return paymentAttemptRepository.findAllByStatusAndUpdatedAtBefore(PaymentAttemptStatus.IN_PROGRESS, cutoff)
+                .stream().map(PaymentAttempt::getOrderId).toList();
     }
 }

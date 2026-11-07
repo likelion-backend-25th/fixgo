@@ -104,19 +104,22 @@ public class PaymentAttempt {
     }
 
     /**
-     * 온라인(카드) 결제 승인 완료 처리
+     * 온라인 결제 승인 완료 처리
      * 반드시 승인 준비(IN_PROGRESS)를 거친 시도만 완료할 수 있다.
      *
      * @param paymentKey 토스 승인 응답의 paymentKey (환불 시 필요)
      * @param approvedAt 토스 승인 시각
      */
-    public void markCardDone(String paymentKey, LocalDateTime approvedAt) {
+    public void markOnlineDone(String paymentKey, PaymentMethod method, LocalDateTime approvedAt) {
         if (this.getStatus() != PaymentAttemptStatus.IN_PROGRESS) {
-            throw new IllegalStateException("카드 결제 완료는 IN_PROGRESS 상태에서만 가능합니다. 현재: " + status);
+            throw new IllegalStateException("온라인 결제 완료는 IN_PROGRESS 상태에서만 가능합니다. 현재: " + status);
+        }
+        if (method != PaymentMethod.CARD && method != PaymentMethod.EASY_PAY) {
+            throw new IllegalStateException("온라인 결제는 카드와 간편결제만 가능합니다.");
         }
         changeStatus(PaymentAttemptStatus.DONE);
         this.paymentKey = paymentKey;
-        this.method = PaymentMethod.CARD;
+        this.method = method;
         this.approvedAt = approvedAt;
     }
 

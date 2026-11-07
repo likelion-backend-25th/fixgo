@@ -1,8 +1,7 @@
 package net.likelion.bebc25.fixgo.payment.service;
 
-import net.likelion.bebc25.fixgo.config.JpaConfig;
-import net.likelion.bebc25.fixgo.support.AsReceptionFixture;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
+import net.likelion.bebc25.fixgo.config.JpaConfig;
 import net.likelion.bebc25.fixgo.payment.client.TossDto;
 import net.likelion.bebc25.fixgo.payment.client.TossPaymentsClient;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
@@ -11,9 +10,11 @@ import net.likelion.bebc25.fixgo.payment.exception.PaymentErrorCode;
 import net.likelion.bebc25.fixgo.payment.exception.PaymentException;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentAttemptRepository;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentBillRepository;
+import net.likelion.bebc25.fixgo.support.AsReceptionFixture;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -24,8 +25,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestClientResponseException;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -33,30 +34,22 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
 
 @DataJpaTest
 @Import({JpaConfig.class, AsReceptionFixture.class, PaymentFacadeService.class, PaymentAttemptService.class, PaymentRefundService.class})
 @Transactional(propagation = Propagation.NOT_SUPPORTED) // 테스트 전체를 감싸는 트랜잭션을 끈다 
 class PaymentFacadeServiceTest {
-    @Autowired
-    AsReceptionFixture asReceptionFixture;
-
-    private AsReception reception;
-    private Long asReceptionId;
-
-    @BeforeEach
-    void setUpReception() {
-        reception = asReceptionFixture.save();
-        asReceptionId = reception.getId();
-    }
-
     private static final String PAYMENT_KEY = "test_payment_key";
     private static final OffsetDateTime APPROVED_AT =
             OffsetDateTime.of(2026, 11, 1, 15, 30, 0, 0, ZoneOffset.ofHours(9));
+    @Autowired
+    AsReceptionFixture asReceptionFixture;
     @Autowired
     PaymentFacadeService paymentFacadeService;
     @Autowired
@@ -67,6 +60,14 @@ class PaymentFacadeServiceTest {
     PaymentBillRepository paymentBillRepository;
     @MockitoBean
     TossPaymentsClient tossPaymentsClient; // 진짜 토스 대신 가짜
+    private AsReception reception;
+    private Long asReceptionId;
+
+    @BeforeEach
+    void setUpReception() {
+        reception = asReceptionFixture.save();
+        asReceptionId = reception.getId();
+    }
 
     // 테스트 트랜잭션이 없어서 데이터가 실제로 커밋된다. 테스트끼리 섞이지 않게 매번 지운다. (FK 때문에 attempt 먼저)
     @AfterEach
@@ -91,7 +92,7 @@ class PaymentFacadeServiceTest {
         PaymentBill bill = issueBill();
         PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(asReceptionId);
         given(tossPaymentsClient.confirm(PAYMENT_KEY, started.orderId(), started.amount()))
-                .willReturn(new TossDto.ConfirmResponse(PAYMENT_KEY, started.orderId(), "DONE", APPROVED_AT, null, null));
+                .willReturn(new TossDto.ConfirmResponse(PAYMENT_KEY, started.orderId(), "DONE", "카드", APPROVED_AT, null, null, null));
 
         // when
         paymentFacadeService.confirmPayment(PAYMENT_KEY, started.orderId(), started.amount());
@@ -100,6 +101,7 @@ class PaymentFacadeServiceTest {
         PaymentAttempt attempt = findAttempt(started.orderId());
         assertThat(attempt.getStatus()).isEqualTo(PaymentAttemptStatus.DONE);
         assertThat(attempt.getPaymentKey()).isEqualTo(PAYMENT_KEY);
+        assertThat(attempt.getMethod()).isEqualTo(PaymentMethod.CARD);
         assertThat(attempt.getApprovedAt()).isEqualTo(LocalDateTime.of(2026, 11, 1, 15, 30));
 
         // then: bill
@@ -164,7 +166,9 @@ class PaymentFacadeServiceTest {
 
         // when & then
         assertThatThrownBy(() -> paymentFacadeService.confirmPayment(PAYMENT_KEY, started.orderId(), started.amount()))
-                .isInstanceOf(RestClientResponseException.class);
+                .isInstanceOf(PaymentException.class)
+                .extracting("errorCode")
+                .isEqualTo(PaymentErrorCode.TOSS_REJECTED);
 
         // then
         PaymentAttempt attempt = findAttempt(started.orderId());
@@ -183,13 +187,220 @@ class PaymentFacadeServiceTest {
         given(tossPaymentsClient.confirm(any(), any(), any()))
                 .willThrow(new ResourceAccessException("Read timed out"));
 
-        // when & then
+        // when & then: 사용자에게는 실패가 아니라 "확인 중"으로 응답한다
         assertThatThrownBy(() -> paymentFacadeService.confirmPayment(PAYMENT_KEY, started.orderId(), started.amount()))
-                .isInstanceOf(ResourceAccessException.class);
+                .isInstanceOf(PaymentException.class)
+                .extracting("errorCode")
+                .isEqualTo(PaymentErrorCode.PAYMENT_PENDING);
 
         // then
         assertThat(findAttempt(started.orderId()).getStatus()).isEqualTo(PaymentAttemptStatus.IN_PROGRESS);
         assertThat(paymentBillRepository.findById(bill.getId()).orElseThrow().getStatus())
                 .isEqualTo(PaymentBillStatus.UNPAID);
+    }
+
+    @Test
+    @DisplayName("토스 서버 오류(5xx)는 승인 여부를 알 수 없으므로 FAILED로 바꾸지 않고 IN_PROGRESS로 남긴다.")
+    void tossServerError() {
+        // given
+        PaymentBill bill = issueBill();
+        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(asReceptionId);
+        given(tossPaymentsClient.confirm(any(), any(), any()))
+                .willThrow(HttpServerErrorException.create(
+                        HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", HttpHeaders.EMPTY, new byte[0], StandardCharsets.UTF_8));
+
+        // when & then
+        assertThatThrownBy(() -> paymentFacadeService.confirmPayment(PAYMENT_KEY, started.orderId(), started.amount()))
+                .isInstanceOf(PaymentException.class)
+                .extracting("errorCode")
+                .isEqualTo(PaymentErrorCode.PAYMENT_PENDING);
+
+        // then
+        assertThat(findAttempt(started.orderId()).getStatus()).isEqualTo(PaymentAttemptStatus.IN_PROGRESS);
+        assertThat(paymentBillRepository.findById(bill.getId()).orElseThrow().getStatus())
+                .isEqualTo(PaymentBillStatus.UNPAID);
+    }
+
+    @Test
+    @DisplayName("토스 승인 응답이 확정 상태가 아니면(IN_PROGRESS) 성공으로 응답하지 않고 '확인 중'으로 응답한다.")
+    void tossResponseNotFinal() {
+        // given
+        issueBill();
+        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(asReceptionId);
+        given(tossPaymentsClient.confirm(any(), any(), any()))
+                .willReturn(tossPayment(started.orderId(), "IN_PROGRESS"));
+
+        // when & then
+        assertThatThrownBy(() -> paymentFacadeService.confirmPayment(PAYMENT_KEY, started.orderId(), started.amount()))
+                .isInstanceOf(PaymentException.class)
+                .extracting("errorCode")
+                .isEqualTo(PaymentErrorCode.PAYMENT_PENDING);
+
+        assertThat(findAttempt(started.orderId()).getStatus()).isEqualTo(PaymentAttemptStatus.IN_PROGRESS);
+    }
+
+    @Test
+    @DisplayName("승인 응답을 반영하기 전에 스케줄러가 먼저 DONE으로 반영했어도 예외 없이 성공한다.")
+    void alreadyReconciledByScheduler() {
+        // given: 토스 승인 응답이 도착하기 직전에 스케줄러가 같은 결제를 먼저 반영한 상황
+        PaymentBill bill = issueBill();
+        PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(asReceptionId);
+        TossDto.ConfirmResponse done = tossPayment(started.orderId(), "DONE");
+        given(tossPaymentsClient.confirm(any(), any(), any())).willAnswer(invocation -> {
+            paymentAttemptService.reconcile(done); // 스케줄러가 먼저 반영
+            return done;
+        });
+
+        // when
+        paymentFacadeService.confirmPayment(PAYMENT_KEY, started.orderId(), started.amount());
+
+        // then
+        assertThat(findAttempt(started.orderId()).getStatus()).isEqualTo(PaymentAttemptStatus.DONE);
+        assertThat(paymentBillRepository.findById(bill.getId()).orElseThrow().getStatus())
+                .isEqualTo(PaymentBillStatus.PAID);
+    }
+
+    private TossDto.ConfirmResponse tossPayment(String orderId, String status) {
+        return new TossDto.ConfirmResponse(PAYMENT_KEY, orderId, status, "카드", APPROVED_AT, null, null, null);
+    }
+
+    /**
+     * 스케줄러가 호출하는 대사 로직.
+     * cutoff보다 먼저 IN_PROGRESS가 된 attempt만 대상이다. 테스트에서는 방금 만든 attempt도 대상이 되도록 cutoff를 1분 뒤로 준다.
+     */
+    @Nested
+    @DisplayName("reconcileStuckAttempts")
+    class ReconcileStuckAttempts {
+        private final LocalDateTime cutoffIncludingNow = LocalDateTime.now().plusMinutes(1);
+
+        /** 토스 응답을 받지 못해 IN_PROGRESS로 남은 attempt를 만들고 orderId를 돌려준다. */
+        private String stuckOrderId(AsReception target) {
+            paymentBillRepository.save(PaymentBill.create(target, 30_000L, PaymentBillType.REPAIR));
+            PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(target.getId());
+            paymentAttemptService.prepareConfirm(started.orderId(), started.amount());
+            return started.orderId();
+        }
+
+        private HttpClientErrorException notFound() {
+            return HttpClientErrorException.create(
+                    HttpStatus.NOT_FOUND, "Not Found", HttpHeaders.EMPTY, new byte[0], StandardCharsets.UTF_8);
+        }
+
+        @Test
+        @DisplayName("토스 조회 결과가 DONE이면 attempt는 DONE, bill은 PAID가 된다.")
+        void done() {
+            // given
+            String orderId = stuckOrderId(reception);
+            given(tossPaymentsClient.getByOrderId(orderId)).willReturn(tossPayment(orderId, "DONE"));
+
+            // when
+            paymentFacadeService.reconcileStuckAttempts(cutoffIncludingNow);
+
+            // then
+            PaymentAttempt attempt = findAttempt(orderId);
+            assertThat(attempt.getStatus()).isEqualTo(PaymentAttemptStatus.DONE);
+            assertThat(attempt.getPaymentKey()).isEqualTo(PAYMENT_KEY);
+            assertThat(paymentBillRepository.findById(attempt.getPaymentBill().getId()).orElseThrow().getStatus())
+                    .isEqualTo(PaymentBillStatus.PAID);
+        }
+
+        @Test
+        @DisplayName("토스 조회 결과가 ABORTED면 attempt는 FAILED가 된다.")
+        void aborted() {
+            // given
+            String orderId = stuckOrderId(reception);
+            given(tossPaymentsClient.getByOrderId(orderId)).willReturn(tossPayment(orderId, "ABORTED"));
+
+            // when
+            paymentFacadeService.reconcileStuckAttempts(cutoffIncludingNow);
+
+            // then
+            assertThat(findAttempt(orderId).getStatus()).isEqualTo(PaymentAttemptStatus.FAILED);
+        }
+
+        @Test
+        @DisplayName("토스에서도 아직 IN_PROGRESS면 그대로 둔다.")
+        void tossStillInProgress() {
+            // given
+            String orderId = stuckOrderId(reception);
+            given(tossPaymentsClient.getByOrderId(orderId)).willReturn(tossPayment(orderId, "IN_PROGRESS"));
+
+            // when
+            paymentFacadeService.reconcileStuckAttempts(cutoffIncludingNow);
+
+            // then
+            assertThat(findAttempt(orderId).getStatus()).isEqualTo(PaymentAttemptStatus.IN_PROGRESS);
+        }
+
+        @Test
+        @DisplayName("토스 조회가 타임아웃이면 예외를 밖으로 던지지 않고 IN_PROGRESS로 둔다. (다음 주기에 다시 시도)")
+        void lookupTimeout() {
+            // given
+            String orderId = stuckOrderId(reception);
+            given(tossPaymentsClient.getByOrderId(orderId)).willThrow(new ResourceAccessException("Read timed out"));
+
+            // when & then
+            assertThatCode(() -> paymentFacadeService.reconcileStuckAttempts(cutoffIncludingNow))
+                    .doesNotThrowAnyException();
+            assertThat(findAttempt(orderId).getStatus()).isEqualTo(PaymentAttemptStatus.IN_PROGRESS);
+        }
+
+        @Test
+        @DisplayName("토스에 결제가 없으면(404) 실패로 단정하지 않고 IN_PROGRESS로 둔다.")
+        void notFoundInToss() {
+            // given
+            String orderId = stuckOrderId(reception);
+            given(tossPaymentsClient.getByOrderId(orderId)).willThrow(notFound());
+
+            // when & then
+            assertThatCode(() -> paymentFacadeService.reconcileStuckAttempts(cutoffIncludingNow))
+                    .doesNotThrowAnyException();
+            assertThat(findAttempt(orderId).getStatus()).isEqualTo(PaymentAttemptStatus.IN_PROGRESS);
+        }
+
+        @Test
+        @DisplayName("한 건의 조회가 실패해도 나머지 건은 정상 처리된다.")
+        void oneFailureDoesNotStopOthers() {
+            // given: 멈춘 결제 2건. 첫 건은 조회 실패, 둘째 건은 DONE
+            String failingOrderId = stuckOrderId(reception);
+            String okOrderId = stuckOrderId(asReceptionFixture.save());
+            given(tossPaymentsClient.getByOrderId(failingOrderId)).willThrow(new ResourceAccessException("Read timed out"));
+            given(tossPaymentsClient.getByOrderId(okOrderId)).willReturn(tossPayment(okOrderId, "DONE"));
+
+            // when
+            paymentFacadeService.reconcileStuckAttempts(cutoffIncludingNow);
+
+            // then
+            assertThat(findAttempt(failingOrderId).getStatus()).isEqualTo(PaymentAttemptStatus.IN_PROGRESS);
+            assertThat(findAttempt(okOrderId).getStatus()).isEqualTo(PaymentAttemptStatus.DONE);
+        }
+
+        @Test
+        @DisplayName("cutoff 이후에 IN_PROGRESS가 된 결제(아직 승인 처리 중일 수 있음)는 조회하지 않는다.")
+        void recentAttemptIsSkipped() {
+            // given: 방금 IN_PROGRESS가 됨. 스케줄러처럼 cutoff를 2분 전으로 준다
+            String orderId = stuckOrderId(reception);
+
+            // when
+            paymentFacadeService.reconcileStuckAttempts(LocalDateTime.now().minusMinutes(2));
+
+            // then
+            then(tossPaymentsClient).should(never()).getByOrderId(any());
+            assertThat(findAttempt(orderId).getStatus()).isEqualTo(PaymentAttemptStatus.IN_PROGRESS);
+        }
+
+        @Test
+        @DisplayName("IN_PROGRESS가 아닌 결제(READY)는 조회하지 않는다.")
+        void notInProgressIsSkipped() {
+            // given: 결제 시작만 하고 승인 요청 전인 attempt
+            issueBill();
+            paymentAttemptService.startPayment(asReceptionId);
+
+            // when
+            paymentFacadeService.reconcileStuckAttempts(cutoffIncludingNow);
+
+            // then
+            then(tossPaymentsClient).should(never()).getByOrderId(any());
+        }
     }
 }

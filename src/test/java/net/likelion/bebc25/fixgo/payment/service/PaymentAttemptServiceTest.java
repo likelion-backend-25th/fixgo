@@ -3,6 +3,7 @@ package net.likelion.bebc25.fixgo.payment.service;
 import jakarta.persistence.EntityManager;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.config.JpaConfig;
+import net.likelion.bebc25.fixgo.payment.client.TossDto;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
 import net.likelion.bebc25.fixgo.payment.entity.*;
 import net.likelion.bebc25.fixgo.payment.exception.PaymentErrorCode;
@@ -20,9 +21,10 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 
 @DataJpaTest
 @Import({JpaConfig.class, AsReceptionFixture.class, PaymentAttemptService.class})
@@ -202,7 +204,7 @@ public class PaymentAttemptServiceTest {
             PaymentBill bill = issueBill();
             PaymentAttempt attempt = startAndFindAttempt(asReceptionId);
             attempt.markInProgress();
-            attempt.markCardDone("pk-done", LocalDateTime.now());
+            attempt.markOnlineDone("pk-done", PaymentMethod.CARD, LocalDateTime.now());
             em.flush();
             em.clear();
 
@@ -359,119 +361,294 @@ public class PaymentAttemptServiceTest {
         // 동시 요청 테스트는 실제 커밋이 필요해서 PaymentAttemptServiceConcurrencyTest에 따로 둔다.
     }
 
+    /**
+     * 토스 결제 상태(승인 응답 또는 결제 조회 응답)를 받아 attempt를 맞춘다.
+     * 스케줄러와 승인 스레드가 둘 다 호출할 수 있으므로, 누가 먼저 호출하든 결과가 같고 두 번 반영되지 않아야 한다.
+     */
     @Nested
-    @DisplayName("completeConfirm")
-    class CompleteConfirm {
-        private final LocalDateTime approvedAt =
-                LocalDateTime.of(2026, 10, 31, 15, 30);
+    @DisplayName("reconcile")
+    class Reconcile {
+        private static final String PAYMENT_KEY = "test_payment_key";
+        private final OffsetDateTime tossApprovedAt =
+                OffsetDateTime.of(2026, 10, 31, 15, 30, 0, 0, ZoneOffset.ofHours(9));
+        private final LocalDateTime approvedAt = LocalDateTime.of(2026, 10, 31, 15, 30);
 
-        @Test
-        @DisplayName("승인 진행 중인 결제 시도를 완료하면 attempt는 DONE, bill은 PAID가 된다.")
-        void success() {
-            // given: IN_PROGRESS attempt
-            PaymentBill bill = issueBill();
+        private TossDto.ConfirmResponse tossPayment(String orderId, String status, String method) {
+            return new TossDto.ConfirmResponse(PAYMENT_KEY, orderId, status, method, tossApprovedAt, null, null, null);
+        }
+
+        /**
+         * 토스 응답을 받지 못해 IN_PROGRESS로 남은 attempt
+         */
+        private PaymentAttempt inProgressAttempt() {
             PaymentAttempt attempt = startAndFindAttempt(asReceptionId);
             paymentAttemptService.prepareConfirm(attempt.getOrderId(), attempt.getAmount());
             em.flush();
             em.clear();
+            return attempt;
+        }
+
+        private PaymentAttempt reload(PaymentAttempt attempt) {
+            return paymentAttemptRepository.findById(attempt.getId()).orElseThrow();
+        }
+
+        private PaymentBill reload(PaymentBill bill) {
+            return paymentBillRepository.findById(bill.getId()).orElseThrow();
+        }
+
+        @Test
+        @DisplayName("토스 결제가 DONE이면 attempt는 DONE, bill은 PAID가 되고 승인 정보가 기록된다.")
+        void done() {
+            // given
+            PaymentBill bill = issueBill();
+            PaymentAttempt attempt = inProgressAttempt();
 
             // when
-            paymentAttemptService.completeConfirm(attempt.getOrderId(), "test_payment_key", approvedAt);
+            paymentAttemptService.reconcile(tossPayment(attempt.getOrderId(), "DONE", "카드"));
             em.flush();
             em.clear();
 
             // then: attempt
-            PaymentAttempt reloadedAttempt = paymentAttemptRepository.findById(attempt.getId()).orElseThrow();
+            PaymentAttempt reloadedAttempt = reload(attempt);
             assertThat(reloadedAttempt.getStatus()).isEqualTo(PaymentAttemptStatus.DONE);
-            assertThat(reloadedAttempt.getPaymentKey()).isEqualTo("test_payment_key");
+            assertThat(reloadedAttempt.getPaymentKey()).isEqualTo(PAYMENT_KEY);
             assertThat(reloadedAttempt.getMethod()).isEqualTo(PaymentMethod.CARD);
-            assertThat(reloadedAttempt.getApprovedAt()).isEqualTo(LocalDateTime.of(2026, 10, 31, 15, 30));
+            assertThat(reloadedAttempt.getApprovedAt()).isEqualTo(approvedAt);
 
             // then: bill
-            PaymentBill reloadedBill = paymentBillRepository.findById(bill.getId()).orElseThrow();
+            PaymentBill reloadedBill = reload(bill);
             assertThat(reloadedBill.getStatus()).isEqualTo(PaymentBillStatus.PAID);
-            assertThat(reloadedBill.getPaidAt()).isEqualTo(LocalDateTime.of(2026, 10, 31, 15, 30));
+            assertThat(reloadedBill.getPaidAt()).isEqualTo(approvedAt);
         }
 
         @Test
-        @DisplayName("승인 준비를 거치지 않은 결제 시도는 완료할 수 없고 상태도 바뀌지 않는다.")
-        void notInProgress() {
-            // given: READY attempt (prepareConfirm을 거치지 않음)
+        @DisplayName("간편결제로 승인되면 결제수단이 EASY_PAY로 저장된다.")
+        void doneByEasyPay() {
+            // given
+            issueBill();
+            PaymentAttempt attempt = inProgressAttempt();
+
+            // when
+            paymentAttemptService.reconcile(tossPayment(attempt.getOrderId(), "DONE", "간편결제"));
+            em.flush();
+            em.clear();
+
+            // then
+            PaymentAttempt reloadedAttempt = reload(attempt);
+            assertThat(reloadedAttempt.getStatus()).isEqualTo(PaymentAttemptStatus.DONE);
+            assertThat(reloadedAttempt.getMethod()).isEqualTo(PaymentMethod.EASY_PAY);
+        }
+
+        @Test
+        @DisplayName("승인 준비를 거치지 않은 READY 결제에는 토스 결과를 반영하지 않는다.")
+        void readyIsNotReconciled() {
+            // given: 승인 요청 전인 attempt
             PaymentBill bill = issueBill();
             PaymentAttempt attempt = startAndFindAttempt(asReceptionId);
             em.flush();
             em.clear();
 
-            // when & then
-            assertThatThrownBy(() -> paymentAttemptService.completeConfirm(attempt.getOrderId(), "test_payment_key", approvedAt))
-                    .isInstanceOf(IllegalStateException.class);
-
-            // then: attempt와 bill 모두 그대로
+            // when
+            PaymentAttemptStatus result = paymentAttemptService.reconcile(tossPayment(attempt.getOrderId(), "DONE", "카드"));
+            em.flush();
             em.clear();
-            assertThat(paymentAttemptRepository.findById(attempt.getId()).orElseThrow().getStatus())
-                    .isEqualTo(PaymentAttemptStatus.READY);
-            assertThat(paymentBillRepository.findById(bill.getId()).orElseThrow().getStatus())
-                    .isEqualTo(PaymentBillStatus.UNPAID);
+
+            // then
+            assertThat(result).isEqualTo(PaymentAttemptStatus.READY);
+            assertThat(reload(attempt).getStatus()).isEqualTo(PaymentAttemptStatus.READY);
+            assertThat(reload(bill).getStatus()).isEqualTo(PaymentBillStatus.UNPAID);
         }
-    }
-
-    @Nested
-    @DisplayName("issueVirtualAccount")
-    class IssueVirtualAccount {
-
-        private final LocalDateTime dueAt = LocalDateTime.of(2026, 11, 9, 23, 59, 59);
 
         @Test
-        @DisplayName("승인 진행 중인 시도에 가상계좌가 발급되면 입금 대기가 되고 계좌 정보가 저장된다. bill은 UNPAID 그대로다.")
-        void success() {
-            // given: IN_PROGRESS attempt
+        @DisplayName("토스 결제가 ABORTED(승인 실패)면 attempt는 FAILED가 되고 bill은 UNPAID 그대로다.")
+        void aborted() {
+            // given
             PaymentBill bill = issueBill();
-            PaymentAttempt attempt = startAndFindAttempt(asReceptionId);
-            paymentAttemptService.prepareConfirm(attempt.getOrderId(), attempt.getAmount());
+            PaymentAttempt attempt = inProgressAttempt();
 
             // when
-            paymentAttemptService.issueVirtualAccount(
-                    attempt.getOrderId(), "test_payment_key", "20", "12345678901234", "ps_test_secret", dueAt);
+            paymentAttemptService.reconcile(tossPayment(attempt.getOrderId(), "ABORTED", "카드"));
+            em.flush();
+            em.clear();
+
+            // then
+            PaymentAttempt reloadedAttempt = reload(attempt);
+            assertThat(reloadedAttempt.getStatus()).isEqualTo(PaymentAttemptStatus.FAILED);
+            assertThat(reloadedAttempt.getFailureCode()).isNotNull();
+            assertThat(reload(bill).getStatus()).isEqualTo(PaymentBillStatus.UNPAID);
+        }
+
+        @Test
+        @DisplayName("토스 결제가 EXPIRED(유효 시간 만료)면 attempt는 FAILED가 된다.")
+        void expired() {
+            // given
+            PaymentBill bill = issueBill();
+            PaymentAttempt attempt = inProgressAttempt();
+
+            // when
+            paymentAttemptService.reconcile(tossPayment(attempt.getOrderId(), "EXPIRED", "카드"));
+            em.flush();
+            em.clear();
+
+            // then
+            PaymentAttempt reloadedAttempt = reload(attempt);
+            assertThat(reloadedAttempt.getStatus()).isEqualTo(PaymentAttemptStatus.FAILED);
+            assertThat(reloadedAttempt.getFailureCode()).isNotNull();
+            assertThat(reload(bill).getStatus()).isEqualTo(PaymentBillStatus.UNPAID);
+        }
+
+        @Test
+        @DisplayName("토스 응답에 실패 정보(failure)가 있으면 그 코드와 메시지로 FAILED를 기록한다.")
+        void abortedWithFailureInfo() {
+            // given
+            issueBill();
+            PaymentAttempt attempt = inProgressAttempt();
+            TossDto.ConfirmResponse payment = new TossDto.ConfirmResponse(
+                    PAYMENT_KEY, attempt.getOrderId(), "ABORTED", "카드", null, null, null,
+                    new TossDto.ConfirmResponse.Failure("REJECT_CARD_COMPANY", "카드사에서 거절했습니다."));
+
+            // when
+            paymentAttemptService.reconcile(payment);
+            em.flush();
+            em.clear();
+
+            // then
+            PaymentAttempt reloadedAttempt = reload(attempt);
+            assertThat(reloadedAttempt.getFailureCode()).isEqualTo("REJECT_CARD_COMPANY");
+            assertThat(reloadedAttempt.getFailureMessage()).isEqualTo("카드사에서 거절했습니다.");
+        }
+
+        @Test
+        @DisplayName("토스 응답에 실패 정보가 없으면(만료 등) 토스 상태로 만든 기본 코드를 기록한다.")
+        void expiredWithoutFailureInfo() {
+            // given
+            issueBill();
+            PaymentAttempt attempt = inProgressAttempt();
+
+            // when
+            paymentAttemptService.reconcile(tossPayment(attempt.getOrderId(), "EXPIRED", "카드"));
+            em.flush();
+            em.clear();
+
+            // then
+            assertThat(reload(attempt).getFailureCode()).isEqualTo("TOSS_EXPIRED");
+        }
+
+        @Test
+        @DisplayName("반영 결과로 바뀐 attempt 상태를 돌려준다.")
+        void returnsResultStatus() {
+            // given
+            issueBill();
+            PaymentAttempt attempt = inProgressAttempt();
+
+            // when
+            PaymentAttemptStatus result = paymentAttemptService.reconcile(tossPayment(attempt.getOrderId(), "DONE", "카드"));
+
+            // then
+            assertThat(result).isEqualTo(PaymentAttemptStatus.DONE);
+        }
+
+        @Test
+        @DisplayName("토스 결제가 아직 IN_PROGRESS면 확정 전이므로 아무것도 바꾸지 않는다.")
+        void tossStillInProgress() {
+            // given
+            PaymentBill bill = issueBill();
+            PaymentAttempt attempt = inProgressAttempt();
+
+            // when
+            paymentAttemptService.reconcile(tossPayment(attempt.getOrderId(), "IN_PROGRESS", "카드"));
+            em.flush();
+            em.clear();
+
+            // then
+            PaymentAttempt reloadedAttempt = reload(attempt);
+            assertThat(reloadedAttempt.getStatus()).isEqualTo(PaymentAttemptStatus.IN_PROGRESS);
+            assertThat(reloadedAttempt.getPaymentKey()).isNull();
+            assertThat(reload(bill).getStatus()).isEqualTo(PaymentBillStatus.UNPAID);
+        }
+
+        @Test
+        @DisplayName("토스 결제가 WAITING_FOR_DEPOSIT이면 attempt는 입금 대기가 되고 가상계좌 정보가 저장된다.")
+        void waitingForDeposit() {
+            // given
+            PaymentBill bill = issueBill();
+            PaymentAttempt attempt = inProgressAttempt();
+            OffsetDateTime dueDate = OffsetDateTime.of(2026, 11, 9, 23, 59, 59, 0, ZoneOffset.ofHours(9));
+            TossDto.ConfirmResponse payment = new TossDto.ConfirmResponse(
+                    PAYMENT_KEY, attempt.getOrderId(), "WAITING_FOR_DEPOSIT", "가상계좌", null, "ps_test_secret",
+                    new TossDto.ConfirmResponse.VirtualAccount("12345678901234", "20", dueDate), null);
+
+            // when
+            paymentAttemptService.reconcile(payment);
             em.flush();
             em.clear();
 
             // then: attempt
-            PaymentAttempt reloaded = paymentAttemptRepository.findById(attempt.getId()).orElseThrow();
-            assertThat(reloaded.getStatus()).isEqualTo(PaymentAttemptStatus.WAITING_FOR_DEPOSIT);
-            assertThat(reloaded.getPaymentKey()).isEqualTo("test_payment_key");
-            assertThat(reloaded.getMethod()).isEqualTo(PaymentMethod.VIRTUAL_ACCOUNT);
-            assertThat(reloaded.getApprovedAt()).isNull();
+            PaymentAttempt reloadedAttempt = reload(attempt);
+            assertThat(reloadedAttempt.getStatus()).isEqualTo(PaymentAttemptStatus.WAITING_FOR_DEPOSIT);
+            assertThat(reloadedAttempt.getPaymentKey()).isEqualTo(PAYMENT_KEY);
+            assertThat(reloadedAttempt.getMethod()).isEqualTo(PaymentMethod.VIRTUAL_ACCOUNT);
 
-            // then: 계좌 정보. 매개변수 순서가 바뀌는 실수를 잡기 위해 필드를 하나씩 확인한다
+            // then: 계좌 정보
             VirtualAccount virtualAccount = virtualAccountRepository.findByPaymentAttemptId(attempt.getId()).orElseThrow();
             assertThat(virtualAccount.getBankCode()).isEqualTo("20");
             assertThat(virtualAccount.getAccountNumber()).isEqualTo("12345678901234");
             assertThat(virtualAccount.getWebhookSecret()).isEqualTo("ps_test_secret");
-            assertThat(virtualAccount.getDueAt()).isEqualTo(dueAt);
+            assertThat(virtualAccount.getDueAt()).isEqualTo(LocalDateTime.of(2026, 11, 9, 23, 59, 59));
 
-            // then: 입금 전이므로 청구서는 그대로
-            assertThat(paymentBillRepository.findById(bill.getId()).orElseThrow().getStatus())
-                    .isEqualTo(PaymentBillStatus.UNPAID);
+            // then: 입금 전이므로 bill은 그대로
+            assertThat(reload(bill).getStatus()).isEqualTo(PaymentBillStatus.UNPAID);
         }
 
         @Test
-        @DisplayName("승인 준비를 거치지 않은 시도에는 가상계좌를 발급할 수 없고 계좌도 저장되지 않는다.")
-        void notInProgress() {
-            // given: READY attempt
+        @DisplayName("이미 DONE으로 반영된 결제에 같은 DONE 결과가 다시 오면 예외 없이 무시한다.")
+        void alreadyDone() {
+            // given: 다른 쪽(승인 스레드 또는 스케줄러)이 먼저 같은 결과로 DONE을 반영함
             PaymentBill bill = issueBill();
-            PaymentAttempt attempt = startAndFindAttempt(asReceptionId);
+            PaymentAttempt attempt = inProgressAttempt();
+            paymentAttemptService.reconcile(tossPayment(attempt.getOrderId(), "DONE", "카드"));
+            em.flush();
+            em.clear();
+
+            // when & then: bill.markPaid가 두 번 불리면 PAID → PAID 전이로 예외가 난다
+            assertThatCode(() -> paymentAttemptService.reconcile(tossPayment(attempt.getOrderId(), "DONE", "카드")))
+                    .doesNotThrowAnyException();
+            em.flush();
+            em.clear();
+
+            // then: 그대로
+            assertThat(reload(attempt).getStatus()).isEqualTo(PaymentAttemptStatus.DONE);
+            PaymentBill reloadedBill = reload(bill);
+            assertThat(reloadedBill.getStatus()).isEqualTo(PaymentBillStatus.PAID);
+            assertThat(reloadedBill.getPaidAt()).isEqualTo(approvedAt);
+        }
+
+        @Test
+        @DisplayName("이미 FAILED로 반영된 결제에 토스 DONE이 오면 예외 없이 상태를 바꾸지 않는다. (수동 확인 대상)")
+        void alreadyFailedButTossDone() {
+            // given: 거절로 FAILED 처리된 attempt
+            PaymentBill bill = issueBill();
+            PaymentAttempt attempt = inProgressAttempt();
+            paymentAttemptService.failConfirm(attempt.getOrderId(), "REJECT_CARD_COMPANY", "카드사 거절");
             em.flush();
             em.clear();
 
             // when & then
-            assertThatThrownBy(() -> paymentAttemptService.issueVirtualAccount(
-                    attempt.getOrderId(), "test_payment_key", "20", "12345678901234", "ps_test_secret", dueAt))
-                    .isInstanceOf(IllegalStateException.class);
-
+            assertThatCode(() -> paymentAttemptService.reconcile(tossPayment(attempt.getOrderId(), "DONE", "카드")))
+                    .doesNotThrowAnyException();
+            em.flush();
             em.clear();
-            assertThat(virtualAccountRepository.findByPaymentAttemptId(attempt.getId())).isEmpty();
-            assertThat(paymentAttemptRepository.findById(attempt.getId()).orElseThrow().getStatus())
-                    .isEqualTo(PaymentAttemptStatus.READY);
+
+            // then: 자동으로 되돌리지 않는다
+            assertThat(reload(attempt).getStatus()).isEqualTo(PaymentAttemptStatus.FAILED);
+            assertThat(reload(bill).getStatus()).isEqualTo(PaymentBillStatus.UNPAID);
+        }
+
+        @Test
+        @DisplayName("없는 orderId면 예외가 발생한다.")
+        void orderNotFound() {
+            assertThatThrownBy(() -> paymentAttemptService.reconcile(tossPayment("not-exist-order-id", "DONE", "카드")))
+                    .isInstanceOf(IllegalStateException.class);
         }
     }
 }

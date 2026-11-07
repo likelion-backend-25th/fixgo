@@ -50,4 +50,11 @@ public class TossPaymentsClient {
                 .retrieve()
                 .body(TossDto.CancelResponse.class);
     }
+
+    public TossDto.ConfirmResponse getByOrderId(String orderId) {
+        return restClient.get()
+                .uri("/orders/{orderId}", orderId)
+                .retrieve()
+                .body(TossDto.ConfirmResponse.class);
+    }
 }

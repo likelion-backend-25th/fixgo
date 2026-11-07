@@ -19,6 +19,7 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -61,8 +62,9 @@ class PaymentWebhookServiceTest {
         paymentBillRepository.save(PaymentBill.create(reception, 30_000L, PaymentBillType.REPAIR));
         PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(asReceptionId);
         paymentAttemptService.prepareConfirm(started.orderId(), started.amount());
-        paymentAttemptService.issueVirtualAccount(
-                started.orderId(), PAYMENT_KEY, "20", "12345678901234", SECRET, DUE_AT);
+        paymentAttemptService.reconcile(new TossDto.ConfirmResponse(
+                PAYMENT_KEY, started.orderId(), "WAITING_FOR_DEPOSIT", "가상계좌", null, SECRET,
+                new TossDto.ConfirmResponse.VirtualAccount("12345678901234", "20", DUE_AT.atOffset(ZoneOffset.ofHours(9))), null));
         em.flush();
         em.clear();
         return started.orderId();
@@ -159,7 +161,8 @@ class PaymentWebhookServiceTest {
         paymentBillRepository.save(PaymentBill.create(reception, 30_000L, PaymentBillType.REPAIR));
         PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(asReceptionId);
         paymentAttemptService.prepareConfirm(started.orderId(), started.amount());
-        paymentAttemptService.completeConfirm(started.orderId(), PAYMENT_KEY, DEPOSITED_AT);
+        paymentAttemptService.reconcile(new TossDto.ConfirmResponse(
+                PAYMENT_KEY, started.orderId(), "DONE", "카드", DEPOSITED_AT.atOffset(ZoneOffset.ofHours(9)), null, null, null));
         em.flush();
         em.clear();
 

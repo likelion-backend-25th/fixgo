@@ -4,6 +4,7 @@ import jakarta.persistence.EntityManager;
 import net.likelion.bebc25.fixgo.config.JpaConfig;
 import net.likelion.bebc25.fixgo.support.AsReceptionFixture;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
+import net.likelion.bebc25.fixgo.payment.client.TossDto;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentInternalDto;
 import net.likelion.bebc25.fixgo.payment.entity.*;
@@ -18,6 +19,7 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -62,7 +64,8 @@ class PaymentRefundServiceTest {
         PaymentBill bill = paymentBillRepository.save(PaymentBill.create(reception, 30_000L, PaymentBillType.REPAIR));
         PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(asReceptionId);
         paymentAttemptService.prepareConfirm(started.orderId(), started.amount());
-        paymentAttemptService.completeConfirm(started.orderId(), PAYMENT_KEY, LocalDateTime.of(2026, 11, 4, 10, 0));
+        paymentAttemptService.reconcile(new TossDto.ConfirmResponse(
+                PAYMENT_KEY, started.orderId(), "DONE", "카드", LocalDateTime.of(2026, 11, 4, 10, 0).atOffset(ZoneOffset.ofHours(9)), null, null, null));
         em.flush();
         em.clear();
         return bill.getId();

@@ -49,7 +49,7 @@ class PaymentStatisticsRepositoryTest {
     private PaymentAttempt createDoneAttempt(PaymentBill bill, String paymentKey, LocalDateTime approvedAt) {
         PaymentAttempt attempt = PaymentAttempt.create(bill);
         attempt.markInProgress();
-        attempt.markCardDone(paymentKey, approvedAt);
+        attempt.markOnlineDone(paymentKey, PaymentMethod.CARD, approvedAt);
 
         return paymentAttemptRepository.save(attempt);
     }

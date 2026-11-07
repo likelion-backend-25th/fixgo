@@ -3,6 +3,7 @@ package net.likelion.bebc25.fixgo.payment.service;
 import jakarta.persistence.EntityManager;
 import net.likelion.bebc25.fixgo.config.JpaConfig;
 import net.likelion.bebc25.fixgo.support.AsReceptionFixture;
+import net.likelion.bebc25.fixgo.payment.client.TossDto;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.payment.client.TossPaymentsClient;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
@@ -19,6 +20,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
@@ -65,8 +67,9 @@ class PaymentCancelServiceTest {
         paymentBillRepository.save(PaymentBill.create(reception, 30_000L, PaymentBillType.REPAIR));
         PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(asReceptionId);
         paymentAttemptService.prepareConfirm(started.orderId(), started.amount());
-        paymentAttemptService.issueVirtualAccount(
-                started.orderId(), PAYMENT_KEY, "20", "12345678901234", "ps_test_secret", DUE_AT);
+        paymentAttemptService.reconcile(new TossDto.ConfirmResponse(
+                PAYMENT_KEY, started.orderId(), "WAITING_FOR_DEPOSIT", "가상계좌", null, "ps_test_secret",
+                new TossDto.ConfirmResponse.VirtualAccount("12345678901234", "20", DUE_AT.atOffset(ZoneOffset.ofHours(9))), null));
         em.flush();
         em.clear();
         return started.orderId();
