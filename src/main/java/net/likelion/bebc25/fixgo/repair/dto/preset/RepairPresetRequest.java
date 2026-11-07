@@ -12,7 +12,4 @@ public class RepairPresetRequest {
     private String name;
 
     private String description;
-
-    @NotBlank(message = "생성자 정보는 필수입니다.")
-    private String createdBy;
 }

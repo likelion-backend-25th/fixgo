@@ -4,13 +4,13 @@ import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
+import net.likelion.bebc25.fixgo.repair.dto.repair.RepairMessageResponse;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairRequest;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairResponse;
 import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairDecision;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
 import net.likelion.bebc25.fixgo.repair.entity.repair.WarrantyResult;
-import net.likelion.bebc25.fixgo.repair.mapper.RepairMapper;
 import net.likelion.bebc25.fixgo.repair.repository.RepairRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -21,7 +21,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -43,18 +42,19 @@ class RepairServiceTest {
     @Mock
     private MemberRepository memberRepository;
 
-    private RepairMapper repairMapper;
-
-    private RepairService repairService;
-
     @Mock
     private RepairStatusService repairStatusService;
 
+    private RepairService repairService;
+
     @BeforeEach
     void setUp() {
-        repairMapper = new RepairMapper();
-
-        repairService = new RepairService(repairRepository, repairMapper, asReceptionRepository, memberRepository, repairStatusService);
+        repairService = new RepairService(
+                repairRepository,
+                asReceptionRepository,
+                memberRepository,
+                repairStatusService
+        );
     }
 
     // 테스트용 A/S 접수 정보 생성
@@ -73,9 +73,26 @@ class RepairServiceTest {
         AsReception asReception = createAsReception();
         Member technician = createTechnician();
 
-        Repair repair = new Repair(asReception, technician, WarrantyResult.FREE, RepairStatus.DIAGNOSING);
+        Repair repair = new Repair(
+                asReception,
+                technician,
+                WarrantyResult.FREE,
+                RepairStatus.DIAGNOSING
+        );
 
-        repair.updateRepairInfo(asReception, technician, "메인보드 점검", "부품 교체", RepairDecision.REPAIRABLE, WarrantyResult.FREE, "보증 기간 내", 10000, 5000, 15000, null);
+        repair.updateRepairInfo(
+                asReception,
+                technician,
+                "메인보드 점검",
+                "부품 교체",
+                RepairDecision.REPAIRABLE,
+                WarrantyResult.FREE,
+                "보증 기간 내",
+                10000,
+                5000,
+                15000,
+                null
+        );
 
         ReflectionTestUtils.setField(repair, "id", 1L);
 
@@ -85,25 +102,28 @@ class RepairServiceTest {
     // 테스트용 요청 DTO 생성
     private RepairRequest createRequestDto() {
 
-        RepairRequest dto = new RepairRequest();
-
-        dto.setAsReceptionId(10L);
-        dto.setTechnicianId(20L);
-        dto.setDiagnosis("메인보드 점검");
-        dto.setWorkNote("부품 교체");
-        dto.setRepairDecision(RepairDecision.REPAIRABLE);
-        dto.setWarrantyResult("FREE");
-        dto.setReason("보증 기간 내");
-        dto.setLaborRate(10000);
-        dto.setInspectionCost(5000);
-        dto.setFinalAmount(15000);
-        dto.setStatus("REQUESTED");
-
-        return dto;
+        return new RepairRequest(
+                10L,
+                20L,
+                "메인보드 점검",
+                "부품 교체",
+                RepairDecision.REPAIRABLE,
+                "FREE",
+                "보증 기간 내",
+                10000,
+                5000,
+                15000,
+                "REQUESTED",
+                null
+        );
     }
 
+    // ==========================================
     // 수리 등록 테스트
+    // ==========================================
+
     @Test
+    @DisplayName("수리 정보를 정상적으로 등록한다.")
     void createRepairTest() {
 
         RepairRequest dto = createRequestDto();
@@ -111,21 +131,71 @@ class RepairServiceTest {
         AsReception asReception = createAsReception();
         Member technician = createTechnician();
 
-        when(asReceptionRepository.findById(10L)).thenReturn(Optional.of(asReception));
+        when(asReceptionRepository.findById(10L))
+                .thenReturn(Optional.of(asReception));
 
-        when(memberRepository.findById(20L)).thenReturn(Optional.of(technician));
+        when(memberRepository.findById(20L))
+                .thenReturn(Optional.of(technician));
 
-        Map<String, String> response = repairService.createRepair(dto, TEST_EMAIL);
+        RepairMessageResponse response =
+                repairService.createRepair(dto, TEST_EMAIL);
 
-        assertEquals("수리 정보가 등록되었습니다.", response.get("message"));
+        assertEquals("수리 정보가 등록되었습니다.", response.message());
 
-        verify(asReceptionRepository, times(1)).findById(10L);
-        verify(memberRepository, times(1)).findById(20L);
-        verify(repairRepository, times(1)).save(any(Repair.class));
+        verify(asReceptionRepository).findById(10L);
+        verify(memberRepository).findById(20L);
+        verify(repairRepository).save(any(Repair.class));
     }
 
-    // 전체 수리 조회 테스트
     @Test
+    @DisplayName("존재하지 않는 A/S 접수 ID로 수리 등록 시 예외가 발생한다.")
+    void createRepairAsReceptionNotFoundTest() {
+
+        RepairRequest dto = createRequestDto();
+
+        when(asReceptionRepository.findById(10L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> repairService.createRepair(dto, TEST_EMAIL)
+        );
+
+        verify(asReceptionRepository).findById(10L);
+        verifyNoInteractions(memberRepository);
+        verify(repairRepository, never()).save(any(Repair.class));
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 담당 기사 ID로 수리 등록 시 예외가 발생한다.")
+    void createRepairTechnicianNotFoundTest() {
+
+        RepairRequest dto = createRequestDto();
+
+        AsReception asReception = createAsReception();
+
+        when(asReceptionRepository.findById(10L))
+                .thenReturn(Optional.of(asReception));
+
+        when(memberRepository.findById(20L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> repairService.createRepair(dto, TEST_EMAIL)
+        );
+
+        verify(asReceptionRepository).findById(10L);
+        verify(memberRepository).findById(20L);
+        verify(repairRepository, never()).save(any(Repair.class));
+    }
+
+    // ==========================================
+    // 수리 목록 및 상세 조회 테스트
+    // ==========================================
+
+    @Test
+    @DisplayName("전체 수리 목록을 조회한다.")
     void getAllRepairsTest() {
 
         Repair repair = createRepair();
@@ -135,20 +205,20 @@ class RepairServiceTest {
 
         List<Repair> repairs = List.of(repair);
 
-        when(repairRepository.findAll()).thenReturn(repairs);
+        when(repairRepository.findAllWithDetails()).thenReturn(repairs);
 
         List<RepairResponse> response = repairService.getAllRepairs();
 
         assertEquals(1, response.size());
-        assertEquals(1L, response.get(0).getId());
-        assertEquals(10L, response.get(0).getAsReceptionId());
-        assertEquals(20L, response.get(0).getTechnicianId());
+        assertEquals(1L, response.get(0).id());
+        assertEquals(10L, response.get(0).asReceptionId());
+        assertEquals(20L, response.get(0).technicianId());
 
-        verify(repairRepository, times(1)).findAll();
+        verify(repairRepository).findAllWithDetails();
     }
 
-    // 수리 상세 조회 테스트
     @Test
+    @DisplayName("수리 상세 정보를 조회한다.")
     void getRepairTest() {
 
         Repair repair = createRepair();
@@ -156,19 +226,20 @@ class RepairServiceTest {
         when(repair.getAsReception().getId()).thenReturn(10L);
         when(repair.getTechnician().getId()).thenReturn(20L);
 
-        when(repairRepository.findById(1L)).thenReturn(Optional.of(repair));
+        when(repairRepository.findById(1L))
+                .thenReturn(Optional.of(repair));
 
         RepairResponse response = repairService.getRepair(1L);
 
-        assertEquals(1L, response.getId());
-        assertEquals(10L, response.getAsReceptionId());
-        assertEquals(20L, response.getTechnicianId());
+        assertEquals(1L, response.id());
+        assertEquals(10L, response.asReceptionId());
+        assertEquals(20L, response.technicianId());
 
-        verify(repairRepository, times(1)).findById(1L);
+        verify(repairRepository).findById(1L);
     }
 
-    // A/S 접수번호로 수리 상세 조회 테스트
     @Test
+    @DisplayName("A/S 접수번호로 수리 상세 정보를 조회한다.")
     void getRepairByReceptionNumberTest() {
 
         Repair repair = createRepair();
@@ -177,18 +248,39 @@ class RepairServiceTest {
         when(repair.getAsReception().getId()).thenReturn(10L);
         when(repair.getTechnician().getId()).thenReturn(20L);
 
-        when(repairRepository.findByReceptionNumber(receptionNumber)).thenReturn(Optional.of(repair));
+        when(repairRepository.findByAsReception_ReceptionNumber(receptionNumber))
+                .thenReturn(Optional.of(repair));
 
-        RepairResponse response = repairService.getRepairByReceptionNumber(receptionNumber);
+        RepairResponse response =
+                repairService.getRepairByReceptionNumber(receptionNumber);
 
-        assertEquals(1L, response.getId());
-        assertEquals(10L, response.getAsReceptionId());
-        assertEquals(20L, response.getTechnicianId());
+        assertEquals(1L, response.id());
+        assertEquals(10L, response.asReceptionId());
+        assertEquals(20L, response.technicianId());
 
-        verify(repairRepository, times(1)).findByReceptionNumber(receptionNumber);
+        verify(repairRepository)
+                .findByAsReception_ReceptionNumber(receptionNumber);
     }
 
-    // 본인 담당 수리 목록 조회 테스트
+    @Test
+    @DisplayName("존재하지 않는 수리 정보를 조회하면 예외가 발생한다.")
+    void getRepairNotFoundTest() {
+
+        when(repairRepository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> repairService.getRepair(999L)
+        );
+
+        verify(repairRepository).findById(999L);
+    }
+
+    // ==========================================
+    // 담당 기사별 수리 조회 테스트
+    // ==========================================
+
     @Test
     @DisplayName("로그인한 기사에게 배정된 수리 목록을 조회한다.")
     void getMyRepairsTest() {
@@ -200,19 +292,20 @@ class RepairServiceTest {
         when(repair.getAsReception().getId()).thenReturn(10L);
         when(repair.getTechnician().getId()).thenReturn(technicianId);
 
-        when(repairRepository.findByTechnicianId(technicianId)).thenReturn(List.of(repair));
+        when(repairRepository.findByTechnician_Id(technicianId))
+                .thenReturn(List.of(repair));
 
-        List<RepairResponse> response = repairService.getMyRepairs(technicianId);
+        List<RepairResponse> response =
+                repairService.getMyRepairs(technicianId);
 
         assertEquals(1, response.size());
-        assertEquals(1L, response.get(0).getId());
-        assertEquals(10L, response.get(0).getAsReceptionId());
-        assertEquals(technicianId, response.get(0).getTechnicianId());
+        assertEquals(1L, response.get(0).id());
+        assertEquals(10L, response.get(0).asReceptionId());
+        assertEquals(technicianId, response.get(0).technicianId());
 
-        verify(repairRepository, times(1)).findByTechnicianId(technicianId);
+        verify(repairRepository).findByTechnician_Id(technicianId);
     }
 
-    // 본인 담당 수리 상세 조회 테스트
     @Test
     @DisplayName("로그인한 기사에게 배정된 수리 상세 정보를 조회한다.")
     void getMyRepairTest() {
@@ -225,18 +318,20 @@ class RepairServiceTest {
         when(repair.getAsReception().getId()).thenReturn(10L);
         when(repair.getTechnician().getId()).thenReturn(technicianId);
 
-        when(repairRepository.findByIdAndTechnicianId(repairId, technicianId)).thenReturn(Optional.of(repair));
+        when(repairRepository.findByIdAndTechnician_Id(repairId, technicianId))
+                .thenReturn(Optional.of(repair));
 
-        RepairResponse response = repairService.getMyRepair(repairId, technicianId);
+        RepairResponse response =
+                repairService.getMyRepair(repairId, technicianId);
 
-        assertEquals(repairId, response.getId());
-        assertEquals(10L, response.getAsReceptionId());
-        assertEquals(technicianId, response.getTechnicianId());
+        assertEquals(repairId, response.id());
+        assertEquals(10L, response.asReceptionId());
+        assertEquals(technicianId, response.technicianId());
 
-        verify(repairRepository, times(1)).findByIdAndTechnicianId(repairId, technicianId);
+        verify(repairRepository)
+                .findByIdAndTechnician_Id(repairId, technicianId);
     }
 
-    // 다른 기사 담당 수리 상세 조회 차단 테스트
     @Test
     @DisplayName("본인에게 배정되지 않은 수리 건은 조회할 수 없다.")
     void getMyRepairNotAssignedTest() {
@@ -244,94 +339,188 @@ class RepairServiceTest {
         Long repairId = 1L;
         Long technicianId = 30L;
 
-        when(repairRepository.findByIdAndTechnicianId(repairId, technicianId)).thenReturn(Optional.empty());
+        when(repairRepository.findByIdAndTechnician_Id(repairId, technicianId))
+                .thenReturn(Optional.empty());
 
-        assertThrows(IllegalArgumentException.class, () -> repairService.getMyRepair(repairId, technicianId));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> repairService.getMyRepair(repairId, technicianId)
+        );
 
-        verify(repairRepository, times(1)).findByIdAndTechnicianId(repairId, technicianId);
+        verify(repairRepository)
+                .findByIdAndTechnician_Id(repairId, technicianId);
     }
 
-    // 수리 수정 테스트
+    // ==========================================
+    // 수리 정보 수정 테스트
+    // ==========================================
+
     @Test
+    @DisplayName("수리 정보를 정상적으로 수정한다.")
     void updateRepairTest() {
 
         Repair repair = createRepair();
-        RepairRequest dto = createRequestDto();
 
-        dto.setDiagnosis("CPU 점검");
-        dto.setWorkNote("CPU 교체");
+        RepairRequest dto = new RepairRequest(
+                10L,
+                20L,
+                "CPU 점검",
+                "CPU 교체",
+                RepairDecision.REPAIRABLE,
+                "FREE",
+                "보증 기간 내",
+                10000,
+                5000,
+                15000,
+                "REQUESTED",
+                null
+        );
 
         AsReception asReception = createAsReception();
         Member technician = createTechnician();
 
-        when(repairRepository.findById(1L)).thenReturn(Optional.of(repair));
+        when(repairRepository.findById(1L))
+                .thenReturn(Optional.of(repair));
 
-        when(asReceptionRepository.findById(10L)).thenReturn(Optional.of(asReception));
+        when(asReceptionRepository.findById(10L))
+                .thenReturn(Optional.of(asReception));
 
-        when(memberRepository.findById(20L)).thenReturn(Optional.of(technician));
+        when(memberRepository.findById(20L))
+                .thenReturn(Optional.of(technician));
 
-        RepairResponse response = repairService.updateRepair(1L, dto, TEST_EMAIL);
+        RepairResponse response =
+                repairService.updateRepair(1L, dto, TEST_EMAIL);
 
-        assertEquals("CPU 점검", response.getDiagnosis());
-        assertEquals("CPU 교체", response.getWorkNote());
+        assertEquals("CPU 점검", response.diagnosis());
+        assertEquals("CPU 교체", response.workNote());
 
-        verify(repairRepository, times(1)).findById(1L);
-        verify(asReceptionRepository, times(1)).findById(10L);
-        verify(memberRepository, times(1)).findById(20L);
+        verify(repairRepository).findById(1L);
+        verify(asReceptionRepository).findById(10L);
+        verify(memberRepository).findById(20L);
     }
 
-    // 수리 삭제 테스트
     @Test
+    @DisplayName("존재하지 않는 A/S 접수 ID로 수리 수정 시 예외가 발생한다.")
+    void updateRepairAsReceptionNotFoundTest() {
+
+        Repair repair = createRepair();
+
+        when(repairRepository.findById(1L))
+                .thenReturn(Optional.of(repair));
+
+        when(asReceptionRepository.findById(10L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> repairService.updateRepair(
+                        1L,
+                        createRequestDto(),
+                        TEST_EMAIL
+                )
+        );
+
+        verify(repairRepository).findById(1L);
+        verify(asReceptionRepository).findById(10L);
+        verifyNoInteractions(memberRepository);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 담당 기사 ID로 수리 수정 시 예외가 발생한다.")
+    void updateRepairTechnicianNotFoundTest() {
+
+        Repair repair = createRepair();
+
+        when(repairRepository.findById(1L))
+                .thenReturn(Optional.of(repair));
+
+        when(asReceptionRepository.findById(10L))
+                .thenReturn(Optional.of(createAsReception()));
+
+        when(memberRepository.findById(20L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> repairService.updateRepair(
+                        1L,
+                        createRequestDto(),
+                        TEST_EMAIL
+                )
+        );
+
+        verify(repairRepository).findById(1L);
+        verify(asReceptionRepository).findById(10L);
+        verify(memberRepository).findById(20L);
+    }
+
+    // ==========================================
+    // 수리 삭제 테스트
+    // ==========================================
+
+    @Test
+    @DisplayName("수리 정보를 삭제한다.")
     void deleteRepairTest() {
 
         Repair repair = createRepair();
 
-        when(repairRepository.findById(1L)).thenReturn(Optional.of(repair));
+        when(repairRepository.findById(1L))
+                .thenReturn(Optional.of(repair));
 
         repairService.deleteRepair(1L);
 
-        verify(repairRepository, times(1)).delete(repair);
+        verify(repairRepository).delete(repair);
     }
 
-    // 존재하지 않는 수리 정보 조회 테스트
-    @Test
-    void getRepairNotFoundTest() {
-
-        when(repairRepository.findById(999L)).thenReturn(Optional.empty());
-
-        assertThrows(IllegalArgumentException.class, () -> repairService.getRepair(999L));
-    }
-
+    // ==========================================
     // 수리 상태 변경 테스트
+    // ==========================================
+
     @Test
     @DisplayName("수리 상태 변경을 공통 상태 관리 서비스에 위임한다.")
     void changeRepairStatusTest() {
 
         Repair repair = createRepair();
 
-        when(repairRepository.findById(1L)).thenReturn(Optional.of(repair));
+        when(repairRepository.findById(1L))
+                .thenReturn(Optional.of(repair));
 
-        repairService.changeRepairStatus(1L, RepairStatus.REQUESTED, TEST_EMAIL);
+        repairService.changeRepairStatus(
+                1L,
+                RepairStatus.REQUESTED,
+                TEST_EMAIL
+        );
 
-        verify(repairStatusService).changeStatus(repair, RepairStatus.REQUESTED, TEST_EMAIL);
+        verify(repairStatusService)
+                .changeStatus(repair, RepairStatus.REQUESTED, TEST_EMAIL);
 
         assertEquals(RepairStatus.DIAGNOSING, repair.getStatus());
     }
 
-    // 허용되지 않은 상태 변경 테스트
     @Test
-    @DisplayName("허용되지 않은 상태 변경 요청을 공통 상태 관리 서비스에 위임한다.")
+    @DisplayName("허용되지 않은 상태 변경 요청은 예외가 발생한다.")
     void changeRepairStatusInvalidTest() {
 
         Repair repair = createRepair();
 
-        when(repairRepository.findById(1L)).thenReturn(Optional.of(repair));
+        when(repairRepository.findById(1L))
+                .thenReturn(Optional.of(repair));
 
-        doThrow(new IllegalArgumentException("허용되지 않은 상태 변경입니다.")).when(repairStatusService).changeStatus(repair, RepairStatus.APPROVED, TEST_EMAIL);
+        doThrow(new IllegalArgumentException("허용되지 않은 상태 변경입니다."))
+                .when(repairStatusService)
+                .changeStatus(repair, RepairStatus.APPROVED, TEST_EMAIL);
 
-        assertThrows(IllegalArgumentException.class, () -> repairService.changeRepairStatus(1L, RepairStatus.APPROVED, TEST_EMAIL));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> repairService.changeRepairStatus(
+                        1L,
+                        RepairStatus.APPROVED,
+                        TEST_EMAIL
+                )
+        );
 
-        verify(repairStatusService).changeStatus(repair, RepairStatus.APPROVED, TEST_EMAIL);
+        verify(repairStatusService)
+                .changeStatus(repair, RepairStatus.APPROVED, TEST_EMAIL);
 
         assertEquals(RepairStatus.DIAGNOSING, repair.getStatus());
     }
@@ -340,17 +529,21 @@ class RepairServiceTest {
     // REQ-REPAIR-05 수리 시작 테스트
     // ==========================================
 
-    // 담당 기사의 수리 시작 성공 테스트
     @Test
     @DisplayName("담당 기사가 수리를 시작한다.")
     void startRepairSuccessTest() {
+
         Repair repair = createRepair();
 
-        when(repairRepository.findByIdAndTechnicianId(1L, 1L)).thenReturn(Optional.of(repair));
+        when(repairRepository.findByIdAndTechnician_Id(1L, 1L))
+                .thenReturn(Optional.of(repair));
 
         repairService.startRepair(1L, 1L, "technician");
 
-        verify(repairRepository).findByIdAndTechnicianId(1L, 1L);
-        verify(repairStatusService).changeStatus(repair, RepairStatus.REPAIRING, "technician");
+        verify(repairRepository)
+                .findByIdAndTechnician_Id(1L, 1L);
+
+        verify(repairStatusService)
+                .changeStatus(repair, RepairStatus.REPAIRING, "technician");
     }
 }

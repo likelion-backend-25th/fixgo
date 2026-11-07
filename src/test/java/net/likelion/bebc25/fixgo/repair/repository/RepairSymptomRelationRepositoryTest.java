@@ -33,18 +33,21 @@ class RepairSymptomRelationRepositoryTest {
         LocalDateTime now = LocalDateTime.now();
 
         // 테스트용 수리 프리셋 생성
-        repairPreset = new RepairPreset("부품 교체", "부품 교체 작업 프리셋", now, now, "tester", "tester");
+        repairPreset = new RepairPreset(
+                "부품 교체",
+                "부품 교체 작업 프리셋"
+        );
 
         repairPreset = repairPresetRepository.save(repairPreset);
 
         // 테스트용 증상 관계 데이터 생성
         RepairSymptomRelation relation1 = new RepairSymptomRelation(repairPreset, now);
-
         RepairSymptomRelation relation2 = new RepairSymptomRelation(repairPreset, now);
-
         RepairSymptomRelation relation3 = new RepairSymptomRelation(repairPreset, now);
 
-        repairSymptomRelationRepository.saveAll(List.of(relation1, relation2, relation3));
+        repairSymptomRelationRepository.saveAll(
+                List.of(relation1, relation2, relation3)
+        );
     }
 
     @Test
@@ -52,11 +55,14 @@ class RepairSymptomRelationRepositoryTest {
     void findByRepairPresetId() {
 
         // when
-        List<RepairSymptomRelation> result = repairSymptomRelationRepository.findByRepairPresetId(repairPreset.getId());
+        List<RepairSymptomRelation> result =
+                repairSymptomRelationRepository.findByRepairPresetId(repairPreset.getId());
 
         // then
         assertThat(result).hasSize(3);
 
-        assertThat(result).allMatch(relation -> relation.getRepairPreset().getId().equals(repairPreset.getId()));
+        assertThat(result)
+                .allMatch(relation ->
+                                  relation.getRepairPreset().getId().equals(repairPreset.getId()));
     }
 }

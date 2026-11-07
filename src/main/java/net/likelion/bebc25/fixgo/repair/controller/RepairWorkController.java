@@ -1,5 +1,6 @@
 package net.likelion.bebc25.fixgo.repair.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
 import net.likelion.bebc25.fixgo.repair.dto.repairWork.RepairWorkRequest;
@@ -22,8 +23,12 @@ public class RepairWorkController {
 
     // 수리 작업 내역 등록
     @PostMapping
-    public ResponseEntity<RepairWorkResponse> createRepairWork(@RequestBody RepairWorkRequest dto, @AuthenticationPrincipal CustomUserDetails userDetails) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(repairWorkService.createRepairWork(dto, userDetails.getUsername()));
+    public ResponseEntity<RepairWorkResponse> createRepairWork(
+            @Valid @RequestBody RepairWorkRequest dto,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(repairWorkService.createRepairWork(dto, userDetails.getUsername()));
     }
 
     // 수리 작업 내역 전체 조회
@@ -34,31 +39,47 @@ public class RepairWorkController {
 
     // 수리 작업 내역 단건 조회
     @GetMapping("/{id}")
-    public ResponseEntity<RepairWorkResponse> getRepairWork(@PathVariable Long id) {
+    public ResponseEntity<RepairWorkResponse> getRepairWork(
+            @PathVariable Long id
+    ) {
         return ResponseEntity.ok(repairWorkService.getRepairWork(id));
     }
 
     // 특정 수리 건의 작업 내역 조회
     @GetMapping("/repair/{repairId}")
-    public ResponseEntity<List<RepairWorkResponse>> getRepairWorksByRepairId(@PathVariable Long repairId) {
-        return ResponseEntity.ok(repairWorkService.getRepairWorksByRepairId(repairId));
+    public ResponseEntity<List<RepairWorkResponse>> getRepairWorksByRepairId(
+            @PathVariable Long repairId
+    ) {
+        return ResponseEntity.ok(
+                repairWorkService.getRepairWorksByRepairId(repairId)
+        );
     }
 
     // 작업명 검색
     @GetMapping("/search")
-    public ResponseEntity<List<RepairWorkResponse>> searchRepairWorks(@RequestParam String workName) {
+    public ResponseEntity<List<RepairWorkResponse>> searchRepairWorks(
+            @RequestParam String workName
+    ) {
         return ResponseEntity.ok(repairWorkService.searchRepairWorks(workName));
     }
 
     // 수리 작업 내역 수정
     @PutMapping("/{id}")
-    public ResponseEntity<RepairWorkResponse> updateRepairWork(@PathVariable Long id, @RequestBody RepairWorkUpdate dto, @AuthenticationPrincipal CustomUserDetails userDetails) {
-        return ResponseEntity.ok(repairWorkService.updateRepairWork(id, dto, userDetails.getUsername()));
+    public ResponseEntity<RepairWorkResponse> updateRepairWork(
+            @PathVariable Long id,
+            @Valid @RequestBody RepairWorkUpdate dto,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        return ResponseEntity.ok(
+                repairWorkService.updateRepairWork(id, dto, userDetails.getUsername())
+        );
     }
 
     // 수리 작업 내역 삭제
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteRepairWork(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteRepairWork(
+            @PathVariable Long id
+    ) {
         repairWorkService.deleteRepairWork(id);
 
         return ResponseEntity.noContent().build();

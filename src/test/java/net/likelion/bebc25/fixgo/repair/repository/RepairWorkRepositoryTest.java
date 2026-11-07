@@ -70,31 +70,72 @@ class RepairWorkRepositoryTest {
         technician = memberRepository.save(technician);
 
         // 고객 생성
-        Customer customer = new Customer("테스트 고객", "010-1111-2222", "customer@test.com", "12345", "대구광역시", "중구", 1L);
+        Customer customer = new Customer(
+                "테스트 고객",
+                "010-1111-2222",
+                "customer@test.com",
+                "12345",
+                "대구광역시",
+                "중구",
+                1L
+        );
 
         customer = customerRepository.save(customer);
 
         // 제품 생성
-        Product product = new Product(1L, "TEST-SERIAL-001", now, 1L);
+        Product product = new Product(
+                1L,
+                "TEST-SERIAL-001",
+                now,
+                1L
+        );
 
         product = productRepository.save(product);
 
         // A/S 접수 정보 생성
-        AsReception asReception = new AsReception("AS-TEST-001", customer, product, technician, technician, "메인보드 이상", "전원이 켜지지 않는 증상", "테스트 접수", ReturnMethod.DELIVERY, null);
+        AsReception asReception = new AsReception(
+                "AS-TEST-001",
+                customer,
+                product,
+                technician,
+                technician,
+                "메인보드 이상",
+                "전원이 켜지지 않는 증상",
+                "테스트 접수",
+                ReturnMethod.DELIVERY,
+                null
+        );
 
         asReception = asRequestRepository.save(asReception);
 
         // 수리 정보 생성
-        repair = new Repair(asReception, technician, WarrantyResult.FREE, RepairStatus.REQUESTED);
+        repair = new Repair(
+                asReception,
+                technician,
+                WarrantyResult.FREE,
+                RepairStatus.REQUESTED
+        );
 
         repair = repairRepository.save(repair);
 
         // 수리 작업 내역 생성
-        RepairWork work1 = new RepairWork(repair, "부품 교체", "메인보드 교체", now, now, "tester", "tester");
+        RepairWork work1 = new RepairWork(
+                repair,
+                "부품 교체",
+                "메인보드 교체"
+        );
 
-        RepairWork work2 = new RepairWork(repair, "부품 교체", "메모리 교체", now, now, "tester", "tester");
+        RepairWork work2 = new RepairWork(
+                repair,
+                "부품 교체",
+                "메모리 교체"
+        );
 
-        RepairWork work3 = new RepairWork(repair, "점검 작업", "메인보드 점검", now, now, "tester", "tester");
+        RepairWork work3 = new RepairWork(
+                repair,
+                "점검 작업",
+                "메인보드 점검"
+        );
 
         repairWorkRepository.saveAll(List.of(work1, work2, work3));
     }
@@ -103,29 +144,43 @@ class RepairWorkRepositoryTest {
     @DisplayName("A/S 수리 건별 작업 내역 조회")
     void findByRepairId() {
 
-        List<RepairWork> result = repairWorkRepository.findByRepairId(repair.getId());
+        List<RepairWork> result =
+                repairWorkRepository.findByRepairId(repair.getId());
 
         assertThat(result).hasSize(3);
 
-        assertThat(result).extracting(RepairWork::getWorkName).containsExactlyInAnyOrder("메인보드 교체", "메모리 교체", "메인보드 점검");
+        assertThat(result)
+                .extracting(RepairWork::getWorkName)
+                .containsExactlyInAnyOrder(
+                        "메인보드 교체",
+                        "메모리 교체",
+                        "메인보드 점검"
+                );
     }
 
     @Test
     @DisplayName("작업명 일부로 검색")
     void findByWorkName() {
 
-        List<RepairWork> result = repairWorkRepository.findByWorkName("메인보드");
+        List<RepairWork> result =
+                repairWorkRepository.findByWorkName("메인보드");
 
         assertThat(result).hasSize(2);
 
-        assertThat(result).extracting(RepairWork::getWorkName).containsExactlyInAnyOrder("메인보드 교체", "메인보드 점검");
+        assertThat(result)
+                .extracting(RepairWork::getWorkName)
+                .containsExactlyInAnyOrder(
+                        "메인보드 교체",
+                        "메인보드 점검"
+                );
     }
 
     @Test
     @DisplayName("존재하지 않는 작업명 검색")
     void findByWorkNameNotFound() {
 
-        List<RepairWork> result = repairWorkRepository.findByWorkName("그래픽카드");
+        List<RepairWork> result =
+                repairWorkRepository.findByWorkName("그래픽카드");
 
         assertThat(result).isEmpty();
     }

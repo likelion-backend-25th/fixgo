@@ -19,6 +19,8 @@ import net.likelion.bebc25.fixgo.repair.entity.part.RepairPartUsage;
 import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairDecision;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
+import net.likelion.bebc25.fixgo.repair.exception.RepairErrorCode;
+import net.likelion.bebc25.fixgo.repair.exception.RepairException;
 import net.likelion.bebc25.fixgo.repair.repository.RepairPartUsageRepository;
 import net.likelion.bebc25.fixgo.repair.repository.RepairRepository;
 import net.likelion.bebc25.fixgo.repair.repository.RepairWorkRepository;
@@ -44,15 +46,23 @@ public class RepairCostService {
 
     // 수리비 계산 및 저장
     @Transactional
-    public int calculateRepairCost(Long repairId, String updatedBy) {
+    public int calculateRepairCost(Long repairId) {
 
-        Repair repair = repairRepository.findByIdWithLock(repairId).orElseThrow(() -> new IllegalArgumentException("수리 정보를 찾을 수 없습니다."));
+        Repair repair = repairRepository.findByIdWithLock(repairId)
+                .orElseThrow(() -> new RepairException(
+                        RepairErrorCode.REPAIR_NOT_FOUND,
+                        "수리 정보를 찾을 수 없습니다."
+                ));
 
         // A/S 접수 제품 조회
         Product product = repair.getAsReception().getProduct();
 
         // 제품 모델을 통해 제품군 조회
-        ProductModel productModel = productModelRepository.findById(product.getProductModelId()).orElseThrow(() -> new IllegalArgumentException("제품 모델을 찾을 수 없습니다."));
+        ProductModel productModel = productModelRepository.findById(product.getProductModelId())
+                .orElseThrow(() -> new RepairException(
+                        RepairErrorCode.PRODUCT_MODEL_NOT_FOUND,
+                        "제품 모델을 찾을 수 없습니다."
+                ));
 
         Category category = productModel.getCategory();
 
@@ -72,12 +82,17 @@ public class RepairCostService {
             laborRate = getLaborRate(category, RateType.LABOR_RATE);
 
             // 수리 작업 목록 조회
-            List<RepairWork> repairWorks = repairWorkRepository.findByRepairId(repairId);
+            List<RepairWork> repairWorks =
+                    repairWorkRepository.findByRepairId(repairId);
 
-            List<Long> repairWorkIds = repairWorks.stream().map(RepairWork::getId).toList();
+            List<Long> repairWorkIds = repairWorks.stream()
+                    .map(RepairWork::getId)
+                    .toList();
 
             // 실제 사용 부품 조회
-            List<RepairPartUsage> usages = repairWorkIds.isEmpty() ? List.of() : repairPartUsageRepository.findByRepairWorkIdIn(repairWorkIds);
+            List<RepairPartUsage> usages = repairWorkIds.isEmpty()
+                    ? List.of()
+                    : repairPartUsageRepository.findByRepairWorkIdIn(repairWorkIds);
 
             // 부품비 계산
             long partsCost = 0L;
@@ -86,75 +101,116 @@ public class RepairCostService {
 
                 Part part = usage.getPart();
 
-                long partCost = Math.multiplyExact(Math.multiplyExact((long) usage.getUnitPrice(), usage.getQuantity()), part.getStandardMinutes());
+                long partCost = Math.multiplyExact(
+                        Math.multiplyExact(
+                                (long) usage.getUnitPrice(),
+                                usage.getQuantity()
+                        ),
+                        part.getStandardMinutes()
+                );
 
                 partsCost = Math.addExact(partsCost, partCost);
             }
 
-            finalAmount = Math.toIntExact(Math.addExact((long) laborRate, partsCost));
+            finalAmount = Math.toIntExact(
+                    Math.addExact((long) laborRate, partsCost)
+            );
 
         } else {
-            throw new IllegalArgumentException("수리 판정 정보가 올바르지 않습니다.");
+            throw new RepairException(
+                    RepairErrorCode.INVALID_REPAIR_DECISION,
+                    "수리 판정 정보가 올바르지 않습니다."
+            );
         }
 
         // 계산 결과 저장
         repair.updateRepairCost(laborRate, inspectionCost, finalAmount);
-        repair.updateAuditInfo(updatedBy);
 
         return finalAmount;
     }
 
     // 제품군 및 요금 종류별 최신 적용 요금 조회
     private int getLaborRate(Category category, RateType rateType) {
-        LaborRate laborRate = laborRateRepository.findLatestRate(category, rateType, LocalDate.now(), PageRequest.of(0, 1)).stream().findFirst().orElseThrow(() -> new IllegalArgumentException("해당 제품군의 요금 정보를 찾을 수 없습니다."));
+
+        LaborRate laborRate = laborRateRepository.findLatestRate(
+                        category,
+                        rateType,
+                        LocalDate.now(),
+                        PageRequest.of(0, 1)
+                )
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new RepairException(
+                        RepairErrorCode.LABOR_RATE_NOT_FOUND,
+                        "해당 제품군의 요금 정보를 찾을 수 없습니다."
+                ));
 
         return laborRate.getCost();
     }
 
-    /**
-     * 수리비 확정
-     */
-
-    /**
-     * 수리비 확정
-     */
+    // 수리비 확정
     @Transactional
     public void confirmRepairCost(Long repairId, CustomUserDetails userDetails) {
 
         // 로그인 사용자 권한 확인
         if (userDetails.getMember().getRole() != Role.ROLE_TECHNICIAN) {
-            throw new IllegalArgumentException("기사 권한이 필요합니다.");
+            throw new RepairException(
+                    RepairErrorCode.REPAIR_COST_TECHNICIAN_ONLY,
+                    "기사 권한이 필요합니다."
+            );
         }
 
         // 수리 정보 잠금 조회
-        Repair repair = repairRepository.findByIdWithLock(repairId).orElseThrow(() -> new IllegalArgumentException("수리 정보를 찾을 수 없습니다."));
+        Repair repair = repairRepository.findByIdWithLock(repairId)
+                .orElseThrow(() -> new RepairException(
+                        RepairErrorCode.REPAIR_NOT_FOUND,
+                        "수리 정보를 찾을 수 없습니다."
+                ));
 
         // 담당 기사 확인
         if (!repair.getTechnician().getId().equals(userDetails.getId())) {
-            throw new IllegalArgumentException("담당 기사만 수리비를 확정할 수 있습니다.");
+            throw new RepairException(
+                    RepairErrorCode.NOT_ASSIGNED_TECHNICIAN,
+                    "담당 기사만 수리비를 확정할 수 있습니다."
+            );
         }
 
         // 수리 상태 확인
         if (repair.getStatus() != RepairStatus.DIAGNOSING) {
-            throw new IllegalArgumentException("점검 중인 건만 수리비를 확정할 수 있습니다.");
+            throw new RepairException(
+                    RepairErrorCode.REPAIR_COST_NOT_DIAGNOSING,
+                    "점검 중인 건만 수리비를 확정할 수 있습니다."
+            );
         }
 
         // 중복 확정 확인
         if (repair.getConfirmedAt() != null) {
-            throw new IllegalArgumentException("이미 수리비가 확정되었습니다.");
+            throw new RepairException(
+                    RepairErrorCode.REPAIR_COST_ALREADY_CONFIRMED,
+                    "이미 수리비가 확정되었습니다."
+            );
         }
 
         // A/S 접수 정보 잠금 조회
-        AsReception asReception = asReceptionRepository.findByIdWithLock(repair.getAsReception().getId()).orElseThrow(() -> new IllegalArgumentException("A/S 접수 정보를 찾을 수 없습니다."));
+        AsReception asReception = asReceptionRepository.findByIdWithLock(
+                        repair.getAsReception().getId()
+                )
+                .orElseThrow(() -> new RepairException(
+                        RepairErrorCode.AS_RECEPTION_NOT_FOUND,
+                        "A/S 접수 정보를 찾을 수 없습니다."
+                ));
 
         // 수리비 확정
-        repair.confirmRepairCost(userDetails.getUsername());
+        repair.confirmRepairCost();
 
         // 공통 수리 상태 변경
-        repairStatusService.changeStatus(repair, RepairStatus.REQUESTED, userDetails.getUsername());
+        repairStatusService.changeStatus(
+                repair,
+                RepairStatus.REQUESTED,
+                userDetails.getUsername()
+        );
 
         // A/S 접수 상태 변경
         asReception.changeStatus(AsReceptionStatus.AWAITING_QUOTE_APPROVAL);
     }
-
 }

@@ -92,7 +92,7 @@ class RepairRepositoryTest {
     @DisplayName("A/S 접수 ID로 수리 정보 조회")
     void findByAsReceptionIdTest() {
 
-        Optional<Repair> result = repairRepository.findByAsReceptionId(repair.getAsReception().getId());
+        Optional<Repair> result = repairRepository.findByAsReception_Id(repair.getAsReception().getId());
 
         assertThat(result).isPresent();
         assertThat(result.get().getAsReception().getId()).isEqualTo(repair.getAsReception().getId());
@@ -102,7 +102,7 @@ class RepairRepositoryTest {
     @DisplayName("담당 기사별 수리 목록 조회")
     void findByTechnicianIdTest() {
 
-        List<Repair> result = repairRepository.findByTechnicianId(technician.getId());
+        List<Repair> result = repairRepository.findByTechnician_Id(technician.getId());
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getTechnician().getId()).isEqualTo(technician.getId());
@@ -122,7 +122,7 @@ class RepairRepositoryTest {
     @DisplayName("담당 기사 및 수리 상태별 목록 조회")
     void findByTechnicianIdAndStatusTest() {
 
-        List<Repair> result = repairRepository.findByTechnicianIDAndStatus(technician.getId(), RepairStatus.REQUESTED);
+        List<Repair> result = repairRepository.findByTechnician_IdAndStatus(technician.getId(), RepairStatus.REQUESTED);
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getTechnician().getId()).isEqualTo(technician.getId());

@@ -6,6 +6,7 @@ import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
 import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
+import net.likelion.bebc25.fixgo.repair.exception.RepairException;
 import net.likelion.bebc25.fixgo.repair.repository.RepairRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -47,14 +48,19 @@ class RepairStatusServiceTest {
 
     @BeforeEach
     void setUp() {
-        repairStatusService = new RepairStatusService(asStatusHistoryService, memberRepository, repairRepository);
+        repairStatusService = new RepairStatusService(
+                asStatusHistoryService,
+                memberRepository,
+                repairRepository
+        );
     }
 
     // 잠금 조회 및 현재 상태 설정
     private void prepareStatusChange(RepairStatus currentStatus) {
         when(repair.getId()).thenReturn(1L);
 
-        when(repairRepository.findByIdWithLock(1L)).thenReturn(Optional.of(repair));
+        when(repairRepository.findByIdWithLock(1L))
+                .thenReturn(Optional.of(repair));
 
         when(repair.getStatus()).thenReturn(currentStatus);
     }
@@ -63,7 +69,8 @@ class RepairStatusServiceTest {
     private void prepareValidStatusChange() {
         when(repair.getAsReception()).thenReturn(asReception);
 
-        when(memberRepository.findByEmail(updatedBy)).thenReturn(Optional.of(changedBy));
+        when(memberRepository.findByEmail(updatedBy))
+                .thenReturn(Optional.of(changedBy));
     }
 
     @Test
@@ -72,13 +79,23 @@ class RepairStatusServiceTest {
         prepareStatusChange(RepairStatus.DIAGNOSING);
         prepareValidStatusChange();
 
-        repairStatusService.changeStatus(repair, RepairStatus.REQUESTED, updatedBy);
+        repairStatusService.changeStatus(
+                repair,
+                RepairStatus.REQUESTED,
+                updatedBy
+        );
 
         verify(repairRepository).findByIdWithLock(1L);
 
-        verify(repair).changeStatus(RepairStatus.REQUESTED, updatedBy);
+        verify(repair).changeStatus(RepairStatus.REQUESTED);
 
-        verify(asStatusHistoryService).record(asReception, "DIAGNOSING", "REQUESTED", null, changedBy);
+        verify(asStatusHistoryService).record(
+                asReception,
+                "DIAGNOSING",
+                "REQUESTED",
+                null,
+                changedBy
+        );
     }
 
     @Test
@@ -87,11 +104,21 @@ class RepairStatusServiceTest {
         prepareStatusChange(RepairStatus.REQUESTED);
         prepareValidStatusChange();
 
-        repairStatusService.changeStatus(repair, RepairStatus.APPROVED, updatedBy);
+        repairStatusService.changeStatus(
+                repair,
+                RepairStatus.APPROVED,
+                updatedBy
+        );
 
-        verify(repair).changeStatus(RepairStatus.APPROVED, updatedBy);
+        verify(repair).changeStatus(RepairStatus.APPROVED);
 
-        verify(asStatusHistoryService).record(asReception, "REQUESTED", "APPROVED", null, changedBy);
+        verify(asStatusHistoryService).record(
+                asReception,
+                "REQUESTED",
+                "APPROVED",
+                null,
+                changedBy
+        );
     }
 
     @Test
@@ -100,11 +127,21 @@ class RepairStatusServiceTest {
         prepareStatusChange(RepairStatus.REQUESTED);
         prepareValidStatusChange();
 
-        repairStatusService.changeStatus(repair, RepairStatus.REJECTED, updatedBy);
+        repairStatusService.changeStatus(
+                repair,
+                RepairStatus.REJECTED,
+                updatedBy
+        );
 
-        verify(repair).changeStatus(RepairStatus.REJECTED, updatedBy);
+        verify(repair).changeStatus(RepairStatus.REJECTED);
 
-        verify(asStatusHistoryService).record(asReception, "REQUESTED", "REJECTED", null, changedBy);
+        verify(asStatusHistoryService).record(
+                asReception,
+                "REQUESTED",
+                "REJECTED",
+                null,
+                changedBy
+        );
     }
 
     @Test
@@ -113,11 +150,21 @@ class RepairStatusServiceTest {
         prepareStatusChange(RepairStatus.APPROVED);
         prepareValidStatusChange();
 
-        repairStatusService.changeStatus(repair, RepairStatus.REPAIRING, updatedBy);
+        repairStatusService.changeStatus(
+                repair,
+                RepairStatus.REPAIRING,
+                updatedBy
+        );
 
-        verify(repair).changeStatus(RepairStatus.REPAIRING, updatedBy);
+        verify(repair).changeStatus(RepairStatus.REPAIRING);
 
-        verify(asStatusHistoryService).record(asReception, "APPROVED", "REPAIRING", null, changedBy);
+        verify(asStatusHistoryService).record(
+                asReception,
+                "APPROVED",
+                "REPAIRING",
+                null,
+                changedBy
+        );
     }
 
     @Test
@@ -126,11 +173,21 @@ class RepairStatusServiceTest {
         prepareStatusChange(RepairStatus.REPAIRING);
         prepareValidStatusChange();
 
-        repairStatusService.changeStatus(repair, RepairStatus.COMPLETED, updatedBy);
+        repairStatusService.changeStatus(
+                repair,
+                RepairStatus.COMPLETED,
+                updatedBy
+        );
 
-        verify(repair).changeStatus(RepairStatus.COMPLETED, updatedBy);
+        verify(repair).changeStatus(RepairStatus.COMPLETED);
 
-        verify(asStatusHistoryService).record(asReception, "REPAIRING", "COMPLETED", null, changedBy);
+        verify(asStatusHistoryService).record(
+                asReception,
+                "REPAIRING",
+                "COMPLETED",
+                null,
+                changedBy
+        );
     }
 
     @Test
@@ -138,9 +195,16 @@ class RepairStatusServiceTest {
     void changeInvalidStatus() {
         prepareStatusChange(RepairStatus.DIAGNOSING);
 
-        assertThrows(IllegalArgumentException.class, () -> repairStatusService.changeStatus(repair, RepairStatus.COMPLETED, updatedBy));
+        assertThrows(
+                RepairException.class,
+                () -> repairStatusService.changeStatus(
+                        repair,
+                        RepairStatus.COMPLETED,
+                        updatedBy
+                )
+        );
 
-        verify(repair, never()).changeStatus(any(), anyString());
+        verify(repair, never()).changeStatus(any());
         verifyNoInteractions(memberRepository, asStatusHistoryService);
     }
 
@@ -149,9 +213,16 @@ class RepairStatusServiceTest {
     void changeRejectedStatus() {
         prepareStatusChange(RepairStatus.REJECTED);
 
-        assertThrows(IllegalArgumentException.class, () -> repairStatusService.changeStatus(repair, RepairStatus.REQUESTED, updatedBy));
+        assertThrows(
+                RepairException.class,
+                () -> repairStatusService.changeStatus(
+                        repair,
+                        RepairStatus.REQUESTED,
+                        updatedBy
+                )
+        );
 
-        verify(repair, never()).changeStatus(any(), anyString());
+        verify(repair, never()).changeStatus(any());
         verifyNoInteractions(memberRepository, asStatusHistoryService);
     }
 
@@ -160,9 +231,16 @@ class RepairStatusServiceTest {
     void changeCompletedStatus() {
         prepareStatusChange(RepairStatus.COMPLETED);
 
-        assertThrows(IllegalArgumentException.class, () -> repairStatusService.changeStatus(repair, RepairStatus.REQUESTED, updatedBy));
+        assertThrows(
+                RepairException.class,
+                () -> repairStatusService.changeStatus(
+                        repair,
+                        RepairStatus.REQUESTED,
+                        updatedBy
+                )
+        );
 
-        verify(repair, never()).changeStatus(any(), anyString());
+        verify(repair, never()).changeStatus(any());
         verifyNoInteractions(memberRepository, asStatusHistoryService);
     }
 
@@ -171,9 +249,16 @@ class RepairStatusServiceTest {
     void changeSameStatus() {
         prepareStatusChange(RepairStatus.DIAGNOSING);
 
-        assertThrows(IllegalArgumentException.class, () -> repairStatusService.changeStatus(repair, RepairStatus.DIAGNOSING, updatedBy));
+        assertThrows(
+                RepairException.class,
+                () -> repairStatusService.changeStatus(
+                        repair,
+                        RepairStatus.DIAGNOSING,
+                        updatedBy
+                )
+        );
 
-        verify(repair, never()).changeStatus(any(), anyString());
+        verify(repair, never()).changeStatus(any());
         verifyNoInteractions(memberRepository, asStatusHistoryService);
     }
 
@@ -182,9 +267,17 @@ class RepairStatusServiceTest {
     void changeStatusWhenRepairNotFound() {
         when(repair.getId()).thenReturn(1L);
 
-        when(repairRepository.findByIdWithLock(1L)).thenReturn(Optional.empty());
+        when(repairRepository.findByIdWithLock(1L))
+                .thenReturn(Optional.empty());
 
-        assertThrows(java.util.NoSuchElementException.class, () -> repairStatusService.changeStatus(repair, RepairStatus.REQUESTED, updatedBy));
+        assertThrows(
+                RepairException.class,
+                () -> repairStatusService.changeStatus(
+                        repair,
+                        RepairStatus.REQUESTED,
+                        updatedBy
+                )
+        );
 
         verifyNoInteractions(memberRepository, asStatusHistoryService);
     }
