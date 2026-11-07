@@ -4,6 +4,7 @@ import jakarta.persistence.EntityManager;
 import net.likelion.bebc25.fixgo.config.JpaConfig;
 import net.likelion.bebc25.fixgo.support.AsReceptionFixture;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
+import net.likelion.bebc25.fixgo.payment.client.TossDto;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentAttempt;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentBill;
@@ -20,6 +21,7 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -109,7 +111,8 @@ class PaymentQueryServiceTest {
         PaymentBill bill = issueBill();
         PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(asReceptionId);
         paymentAttemptService.prepareConfirm(started.orderId(), started.amount());
-        paymentAttemptService.completeConfirm(started.orderId(), "test_payment_key", APPROVED_AT);
+        paymentAttemptService.reconcile(new TossDto.ConfirmResponse(
+                "test_payment_key", started.orderId(), "DONE", "카드", APPROVED_AT.atOffset(ZoneOffset.ofHours(9)), null, null, null));
         em.flush();
         em.clear();
 
@@ -144,8 +147,9 @@ class PaymentQueryServiceTest {
         PaymentBill bill = issueBill();
         PaymentDto.StartPaymentResponse started = paymentAttemptService.startPayment(asReceptionId);
         paymentAttemptService.prepareConfirm(started.orderId(), started.amount());
-        paymentAttemptService.issueVirtualAccount(
-                started.orderId(), "test_payment_key", "20", "12345678901234", "ps_test_secret", DUE_AT);
+        paymentAttemptService.reconcile(new TossDto.ConfirmResponse(
+                "test_payment_key", started.orderId(), "WAITING_FOR_DEPOSIT", "가상계좌", null, "ps_test_secret",
+                new TossDto.ConfirmResponse.VirtualAccount("12345678901234", "20", DUE_AT.atOffset(ZoneOffset.ofHours(9))), null));
         em.flush();
         em.clear();
 

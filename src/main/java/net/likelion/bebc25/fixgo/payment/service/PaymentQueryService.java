@@ -132,7 +132,7 @@ public class PaymentQueryService {
                 }
 
                 PaymentAttempt attempt = waitingAttempt.get();
-                // 입금 대기 attempt는 issueVirtualAccount에서 계좌와 함께 저장되므로 계좌가 반드시 있다
+                // 입금 대기 attempt는 reconcile에서 계좌와 함께 저장되므로 계좌가 반드시 있다
                 VirtualAccount virtualAccount = virtualAccountRepository.findByPaymentAttemptId(attempt.getId())
                         .orElseThrow(() -> new IllegalStateException(
                                 "입금 대기 중인 결제 시도에 가상계좌가 없습니다. attemptId=" + attempt.getId()));

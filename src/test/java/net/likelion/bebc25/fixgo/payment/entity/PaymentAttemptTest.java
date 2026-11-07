@@ -93,15 +93,15 @@ class PaymentAttemptTest {
     }
 
     @Nested
-    @DisplayName("markCardDone")
-    class MarkCardDone {
+    @DisplayName("markOnlineDone")
+    class MarkOnlineDone {
 
         @Test
         @DisplayName("IN_PROGRESS면 DONE이 되고 paymentKey, 카드 수단, 승인 시각이 기록된다.")
         void success() {
             PaymentAttempt attempt = inProgress();
 
-            attempt.markCardDone(PAYMENT_KEY, APPROVED_AT);
+            attempt.markOnlineDone(PAYMENT_KEY, PaymentMethod.CARD, APPROVED_AT);
 
             assertThat(attempt.getStatus()).isEqualTo(PaymentAttemptStatus.DONE);
             assertThat(attempt.getPaymentKey()).isEqualTo(PAYMENT_KEY);
@@ -110,11 +110,22 @@ class PaymentAttemptTest {
         }
 
         @Test
+        @DisplayName("전달받은 결제수단(간편결제)이 그대로 기록된다.")
+        void easyPay() {
+            PaymentAttempt attempt = inProgress();
+
+            attempt.markOnlineDone(PAYMENT_KEY, PaymentMethod.EASY_PAY, APPROVED_AT);
+
+            assertThat(attempt.getStatus()).isEqualTo(PaymentAttemptStatus.DONE);
+            assertThat(attempt.getMethod()).isEqualTo(PaymentMethod.EASY_PAY);
+        }
+
+        @Test
         @DisplayName("승인 준비를 거치지 않은 READY는 완료할 수 없고 값도 기록되지 않는다.")
         void fromReady() {
             PaymentAttempt attempt = ready();
 
-            assertThatThrownBy(() -> attempt.markCardDone(PAYMENT_KEY, APPROVED_AT))
+            assertThatThrownBy(() -> attempt.markOnlineDone(PAYMENT_KEY, PaymentMethod.CARD, APPROVED_AT))
                     .isInstanceOf(IllegalStateException.class);
 
             assertThat(attempt.getStatus()).isEqualTo(PaymentAttemptStatus.READY);
@@ -122,12 +133,26 @@ class PaymentAttemptTest {
         }
 
         @Test
-        @DisplayName("입금 대기 중인 가상계좌 결제를 카드 완료로 바꿀 수 없다.")
+        @DisplayName("입금 대기 중인 가상계좌 결제를 온라인 결제 완료로 바꿀 수 없다.")
         void fromWaitingForDeposit() {
             PaymentAttempt attempt = waitingForDeposit();
 
-            assertThatThrownBy(() -> attempt.markCardDone(PAYMENT_KEY, APPROVED_AT))
+            assertThatThrownBy(() -> attempt.markOnlineDone(PAYMENT_KEY, PaymentMethod.CARD, APPROVED_AT))
                     .isInstanceOf(IllegalStateException.class);
+        }
+
+        @Test
+        @DisplayName("카드와 간편결제가 아닌 수단(가상계좌, 현금)으로는 온라인 결제 완료 처리할 수 없다.")
+        void notOnlineMethod() {
+            PaymentAttempt virtualAccount = inProgress();
+            assertThatThrownBy(() -> virtualAccount.markOnlineDone(PAYMENT_KEY, PaymentMethod.VIRTUAL_ACCOUNT, APPROVED_AT))
+                    .isInstanceOf(IllegalStateException.class);
+            assertThat(virtualAccount.getStatus()).isEqualTo(PaymentAttemptStatus.IN_PROGRESS);
+
+            PaymentAttempt cash = inProgress();
+            assertThatThrownBy(() -> cash.markOnlineDone(PAYMENT_KEY, PaymentMethod.CASH, APPROVED_AT))
+                    .isInstanceOf(IllegalStateException.class);
+            assertThat(cash.getStatus()).isEqualTo(PaymentAttemptStatus.IN_PROGRESS);
         }
     }
 
@@ -258,7 +283,7 @@ class PaymentAttemptTest {
         @DisplayName("완료된 결제는 실패로 바꿀 수 없다.")
         void fromDone() {
             PaymentAttempt attempt = inProgress();
-            attempt.markCardDone(PAYMENT_KEY, APPROVED_AT);
+            attempt.markOnlineDone(PAYMENT_KEY, PaymentMethod.CARD, APPROVED_AT);
 
             assertThatThrownBy(() -> attempt.markFailed("ANY", "any"))
                     .isInstanceOf(IllegalStateException.class);
