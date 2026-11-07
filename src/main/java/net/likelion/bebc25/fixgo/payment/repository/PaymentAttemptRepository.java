@@ -29,4 +29,6 @@ public interface PaymentAttemptRepository extends JpaRepository<PaymentAttempt, 
     List<PaymentAttempt> findAllByPaymentBillIdOrderByIdAsc(Long paymentBillId);
 
     List<PaymentAttempt> findAllByStatusAndUpdatedAtBefore(PaymentAttemptStatus status, LocalDateTime cutoff);
+
+    Optional<PaymentAttempt> findByPaymentKey(String paymentKey);
 }
