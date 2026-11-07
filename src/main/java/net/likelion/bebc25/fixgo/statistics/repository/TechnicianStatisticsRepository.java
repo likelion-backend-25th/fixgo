@@ -80,7 +80,7 @@ public interface TechnicianStatisticsRepository extends Repository<AsReception, 
                 ) AS averageDurationSeconds
             FROM as_status_history complete_history
             JOIN repair r
-                ON r.as_request_id = complete_history.as_reception_id
+                ON r.as_reception_id = complete_history.as_reception_id
             JOIN as_status_history start_history
                 ON start_history.as_reception_id = complete_history.as_reception_id
                 AND start_history.to_status = 'REPAIRING'

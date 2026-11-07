@@ -1722,11 +1722,11 @@ WHERE p.name IN (
 -- 다량 재고 수정 테스트용 완료 수리 1건
 -- 기존 완료 접수(화면 파손, AS-261101-...010)와 그 담당 기사에 연결한다.
 -- 사용 부품은 해당 노트북과 호환되고, 재고가 사용 수량 이상인 ACTIVE 부품만 넣는다.
-INSERT INTO repair (as_request_id, technician_id, diagnosis, work_note, repair_decision, warranty_result, reason,
+INSERT INTO repair (as_reception_id, technician_id, diagnosis, work_note, repair_decision, warranty_result, reason,
                     labor_rate, inspection_cost, final_amount, status, reason_for_rejection, confirmed_at,
                     created_at, updated_at, created_by, updated_by)
 SELECT ar.id,
-       (SELECT id FROM member WHERE email = 'technician.demo@fixgo.example'),
+       ar.technician_id,
        '상판 LCD 패널 균열과 30핀 eDP 케이블 손상으로 화면이 출력되지 않음',
        '14인치 FHD IPS 패널과 eDP 디스플레이 케이블을 교체하고 점등 및 화면 깜빡임을 확인함',
        'REPAIRABLE',
@@ -1740,12 +1740,12 @@ SELECT ar.id,
        '2026-11-01 14:30:00',
        '2026-11-01 10:00:00',
        '2026-11-01 15:00:00',
-       'technician.demo@fixgo.example',
-       'technician.demo@fixgo.example'
+       ar.technician_id,
+       ar.technician_id
 FROM as_reception ar
 WHERE ar.reception_number = 'AS-261101-8f3a2c10-7b6e-4d90-a123-000000000010'
   AND ar.status = 'COMPLETED'
-  AND NOT EXISTS (SELECT 1 FROM repair r WHERE r.as_request_id = ar.id);
+  AND NOT EXISTS (SELECT 1 FROM repair r WHERE r.as_reception_id = ar.id);
 
 INSERT INTO repair_work (repair_id, repair_preset_name, work_name, created_at, updated_at, created_by, updated_by)
 SELECT r.id,
@@ -1753,10 +1753,10 @@ SELECT r.id,
        '14인치 FHD LCD 패널 및 eDP 케이블 교체',
        '2026-11-01 11:00:00',
        '2026-11-01 14:00:00',
-       'technician.demo@fixgo.example',
-       'technician.demo@fixgo.example'
+       r.technician_id,
+       r.technician_id
 FROM repair r
-         JOIN as_reception ar ON ar.id = r.as_request_id
+         JOIN as_reception ar ON ar.id = r.as_reception_id
 WHERE ar.reception_number = 'AS-261101-8f3a2c10-7b6e-4d90-a123-000000000010'
   AND NOT EXISTS (SELECT 1
                   FROM repair_work rw
@@ -1771,7 +1771,7 @@ SELECT rw.id,
        '2026-11-01 11:30:00'
 FROM repair_work rw
          JOIN repair r ON r.id = rw.repair_id
-         JOIN as_reception ar ON ar.id = r.as_request_id
+         JOIN as_reception ar ON ar.id = r.as_reception_id
          JOIN product pr ON pr.id = ar.product_id
          JOIN part p ON p.name = '14인치 FHD IPS 노트북 LCD 패널 모듈 (1920x1080, 30핀 eDP, 무광, 슬림 베젤)'
          JOIN part_compatibility pc ON pc.part_id = p.id AND pc.product_model_id = pr.product_model_id
@@ -1793,7 +1793,7 @@ SELECT rw.id,
        '2026-11-01 11:40:00'
 FROM repair_work rw
          JOIN repair r ON r.id = rw.repair_id
-         JOIN as_reception ar ON ar.id = r.as_request_id
+         JOIN as_reception ar ON ar.id = r.as_reception_id
          JOIN product pr ON pr.id = ar.product_id
          JOIN part p ON p.name = '14인치 노트북 LCD 패널 연결용 30핀 eDP 디스플레이 플렉스 케이블'
          JOIN part_compatibility pc ON pc.part_id = p.id AND pc.product_model_id = pr.product_model_id
