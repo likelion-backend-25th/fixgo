@@ -34,7 +34,7 @@ class RepairCostControllerTest {
     @DisplayName("수리비 계산 성공")
     void calculateRepairCostSuccess() throws Exception {
         Long repairId = 1L;
-        int finalAmount = 60000;
+        Long finalAmount = 60000L;
 
         when(repairCostService.calculateRepairCost(repairId))
                 .thenReturn(finalAmount);

@@ -23,10 +23,10 @@ public class RepairCostController {
      * 수리비 계산
      */
     @PostMapping("/{repairId}/cost")
-    public ResponseEntity<Integer> calculateRepairCost(
+    public ResponseEntity<Long> calculateRepairCost(
             @PathVariable Long repairId
     ) {
-        int finalAmount = repairCostService.calculateRepairCost(repairId);
+        Long finalAmount = repairCostService.calculateRepairCost(repairId);
 
         return ResponseEntity.ok(finalAmount);
     }
