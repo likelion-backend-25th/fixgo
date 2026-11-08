@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import net.likelion.bebc25.fixgo.payment.entity.*;
+import net.likelion.bebc25.fixgo.payment.service.dto.RefundDto;
 
 import java.time.LocalDateTime;
 
@@ -74,8 +75,8 @@ public class PaymentDto {
             @NotBlank(message = "예금주명은 필수입니다.")
             String holderName
     ) {
-        public PaymentInternalDto.RefundAccount toInternal() {
-            return new PaymentInternalDto.RefundAccount(
+        public RefundDto.RefundAccount toRefundDto() {
+            return new RefundDto.RefundAccount(
                     bank, accountNumber, holderName
             );
         }

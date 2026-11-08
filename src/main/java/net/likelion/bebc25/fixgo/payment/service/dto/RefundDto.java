@@ -1,6 +1,6 @@
-package net.likelion.bebc25.fixgo.payment.dto;
+package net.likelion.bebc25.fixgo.payment.service.dto;
 
-public class PaymentInternalDto {
+public class RefundDto {
     public record PreparedRefund(
             Long refundId,
             String paymentKey,
@@ -11,5 +11,10 @@ public class PaymentInternalDto {
             String bank,
             String accountNumber,
             String holderName
+    ) {}
+    
+    public record StuckRefund(
+            Long refundId,
+            String paymentKey
     ) {}
 }

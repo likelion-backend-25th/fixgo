@@ -57,4 +57,11 @@ public class TossPaymentsClient {
                 .retrieve()
                 .body(TossDto.ConfirmResponse.class);
     }
+
+    public TossDto.CancelResponse getByPaymentKey(String paymentKey) {
+        return restClient.get()
+                .uri("/{paymentKey}", paymentKey)
+                .retrieve()
+                .body(TossDto.CancelResponse.class);
+    }
 }

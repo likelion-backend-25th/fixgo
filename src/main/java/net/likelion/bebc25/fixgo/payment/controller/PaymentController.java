@@ -3,6 +3,7 @@ package net.likelion.bebc25.fixgo.payment.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
 import net.likelion.bebc25.fixgo.payment.client.TossDto;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentBillStatus;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -47,11 +49,10 @@ public class PaymentController {
     @PostMapping("/{billId}/refund")
     public ResponseEntity<Void> refundPayment(
             @Valid @RequestBody PaymentDto.RefundPaymentRequest request,
-            @PathVariable Long billId
+            @PathVariable Long billId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        PaymentDto.RefundAccountRequest account = request.refundAccount();
-        paymentFacadeService.refundPayment(billId, request.cancelReason(), 1L,
-                                           account == null ? null : account.toInternal());
+        paymentFacadeService.refundPayment(billId, userDetails.getId(), request);
         return ResponseEntity.ok().build();
     }
 
