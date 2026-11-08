@@ -4,6 +4,9 @@ import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
 import net.likelion.bebc25.fixgo.customer.dto.CustomerDto;
 import net.likelion.bebc25.fixgo.customer.service.CustomerService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -59,6 +62,15 @@ public class CustomerController {
                 customerService.search(new CustomerDto.SearchRequest(name, phone, email))
         );
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<Page<CustomerDto.Response>> searchPage(
+            @ModelAttribute CustomerDto.SearchRequest request,
+            @PageableDefault(size = 20, sort = "id") Pageable pageable
+    ) {
+        return ResponseEntity.ok(customerService.searchPage(request, pageable));
+    }
+
 
     // 고객 정보 수정
     @PatchMapping("/{id}")
