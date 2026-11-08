@@ -26,7 +26,7 @@ class VirtualAccountTest {
         PaymentAttempt attempt = attempt();
 
         VirtualAccount virtualAccount =
-                VirtualAccount.issue(attempt, BANK_CODE, ACCOUNT_NUMBER, WEBHOOK_SECRET, DUE_AT);
+                VirtualAccount.create(attempt, BANK_CODE, ACCOUNT_NUMBER, WEBHOOK_SECRET, DUE_AT);
 
         // 매개변수 순서가 바뀌는 실수를 잡기 위해 필드를 하나씩 확인한다
         assertThat(virtualAccount.getPaymentAttempt()).isSameAs(attempt);
@@ -39,47 +39,47 @@ class VirtualAccountTest {
     @Test
     @DisplayName("결제 시도 없이는 발급할 수 없다.")
     void nullAttempt() {
-        assertThatThrownBy(() -> VirtualAccount.issue(null, BANK_CODE, ACCOUNT_NUMBER, WEBHOOK_SECRET, DUE_AT))
+        assertThatThrownBy(() -> VirtualAccount.create(null, BANK_CODE, ACCOUNT_NUMBER, WEBHOOK_SECRET, DUE_AT))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     @DisplayName("은행 코드가 비어 있으면 발급할 수 없다.")
     void blankBankCode() {
-        assertThatThrownBy(() -> VirtualAccount.issue(attempt(), null, ACCOUNT_NUMBER, WEBHOOK_SECRET, DUE_AT))
+        assertThatThrownBy(() -> VirtualAccount.create(attempt(), null, ACCOUNT_NUMBER, WEBHOOK_SECRET, DUE_AT))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> VirtualAccount.issue(attempt(), "", ACCOUNT_NUMBER, WEBHOOK_SECRET, DUE_AT))
+        assertThatThrownBy(() -> VirtualAccount.create(attempt(), "", ACCOUNT_NUMBER, WEBHOOK_SECRET, DUE_AT))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> VirtualAccount.issue(attempt(), " ", ACCOUNT_NUMBER, WEBHOOK_SECRET, DUE_AT))
+        assertThatThrownBy(() -> VirtualAccount.create(attempt(), " ", ACCOUNT_NUMBER, WEBHOOK_SECRET, DUE_AT))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     @DisplayName("계좌번호가 비어 있으면 발급할 수 없다.")
     void blankAccountNumber() {
-        assertThatThrownBy(() -> VirtualAccount.issue(attempt(), BANK_CODE, null, WEBHOOK_SECRET, DUE_AT))
+        assertThatThrownBy(() -> VirtualAccount.create(attempt(), BANK_CODE, null, WEBHOOK_SECRET, DUE_AT))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> VirtualAccount.issue(attempt(), BANK_CODE, "", WEBHOOK_SECRET, DUE_AT))
+        assertThatThrownBy(() -> VirtualAccount.create(attempt(), BANK_CODE, "", WEBHOOK_SECRET, DUE_AT))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> VirtualAccount.issue(attempt(), BANK_CODE, " ", WEBHOOK_SECRET, DUE_AT))
+        assertThatThrownBy(() -> VirtualAccount.create(attempt(), BANK_CODE, " ", WEBHOOK_SECRET, DUE_AT))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     @DisplayName("웹훅 검증 값이 비어 있으면 발급할 수 없다. (입금 웹훅을 검증할 수 없게 되므로)")
     void blankWebhookSecret() {
-        assertThatThrownBy(() -> VirtualAccount.issue(attempt(), BANK_CODE, ACCOUNT_NUMBER, null, DUE_AT))
+        assertThatThrownBy(() -> VirtualAccount.create(attempt(), BANK_CODE, ACCOUNT_NUMBER, null, DUE_AT))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> VirtualAccount.issue(attempt(), BANK_CODE, ACCOUNT_NUMBER, "", DUE_AT))
+        assertThatThrownBy(() -> VirtualAccount.create(attempt(), BANK_CODE, ACCOUNT_NUMBER, "", DUE_AT))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> VirtualAccount.issue(attempt(), BANK_CODE, ACCOUNT_NUMBER, " ", DUE_AT))
+        assertThatThrownBy(() -> VirtualAccount.create(attempt(), BANK_CODE, ACCOUNT_NUMBER, " ", DUE_AT))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     @DisplayName("입금 기한이 없으면 발급할 수 없다.")
     void nullDueAt() {
-        assertThatThrownBy(() -> VirtualAccount.issue(attempt(), BANK_CODE, ACCOUNT_NUMBER, WEBHOOK_SECRET, null))
+        assertThatThrownBy(() -> VirtualAccount.create(attempt(), BANK_CODE, ACCOUNT_NUMBER, WEBHOOK_SECRET, null))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 }
