@@ -31,7 +31,7 @@ public class VirtualAccount {
     @Column(nullable = false)
     private LocalDateTime dueAt;
 
-    public static VirtualAccount issue(
+    public static VirtualAccount create(
             PaymentAttempt paymentAttempt, String bankCode,
             String accountNumber, String webhookSecret, LocalDateTime dueAt
     ) {
@@ -59,5 +59,12 @@ public class VirtualAccount {
         virtualAccount.dueAt = dueAt;
 
         return virtualAccount;
+    }
+
+    /**
+     * secret 값 비교
+     */
+    public boolean matchesSecret(String secret) {
+        return this.webhookSecret.equals(secret);
     }
 }
