@@ -1,7 +1,7 @@
 info:
   name: 제품 상세 조회
   type: http
-  seq: 17
+  seq: 19
 
 http:
   method: GET

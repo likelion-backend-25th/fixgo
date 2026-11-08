@@ -1,7 +1,7 @@
 info:
   name: 삭제된 직원목록 (관리자용)
   type: http
-  seq: 16
+  seq: 18
 
 http:
   method: GET

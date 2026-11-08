@@ -92,6 +92,38 @@ class AsReceptionServiceTest {
     }
 
     @Test
+    @DisplayName("접수증에 고객, 제품, 접수 및 담당자 정보가 포함된다")
+    void getReceptionReceipt_returnsDocumentFields() {
+        String expectedModelName = productModelRepository
+                .findById(reception.getProduct().getProductModelId()).orElseThrow().getModelName();
+        var response = asReceptionService.getReceptionReceipt(reception.getId());
+        var customer = reception.getCustomer();
+
+        assertThat(response.receptionNumber()).isEqualTo(reception.getReceptionNumber());
+        assertThat(response.createdAt()).isEqualTo(reception.getCreatedAt());
+        assertThat(response.customerName()).isEqualTo(customer.getName());
+        assertThat(response.customerPhone()).isEqualTo(customer.getPhone());
+        assertThat(response.customerEmail()).isEqualTo(customer.getEmail());
+        assertThat(response.zipcode()).isEqualTo(customer.getZipcode());
+        assertThat(response.basicAddress()).isEqualTo(customer.getBasicAddress());
+        assertThat(response.detailAddress()).isEqualTo(customer.getDetailAddress());
+        assertThat(response.modelName()).isEqualTo(expectedModelName);
+        assertThat(response.serialNumber()).isEqualTo(reception.getProduct().getSerialNumber());
+        assertThat(response.symptom()).isEqualTo(reception.getSymptom());
+        assertThat(response.returnMethod()).isEqualTo(reception.getReturnMethod());
+        assertThat(response.receptionistName()).isEqualTo(reception.getReceptionist().getName());
+        assertThat(response.technicianName()).isEqualTo(reception.getTechnician().getName());
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 접수의 접수증을 조회하면 404를 반환한다")
+    void getReceptionReceipt_receptionNotFound() {
+        assertThatThrownBy(() -> asReceptionService.getReceptionReceipt(Long.MAX_VALUE))
+                .isInstanceOfSatisfying(ResponseStatusException.class, exception ->
+                        assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND));
+    }
+
+    @Test
     @DisplayName("접수 담당자가 수정한 필드가 저장되고 생략한 증상 상세는 유지된다")
     void updateReception_ownerPersistsPartialUpdate() {
         Long id = reception.getId();

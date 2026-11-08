@@ -1,7 +1,7 @@
 info:
   name: 부품 기준공임시간 변경
   type: http
-  seq: 26
+  seq: 28
 
 http:
   method: PATCH

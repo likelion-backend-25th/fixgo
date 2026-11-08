@@ -10,6 +10,8 @@ import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
 import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
 import net.likelion.bebc25.fixgo.repair.dto.repair.EstimateResponse;
 import net.likelion.bebc25.fixgo.repair.service.RepairCostService;
+import net.likelion.bebc25.fixgo.repair.dto.repair.RepairStatementResponse;
+import net.likelion.bebc25.fixgo.repair.service.RepairHistoryService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -28,10 +30,9 @@ import java.util.List;
 public class AsReceptionController {
 
     private final AsReceptionService asReceptionService;
-
     private final AsStatusHistoryService asStatusHistoryService;
-
     private final RepairCostService repairCostService;
+    private final RepairHistoryService repairHistoryService;
 
     // 접수 등록
     @PostMapping
@@ -123,6 +124,15 @@ public class AsReceptionController {
         return asReceptionService.getTechnicianAssignmentHistory(receptionId);
     }
 
+    // 접수증 조회
+    @PreAuthorize("hasAnyRole('RECEPTIONIST', 'ADMIN')")
+    @GetMapping("/{id}/documents/reception-receipt")
+    public ResponseEntity<AsReceptionDto.ReceptionReceiptResponse> getReceptionReceipt(
+            @PathVariable Long id
+    ) {
+        return ResponseEntity.ok(asReceptionService.getReceptionReceipt(id));
+    }
+
     // 견적서 조회
     @PreAuthorize("hasAnyRole('RECEPTIONIST', 'ADMIN')")
     @GetMapping("/{id}/documents/estimate")
@@ -130,6 +140,15 @@ public class AsReceptionController {
             @PathVariable Long id
     ) {
         return ResponseEntity.ok(repairCostService.getEstimate(id));
+    }
+
+    // 수리내역서 조회
+    @PreAuthorize("hasAnyRole('RECEPTIONIST', 'ADMIN')")
+    @GetMapping("/{id}/documents/repair-statement")
+    public ResponseEntity<RepairStatementResponse> getRepairStatement(
+            @PathVariable Long id
+    ) {
+        return ResponseEntity.ok(repairHistoryService.getRepairStatement(id));
     }
 
 }

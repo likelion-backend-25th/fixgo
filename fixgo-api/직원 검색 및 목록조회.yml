@@ -1,7 +1,7 @@
 info:
   name: 직원 검색 및 목록조회
   type: http
-  seq: 15
+  seq: 17
 
 http:
   method: GET
