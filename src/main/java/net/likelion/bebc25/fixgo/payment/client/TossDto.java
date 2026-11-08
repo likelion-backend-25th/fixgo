@@ -1,6 +1,6 @@
 package net.likelion.bebc25.fixgo.payment.client;
 
-import net.likelion.bebc25.fixgo.payment.dto.PaymentInternalDto;
+import net.likelion.bebc25.fixgo.payment.service.dto.RefundDto;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -28,7 +28,7 @@ public class TossDto {
                 String holderName
         ) {
             public static RefundReceiveAccount from(
-                    PaymentInternalDto.RefundAccount account
+                    RefundDto.RefundAccount account
             ) {
                 if (account == null) {
                     return null;
@@ -44,14 +44,15 @@ public class TossDto {
     }
 
     public record CancelResponse(
+            String status,
             List<Cancel> cancels
-    ) {
-        public record Cancel(
-                String transactionKey,
-                OffsetDateTime canceledAt,
-                String cancelStatus
-        ) {}
-    }
+    ) {}
+
+    public record Cancel(
+            String transactionKey,
+            OffsetDateTime canceledAt,
+            String cancelStatus
+    ) {}
 
     /**
      * 토스 승인 응답(Payment 객체). 카드와 가상계좌가 같은 모양으로 온다.

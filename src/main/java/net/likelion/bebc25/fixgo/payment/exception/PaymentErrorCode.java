@@ -18,7 +18,10 @@ public enum PaymentErrorCode implements ErrorCode {
     // 토스가 승인을 거절함(4xx). attempt는 FAILED로 기록되며, 새 결제로 다시 시도할 수 있다.
     TOSS_REJECTED(HttpStatus.BAD_REQUEST),
     // 토스 응답을 받지 못했거나(타임아웃) 토스 서버 오류(5xx)라 결과를 알 수 없음. 스케줄러가 정리한다.
-    PAYMENT_PENDING(HttpStatus.GATEWAY_TIMEOUT);
+    PAYMENT_PENDING(HttpStatus.GATEWAY_TIMEOUT),
+    REFUND_ACCOUNT_REQUIRED(HttpStatus.BAD_REQUEST),
+    REFUND_IN_PROGRESS(HttpStatus.CONFLICT),
+    REFUND_PENDING(HttpStatus.GATEWAY_TIMEOUT);
 
     // 이 실패를 응답할 때의 HTTP 상태
     private final HttpStatus httpStatus;
