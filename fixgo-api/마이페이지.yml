@@ -1,7 +1,7 @@
 info:
   name: 마이페이지
   type: http
-  seq: 10
+  seq: 12
 
 http:
   method: GET

@@ -1,7 +1,7 @@
 info:
   name: 부품목록조회
   type: http
-  seq: 22
+  seq: 24
 
 http:
   method: GET

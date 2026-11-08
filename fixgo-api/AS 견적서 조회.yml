@@ -1,7 +1,7 @@
 info:
   name: AS 견적서 조회
   type: http
-  seq: 4
+  seq: 3
 
 http:
   method: GET

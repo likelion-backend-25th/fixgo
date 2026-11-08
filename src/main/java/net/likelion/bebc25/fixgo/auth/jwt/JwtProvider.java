@@ -5,18 +5,22 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.io.Encoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.security.SecureRandom;
 import java.util.Date;
 import java.util.List;
 
 @Slf4j
 @Component
 public class JwtProvider {
+    private static final SecureRandom REFRESH_TOKEN_RANDOM = new SecureRandom();
+
     private final SecretKey secretKey;
     private final long accessTokenExpiration;
     private final long refreshTokenExpiration;
@@ -52,8 +56,11 @@ public class JwtProvider {
     public String createRefreshToken(Long memberId) {
         Date now = new Date();
         Date validity = new Date(now.getTime() + refreshTokenExpiration);
+        byte[] tokenId = new byte[16];
+        REFRESH_TOKEN_RANDOM.nextBytes(tokenId);
 
         return Jwts.builder()
+                .id(Encoders.BASE64URL.encode(tokenId))
                 .issuer("fixgo")
                 .subject(String.valueOf(memberId))
                 .issuedAt(now)

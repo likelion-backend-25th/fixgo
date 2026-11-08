@@ -19,6 +19,7 @@ import net.likelion.bebc25.fixgo.repair.entity.part.RepairPartUsage;
 import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairDecision;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
+import net.likelion.bebc25.fixgo.repair.exception.RepairErrorCode;
 import net.likelion.bebc25.fixgo.repair.exception.RepairException;
 import net.likelion.bebc25.fixgo.repair.repository.RepairPartUsageRepository;
 import net.likelion.bebc25.fixgo.repair.repository.RepairRepository;
@@ -67,6 +68,54 @@ class RepairCostServiceTest {
 
     @InjectMocks
     private RepairCostService repairCostService;
+
+    @Test
+    @DisplayName("수리비가 확정된 건의 견적서 정보를 반환한다")
+    void getEstimate_returnsConfirmedCosts() {
+        Long receptionId = 1L;
+        LocalDateTime confirmedAt = LocalDateTime.of(2026, 1, 1, 10, 0);
+        Repair repair = mock(Repair.class);
+        AsReception reception = mock(AsReception.class);
+        when(repairRepository.findByAsReception_Id(receptionId)).thenReturn(Optional.of(repair));
+        when(repair.getAsReception()).thenReturn(reception);
+        when(reception.getId()).thenReturn(receptionId);
+        when(reception.getReceptionNumber()).thenReturn("AS-1");
+        when(repair.getConfirmedAt()).thenReturn(confirmedAt);
+        when(repair.getLaborRate()).thenReturn(50000);
+        when(repair.getInspectionCost()).thenReturn(10000);
+        when(repair.getFinalAmount()).thenReturn(70000);
+
+        var response = repairCostService.getEstimate(receptionId);
+
+        assertThat(response.receptionId()).isEqualTo(receptionId);
+        assertThat(response.receptionNumber()).isEqualTo("AS-1");
+        assertThat(response.confirmedAt()).isEqualTo(confirmedAt);
+        assertThat(response.laborRate()).isEqualTo(50000);
+        assertThat(response.inspectionCost()).isEqualTo(10000);
+        assertThat(response.totalAmount()).isEqualTo(70000);
+    }
+
+    @Test
+    @DisplayName("연결된 수리 건이 없으면 견적서를 조회할 수 없다")
+    void getEstimate_repairNotFound() {
+        when(repairRepository.findByAsReception_Id(1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> repairCostService.getEstimate(1L))
+                .isInstanceOfSatisfying(RepairException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(RepairErrorCode.REPAIR_NOT_FOUND));
+    }
+
+    @Test
+    @DisplayName("수리비가 확정되기 전에는 견적서를 조회할 수 없다")
+    void getEstimate_costNotConfirmed() {
+        Repair repair = mock(Repair.class);
+        when(repairRepository.findByAsReception_Id(1L)).thenReturn(Optional.of(repair));
+        when(repair.getConfirmedAt()).thenReturn(null);
+
+        assertThatThrownBy(() -> repairCostService.getEstimate(1L))
+                .isInstanceOfSatisfying(RepairException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(RepairErrorCode.REPAIR_COST_NOT_CONFIRMED));
+    }
 
     @Test
     @DisplayName("수리 가능한 경우 공임비와 부품비를 합산한다.")
