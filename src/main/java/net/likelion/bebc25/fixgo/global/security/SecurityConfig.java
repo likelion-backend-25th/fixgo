@@ -59,12 +59,15 @@ public class SecurityConfig {
                         // 고객 페이지
                         .requestMatchers("/api/v1/portal/**").permitAll()
 
-                        // 이메일 관련 API
+                        // 이메일 알림, 배송
                         .requestMatchers(
+                                "/api/v1/notifications",
                                 "/api/v1/notifications/**",
                                 "/api/v1/email-presets",
-                                "/api/v1/email-presets/**"
-                        ).permitAll()
+                                "/api/v1/email-presets/**",
+                                "/api/v1/shipments",
+                                "/api/v1/shipments/**"
+                        ).hasAnyRole("ADMIN", "RECEPTIONIST")
 
                         // Swagger
                         .requestMatchers(
