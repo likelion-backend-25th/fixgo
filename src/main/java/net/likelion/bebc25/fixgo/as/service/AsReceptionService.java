@@ -86,7 +86,7 @@ public class AsReceptionService {
         );
 
         // 고객 포털 링크 발급
-        String customerLink = customerPortalLinkService.issueLink(asReception.getId());
+        String customerLink = customerPortalLinkService.createLink(asReception.getId());
 
         // 최초 접수 상태 이력 저장
         asStatusHistoryService.record(asReception, null, AsReceptionStatus.RECEIVED.name(), "A/S 최초 접수", receptionist);

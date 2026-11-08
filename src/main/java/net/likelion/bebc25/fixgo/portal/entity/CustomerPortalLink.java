@@ -4,35 +4,31 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import net.likelion.bebc25.fixgo.as.entity.AsReception;
 
 import java.time.LocalDateTime;
 
 /**
- * 고객 포털 링크. A/S 접수 시 발급되어, 고객이 로그인 없이 진행 상황 확인·견적 승인·결제를 하는 입장권이다.
+ * 고객 포털 링크. A/S 접수 시 발급되어, 고객이 로그인 없이 진행 상황 확인,견적 승인,결제를 할 수 있다.
  * <p>
- * 토큰 원본은 저장하지 않고 SHA-256 해시만 저장한다.
- * 조회 시에는 고객이 가져온 토큰을 같은 방식으로 해시해서 tokenHash와 비교한다.
- *
+ * 직원이 링크를 다시 조회하거나 재전송할 수 있도록 토큰 원본을 저장한다.
+ * DB 유출 시 링크가 그대로 쓰일 수 있으므로, 만료(expiresAt)와 재발급(rotate)으로 피해 범위를 제한한다.
  */
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CustomerPortalLink {
 
-    /**
-     * SHA-256 해시를 16진수 문자열로 표현한 길이
-     */
-    private static final int TOKEN_HASH_LENGTH = 64;
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
-    @Column(nullable = false, unique = true)
-    private Long asReceptionId;
 
-    @Column(nullable = false, unique = true, length = TOKEN_HASH_LENGTH)
-    private String tokenHash;
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "as_reception_id", nullable = false, unique = true)
+    private AsReception asReception;
+
+    @Column(nullable = false, unique = true)
+    private String token;
 
     @Column(nullable = false)
     private LocalDateTime expiresAt;
@@ -40,26 +36,26 @@ public class CustomerPortalLink {
     /**
      * 링크를 발급한다.
      *
-     * @param asReceptionId 링크가 가리키는 A/S 접수 ID
-     * @param tokenHash     서비스가 생성한 토큰의 SHA-256 해시 (64자 16진수)
-     * @param expiresAt     만료 시각
+     * @param asReception 링크가 가리키는 A/S 접수
+     * @param token       서비스가 생성한 토큰
+     * @param expiresAt   만료 시각
      */
-    public static CustomerPortalLink issue(Long asReceptionId, String tokenHash, LocalDateTime expiresAt) {
-        if (asReceptionId == null) {
+    public static CustomerPortalLink create(AsReception asReception, String token, LocalDateTime expiresAt) {
+        if (asReception == null) {
             throw new IllegalArgumentException("asReceptionId는 필수입니다.");
         }
-        validateToken(tokenHash, expiresAt);
+        validateToken(token, expiresAt);
 
         CustomerPortalLink link = new CustomerPortalLink();
-        link.asReceptionId = asReceptionId;
-        link.tokenHash = tokenHash;
+        link.asReception = asReception;
+        link.token = token;
         link.expiresAt = expiresAt;
         return link;
     }
 
-    private static void validateToken(String tokenHash, LocalDateTime expiresAt) {
-        if (tokenHash == null || tokenHash.length() != TOKEN_HASH_LENGTH) {
-            throw new IllegalArgumentException("tokenHash는 " + TOKEN_HASH_LENGTH + "자 해시여야 합니다.");
+    private static void validateToken(String token, LocalDateTime expiresAt) {
+        if (token == null || token.isBlank()) {
+            throw new IllegalArgumentException("token은 필수입니다.");
         }
         if (expiresAt == null) {
             throw new IllegalArgumentException("expiresAt은 필수입니다.");
@@ -68,11 +64,10 @@ public class CustomerPortalLink {
 
     /**
      * 토큰을 새 값으로 교체한다. 이전 토큰으로 만든 링크는 더 이상 조회되지 않는다.
-     * 고객이 링크를 분실했거나 만료된 경우에 쓴다. (토큰 원본을 저장하지 않으므로 같은 링크를 다시 보낼 수 없다)
      */
-    public void rotate(String newTokenHash, LocalDateTime newExpiresAt) {
-        validateToken(newTokenHash, newExpiresAt);
-        this.tokenHash = newTokenHash;
+    public void rotate(String newToken, LocalDateTime newExpiresAt) {
+        validateToken(newToken, newExpiresAt);
+        this.token = newToken;
         this.expiresAt = newExpiresAt;
     }
 
