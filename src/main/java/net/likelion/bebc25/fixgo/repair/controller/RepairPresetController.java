@@ -16,7 +16,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/as/repair-presets")
+@RequestMapping("/api/v1/as/repair-presets")
 public class RepairPresetController {
 
     private final RepairPresetService repairPresetService;
