@@ -32,7 +32,8 @@ public class LongPendingStatisticsService {
         return statistics.stream().map(statistic -> {
             long elapsedDays = ChronoUnit.DAYS.between(statistic.getStatusChangedAt().toLocalDate(), now.toLocalDate());
 
-            return new LongPendingStatisticsDto.LongPendingResponse(statistic.getReceptionNumber(),
+            return new LongPendingStatisticsDto.LongPendingResponse(statistic.getReceptionId(),
+                                                                    statistic.getReceptionNumber(),
                                                                     statistic.getCustomerName(),
                                                                     statistic.getModelName(), statistic.getStatus(),
                                                                     statistic.getTechnicianName(), elapsedDays,

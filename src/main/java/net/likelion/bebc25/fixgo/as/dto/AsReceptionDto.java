@@ -68,7 +68,18 @@ public class AsReceptionDto {
                     UUID.randomUUID()
             );
 
-            return new AsReception(receptionNumber, customer, product, receptionist, technician, symptom, symptomDetail, memo, returnMethod, fileUrl);
+            return new AsReception(
+                    receptionNumber,
+                    customer,
+                    product,
+                    receptionist,
+                    technician,
+                    symptom,
+                    symptomDetail,
+                    memo,
+                    returnMethod,
+                    fileUrl
+            );
         }
 
     }
@@ -118,6 +129,7 @@ public class AsReceptionDto {
 
             Customer customer,
             Product product,
+            String modelName,
             MemberInfo receptionist,
             MemberInfo technician,
 
@@ -129,7 +141,7 @@ public class AsReceptionDto {
             ReturnMethod returnMethod,
             String fileUrl
     ) {
-        public static DetailResponse from(AsReception asReception) {
+        public static DetailResponse from(AsReception asReception, String modelName) {
 
             return new DetailResponse(
                     asReception.getId(),
@@ -138,6 +150,7 @@ public class AsReceptionDto {
 
                     asReception.getCustomer(),
                     asReception.getProduct(),
+                    modelName,
                     MemberInfo.from(asReception.getReceptionist()),
                     MemberInfo.from(asReception.getTechnician()),
 
@@ -148,6 +161,50 @@ public class AsReceptionDto {
                     asReception.getMemo(),
                     asReception.getReturnMethod(),
                     asReception.getFileUrl()
+            );
+        }
+    }
+
+    // 접수증에 필요한 응답
+    public record ReceptionReceiptResponse(
+            String receptionNumber,
+            LocalDateTime createdAt,
+            String customerName,
+            String customerPhone,
+            String customerEmail,
+            String zipcode,
+            String basicAddress,
+            String detailAddress,
+            String modelName,
+            String serialNumber,
+            String symptom,
+            ReturnMethod returnMethod,
+            String receptionistName,
+            String technicianName
+    ) {
+        public static ReceptionReceiptResponse from(
+                AsReception reception,
+                String modelName
+        ) {
+            Customer customer = reception.getCustomer();
+            Product product = reception.getProduct();
+            Member technician = reception.getTechnician();
+
+            return new ReceptionReceiptResponse(
+                    reception.getReceptionNumber(),
+                    reception.getCreatedAt(),
+                    customer.getName(),
+                    customer.getPhone(),
+                    customer.getEmail(),
+                    customer.getZipcode(),
+                    customer.getBasicAddress(),
+                    customer.getDetailAddress(),
+                    modelName,
+                    product.getSerialNumber(),
+                    reception.getSymptom(),
+                    reception.getReturnMethod(),
+                    reception.getReceptionist().getName(),
+                    technician == null ? null : technician.getName()
             );
         }
     }
@@ -191,7 +248,6 @@ public class AsReceptionDto {
     ) {}
 
     public record AssignmentHistoryMember(Long id, String name) {}
-
 
     public record TechnicianAssignmentHistoryResponse(
             Long receptionId,

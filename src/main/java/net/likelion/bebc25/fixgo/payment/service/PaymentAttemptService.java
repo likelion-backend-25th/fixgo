@@ -150,7 +150,6 @@ public class PaymentAttemptService {
                 bill.markPaid(response.approvedAt().toLocalDateTime());
             }
             case "ABORTED", "EXPIRED" -> {
-                // ABORTED는 failure에 거절 사유가 있다.
                 TossDto.ConfirmResponse.Failure failure = response.failure();
                 String code = (failure != null) ? failure.code() : "TOSS_" + response.status();
                 String message = (failure != null) ? failure.message() : "토스 결제 상태: " + response.status();
@@ -160,7 +159,7 @@ public class PaymentAttemptService {
                 // 입금 웹훅의 위조 여부를 secret으로 검증하므로 계좌 정보와 함께 저장한다
                 TossDto.ConfirmResponse.VirtualAccount account = response.virtualAccount();
                 attempt.markWaitingForDeposit(response.paymentKey());
-                virtualAccountRepository.save(VirtualAccount.issue(
+                virtualAccountRepository.save(VirtualAccount.create(
                         attempt, account.bankCode(), account.accountNumber(),
                         response.secret(), account.dueDate().toLocalDateTime()));
             }
@@ -179,5 +178,15 @@ public class PaymentAttemptService {
     public List<String> findStuckOrderIds(LocalDateTime cutoff) {
         return paymentAttemptRepository.findAllByStatusAndUpdatedAtBefore(PaymentAttemptStatus.IN_PROGRESS, cutoff)
                 .stream().map(PaymentAttempt::getOrderId).toList();
+    }
+
+    /**
+     * 입금 기한이 지난 입금 대기 결제를 FAILED로 일괄 처리한다.
+     */
+    @Transactional
+    public int expireOverdueDeposits(LocalDateTime cutoff) {
+        return paymentAttemptRepository.expireVirtualAccounts(
+                PaymentAttemptStatus.WAITING_FOR_DEPOSIT, PaymentAttemptStatus.FAILED,
+                cutoff, LocalDateTime.now());
     }
 }
