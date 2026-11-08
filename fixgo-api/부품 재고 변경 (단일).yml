@@ -1,7 +1,7 @@
 info:
   name: 부품 재고 변경 (단일)
   type: http
-  seq: 27
+  seq: 29
 
 http:
   method: PATCH

@@ -1,7 +1,7 @@
 info:
   name: 고객 등록
   type: http
-  seq: 6
+  seq: 7
 
 http:
   method: POST

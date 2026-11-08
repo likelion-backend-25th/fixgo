@@ -1,7 +1,7 @@
 info:
   name: 직원프로필정보 수정
   type: http
-  seq: 23
+  seq: 25
 
 http:
   method: PATCH

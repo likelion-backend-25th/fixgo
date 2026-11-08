@@ -37,13 +37,17 @@ class JwtProviderTest {
     }
 
     @Test
-    @DisplayName("Refresh Token을 생성하면 memberId만 포함하고 email claim은 없다")
+    @DisplayName("Refresh Token에는 회원 ID와 발급마다 다른 토큰 ID가 포함된다")
     void createRefreshToken() {
         String token = jwtProvider.createRefreshToken(1L);
+        String nextToken = jwtProvider.createRefreshToken(1L);
 
         assertThat(jwtProvider.validateToken(token)).isTrue();
         assertThat(jwtProvider.getMemberId(token)).isEqualTo(1L);
         assertThat(jwtProvider.getEmail(token)).isNull();
+        String tokenId = jwtProvider.parseClaims(token).getId();
+        assertThat(tokenId).isNotBlank();
+        assertThat(jwtProvider.parseClaims(nextToken).getId()).isNotEqualTo(tokenId);
     }
 
     @Test

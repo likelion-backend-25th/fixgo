@@ -1,7 +1,7 @@
 info:
   name: 부품 단가 변경
   type: http
-  seq: 25
+  seq: 27
 
 http:
   method: PATCH

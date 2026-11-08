@@ -1,7 +1,7 @@
 info:
   name: 제품 등록
   type: http
-  seq: 13
+  seq: 15
 
 http:
   method: POST
