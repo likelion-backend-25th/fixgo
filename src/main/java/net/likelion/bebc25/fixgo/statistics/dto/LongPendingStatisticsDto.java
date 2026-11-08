@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 
 public class LongPendingStatisticsDto {
 
-    public record LongPendingResponse(String receptionNumber, String customerName, String modelName,
+    public record LongPendingResponse(Long receptionId, String receptionNumber, String customerName, String modelName,
                                       AsReceptionStatus status, String technicianName, long elapsedDays,
                                       LocalDateTime lastActivityAt) {}
 }

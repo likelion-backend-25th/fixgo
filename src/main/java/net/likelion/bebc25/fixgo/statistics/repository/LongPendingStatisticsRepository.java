@@ -13,6 +13,7 @@ public interface LongPendingStatisticsRepository extends Repository<AsReception,
 
     @Query("""
             SELECT
+                ar.id AS receptionId,
                 ar.receptionNumber AS receptionNumber,
                 c.name AS customerName,
                 pm.modelName AS modelName,
@@ -34,6 +35,8 @@ public interface LongPendingStatisticsRepository extends Repository<AsReception,
     );
 
     interface LongPendingStatistics {
+        Long getReceptionId();
+
         String getReceptionNumber();
 
         String getCustomerName();
