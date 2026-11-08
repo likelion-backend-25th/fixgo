@@ -175,8 +175,14 @@ class AsReceptionServiceTest {
     @DisplayName("접수를 등록하면 고객 포털 링크와 최초 접수 이력이 함께 저장된다")
     void create_savesPortalLinkAndHistory() {
         // when
-        var response = asReceptionService.createReception(receptionist,
-                                                          request(reception.getCustomer().getId(), reception.getProduct().getId(), technician.getId()));
+        var response = asReceptionService.createReception(
+                receptionist,
+                request(
+                        reception.getCustomer().getId(),
+                        reception.getProduct().getId(),
+                        technician.getId()
+                )
+        );
 
         // then
         assertThat(customerPortalLinkRepository.findByAsReceptionId(response.id())).isPresent();
@@ -196,8 +202,14 @@ class AsReceptionServiceTest {
                                                         "010-5555-6666", "서울시", Role.ROLE_ADMIN, "profile.png"));
 
         // when
-        var response = asReceptionService.createReception(new CustomUserDetails(admin),
-                                                          request(reception.getCustomer().getId(), reception.getProduct().getId(), technician.getId()));
+        var response = asReceptionService.createReception(
+                new CustomUserDetails(admin),
+                request(
+                        reception.getCustomer().getId(),
+                        reception.getProduct().getId(),
+                        technician.getId()
+                )
+        );
 
         // then
         assertThat(asReceptionRepository.findById(response.id()).orElseThrow().getReceptionist().getId())
@@ -211,8 +223,14 @@ class AsReceptionServiceTest {
         long count = asReceptionRepository.count();
 
         // when & then
-        assertThatThrownBy(() -> asReceptionService.createReception(new CustomUserDetails(technician),
-                                                                    request(reception.getCustomer().getId(), reception.getProduct().getId(), technician.getId())))
+        assertThatThrownBy(() -> asReceptionService.createReception(
+                new CustomUserDetails(technician),
+                request(
+                        reception.getCustomer().getId(),
+                        reception.getProduct().getId(),
+                        technician.getId()
+                )
+        ))
                 .isInstanceOf(IllegalArgumentException.class).hasMessage("권한이 없습니다.");
         assertThat(asReceptionRepository.count()).isEqualTo(count);
         assertThat(asStatusHistoryRepository.count()).isZero();
@@ -226,8 +244,14 @@ class AsReceptionServiceTest {
         long count = asReceptionRepository.count();
 
         // when & then
-        assertThatThrownBy(() -> asReceptionService.createReception(receptionist,
-                                                                    request(-1L, reception.getProduct().getId(), technician.getId())))
+        assertThatThrownBy(() -> asReceptionService.createReception(
+                receptionist,
+                request(
+                        -1L,
+                        reception.getProduct().getId(),
+                        technician.getId()
+                )
+        ))
                 .isInstanceOf(NoSuchElementException.class).hasMessage("존재하지 않는 고객입니다.");
         assertThat(asReceptionRepository.count()).isEqualTo(count);
     }
@@ -239,8 +263,14 @@ class AsReceptionServiceTest {
         long count = asReceptionRepository.count();
 
         // when & then
-        assertThatThrownBy(() -> asReceptionService.createReception(receptionist,
-                                                                    request(reception.getCustomer().getId(), -1L, technician.getId())))
+        assertThatThrownBy(() -> asReceptionService.createReception(
+                receptionist,
+                request(
+                        reception.getCustomer().getId(),
+                        -1L,
+                        technician.getId()
+                )
+        ))
                 .isInstanceOf(NoSuchElementException.class).hasMessage("지원하지 않는 제품입니다.");
         assertThat(asReceptionRepository.count()).isEqualTo(count);
     }
@@ -252,8 +282,14 @@ class AsReceptionServiceTest {
         long count = asReceptionRepository.count();
 
         // when & then
-        assertThatThrownBy(() -> asReceptionService.createReception(receptionist,
-                                                                    request(reception.getCustomer().getId(), reception.getProduct().getId(), -1L)))
+        assertThatThrownBy(() -> asReceptionService.createReception(
+                receptionist,
+                request(
+                        reception.getCustomer().getId(),
+                        reception.getProduct().getId(),
+                        -1L
+                )
+        ))
                 .isInstanceOf(NoSuchElementException.class).hasMessage("존재하지 않는 직원입니다.");
         assertThat(asReceptionRepository.count()).isEqualTo(count);
     }
@@ -266,8 +302,14 @@ class AsReceptionServiceTest {
         long count = asReceptionRepository.count();
 
         // when & then
-        assertThatThrownBy(() -> asReceptionService.createReception(missingUser,
-                                                                    request(reception.getCustomer().getId(), reception.getProduct().getId(), technician.getId())))
+        assertThatThrownBy(() -> asReceptionService.createReception(
+                missingUser,
+                request(
+                        reception.getCustomer().getId(),
+                        reception.getProduct().getId(),
+                        technician.getId()
+                )
+        ))
                 .isInstanceOf(NoSuchElementException.class).hasMessage("존재하지 않는 직원입니다.");
         assertThat(asReceptionRepository.count()).isEqualTo(count);
         assertThat(asStatusHistoryRepository.count()).isZero();
@@ -281,8 +323,14 @@ class AsReceptionServiceTest {
         long count = asReceptionRepository.count();
 
         // when & then
-        assertThatThrownBy(() -> asReceptionService.createReception(receptionist,
-                                                                    request(reception.getCustomer().getId(), reception.getProduct().getId(), receptionist.getId())))
+        assertThatThrownBy(() -> asReceptionService.createReception(
+                receptionist,
+                request(
+                        reception.getCustomer().getId(),
+                        reception.getProduct().getId(),
+                        receptionist.getId()
+                )
+        ))
                 .isInstanceOf(IllegalArgumentException.class).hasMessage("수리 기사만 담당자로 배정할 수 있습니다.");
         assertThat(asReceptionRepository.count()).isEqualTo(count);
     }
@@ -295,8 +343,14 @@ class AsReceptionServiceTest {
         long count = asReceptionRepository.count();
 
         // when & then
-        assertThatThrownBy(() -> asReceptionService.createReception(receptionist,
-                                                                    request(reception.getCustomer().getId(), reception.getProduct().getId(), technician.getId())))
+        assertThatThrownBy(() -> asReceptionService.createReception(
+                receptionist,
+                request(
+                        reception.getCustomer().getId(),
+                        reception.getProduct().getId(),
+                        technician.getId()
+                )
+        ))
                 .isInstanceOf(IllegalArgumentException.class).hasMessage("활성 상태의 기사만 배정할 수 있습니다.");
         assertThat(asReceptionRepository.count()).isEqualTo(count);
     }
@@ -348,14 +402,19 @@ class AsReceptionServiceTest {
         // when & then
         assertThatThrownBy(() -> asReceptionService.getReception(-1L))
                 .isInstanceOfSatisfying(ResponseStatusException.class,
-                                        exception -> assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND));
+                        exception -> assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND));
     }
 
     @Test
     @DisplayName("접수 상태를 변경하면 이전 상태와 수행자 및 사유가 이력에 저장된다")
     void changeReceptionStatus_success() {
         // when
-        asReceptionService.changeReceptionStatus(reception.getId(), AsReceptionStatus.INSPECTION, "점검 시작", receptionist);
+        asReceptionService.changeReceptionStatus(
+                reception.getId(),
+                AsReceptionStatus.INSPECTION,
+                "점검 시작",
+                receptionist
+        );
         entityManager.flush();
         entityManager.clear();
 
@@ -505,7 +564,15 @@ class AsReceptionServiceTest {
     }
 
     private AsReceptionDto.CreateReceptionRequest request(Long customerId, Long productId, Long technicianId) {
-        return new AsReceptionDto.CreateReceptionRequest(customerId, productId, technicianId,
-                                                         "충전불량", "충전이 안 됩니다", "방문 수령 예정", ReturnMethod.PICKUP, "https://example.com/receipt.jpg");
+        return new AsReceptionDto.CreateReceptionRequest(
+                customerId,
+                productId,
+                technicianId,
+                "충전불량",
+                "충전이 안 됩니다",
+                "방문 수령 예정",
+                ReturnMethod.PICKUP,
+                "https://example.com/receipt.jpg"
+        );
     }
 }

@@ -35,19 +35,36 @@ public class AsReceptionController {
 
     // 접수 등록
     @PostMapping
-    public ResponseEntity<AsReceptionDto.CreateReceptionResponse> createReception(@AuthenticationPrincipal CustomUserDetails userDetails, @Valid @RequestBody AsReceptionDto.CreateReceptionRequest request) {
+    public ResponseEntity<AsReceptionDto.CreateReceptionResponse> createReception(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody AsReceptionDto.CreateReceptionRequest request
+    ) {
         return ResponseEntity.status(HttpStatus.CREATED).body(asReceptionService.createReception(userDetails, request));
     }
 
     // 접수 목록 조회
     @GetMapping
-    public ResponseEntity<Page<AsReceptionDto.ListResponse>> getReceptions(@RequestParam(required = false) String keyword, @RequestParam(required = false) AsReceptionStatus status, @RequestParam(required = false) Long technicianId, @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(asReceptionService.getReceptions(new AsReceptionDto.ReceptionSearchRequest(keyword, status, technicianId), pageable));
+    public ResponseEntity<Page<AsReceptionDto.ListResponse>> getReceptions(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) AsReceptionStatus status,
+            @RequestParam(required = false) Long technicianId,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        AsReceptionDto.ReceptionSearchRequest request =
+                new AsReceptionDto.ReceptionSearchRequest(
+                        keyword,
+                        status,
+                        technicianId
+                );
+
+        return ResponseEntity.ok(asReceptionService.getReceptions(request, pageable));
     }
 
     // 접수 상세 조회
     @GetMapping("/{id}")
-    public ResponseEntity<AsReceptionDto.DetailResponse> getReception(@PathVariable Long id) {
+    public ResponseEntity<AsReceptionDto.DetailResponse> getReception(
+            @PathVariable Long id
+    ) {
         return ResponseEntity.ok(asReceptionService.getReception(id));
     }
 
@@ -63,37 +80,55 @@ public class AsReceptionController {
 
     // 접수 상태 변경 (내 admin 컨트롤러에서 이동)
     @PatchMapping("/{receptionId}/status")   // ← 원래 admin 파일의 매핑 줄로 교체
-    public void changeReceptionStatus(@PathVariable Long receptionId, @RequestParam AsReceptionStatus newStatus, @RequestParam(required = false) String reason, @AuthenticationPrincipal CustomUserDetails userDetails) {
+    public void changeReceptionStatus(
+            @PathVariable Long receptionId,
+            @RequestParam AsReceptionStatus newStatus,
+            @RequestParam(required = false) String reason,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
         asReceptionService.changeReceptionStatus(receptionId, newStatus, reason, userDetails);
     }
 
     // 접수 상태 변경 이력 조회
     @GetMapping("/{id}/history")
-    public List<AsStatusHistoryDto> getHistory(@PathVariable Long id) {
+    public List<AsStatusHistoryDto> getHistory(
+            @PathVariable Long id
+    ) {
         return asStatusHistoryService.getHistory(id);
     }
 
     // 기사 재배정
     @PreAuthorize("hasAnyRole('RECEPTIONIST', 'ADMIN')")
     @PatchMapping("/{receptionId}/technician")
-    public ResponseEntity<Void> updateTechnician(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long receptionId, @Valid @RequestBody AsReceptionDto.updateTechnicianRequest request) {
-
-        asReceptionService.updateTechnician(receptionId, request.technicianId(), request.reason(), userDetails.getMember());
+    public ResponseEntity<Void> updateTechnician(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long receptionId,
+            @Valid @RequestBody AsReceptionDto.updateTechnicianRequest request
+    ) {
+        asReceptionService.updateTechnician(
+                receptionId,
+                request.technicianId(),
+                request.reason(),
+                userDetails.getMember()
+        );
         return ResponseEntity.noContent().build();
     }
 
     // 기사 배정 이력 조회
     @PreAuthorize("hasAnyRole('RECEPTIONIST', 'ADMIN')")
     @GetMapping("/{receptionId}/technician-history")
-    public List<AsReceptionDto.TechnicianAssignmentHistoryResponse>
-    getTechnicianAssignmentHistory(@PathVariable Long receptionId) {
+    public List<AsReceptionDto.TechnicianAssignmentHistoryResponse> getTechnicianAssignmentHistory(
+            @PathVariable Long receptionId
+    ) {
         return asReceptionService.getTechnicianAssignmentHistory(receptionId);
     }
 
     // 견적서 조회
     @PreAuthorize("hasAnyRole('RECEPTIONIST', 'ADMIN')")
     @GetMapping("/{id}/documents/estimate")
-    public ResponseEntity<EstimateResponse> getEstimate(@PathVariable Long id) {
+    public ResponseEntity<EstimateResponse> getEstimate(
+            @PathVariable Long id
+    ) {
         return ResponseEntity.ok(repairCostService.getEstimate(id));
     }
 

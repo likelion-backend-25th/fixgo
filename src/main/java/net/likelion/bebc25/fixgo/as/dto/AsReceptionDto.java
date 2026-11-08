@@ -68,7 +68,18 @@ public class AsReceptionDto {
                     UUID.randomUUID()
             );
 
-            return new AsReception(receptionNumber, customer, product, receptionist, technician, symptom, symptomDetail, memo, returnMethod, fileUrl);
+            return new AsReception(
+                    receptionNumber,
+                    customer,
+                    product,
+                    receptionist,
+                    technician,
+                    symptom,
+                    symptomDetail,
+                    memo,
+                    returnMethod,
+                    fileUrl
+            );
         }
 
     }
