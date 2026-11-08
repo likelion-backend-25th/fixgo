@@ -18,7 +18,7 @@ public class Shipment extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "as_reception_id", nullable = false, unique = true)
     private AsReception asReception;
 
