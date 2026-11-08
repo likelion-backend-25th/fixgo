@@ -15,6 +15,7 @@ import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
 import net.likelion.bebc25.fixgo.config.JpaConfig;
 import net.likelion.bebc25.fixgo.portal.repository.CustomerPortalLinkRepository;
 import net.likelion.bebc25.fixgo.portal.service.CustomerPortalLinkService;
+import net.likelion.bebc25.fixgo.product.repository.ProductModelRepository;
 import net.likelion.bebc25.fixgo.shipment.entity.ReturnMethod;
 import net.likelion.bebc25.fixgo.support.AsReceptionFixture;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,6 +58,8 @@ class AsReceptionServiceTest {
     private AsReceptionFixture asReceptionFixture;
     @Autowired
     private EntityManager entityManager;
+    @Autowired
+    private ProductModelRepository productModelRepository;
 
     private static final String REASSIGNMENT_REASON = "Schedule change";
 
@@ -71,6 +74,21 @@ class AsReceptionServiceTest {
         technician = memberRepository.save(new Member(
                 "technician@test.com", "password", "수리기사", "010-3333-4444",
                 "서울시", Role.ROLE_TECHNICIAN, "profile.png"));
+    }
+
+    @Test
+    @DisplayName("접수 상세조회에 접수 제품의 모델명이 포함된다")
+    void getReception_includesProductModelName() {
+        Long id = reception.getId();
+        String expectedModelName = productModelRepository
+                .findById(reception.getProduct().getProductModelId()).orElseThrow().getModelName();
+        entityManager.flush();
+        entityManager.clear();
+
+        var response = asReceptionService.getReception(id);
+
+        assertThat(response.modelName()).isEqualTo(expectedModelName);
+        assertThat(response.product().getId()).isEqualTo(reception.getProduct().getId());
     }
 
     @Test

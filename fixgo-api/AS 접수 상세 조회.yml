@@ -1,7 +1,7 @@
 info:
   name: AS 접수 상세 조회
   type: http
-  seq: 2
+  seq: 4
 
 http:
   method: GET
