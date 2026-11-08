@@ -136,7 +136,7 @@ public class ProductServiceTest {
         saveProduct(laptopModel.getId(), "SZN16-11001-10001");
 
         List<ProductDto.Response> responses = productService.search(
-                new ProductDto.SearchRequest("szp24")
+                new ProductDto.SearchRequest("SZP24")
         );
 
         assertThat(responses).hasSize(2);
