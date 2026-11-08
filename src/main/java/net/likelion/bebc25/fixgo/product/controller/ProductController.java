@@ -4,6 +4,9 @@ import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
 import net.likelion.bebc25.fixgo.product.dto.ProductDto;
 import net.likelion.bebc25.fixgo.product.service.ProductService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -51,6 +54,15 @@ public class ProductController {
                 productService.search(new ProductDto.SearchRequest(serialNumber))
         );
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<Page<ProductDto.Response>> searchPage(
+            @ModelAttribute ProductDto.SearchRequest request,
+            @PageableDefault(size = 20, sort = "id") Pageable pageable
+    ) {
+        return ResponseEntity.ok(productService.searchPage(request, pageable));
+    }
+
 
     // 수리 대상 제품 정보 수정
     @PatchMapping("/{id}")

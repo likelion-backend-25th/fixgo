@@ -6,6 +6,8 @@ import net.likelion.bebc25.fixgo.product.entity.Product;
 import net.likelion.bebc25.fixgo.product.entity.ProductModel;
 import net.likelion.bebc25.fixgo.product.repository.ProductModelRepository;
 import net.likelion.bebc25.fixgo.product.repository.ProductRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,6 +63,15 @@ public class ProductService {
                 .map(this::toResponse)
                 .toList();
     }
+
+    public Page<ProductDto.Response> searchPage(ProductDto.SearchRequest request, Pageable pageable) {
+        if (request.serialNumber() == null || request.serialNumber().isBlank()) {
+            return Page.empty(pageable);
+        }
+        return productRepository.findBySerialNumberContaining(request.serialNumber().trim(), pageable)
+                .map(this::toResponse);
+    }
+
 
     // 고객 보유 제품 목록 조회
     public List<ProductDto.Response> listByCustomerId(Long customerId) {

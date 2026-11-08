@@ -12,7 +12,9 @@ import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
 import net.likelion.bebc25.fixgo.repair.repository.RepairRepository;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,6 +49,22 @@ public class MemberService {
         return memberRepository
                 .searchMembers(request.keyword(), request.role(), request.status(), Status.DELETED, pageable)
                 .map(MemberDto.BriefResponse::from);
+    }
+
+    public Page<MemberDto.TechnicianResponse> getAssignableTechnicians(
+            String keyword,
+            MemberDto.TechnicianSort sortBy,
+            Sort.Direction direction,
+            Pageable pageable
+    ) {
+        String name = keyword == null ? "" : keyword.strip();
+        Pageable page = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+        return memberRepository.findAssignableTechnicians(name, sortBy.name(), direction.name(), page)
+                .map(row -> new MemberDto.TechnicianResponse(
+                        row.getTechnicianId(), row.getName(), row.getEmail(), Status.ACTIVE,
+                        row.getInspectionWaitingCount(), row.getRepairInProgressCount(),
+                        row.getEstimatedDurationMinutes()
+                ));
     }
 
     public Page<MemberDto.BriefResponse> getDeletedMembers(

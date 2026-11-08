@@ -1,10 +1,17 @@
 package net.likelion.bebc25.fixgo.auth.repository;
 
 import jakarta.persistence.EntityManager;
+import net.likelion.bebc25.fixgo.as.entity.AsReception;
+import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
+import net.likelion.bebc25.fixgo.as.entity.AsStatusHistory;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.entity.Role;
 import net.likelion.bebc25.fixgo.auth.entity.Status;
 import net.likelion.bebc25.fixgo.config.JpaConfig;
+import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
+import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
+import net.likelion.bebc25.fixgo.repair.entity.repair.WarrantyResult;
+import net.likelion.bebc25.fixgo.support.AsReceptionFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,13 +28,15 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
-@Import(JpaConfig.class)
+@Import({JpaConfig.class, AsReceptionFixture.class})
 class MemberRepositoryTest {
 
     @Autowired
     private EntityManager em;
     @Autowired
     private MemberRepository memberRepository;
+    @Autowired
+    private AsReceptionFixture receptionFixture;
 
     private Long newMemberId;
 
@@ -52,6 +61,59 @@ class MemberRepositoryTest {
 
         em.flush();
         em.clear();
+    }
+
+    @Test
+    void findsAssignableTechniciansWithWorkloadAndHistoricalEstimate() {
+        Member busy = memberRepository.save(createMember("busy@example.com", "Kim Z", Role.ROLE_TECHNICIAN));
+        Member idle = memberRepository.save(createMember("idle@example.com", "Kim A", Role.ROLE_TECHNICIAN));
+        Member inactive = createMember("inactive@example.com", "Kim I", Role.ROLE_TECHNICIAN);
+        inactive.changeStatus(Status.INACTIVE);
+        memberRepository.save(inactive);
+
+        receptionFixture.save().updateTechnician(busy);
+        AsReception ongoing = receptionFixture.save();
+        ongoing.updateTechnician(busy);
+        em.persist(new Repair(ongoing, busy, WarrantyResult.PAID, RepairStatus.REPAIRING));
+        AsReception ongoingWithoutRepair = receptionFixture.save();
+        ongoingWithoutRepair.updateTechnician(busy);
+        ongoingWithoutRepair.changeStatus(AsReceptionStatus.REPAIR_IN_PROGRESS);
+
+        AsReception completed = receptionFixture.save();
+        completed.updateTechnician(busy);
+        em.persist(new Repair(completed, busy, WarrantyResult.PAID, RepairStatus.COMPLETED));
+        AsStatusHistory started = new AsStatusHistory(completed, "APPROVED", "REPAIRING", null, busy);
+        AsStatusHistory finished = new AsStatusHistory(completed, "REPAIRING", "COMPLETED", null, busy);
+        em.persist(started);
+        em.persist(finished);
+        em.flush();
+        setHistoryTime(started, LocalDateTime.of(2026, 10, 1, 10, 0));
+        setHistoryTime(finished, LocalDateTime.of(2026, 10, 1, 10, 30));
+        em.clear();
+
+        Page<MemberRepository.TechnicianCandidate> first = memberRepository.findAssignableTechnicians(
+                "kim", "INSPECTION_WAITING_COUNT", "DESC", PageRequest.of(0, 1));
+        assertThat(first.getTotalElements()).isEqualTo(2);
+        MemberRepository.TechnicianCandidate candidate = first.getContent().getFirst();
+        assertThat(candidate.getTechnicianId()).isEqualTo(busy.getId());
+        assertThat(candidate.getInspectionWaitingCount()).isEqualTo(1);
+        assertThat(candidate.getRepairInProgressCount()).isEqualTo(2);
+        assertThat(candidate.getEstimatedDurationMinutes()).isEqualTo(30.0);
+
+        Page<MemberRepository.TechnicianCandidate> last = memberRepository.findAssignableTechnicians(
+                "", "ESTIMATED_DURATION_MINUTES", "ASC", PageRequest.of(1, 1));
+        candidate = last.getContent().getFirst();
+        assertThat(candidate.getTechnicianId()).isEqualTo(idle.getId());
+        assertThat(candidate.getInspectionWaitingCount()).isZero();
+        assertThat(candidate.getRepairInProgressCount()).isZero();
+        assertThat(candidate.getEstimatedDurationMinutes()).isNull();
+    }
+
+    private void setHistoryTime(AsStatusHistory history, LocalDateTime time) {
+        em.createNativeQuery("UPDATE as_status_history SET created_at = :time WHERE id = :id")
+                .setParameter("time", time)
+                .setParameter("id", history.getId())
+                .executeUpdate();
     }
 
     @Test
