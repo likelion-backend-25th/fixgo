@@ -5,11 +5,16 @@ import jakarta.persistence.Query;
 import net.likelion.bebc25.fixgo.repair.dto.preset.RepairPresetRequest;
 import net.likelion.bebc25.fixgo.repair.dto.preset.RepairPresetResponse;
 import net.likelion.bebc25.fixgo.repair.dto.preset.RepairPresetUpdate;
+import net.likelion.bebc25.fixgo.repair.dto.repair.RepairPresetPartRequest;
 import net.likelion.bebc25.fixgo.repair.entity.RepairPreset;
+import net.likelion.bebc25.fixgo.repair.entity.part.Part;
+import net.likelion.bebc25.fixgo.repair.repository.PartRepository;
+import net.likelion.bebc25.fixgo.repair.repository.RepairPresetPartRepository;
 import net.likelion.bebc25.fixgo.repair.repository.RepairPresetRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -29,6 +34,12 @@ class RepairPresetServiceTest {
     private RepairPresetRepository repairPresetRepository;
 
     @Mock
+    private RepairPresetPartRepository repairPresetPartRepository;
+
+    @Mock
+    private PartRepository partRepository;
+
+    @Mock
     private EntityManager entityManager;
 
     @Mock
@@ -39,7 +50,7 @@ class RepairPresetServiceTest {
 
     private RepairPreset preset;
 
-    // 공통 Entity 생성
+    // 공통 프리셋 Entity 생성
     private void setUpPreset() {
         preset = new RepairPreset(
                 "액정 교체",
@@ -51,22 +62,22 @@ class RepairPresetServiceTest {
 
     // 단가 계산 Mock 설정
     private void setUpBasePrice(Long basePrice) {
-        when(entityManager.createNativeQuery(anyString()))
+        lenient().when(entityManager.createNativeQuery(anyString()))
                 .thenReturn(query);
 
-        when(query.setParameter(eq(1), any()))
+        lenient().when(query.setParameter(eq(1), any()))
                 .thenReturn(query);
 
-        when(query.getSingleResult())
+        lenient().when(query.getSingleResult())
                 .thenReturn(basePrice);
     }
-
+    
     @Test
     @DisplayName("수리 프리셋을 정상적으로 등록한다.")
     void createPresetSuccess() {
         // given
         setUpPreset();
-        setUpBasePrice(50000L);
+        setUpBasePrice(0L);
 
         RepairPresetRequest request = mock(RepairPresetRequest.class);
 
@@ -84,10 +95,52 @@ class RepairPresetServiceTest {
         assertThat(result).isNotNull();
         assertThat(result.name()).isEqualTo("액정 교체");
         assertThat(result.description()).isEqualTo("액정 파손 수리");
-        assertThat(result.basePrice()).isEqualTo(50000L);
+        assertThat(result.basePrice()).isEqualTo(0L);
 
         verify(repairPresetRepository).save(any(RepairPreset.class));
         verify(entityManager).createNativeQuery(anyString());
+        verify(repairPresetPartRepository, never()).saveAll(anyList());
+    }
+
+    @Test
+    @DisplayName("부품과 기본 수량을 포함하여 수리 프리셋을 등록한다.")
+    void createPresetWithPartsSuccess() {
+        // given
+        setUpPreset();
+        setUpBasePrice(50000L);
+
+        RepairPresetRequest request = mock(RepairPresetRequest.class);
+
+        RepairPresetPartRequest partRequest =
+                new RepairPresetPartRequest(10L, 2);
+
+        when(request.getName()).thenReturn("액정 교체");
+        when(request.getDescription()).thenReturn("액정 파손 수리");
+        when(request.getParts()).thenReturn(List.of(partRequest));
+
+        Part part = new Part(
+                "액정",
+                25000,
+                30,
+                10
+        );
+
+        when(repairPresetRepository.save(any(RepairPreset.class)))
+                .thenReturn(preset);
+
+        when(partRepository.findById(10L))
+                .thenReturn(Optional.of(part));
+
+        // when
+        RepairPresetResponse result =
+                repairPresetService.createPreset(request);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.basePrice()).isEqualTo(50000L);
+
+        verify(partRepository).findById(10L);
+        verify(repairPresetPartRepository).saveAll(anyList());
     }
 
     @Test
@@ -133,6 +186,7 @@ class RepairPresetServiceTest {
         assertThat(result.basePrice()).isEqualTo(50000L);
 
         verify(repairPresetRepository).findById(1L);
+        verify(entityManager).createNativeQuery(anyString());
     }
 
     @Test
@@ -162,10 +216,74 @@ class RepairPresetServiceTest {
 
         verify(repairPresetRepository).findById(1L);
         verify(repairPresetRepository, never()).save(any(RepairPreset.class));
+
+        // parts가 null이면 기존 부품 구성을 유지한다.
+        verify(repairPresetPartRepository, never())
+                .deleteByRepairPreset_Id(anyLong());
     }
 
     @Test
-    @DisplayName("수리 프리셋을 정상적으로 삭제한다.")
+    @DisplayName("수리 프리셋 수정 시 부품 구성을 교체한다.")
+    void updatePresetPartsSuccess() {
+        // given
+        setUpPreset();
+        setUpBasePrice(50000L);
+
+        RepairPresetPartRequest partRequest =
+                new RepairPresetPartRequest(10L, 2);
+
+        RepairPresetUpdate request = new RepairPresetUpdate(
+                "액정 교체",
+                "액정 파손 수리",
+                List.of(partRequest)
+        );
+
+        Part part = new Part(
+                "액정",
+                25000,
+                30,
+                10
+        );
+
+        when(repairPresetRepository.findById(1L))
+                .thenReturn(Optional.of(preset));
+
+        when(partRepository.findById(10L))
+                .thenReturn(Optional.of(part));
+
+        when(entityManager.createNativeQuery(anyString()))
+                .thenReturn(query);
+
+        when(query.setParameter(eq(1), any()))
+                .thenReturn(query);
+
+        when(query.getSingleResult())
+                .thenReturn(50000L);
+
+        // when
+        RepairPresetResponse result =
+                repairPresetService.updatePreset(1L, request);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.basePrice()).isEqualTo(50000L);
+
+        InOrder inOrder = inOrder(
+                repairPresetPartRepository,
+                entityManager,
+                partRepository
+        );
+
+        inOrder.verify(repairPresetPartRepository)
+                .deleteByRepairPreset_Id(1L);
+        inOrder.verify(entityManager).flush();
+        inOrder.verify(partRepository).findById(10L);
+
+        verify(repairPresetPartRepository).saveAll(anyList());
+    }
+
+    @Test
+    @DisplayName("수리 프리셋 삭제 시 연결된 부품 구성도 삭제한다.")
     void deletePresetSuccess() {
         // given
         setUpPreset();
@@ -177,7 +295,16 @@ class RepairPresetServiceTest {
         repairPresetService.deletePreset(1L);
 
         // then
-        verify(repairPresetRepository).delete(preset);
+        InOrder inOrder = inOrder(
+                repairPresetPartRepository,
+                repairPresetRepository
+        );
+
+        inOrder.verify(repairPresetPartRepository)
+                .deleteByRepairPreset_Id(1L);
+
+        inOrder.verify(repairPresetRepository)
+                .delete(preset);
     }
 
     @Test
@@ -198,7 +325,7 @@ class RepairPresetServiceTest {
     }
 
     @Test
-    @DisplayName("연결된 부품의 단가를 합산하여 기본 단가로 반환한다.")
+    @DisplayName("연결된 부품의 단가와 기본 수량을 반영하여 기본 단가를 반환한다.")
     void calculateBasePriceSuccess() {
         // given
         setUpPreset();
@@ -220,7 +347,7 @@ class RepairPresetServiceTest {
     }
 
     @Test
-    @DisplayName("검색어가 공백이면 전체 프리셋 조회")
+    @DisplayName("검색어가 공백이면 전체 프리셋을 조회한다.")
     void searchPresetsBlankTest() {
         // given
         when(repairPresetRepository.findAll())

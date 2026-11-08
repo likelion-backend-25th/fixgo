@@ -13,8 +13,8 @@ import net.likelion.bebc25.fixgo.product.entity.Category;
 import net.likelion.bebc25.fixgo.product.entity.Product;
 import net.likelion.bebc25.fixgo.product.entity.ProductModel;
 import net.likelion.bebc25.fixgo.product.repository.ProductModelRepository;
+import net.likelion.bebc25.fixgo.repair.dto.repair.EstimateResponse;
 import net.likelion.bebc25.fixgo.repair.entity.RepairWork;
-import net.likelion.bebc25.fixgo.repair.entity.part.Part;
 import net.likelion.bebc25.fixgo.repair.entity.part.RepairPartUsage;
 import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairDecision;
@@ -44,9 +44,27 @@ public class RepairCostService {
     private final RepairStatusService repairStatusService;
     private final AsReceptionRepository asReceptionRepository;
 
+    // 접수 ID로 수리비가 확정된 견적서를 조회
+    public EstimateResponse getEstimate(Long receptionId) {
+        Repair repair = repairRepository.findByAsReception_Id(receptionId)
+                .orElseThrow(() -> new RepairException(
+                        RepairErrorCode.REPAIR_NOT_FOUND,
+                        "수리 정보를 찾을 수 없습니다."
+                ));
+
+        if (repair.getConfirmedAt() == null) {
+            throw new RepairException(
+                    RepairErrorCode.REPAIR_COST_NOT_CONFIRMED,
+                    "아직 수리비가 확정되지 않았습니다."
+            );
+        }
+
+        return EstimateResponse.from(repair);
+    }
+
     // 수리비 계산 및 저장
     @Transactional
-    public int calculateRepairCost(Long repairId) {
+    public Long calculateRepairCost(Long repairId) {
 
         Repair repair = repairRepository.findByIdWithLock(repairId)
                 .orElseThrow(() -> new RepairException(
@@ -54,11 +72,10 @@ public class RepairCostService {
                         "수리 정보를 찾을 수 없습니다."
                 ));
 
-        // A/S 접수 제품 조회
         Product product = repair.getAsReception().getProduct();
 
-        // 제품 모델을 통해 제품군 조회
-        ProductModel productModel = productModelRepository.findById(product.getProductModelId())
+        ProductModel productModel = productModelRepository
+                .findById(product.getProductModelId())
                 .orElseThrow(() -> new RepairException(
                         RepairErrorCode.PRODUCT_MODEL_NOT_FOUND,
                         "제품 모델을 찾을 수 없습니다."
@@ -66,22 +83,26 @@ public class RepairCostService {
 
         Category category = productModel.getCategory();
 
-        int finalAmount;
-        int laborRate = 0;
+        int laborCost = 0;
         int inspectionCost = 0;
+        int finalAmount;
 
-        // 수리 불가능한 경우 점검비만 청구
         if (repair.getRepairDecision() == RepairDecision.UNREPAIRABLE) {
 
-            inspectionCost = getLaborRate(category, RateType.INSPECTION_COST);
+            inspectionCost = getLaborRate(
+                    category,
+                    RateType.INSPECTION_COST
+            );
+
             finalAmount = inspectionCost;
 
         } else if (repair.getRepairDecision() == RepairDecision.REPAIRABLE) {
 
-            // 건당 고정 공임비 조회
-            laborRate = getLaborRate(category, RateType.LABOR_RATE);
+            int laborRate = getLaborRate(
+                    category,
+                    RateType.LABOR_RATE
+            );
 
-            // 수리 작업 목록 조회
             List<RepairWork> repairWorks =
                     repairWorkRepository.findByRepairId(repairId);
 
@@ -89,44 +110,76 @@ public class RepairCostService {
                     .map(RepairWork::getId)
                     .toList();
 
-            // 실제 사용 부품 조회
             List<RepairPartUsage> usages = repairWorkIds.isEmpty()
                     ? List.of()
-                    : repairPartUsageRepository.findByRepairWorkIdIn(repairWorkIds);
+                    : repairPartUsageRepository
+                    .findByRepairWorkIdIn(repairWorkIds);
 
-            // 부품비 계산
-            long partsCost = 0L;
+            int partsCost = 0;
+            long totalStandardMinutes = 0L;
 
             for (RepairPartUsage usage : usages) {
 
-                Part part = usage.getPart();
+                int unitPrice = usage.getUnitPrice();
+                int quantity = usage.getQuantity();
+                int standardMinutes =
+                        usage.getPart().getStandardMinutes();
 
-                long partCost = Math.multiplyExact(
-                        Math.multiplyExact(
-                                (long) usage.getUnitPrice(),
-                                usage.getQuantity()
-                        ),
-                        part.getStandardMinutes()
+                // 부품 비용 = 단가 × 사용 수량
+                int usageCost = Math.multiplyExact(
+                        unitPrice,
+                        quantity
                 );
 
-                partsCost = Math.addExact(partsCost, partCost);
+                partsCost = Math.addExact(
+                        partsCost,
+                        usageCost
+                );
+
+                // 작업 시간 = 부품별 표준 시간 × 사용 수량
+                long usageMinutes = Math.multiplyExact(
+                        (long) standardMinutes,
+                        quantity
+                );
+
+                totalStandardMinutes = Math.addExact(
+                        totalStandardMinutes,
+                        usageMinutes
+                );
             }
 
-            finalAmount = Math.toIntExact(
-                    Math.addExact((long) laborRate, partsCost)
+            // 10분 단위 올림
+            long laborUnits = (totalStandardMinutes + 9) / 10;
+
+            // 공임 = 10분당 공임 × 작업 단위
+            laborCost = Math.toIntExact(
+                    Math.multiplyExact(
+                            (long) laborRate,
+                            laborUnits
+                    )
+            );
+
+            // 최종 수리비 = 부품비 + 공임
+            finalAmount = Math.addExact(
+                    partsCost,
+                    laborCost
             );
 
         } else {
+
             throw new RepairException(
                     RepairErrorCode.INVALID_REPAIR_DECISION,
                     "수리 판정 정보가 올바르지 않습니다."
             );
         }
 
-        // 계산 결과 저장
-        repair.updateRepairCost(laborRate, inspectionCost, finalAmount);
+        repair.updateRepairCost(
+                laborCost,
+                inspectionCost,
+                finalAmount
+        );
 
-        return finalAmount;
+        return (long) finalAmount;
     }
 
     // 제품군 및 요금 종류별 최신 적용 요금 조회
@@ -192,9 +245,8 @@ public class RepairCostService {
         }
 
         // A/S 접수 정보 잠금 조회
-        AsReception asReception = asReceptionRepository.findByIdWithLock(
-                        repair.getAsReception().getId()
-                )
+        AsReception asReception = asReceptionRepository
+                .findByIdWithLock(repair.getAsReception().getId())
                 .orElseThrow(() -> new RepairException(
                         RepairErrorCode.AS_RECEPTION_NOT_FOUND,
                         "A/S 접수 정보를 찾을 수 없습니다."
@@ -211,6 +263,8 @@ public class RepairCostService {
         );
 
         // A/S 접수 상태 변경
-        asReception.changeStatus(AsReceptionStatus.AWAITING_QUOTE_APPROVAL);
+        asReception.changeStatus(
+                AsReceptionStatus.AWAITING_QUOTE_APPROVAL
+        );
     }
 }

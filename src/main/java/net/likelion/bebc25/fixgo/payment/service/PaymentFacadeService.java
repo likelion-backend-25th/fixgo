@@ -66,12 +66,11 @@ public class PaymentFacadeService {
 
         // 3. 승인 응답 반영. 스케줄러와 같은 reconcile을 쓰므로, 스케줄러가 먼저 반영했더라도 결과가 같다. (스케줄러가 먼저 반영할 가능성은 매우 낮다.)
         PaymentAttemptStatus result = paymentAttemptService.reconcile(response);
-        switch (result) {
-            case DONE, WAITING_FOR_DEPOSIT -> {
-                // 성공. 카드/간편결제는 결제 완료, 가상계좌는 계좌 발급 완료(입금은 웹훅으로 반영)
-            }
-            // 토스 응답이 확정 상태가 아니거나 이미 실패 처리된 결제. 스케줄러가 다시 확인한다.
-            default -> throw new PaymentException(PaymentErrorCode.PAYMENT_PENDING, "결제 확인 중입니다.");
+
+        // 카드는 DONE, 가상계좌는 계좌 발급(WAITING_FOR_DEPOSIT)이 성공이다.
+        // 그 외는 토스 응답이 확정 상태가 아닌 경우다. 성공으로 응답하지 않고 스케줄러가 다시 확인한다.
+        if (result != PaymentAttemptStatus.DONE && result != PaymentAttemptStatus.WAITING_FOR_DEPOSIT) {
+            throw new PaymentException(PaymentErrorCode.PAYMENT_PENDING, "결제 확인 중입니다.");
         }
     }
 

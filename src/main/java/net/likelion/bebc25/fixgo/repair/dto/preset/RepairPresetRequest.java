@@ -3,6 +3,9 @@ package net.likelion.bebc25.fixgo.repair.dto.preset;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import net.likelion.bebc25.fixgo.repair.dto.repair.RepairPresetPartRequest;
+
+import java.util.List;
 
 @Getter
 @NoArgsConstructor
@@ -12,4 +15,6 @@ public class RepairPresetRequest {
     private String name;
 
     private String description;
+
+    private List<RepairPresetPartRequest> parts;
 }

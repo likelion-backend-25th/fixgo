@@ -47,8 +47,12 @@ public interface AsReceptionRepository extends JpaRepository<AsReception, Long> 
               and (:status is null or r.status = :status)
               and (:technicianId is null or t.id = :technicianId)
             """)
-    Page<AsReceptionDto.ListResponse> search(@Param("keyword") String keyword, @Param("status") AsReceptionStatus status, @Param("technicianId") Long technicianId, Pageable pageable);
-
+    Page<AsReceptionDto.ListResponse> search(
+            @Param("keyword") String keyword,
+            @Param("status") AsReceptionStatus status,
+            @Param("technicianId") Long technicianId,
+            Pageable pageable
+    );
     Optional<AsReception> findByIdAndStatusNotIn(Long id, List<AsReceptionStatus> statuses);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

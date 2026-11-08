@@ -68,7 +68,10 @@ class AsReceptionRepositoryTest {
         return page.getContent().stream().map(AsReceptionDto.ListResponse::receptionNumber).toList();
     }
 
-    private static AsReceptionDto.ListResponse findByNumber(Page<AsReceptionDto.ListResponse> page, String receptionNumber) {
+    private static AsReceptionDto.ListResponse findByNumber(
+            Page<AsReceptionDto.ListResponse> page,
+            String receptionNumber
+    ) {
         return page.getContent().stream()
                 .filter(response -> response.receptionNumber().equals(receptionNumber))
                 .findFirst()
@@ -78,13 +81,37 @@ class AsReceptionRepositoryTest {
     @BeforeEach
     void setUp() {
         Member receptionist = memberRepository.save(
-                new Member("receptionist@test.com", "password", "최접수", "010-0000-0001", "서울시 강남구", Role.ROLE_RECEPTIONIST, "default.png")
+                new Member(
+                        "receptionist@test.com",
+                        "password",
+                        "최접수",
+                        "010-0000-0001",
+                        "서울시 강남구",
+                        Role.ROLE_RECEPTIONIST,
+                        "default.png"
+                )
         );
         kim = memberRepository.save(
-                new Member("kim@test.com", "password", "김기사", "010-0000-0002", "서울시 강남구", Role.ROLE_TECHNICIAN, "default.png")
+                new Member(
+                        "kim@test.com",
+                        "password",
+                        "김기사",
+                        "010-0000-0002",
+                        "서울시 강남구",
+                        Role.ROLE_TECHNICIAN,
+                        "default.png"
+                )
         );
         park = memberRepository.save(
-                new Member("park@test.com", "password", "박기사", "010-0000-0003", "서울시 강남구", Role.ROLE_TECHNICIAN, "default.png")
+                new Member(
+                        "park@test.com",
+                        "password",
+                        "박기사",
+                        "010-0000-0003",
+                        "서울시 강남구",
+                        Role.ROLE_TECHNICIAN,
+                        "default.png"
+                )
         );
         Long createdBy = receptionist.getId();
 
@@ -115,7 +142,13 @@ class AsReceptionRepositoryTest {
     @Test
     @DisplayName("조건이 없으면 접수 목록을 ListResponse 필드로 반환한다")
     void search_withoutFilters() {
-        Page<AsReceptionDto.ListResponse> result = asReceptionRepository.search(null, null, null, PageRequest.of(0, 10));
+        Page<AsReceptionDto.ListResponse> result = asReceptionRepository.search(
+                null,
+                null,
+                null,
+                PageRequest.of(0,
+                10)
+        );
 
         assertThat(result.getTotalElements()).isEqualTo(2);
         assertThat(result.getContent())
@@ -149,15 +182,39 @@ class AsReceptionRepositoryTest {
     @Test
     @DisplayName("상태와 담당 기사로 목록을 거른다")
     void search_statusAndTechnician() {
-        assertThat(numbersOf(asReceptionRepository.search(null, AsReceptionStatus.RECEIVED, null, PageRequest.of(0, 10))))
+        assertThat(numbersOf(asReceptionRepository.search(
+                    null,
+                    AsReceptionStatus.RECEIVED,
+                    null,
+                    PageRequest.of(0,
+                    10
+                ))))
                 .containsExactly("AS-ALPHA-001");
-        assertThat(numbersOf(asReceptionRepository.search(null, AsReceptionStatus.INSPECTION, null, PageRequest.of(0, 10))))
+        assertThat(numbersOf(asReceptionRepository.search(
+                    null,
+                    AsReceptionStatus.INSPECTION,
+                    null,
+                    PageRequest.of(0,
+                    10
+                ))))
                 .containsExactly("AS-BETA-002");
         assertThat(numbersOf(asReceptionRepository.search(null, null, kim.getId(), PageRequest.of(0, 10))))
                 .containsExactly("AS-ALPHA-001");
-        assertThat(numbersOf(asReceptionRepository.search(null, AsReceptionStatus.INSPECTION, park.getId(), PageRequest.of(0, 10))))
+        assertThat(numbersOf(asReceptionRepository.search(
+                    null,
+                    AsReceptionStatus.INSPECTION,
+                    park.getId(),
+                    PageRequest.of(0,
+                    10
+                ))))
                 .containsExactly("AS-BETA-002");
-        assertThat(asReceptionRepository.search(null, AsReceptionStatus.INSPECTION, kim.getId(), PageRequest.of(0, 10)).getContent())
+        assertThat(asReceptionRepository.search(
+                    null,
+                    AsReceptionStatus.INSPECTION,
+                    kim.getId(),
+                    PageRequest.of(0,
+                    10)
+                ).getContent())
                 .isEmpty();
     }
 

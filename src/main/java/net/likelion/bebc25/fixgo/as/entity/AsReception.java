@@ -14,7 +14,14 @@ import net.likelion.bebc25.fixgo.shipment.entity.ReturnMethod;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(indexes = {@Index(name = "IDX_AS_CUSTOMER", columnList = "customer_id"), @Index(name = "IDX_AS_PRODUCT", columnList = "product_id"), @Index(name = "IDX_AS_RECEPTIONIST", columnList = "receptionist_id"), @Index(name = "IDX_AS_TECHNICIAN", columnList = "technician_id"), @Index(name = "IDX_AS_STATUS", columnList = "status"), @Index(name = "IDX_AS_CREATED", columnList = "created_at")})
+@Table(indexes = {
+        @Index(name = "IDX_AS_CUSTOMER", columnList = "customer_id"),
+        @Index(name = "IDX_AS_PRODUCT", columnList = "product_id"),
+        @Index(name = "IDX_AS_RECEPTIONIST", columnList = "receptionist_id"),
+        @Index(name = "IDX_AS_TECHNICIAN", columnList = "technician_id"),
+        @Index(name = "IDX_AS_STATUS", columnList = "status"),
+        @Index(name = "IDX_AS_CREATED", columnList = "created_at")
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AsReception extends BaseEntity {
@@ -68,7 +75,18 @@ public class AsReception extends BaseEntity {
     @Column
     private String fileUrl;
 
-    public AsReception(String receptionNumber, Customer customer, Product product, Member receptionist, Member technician, String symptom, String symptomDetail, String memo, ReturnMethod returnMethod, String fileUrl) {
+    public AsReception(
+            String receptionNumber,
+            Customer customer,
+            Product product,
+            Member receptionist,
+            Member technician,
+            String symptom,
+            String symptomDetail,
+            String memo,
+            ReturnMethod returnMethod,
+            String fileUrl
+    ) {
         this.receptionNumber = receptionNumber;
         this.customer = customer;
         this.product = product;

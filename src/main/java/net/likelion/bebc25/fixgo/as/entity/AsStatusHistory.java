@@ -40,7 +40,13 @@ public class AsStatusHistory {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    public AsStatusHistory(AsReception asReception, String fromStatus, String toStatus, String reason, Member changedBy) {
+    public AsStatusHistory(
+            AsReception asReception,
+            String fromStatus,
+            String toStatus,
+            String reason,
+            Member changedBy
+    ) {
         this.asReception = asReception;
         this.fromStatus = fromStatus;
         this.toStatus = toStatus;

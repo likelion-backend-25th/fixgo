@@ -151,7 +151,15 @@ public class AsReceptionTest {
     @Test
     @DisplayName("담당 기사를 다른 기사로 바꾼다")
     void updateTechnician() {
-        Member newTechnician = new Member("tech02@abc.com", "@#$@%", "박기사", "010-0000-0001", "서울시 강남구", Role.ROLE_TECHNICIAN, "technician02");
+        Member newTechnician = new Member(
+                "tech02@abc.com",
+                "@#$@%",
+                "박기사",
+                "010-0000-0001",
+                "서울시 강남구",
+                Role.ROLE_TECHNICIAN,
+                "technician02"
+        );
         em.persist(newTechnician);
 
         AsReception asReception = new AsReception(

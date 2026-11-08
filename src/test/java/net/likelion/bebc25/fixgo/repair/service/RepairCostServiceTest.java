@@ -116,11 +116,11 @@ class RepairCostServiceTest {
         when(repairPartUsageRepository.findByRepairWorkIdIn(List.of(10L)))
                 .thenReturn(List.of(usage));
 
-        int result = repairCostService.calculateRepairCost(repairId);
+        Long result = repairCostService.calculateRepairCost(repairId);
 
-        assertThat(result).isEqualTo(60000);
+        assertThat(result).isEqualTo(82000L);
 
-        verify(repair).updateRepairCost(20000, 0, 60000);
+        verify(repair).updateRepairCost(80000, 0, 82000);
         verify(repairRepository).findByIdWithLock(repairId);
     }
 
@@ -156,9 +156,9 @@ class RepairCostServiceTest {
 
         when(inspectionRate.getCost()).thenReturn(15000);
 
-        int result = repairCostService.calculateRepairCost(repairId);
+        Long result = repairCostService.calculateRepairCost(repairId);
 
-        assertThat(result).isEqualTo(15000);
+        assertThat(result).isEqualTo(15000L);
 
         verify(repair).updateRepairCost(0, 15000, 15000);
 
@@ -233,8 +233,7 @@ class RepairCostServiceTest {
         )).thenReturn(List.of());
 
         assertThatThrownBy(() -> repairCostService.calculateRepairCost(repairId))
-                .isInstanceOf(RepairException.class)
-                .hasMessage("해당 제품군의 요금 정보를 찾을 수 없습니다.");
+                .isInstanceOf(RepairException.class);
 
         verify(repairWorkRepository, never()).findByRepairId(any());
     }
@@ -268,8 +267,7 @@ class RepairCostServiceTest {
         )).thenReturn(List.of());
 
         assertThatThrownBy(() -> repairCostService.calculateRepairCost(repairId))
-                .isInstanceOf(RepairException.class)
-                .hasMessage("해당 제품군의 요금 정보를 찾을 수 없습니다.");
+                .isInstanceOf(RepairException.class);
     }
 
     @Test

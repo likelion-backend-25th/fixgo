@@ -74,7 +74,7 @@ class RepairPresetControllerTest {
         when(repairPresetService.createPreset(any(RepairPresetRequest.class)))
                 .thenReturn(createResponse());
 
-        mockMvc.perform(post("/api/as/repair-presets")
+        mockMvc.perform(post("/api/v1/as/repair-presets")
                                 .with(csrf())
                                 .with(user(userDetails))
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -100,7 +100,7 @@ class RepairPresetControllerTest {
         when(repairPresetService.getAllPresets())
                 .thenReturn(List.of(createResponse()));
 
-        mockMvc.perform(get("/api/as/repair-presets"))
+        mockMvc.perform(get("/api/v1/as/repair-presets"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$[0].name").value("액정 수리"))
@@ -117,7 +117,7 @@ class RepairPresetControllerTest {
         when(repairPresetService.getPreset(1L))
                 .thenReturn(createResponse());
 
-        mockMvc.perform(get("/api/as/repair-presets/1"))
+        mockMvc.perform(get("/api/v1/as/repair-presets/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.name").value("액정 수리"));
@@ -145,7 +145,7 @@ class RepairPresetControllerTest {
         when(repairPresetService.updatePreset(eq(1L), any(RepairPresetUpdate.class)))
                 .thenReturn(response);
 
-        mockMvc.perform(put("/api/as/repair-presets/1")
+        mockMvc.perform(put("/api/v1/as/repair-presets/1")
                                 .with(csrf())
                                 .with(user(userDetails))
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -170,7 +170,7 @@ class RepairPresetControllerTest {
 
         doNothing().when(repairPresetService).deletePreset(1L);
 
-        mockMvc.perform(delete("/api/as/repair-presets/1")
+        mockMvc.perform(delete("/api/v1/as/repair-presets/1")
                                 .with(csrf()))
                 .andExpect(status().isNoContent());
 
@@ -186,7 +186,7 @@ class RepairPresetControllerTest {
         when(repairPresetService.searchPresets("배터리"))
                 .thenReturn(List.of());
 
-        mockMvc.perform(get("/api/as/repair-presets/search")
+        mockMvc.perform(get("/api/v1/as/repair-presets/search")
                                 .param("name", "배터리"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))

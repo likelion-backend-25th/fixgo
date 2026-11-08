@@ -1,7 +1,7 @@
 info:
   name: 직원 계정 생성
   type: http
-  seq: 7
+  seq: 9
 
 http:
   method: POST

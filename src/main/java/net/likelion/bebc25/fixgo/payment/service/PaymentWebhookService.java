@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.likelion.bebc25.fixgo.payment.client.TossDto;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentAttempt;
+import net.likelion.bebc25.fixgo.payment.entity.PaymentAttemptStatus;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentBill;
 import net.likelion.bebc25.fixgo.payment.entity.VirtualAccount;
 import net.likelion.bebc25.fixgo.payment.exception.PaymentErrorCode;
@@ -13,6 +14,8 @@ import net.likelion.bebc25.fixgo.payment.repository.PaymentBillRepository;
 import net.likelion.bebc25.fixgo.payment.repository.VirtualAccountRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -34,70 +37,84 @@ public class PaymentWebhookService {
      */
     @Transactional
     public void handleDepositCallback(TossDto.DepositCallbackWebhook webhook) {
-        // 외부에서 들어온 orderId라 위조 요청일 수 있다. 진짜 토스라면 재전송으로 실패가 드러나도록 거절한다.
-        PaymentAttempt attempt = paymentAttemptRepository.findByOrderIdForUpdate(webhook.orderId())
-                .orElseThrow(() -> {
-                    log.warn("가상계좌 웹훅: 결제 시도를 찾을 수 없어 거절함. orderId={}", webhook.orderId());
-                    return new PaymentException(PaymentErrorCode.ATTEMPT_NOT_FOUND, "결제 시도를 찾을 수 없습니다.");
-                });
-
-
-        // 가상계좌 결제가 아닌 orderId로 온 웹훅. secret도 검증할 수 없으므로 거절한다.
-        VirtualAccount virtualAccount = virtualAccountRepository.findByPaymentAttemptId(attempt.getId())
-                .orElseThrow(() -> {
-                    log.warn("가상계좌 웹훅: 가상계좌 정보가 없어 거절함. orderId={}, attemptStatus={}",
-                             webhook.orderId(), attempt.getStatus());
-                    return new PaymentException(PaymentErrorCode.VIRTUAL_ACCOUNT_NOT_FOUND, "가상계좌 정보를 찾을 수 없습니다.");
-                });
-
-        if (!virtualAccount.getWebhookSecret().equals(webhook.secret())) {
-            // secret이 다르면 토스가 보낸 요청이 아닐 가능성이 크다. secret 값은 로그에 남기지 않는다.
-            log.warn("가상계좌 웹훅: secret 불일치로 거절함. orderId={}", webhook.orderId());
-            throw new PaymentException(PaymentErrorCode.SECRET_MISMATCH, "웹훅 검증에 실패했습니다.");
-        }
+        PaymentAttempt attempt = findVerifiedAttempt(webhook);
 
         PaymentBill bill = paymentBillRepository.findByIdForUpdate(attempt.getPaymentBill().getId())
                 .orElseThrow(() -> new IllegalStateException(
                         "결제 시도에 연결된 청구서가 없습니다. orderId=" + webhook.orderId()));
 
-
         switch (webhook.status()) {
-            case "DONE" -> {
-                switch (attempt.getStatus()) {
-                    case WAITING_FOR_DEPOSIT -> {
-                        attempt.markVirtualAccountDone(webhook.createdAt());
-                        bill.markPaid(webhook.createdAt());
-                    }
-                    case DONE -> log.info("가상계좌 웹훅: 이미 입금 완료 반영된 결제. orderId={}", webhook.orderId());
-                    case FAILED ->
-                            log.error("가상계좌 웹훅: 실패 처리된 결제에 입금이 들어옴. 이중 결제 여부 확인 필요. orderId={}", webhook.orderId());
-                    default -> log.warn("가상계좌 웹훅: 입금 완료를 반영할 수 없는 결제 시도 상태. orderId={}, attemptStatus={}",
-                                        webhook.orderId(), attempt.getStatus());
-                }
+            case "DONE" -> applyDeposit(attempt, bill, webhook.createdAt());  // 가상계좌 입금 완료
+            case "WAITING_FOR_DEPOSIT" -> applyDepositError(attempt, bill); // 가상계좌 입금 오류
+            case "CANCELED" -> applyCancel(attempt); // 가상계좌 취소 또는 환불
+        }
+    }
+
+    /**
+     * 웹훅의 orderId와 secret을 검증한다.
+     */
+    private PaymentAttempt findVerifiedAttempt(TossDto.DepositCallbackWebhook webhook) {
+        // 외부에서 들어온 orderId라 위조 요청일 수 있다. 진짜 토스라면 재전송으로 실패가 드러나도록 거절한다.
+        PaymentAttempt attempt = paymentAttemptRepository.findByOrderIdForUpdate(webhook.orderId())
+                .orElseThrow(() -> reject(PaymentErrorCode.ATTEMPT_NOT_FOUND, webhook));
+
+
+        // 가상계좌 결제가 아닌 orderId로 온 웹훅. secret도 검증할 수 없으므로 거절한다.
+        VirtualAccount virtualAccount = virtualAccountRepository.findByPaymentAttemptId(attempt.getId())
+                .orElseThrow(() -> reject(PaymentErrorCode.VIRTUAL_ACCOUNT_NOT_FOUND, webhook));
+
+        // 웹훅의 secret과 db에 저장된 secret이 일치하는 지 확인한다.
+        if (!virtualAccount.matchesSecret(webhook.secret())) {
+            throw reject(PaymentErrorCode.SECRET_MISMATCH, webhook);
+        }
+        return attempt;
+    }
+
+    /**
+     * 입금완료. 재전송이면 무시한다.
+     * 실패 처리된 결제에 입금 완료가 오는 경우 기록한다.
+     */
+    private void applyDeposit(PaymentAttempt attempt, PaymentBill bill, LocalDateTime depositedAt) {
+        switch (attempt.getStatus()) {
+            case DONE -> {
             }
-            // TODO: 가상계좌 취소 / 환불
-            case "CANCELED" -> {
-                switch (attempt.getStatus()) {
-                    case WAITING_FOR_DEPOSIT -> {
-                        attempt.markFailed("VIRTUAL_ACCOUNT_CANCELED", "가상계좌가 취소되었습니다.");
-                    }
-                    case DONE -> { // TODO: 환불
-                        log.warn("가상계좌 웹훅: 환불 웹훅 orderId={}", webhook.orderId());
-                    }
-                    case FAILED -> { // TODO: 이미 취소가 반영됨.
-                        log.info("가상계좌 웹훅: 이미 취소 반영된 결제. orderId={}", webhook.orderId());
-                    }
-                    default -> { // TODO: 그 외의 상태
-                        log.warn("가상계좌 웹훅: 입금 취소/환불 을 반영할 수 없는 결제 시도 상태. orderId={}, attemptStatus={}",
-                                 webhook.orderId(), attempt.getStatus());
-                    }
-                }
-            }
+            case FAILED -> log.error("만료/취소된 결제에 입금 웩훅. 확인 필요. orderId={}", attempt.getOrderId());
             default -> {
-                // TODO: DONE, CANCELED 외의 웹훅
+                attempt.markVirtualAccountDone(depositedAt);
+                bill.markPaid(depositedAt);
             }
         }
+    }
 
-        // 웹훅이 CANCELED인 경우
+    /**
+     * 입금 오류 (송금 한도 초과, 네트워크 오류 등). 입금 완료를 입금 대기로 되돌리고 구매자에게 재입금을 안내한다.
+     * 입금 완료 상태가 아니면 가상계좌 발급이나 재전송이므로 무시한다.
+     * 가상계좌 발급은 승인 요청 또는 스케줄러에서 처리한다.
+     */
+    private void applyDepositError(PaymentAttempt attempt, PaymentBill bill) {
+        if (attempt.getStatus() != PaymentAttemptStatus.DONE) {
+            return;
+        }
+        // TODO: DONE -> WAITING_FOR_DEPOSIT, approvedAt 비우기 / 구매자 재입금 안내
+    }
+
+    /**
+     * 가상계좌 취소. 입금 전 취소는 FAILED로 반영한다. (우리 요청이 타임아웃이 일어난 경우 대비)
+     */
+    private void applyCancel(PaymentAttempt attempt) {
+        switch (attempt.getStatus()) {
+            case WAITING_FOR_DEPOSIT -> attempt.markFailed("VIRTUAL_ACCOUNT_CANCELED", "가상계좌 입금 전 취소");
+            case DONE -> log.info("가상계좌 웹훅: 환불 웹훅");
+            default -> {
+            } // 이미 반영 됨
+        }
+    }
+
+    /**
+     * 웹훅을 거절한다. 토스가 보낸 웹훅이면 웹훅이 재전송되므로, 원인을 알 수 있게 로그를 남긴다.
+     */
+    private PaymentException reject(PaymentErrorCode code, TossDto.DepositCallbackWebhook webhook) {
+        log.warn("가상계좌 웹훅 거절. reason={}, orderId={}, status={}", code, webhook.orderId(), webhook.status());
+        return new PaymentException(code, "웹훅 검증에 실패했습니다.");
     }
 }
