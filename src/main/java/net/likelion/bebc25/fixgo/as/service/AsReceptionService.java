@@ -45,18 +45,25 @@ public class AsReceptionService {
 
     // 접수 등록
     @Transactional
-    public AsReceptionDto.CreateReceptionResponse createReception(CustomUserDetails userDetails, AsReceptionDto.CreateReceptionRequest request) {
+    public AsReceptionDto.CreateReceptionResponse createReception(
+            CustomUserDetails userDetails,
+            AsReceptionDto.CreateReceptionRequest request
+    ) {
         if (userDetails.getMember().getRole().equals(Role.ROLE_TECHNICIAN)) {
             throw new IllegalArgumentException("권한이 없습니다.");
         }
 
-        Customer customer = customerRepository.findById(request.customerId()).orElseThrow(() -> new NoSuchElementException("존재하지 않는 고객입니다."));
+        Customer customer = customerRepository.findById(request.customerId())
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 고객입니다."));
 
-        Product product = productRepository.findById(request.productId()).orElseThrow(() -> new NoSuchElementException("지원하지 않는 제품입니다."));
+        Product product = productRepository.findById(request.productId())
+                .orElseThrow(() -> new NoSuchElementException("지원하지 않는 제품입니다."));
 
-        Member receptionist = memberRepository.findById(userDetails.getId()).orElseThrow(() -> new NoSuchElementException("존재하지 않는 직원입니다."));
+        Member receptionist = memberRepository.findById(userDetails.getId())
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 직원입니다."));
 
-        Member technician = memberRepository.findById(request.technicianId()).orElseThrow(() -> new NoSuchElementException("존재하지 않는 직원입니다."));
+        Member technician = memberRepository.findById(request.technicianId())
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 직원입니다."));
 
         // 기사 역할 확인
         if (technician.getRole() != Role.ROLE_TECHNICIAN) {
@@ -69,7 +76,12 @@ public class AsReceptionService {
         }
 
         // A/S 접수 등록
-        AsReception asReception = asReceptionRepository.save(request.toEntity(customer, product, receptionist, technician));
+        AsReception asReception = asReceptionRepository.save(
+                request.toEntity(customer,
+                product,
+                receptionist,
+                technician)
+        );
 
         // 고객 포털 링크 발급
         String customerLink = customerPortalLinkService.issueLink(asReception.getId());
@@ -82,8 +94,14 @@ public class AsReceptionService {
 
     // A/S 접수 상태 변경
     @Transactional
-    public void changeReceptionStatus(Long receptionId, AsReceptionStatus newStatus, String reason, CustomUserDetails userDetails) {
-        AsReception asReception = asReceptionRepository.findByIdWithLock(receptionId).orElseThrow(() -> new NoSuchElementException("존재하지 않는 A/S 접수입니다."));
+    public void changeReceptionStatus(
+            Long receptionId,
+            AsReceptionStatus newStatus,
+            String reason,
+            CustomUserDetails userDetails
+    ) {
+        AsReception asReception = asReceptionRepository.findByIdWithLock(receptionId)
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 A/S 접수입니다."));
 
         AsReceptionStatus currentStatus = asReception.getStatus();
 
@@ -91,7 +109,8 @@ public class AsReceptionService {
             throw new IllegalArgumentException("이미 해당 상태로 처리되어 있습니다.");
         }
 
-        Member changedBy = memberRepository.findById(userDetails.getId()).orElseThrow(() -> new NoSuchElementException("존재하지 않는 직원입니다."));
+        Member changedBy = memberRepository.findById(userDetails.getId())
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 직원입니다."));
 
         asReception.changeStatus(newStatus);
 
@@ -99,14 +118,23 @@ public class AsReceptionService {
     }
 
     // 접수번호, 고객명, 증상 검색과 상태/담당 기사 필터
-    public Page<AsReceptionDto.ListResponse> getReceptions(AsReceptionDto.ReceptionSearchRequest request, Pageable pageable) {
-        String searchKeyword = request.keyword() == null || request.keyword().isBlank() ? null : request.keyword().trim();
+    public Page<AsReceptionDto.ListResponse> getReceptions(
+            AsReceptionDto.ReceptionSearchRequest request,
+            Pageable pageable
+    ) {
+        String searchKeyword = request.keyword() == null || request.keyword().isBlank()
+                ? null
+                : request.keyword().trim();
         return asReceptionRepository.search(searchKeyword, request.status(), request.technicianId(), pageable);
     }
 
     // 접수 상세 조회
     public AsReceptionDto.DetailResponse getReception(Long id) {
-        AsReception reception = asReceptionRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 접수입니다."));
+        AsReception reception = asReceptionRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "존재하지 않는 접수입니다."
+                ));
         return AsReceptionDto.DetailResponse.from(reception);
     }
 
@@ -146,13 +174,20 @@ public class AsReceptionService {
 
     // 담당 기사 재배정
     @Transactional
-    public AsReceptionDto.DetailResponse updateTechnician(Long receptionId, Long technicianId, String reason, Member changedBy) {
+    public AsReceptionDto.DetailResponse updateTechnician(
+            Long receptionId,
+            Long technicianId,
+            String reason,
+            Member changedBy
+    ) {
         List<AsReceptionStatus> statuses = new ArrayList<>();
         statuses.add(AsReceptionStatus.AWAITING_PAYMENT);
         statuses.add(AsReceptionStatus.AWAITING_SHIPMENT);
         statuses.add(AsReceptionStatus.AWAITING_PICKUP);
         statuses.add(AsReceptionStatus.COMPLETED);
-        AsReception reception = asReceptionRepository.findByIdAndStatusNotIn(receptionId, statuses).orElseThrow(() -> new NoSuchElementException("존재하지 않는 접수입니다."));
+        AsReception reception = asReceptionRepository.findByIdAndStatusNotIn(receptionId, statuses)
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 접수입니다."
+                ));
 
         Member technician = memberRepository.findById(technicianId).
                 orElseThrow(() -> new NoSuchElementException(

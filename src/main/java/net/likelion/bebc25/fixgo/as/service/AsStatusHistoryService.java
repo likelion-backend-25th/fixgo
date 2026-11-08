@@ -34,6 +34,9 @@ public class AsStatusHistoryService {
     }
 
     public List<AsStatusHistoryDto> getHistory(Long receptionId) {
-        return asStatusHistoryRepository.findHistoryByReceptionId(receptionId).stream().map(AsStatusHistoryDto::from).toList();
+        return asStatusHistoryRepository.findHistoryByReceptionId(receptionId)
+                .stream()
+                .map(AsStatusHistoryDto::from)
+                .toList();
     }
 }

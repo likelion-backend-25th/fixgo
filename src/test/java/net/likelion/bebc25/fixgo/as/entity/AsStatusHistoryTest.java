@@ -48,10 +48,26 @@ class AsStatusHistoryTest {
         );
         Product product = productRepository.save(new Product(1L, "SN-1004", LocalDateTime.now(), 1L));
         Member receptionist = memberRepository.save(
-                new Member("receptionist@test.com", "password", "최접수", "010-0000-0001", "서울시 강남구", Role.ROLE_RECEPTIONIST, "profile.png")
+                new Member(
+                        "receptionist@test.com",
+                        "password",
+                        "최접수",
+                        "010-0000-0001",
+                        "서울시 강남구",
+                        Role.ROLE_RECEPTIONIST,
+                        "profile.png"
+                )
         );
         Member technician = memberRepository.save(
-                new Member("tech@test.com", "password", "김기사", "010-0000-0001", "서울시 강남구", Role.ROLE_TECHNICIAN, "profile.png")
+                new Member(
+                        "tech@test.com",
+                        "password",
+                        "김기사",
+                        "010-0000-0001",
+                        "서울시 강남구",
+                        Role.ROLE_TECHNICIAN,
+                        "profile.png"
+                )
         );
         AsReception reception = asReceptionRepository.save(new AsReception(
                 "AS-HISTORY-001",
