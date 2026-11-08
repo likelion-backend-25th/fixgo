@@ -19,6 +19,12 @@ public class ShipmentDto {
             String trackingNumber
     ) {}
 
+    // 방문 수령
+    public record PickupCreateRequest(
+            @NotBlank
+            Long asReceptionId
+    ) {}
+
     // 택배사 및 운송장번호 수정 요청
     public record UpdateRequest(
             @NotBlank
