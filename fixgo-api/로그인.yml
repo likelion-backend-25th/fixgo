@@ -1,7 +1,7 @@
 info:
   name: 로그인
   type: http
-  seq: 6
+  seq: 4
 
 http:
   method: POST
@@ -13,6 +13,12 @@ http:
         "email": "admin001@fixgo.com",
         "password": "admin1234"
       }
+
+      // {
+      //   "email": "reception.demo@fixgo.example",
+      //   "password": "admin1234"
+      // }
+
       // {
       //   "email": "technician.demo@fixgo.example",
       //   "password": "1234"
