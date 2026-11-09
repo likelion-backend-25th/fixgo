@@ -59,6 +59,7 @@ public interface AsReceptionRepository extends JpaRepository<AsReception, Long> 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT a FROM AsReception a WHERE a.id = :id")
     Optional<AsReception> findByIdWithLock(@Param("id") Long id);
+    
 
     // 접수 ID 와 담당 기사 ID 함께 확인
     Optional<AsReception> findByIdAndTechnician_Id(Long id, Long technicianId);

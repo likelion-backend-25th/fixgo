@@ -21,7 +21,7 @@ public class ShipmentDto {
 
     // 방문 수령
     public record PickupCreateRequest(
-            @NotBlank
+            @NotNull
             Long asReceptionId
     ) {}
 
