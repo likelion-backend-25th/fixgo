@@ -1806,3 +1806,273 @@ WHERE ar.reception_number = 'AS-261101-8f3a2c10-7b6e-4d90-a123-000000000010'
                   FROM repair_part_usage u
                   WHERE u.repair_work_id = rw.id
                     AND u.part_id = p.id);
+
+-- 통계 화면용 더미데이터
+-- 기존 수리기사 더미를 포함해 10명, 2025-12부터 2026-11까지 월 5건.
+-- 완료 건은 수리 시작/완료 이력, 결제, 배송을 함께 넣어 기간 통계가 비지 않게 한다.
+
+INSERT INTO product_model (name, model_name, category, warranty_months, is_active, created_at, updated_at, created_by,
+                           updated_by)
+SELECT '더미 스마트폰',
+       'FIXGO-DEMO-PHONE',
+       'PHONE',
+       12,
+       TRUE,
+       NOW(),
+       NOW(),
+       0,
+       0
+WHERE NOT EXISTS (SELECT 1 FROM product_model WHERE model_name = 'FIXGO-DEMO-PHONE');
+
+INSERT INTO member (email, password_hash, name, phone, role, address, profile_img_url, status, created_at, updated_at,
+                    created_by, updated_by)
+WITH RECURSIVE nums AS (
+    SELECT 2 AS n
+    UNION ALL
+    SELECT n + 1 FROM nums WHERE n < 10
+)
+SELECT CONCAT('stat.tech', LPAD(n, 2, '0'), '@fixgo.example'),
+       '$2a$10$vFJ1GvhwL8vQFOSGsKTjMeH7cQUItVadnGDGRHF1Q8xGefzmSlzMS',
+       ELT(n - 1, '김도윤', '이서연', '박민재', '최하준', '정예린', '한지호', '오수아', '윤태민', '장하늘'),
+       CONCAT('010-8100-', LPAD(n, 4, '0')),
+       'ROLE_TECHNICIAN',
+       '서울시 테스트센터',
+       '',
+       'ACTIVE',
+       NOW(),
+       NOW(),
+       0,
+       0
+FROM nums
+WHERE NOT EXISTS (SELECT 1
+                  FROM member m
+                  WHERE m.email = CONCAT('stat.tech', LPAD(nums.n, 2, '0'), '@fixgo.example'));
+
+DROP TEMPORARY TABLE IF EXISTS stat_seed;
+CREATE TEMPORARY TABLE stat_seed AS
+WITH RECURSIVE nums AS (
+    SELECT 0 AS n
+    UNION ALL
+    SELECT n + 1 FROM nums WHERE n < 59
+)
+SELECT n,
+       CASE
+           WHEN n DIV 5 = 11 AND n MOD 5 = 4 THEN TIMESTAMP('2026-11-08 10:00:00')
+           ELSE DATE_ADD(DATE_ADD(TIMESTAMP('2025-12-03 10:00:00'), INTERVAL (n DIV 5) MONTH), INTERVAL (n MOD 5) DAY)
+       END AS created_at,
+       MOD((n DIV 5) + (n MOD 5) * 2, 10) AS tech_index,
+       CASE
+           WHEN MOD((n DIV 5) + (n MOD 5) * 2, 10) = 0 THEN 'technician.demo@fixgo.example'
+           ELSE CONCAT('stat.tech', LPAD(MOD((n DIV 5) + (n MOD 5) * 2, 10) + 1, 2, '0'), '@fixgo.example')
+       END AS tech_email,
+       CASE WHEN n MOD 2 = 0 THEN 'FIXGO-DEMO-LAPTOP' ELSE 'FIXGO-DEMO-PHONE' END AS model_name,
+       ELT(n MOD 5 + 1, '전원 불량', '배터리 소모', '화면 파손', '키보드 불량', '과열') AS symptom,
+       CASE n MOD 5
+           WHEN 0 THEN 'COMPLETED'
+           WHEN 1 THEN 'COMPLETED'
+           WHEN 2 THEN 'REPAIR_IN_PROGRESS'
+           WHEN 3 THEN 'AWAITING_PAYMENT'
+           ELSE 'INSPECTION'
+       END AS status,
+       CASE
+           WHEN n MOD 5 IN (0, 1) AND n MOD 4 = 3 THEN 'PICKUP'
+           ELSE 'DELIVERY'
+       END AS return_method
+FROM nums;
+
+ALTER TABLE stat_seed
+    ADD COLUMN complete_at DATETIME,
+    ADD COLUMN reception_number VARCHAR(40);
+
+UPDATE stat_seed
+SET complete_at = DATE_ADD(created_at, INTERVAL (8 + tech_index * 3) HOUR),
+    reception_number = CONCAT('AS-STAT-', DATE_FORMAT(created_at, '%y%m%d'), '-', LPAD(n, 2, '0'));
+
+INSERT INTO customer (name, phone, email, zipcode, basic_address, detail_address, created_at, updated_at, created_by,
+                      updated_by)
+SELECT CONCAT('통계고객 ', LPAD(n + 1, 2, '0')),
+       CONCAT('010-8200-', LPAD(n, 4, '0')),
+       CONCAT('stat.customer', LPAD(n, 2, '0'), '@fixgo.example'),
+       '06200',
+       CONCAT('서울시 강남구 통계로 ', n + 1),
+       '1층',
+       created_at,
+       created_at,
+       0,
+       0
+FROM stat_seed
+WHERE NOT EXISTS (SELECT 1
+                  FROM customer c
+                  WHERE c.email = CONCAT('stat.customer', LPAD(stat_seed.n, 2, '0'), '@fixgo.example'));
+
+INSERT INTO product (product_model_id, customer_id, serial_number, manufactured_at, purchased_at, created_at,
+                     updated_at, created_by, updated_by)
+SELECT (SELECT MIN(id) FROM product_model WHERE model_name = s.model_name),
+       (SELECT MIN(id) FROM customer WHERE email = CONCAT('stat.customer', LPAD(s.n, 2, '0'), '@fixgo.example')),
+       CONCAT('STAT-SN-', LPAD(s.n, 2, '0')),
+       '2025-06-01 00:00:00',
+       '2025-09-01 00:00:00',
+       s.created_at,
+       s.created_at,
+       0,
+       0
+FROM stat_seed s
+WHERE NOT EXISTS (SELECT 1 FROM product p WHERE p.serial_number = CONCAT('STAT-SN-', LPAD(s.n, 2, '0')));
+
+INSERT INTO as_reception (reception_number, customer_id, product_id, receptionist_id, technician_id,
+                          symptom, symptom_detail, memo, return_method, status, status_changed_at, closed_at,
+                          file_url, created_at, updated_at, created_by, updated_by)
+SELECT s.reception_number,
+       (SELECT MIN(id) FROM customer WHERE email = CONCAT('stat.customer', LPAD(s.n, 2, '0'), '@fixgo.example')),
+       (SELECT id FROM product WHERE serial_number = CONCAT('STAT-SN-', LPAD(s.n, 2, '0'))),
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
+       (SELECT id FROM member WHERE email = s.tech_email),
+       s.symptom,
+       CONCAT(s.symptom, ' 증상으로 점검을 요청합니다.'),
+       '통계 더미데이터',
+       s.return_method,
+       s.status,
+       CASE WHEN s.status = 'COMPLETED' THEN s.complete_at ELSE s.created_at END,
+       CASE WHEN s.status = 'COMPLETED' THEN s.complete_at ELSE NULL END,
+       NULL,
+       s.created_at,
+       CASE WHEN s.status = 'COMPLETED' THEN s.complete_at ELSE s.created_at END,
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example')
+FROM stat_seed s
+WHERE NOT EXISTS (SELECT 1 FROM as_reception ar WHERE ar.reception_number = s.reception_number);
+
+INSERT INTO repair (as_reception_id, technician_id, diagnosis, work_note, repair_decision, warranty_result, reason,
+                    labor_rate, inspection_cost, final_amount, status, reason_for_rejection, confirmed_at,
+                    created_at, updated_at, created_by, updated_by)
+SELECT ar.id,
+       ar.technician_id,
+       CONCAT(s.symptom, ' 원인을 확인하고 부품을 교체함'),
+       '통계 더미 수리',
+       'REPAIRABLE',
+       CASE WHEN s.n MOD 2 = 0 THEN 'PAID' ELSE 'FREE' END,
+       '통계 더미데이터',
+       30000,
+       0,
+       50000 + s.n * 2500,
+       'COMPLETED',
+       NULL,
+       s.complete_at,
+       s.created_at,
+       s.complete_at,
+       ar.technician_id,
+       ar.technician_id
+FROM stat_seed s
+         JOIN as_reception ar ON ar.reception_number = s.reception_number
+WHERE s.status = 'COMPLETED'
+  AND NOT EXISTS (SELECT 1 FROM repair r WHERE r.as_reception_id = ar.id);
+
+INSERT INTO as_status_history (as_reception_id, from_status, to_status, reason, changed_by, created_at)
+SELECT ar.id,
+       'APPROVED',
+       'REPAIRING',
+       '수리 시작',
+       ar.receptionist_id,
+       DATE_ADD(s.created_at, INTERVAL 2 HOUR)
+FROM stat_seed s
+         JOIN as_reception ar ON ar.reception_number = s.reception_number
+WHERE s.status = 'COMPLETED'
+  AND NOT EXISTS (SELECT 1
+                  FROM as_status_history h
+                  WHERE h.as_reception_id = ar.id
+                    AND h.to_status = 'REPAIRING');
+
+INSERT INTO as_status_history (as_reception_id, from_status, to_status, reason, changed_by, created_at)
+SELECT ar.id,
+       'REPAIRING',
+       'COMPLETED',
+       '수리 완료',
+       ar.technician_id,
+       s.complete_at
+FROM stat_seed s
+         JOIN as_reception ar ON ar.reception_number = s.reception_number
+WHERE s.status = 'COMPLETED'
+  AND NOT EXISTS (SELECT 1
+                  FROM as_status_history h
+                  WHERE h.as_reception_id = ar.id
+                    AND h.from_status = 'REPAIRING'
+                    AND h.to_status = 'COMPLETED');
+
+INSERT INTO payment_bill (as_reception_id, amount, status, type, paid_at, created_at, updated_at)
+SELECT ar.id,
+       50000 + s.n * 2500,
+       CASE WHEN s.status = 'COMPLETED' THEN 'PAID' ELSE 'UNPAID' END,
+       'REPAIR',
+       CASE WHEN s.status = 'COMPLETED' THEN s.complete_at ELSE NULL END,
+       s.created_at,
+       CASE WHEN s.status = 'COMPLETED' THEN s.complete_at ELSE s.created_at END
+FROM stat_seed s
+         JOIN as_reception ar ON ar.reception_number = s.reception_number
+WHERE s.status IN ('COMPLETED', 'AWAITING_PAYMENT')
+  AND NOT EXISTS (SELECT 1 FROM payment_bill pb WHERE pb.as_reception_id = ar.id);
+
+INSERT INTO payment_attempt (payment_bill_id, order_id, payment_key, amount, method, status, approved_at, created_at,
+                             updated_at)
+SELECT pb.id,
+       CONCAT('STAT-ORDER-', s.reception_number),
+       CONCAT('STAT-KEY-', s.reception_number),
+       pb.amount,
+       'CARD',
+       'DONE',
+       s.complete_at,
+       s.created_at,
+       s.complete_at
+FROM stat_seed s
+         JOIN as_reception ar ON ar.reception_number = s.reception_number
+         JOIN payment_bill pb ON pb.as_reception_id = ar.id
+WHERE s.status = 'COMPLETED'
+  AND NOT EXISTS (SELECT 1 FROM payment_attempt pa WHERE pa.order_id = CONCAT('STAT-ORDER-', s.reception_number));
+
+INSERT INTO payment_refund (payment_attempt_id, transaction_key, cancel_amount, cancel_reason, status, canceled_at,
+                            created_by)
+SELECT pa.id,
+       CONCAT('STAT-REFUND-', s.reception_number),
+       10000,
+       '통계 더미 부분 환불',
+       'DONE',
+       DATE_ADD(s.complete_at, INTERVAL 1 DAY),
+       ar.receptionist_id
+FROM stat_seed s
+         JOIN as_reception ar ON ar.reception_number = s.reception_number
+         JOIN payment_attempt pa ON pa.order_id = CONCAT('STAT-ORDER-', s.reception_number)
+WHERE s.status = 'COMPLETED'
+  AND s.n MOD 5 = 0
+  AND (s.n DIV 5) MOD 3 = 0
+  AND NOT EXISTS (SELECT 1 FROM payment_refund pr WHERE pr.transaction_key = CONCAT('STAT-REFUND-', s.reception_number));
+
+INSERT INTO shipment (as_reception_id, return_method, recipient_name, recipient_phone, address, address_detail,
+                      courier, courier_code, tracking_number, status, shipped_at, completed_at, created_at, updated_at,
+                      created_by, updated_by)
+SELECT ar.id,
+       s.return_method,
+       c.name,
+       c.phone,
+       c.basic_address,
+       c.detail_address,
+       CASE WHEN s.return_method = 'DELIVERY' THEN 'CJ대한통운' ELSE NULL END,
+       CASE WHEN s.return_method = 'DELIVERY' THEN '04' ELSE NULL END,
+       CASE WHEN s.return_method = 'DELIVERY' THEN CONCAT('STAT', LPAD(s.n, 6, '0')) ELSE NULL END,
+       CASE s.n MOD 4
+           WHEN 0 THEN 'DELIVERED'
+           WHEN 1 THEN 'SHIPPING'
+           WHEN 2 THEN 'READY'
+           ELSE 'PICKED_UP'
+       END,
+       CASE WHEN s.n MOD 4 IN (0, 1) THEN DATE_ADD(s.created_at, INTERVAL 1 DAY) ELSE NULL END,
+       CASE WHEN s.n MOD 4 IN (0, 3) THEN s.complete_at ELSE NULL END,
+       DATE_ADD(s.created_at, INTERVAL 1 DAY),
+       s.complete_at,
+       ar.receptionist_id,
+       ar.receptionist_id
+FROM stat_seed s
+         JOIN as_reception ar ON ar.reception_number = s.reception_number
+         JOIN customer c ON c.id = ar.customer_id
+WHERE s.status = 'COMPLETED'
+  AND NOT EXISTS (SELECT 1 FROM shipment sh WHERE sh.as_reception_id = ar.id);
+
+DROP TEMPORARY TABLE IF EXISTS stat_seed;
