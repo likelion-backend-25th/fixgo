@@ -1,6 +1,9 @@
 spring:
   application:
     name: project-FixGo
+  ai:
+    openai:
+      api-key: api-key:${openAI-API-secretKey}
 
   # gmail SMTP
   mail:
