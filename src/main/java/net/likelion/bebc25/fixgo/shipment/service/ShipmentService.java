@@ -6,17 +6,20 @@ import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
 import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
 import net.likelion.bebc25.fixgo.customer.entity.Customer;
 import net.likelion.bebc25.fixgo.shipment.dto.ShipmentDto;
-import net.likelion.bebc25.fixgo.shipment.entity.ReturnMethod;
-import net.likelion.bebc25.fixgo.shipment.entity.Shipment;
-import net.likelion.bebc25.fixgo.shipment.entity.ShipmentEvent;
-import net.likelion.bebc25.fixgo.shipment.entity.ShipmentEventStatus;
+import net.likelion.bebc25.fixgo.shipment.dto.SweetTrackerDto;
+import net.likelion.bebc25.fixgo.shipment.entity.*;
 import net.likelion.bebc25.fixgo.shipment.repository.ShipmentEventRepository;
 import net.likelion.bebc25.fixgo.shipment.repository.ShipmentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -47,7 +50,7 @@ public class ShipmentService {
                 customer.getPhone(),
                 customer.getBasicAddress(),
                 customer.getDetailAddress(),
-                null,
+                getCourierName(request.courierCode()),
                 request.courierCode(),
                 request.trackingNumber());
 
@@ -92,7 +95,7 @@ public class ShipmentService {
                 AsReceptionStatus.AWAITING_SHIPMENT);
 
         shipment.updateTrackingInfo(
-                null,
+                getCourierName(request.courierCode()),
                 request.courierCode(),
                 request.trackingNumber());
 
@@ -247,4 +250,198 @@ public class ShipmentService {
         };
 
     }
+
+    // SweetTracker 배송 이력 저장
+    @Transactional
+    public void saveTrackingEvents(
+            Long shipmentId,
+            String courierCode,
+            String trackingNumber,
+            SweetTrackerDto.TrackingResponse response
+    ) {
+        // AsReception에 먼저 락 그 후 Shipment에 락
+        Shipment shipment = getShipmentForUpdate(shipmentId);
+
+        // 택배 배송만 추적
+        if (shipment.getReturnMethod() != ReturnMethod.DELIVERY) {
+            throw new IllegalStateException("택배 배송만 배송이력을 저장합니다.");
+        }
+
+        // 외부 API호출 중 운송장 정보가 변경됐는지 확인
+        if (!courierCode.equals(shipment.getCourierCode())
+                || !trackingNumber.equals(shipment.getTrackingNumber())) {
+            throw new IllegalStateException("배송 조회 중 운송장 정보가 변경되었습니다.");
+        }
+        List<SweetTrackerDto.TrackingDetail> details = response.trackingDetails();
+
+        if (details == null) {
+            details = List.of();
+        }
+
+        for (SweetTrackerDto.TrackingDetail detail : details) {
+            if (detail == null) {
+                continue;
+            }
+
+            Optional<ShipmentEventStatus> status = convertStatus(detail.level());
+
+            // 변환할 수 없는 배송 단계는 저장하지 않음
+            if (status.isEmpty()) {
+                continue;
+            }
+            String eventData = String.join("|",
+                                           String.valueOf(shipmentId),
+                                           courierCode,
+                                           trackingNumber,
+                                           String.valueOf(detail.time()),
+                                           String.valueOf(detail.timeString()),
+                                           String.valueOf(detail.level()),
+                                           String.valueOf(detail.location()),
+                                           String.valueOf(detail.kind()));
+            String eventKey = UUID.nameUUIDFromBytes(eventData.getBytes(StandardCharsets.UTF_8)).toString();
+
+            // 이미 저장된 이벤트는 건너뛰기
+            if (shipmentEventRepository.existsByEventKey(eventKey)) {
+                continue;
+            }
+
+            LocalDateTime occurredAt = parseOccurredAt(detail.timeString());
+
+            String description = String.join(" / ",
+                                             detail.kind() == null ? "" : detail.kind(),
+                                             detail.location() == null ? "" : detail.location());
+
+            ShipmentEvent event = ShipmentEvent.create(
+                    shipment,
+                    eventKey,
+                    status.get(),
+                    description,
+                    occurredAt);
+            shipmentEventRepository.save(event);
+        }
+        // 마지막 배송 조회 정보 갱신
+        shipment.updateTrackingStatus(getLastTrackingStatus(response));
+
+        // 배송 완료 시 상태 자동 변경
+        completeDeliveryIfNeeded(shipment, response);
+
+
+    }
+
+    // SweetTracker 배송 이벤트 발생 시각 변환
+    private LocalDateTime parseOccurredAt(String timeString) {
+        if (timeString == null || timeString.isBlank()) {
+            return null;
+        }
+        try {
+            return LocalDateTime.parse(
+                    timeString,
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("배송 이력의 날짜 형식이 올바르지 않습니다.", e);
+        }
+    }
+
+    // SweetTracker 배송 완료시 A/S 접수까지 자동완료
+    private void completeDeliveryIfNeeded(
+            Shipment shipment,
+            SweetTrackerDto.TrackingResponse response
+    ) {
+        boolean delivered = Boolean.TRUE.equals(response.complete())
+                && Integer.valueOf(6).equals(response.level());
+
+        if (!delivered) {
+            return;
+        }
+
+        AsReception asReception = shipment.getAsReception();
+
+        // 이미 배송 완료된 경우 중복 처리 방지
+        if (shipment.getStatus() == ShipmentStatus.DELIVERED) {
+            return;
+        }
+
+        // 배송 처리가 된 경우
+        if (shipment.getStatus() != ShipmentStatus.SHIPPING) {
+            return;
+        }
+
+        // A/S 접수 상태
+        validateReception(
+                asReception,
+                ReturnMethod.DELIVERY,
+                AsReceptionStatus.AWAITING_SHIPMENT);
+
+        // 배송상태 완료
+        shipment.markDelivered();
+
+        // A/S 접수상태를 완료로 변경
+        asReception.changeStatus(AsReceptionStatus.COMPLETED);
+
+    }
+
+    private String getLastTrackingStatus(SweetTrackerDto.TrackingResponse response) {
+        List<SweetTrackerDto.TrackingDetail> details = response.trackingDetails();
+
+        if (details == null || details.isEmpty()) {
+            return "배송 정보 없음";
+        }
+
+        SweetTrackerDto.TrackingDetail latest = details.stream()
+                .filter(detail -> detail != null && detail.time() != null)
+                .max((a, b) -> Long.compare(a.time(), b.time()))
+                .orElse(null);
+
+        if (latest == null || latest.kind() == null || latest.kind().isBlank()) {
+            return "배송 정보 없음";
+        }
+
+        return latest.kind();
+    }
+
+    public ShippingEmailData getShippingEmailData(Long shipmentId) {
+
+        Shipment shipment = findShipment(shipmentId);
+
+        if (shipment.getReturnMethod() != ReturnMethod.DELIVERY) {
+            throw new IllegalStateException("택배 배송만 이메일 발송이 가능합니다.");
+        }
+        AsReception asReception = shipment.getAsReception();
+        Customer customer = asReception.getCustomer();
+
+        if (customer.getEmail() == null || customer.getEmail().isBlank()) {
+            throw new IllegalStateException("고객 이메일이 등록되어 있지 않습니다.");
+        }
+
+        return new ShippingEmailData(
+                asReception.getId(),
+                customer.getEmail(),
+                asReception.getReceptionNumber(),
+                shipment.getCourier(),
+                shipment.getTrackingNumber()
+        );
+    }
+
+    // 택배사 코드를 택배사 이름으로 변환
+    private String getCourierName(String courierCode) {
+        return switch (courierCode) {
+            case "01" -> "우체국택배";
+            case "04" -> "CJ대한통운";
+            case "05" -> "한진택배";
+            case "06" -> "로젠택배";
+            case "08" -> "롯데택배";
+            default -> throw new IllegalArgumentException(
+                    "지원하지 않는 택배사 코드입니다."
+            );
+        };
+    }
+
+    // 배송 알림 이메일 record
+    public record ShippingEmailData(
+            Long asReceptionId,
+            String recipientEmail,
+            String receptionNumber,
+            String courier,
+            String trackingNumber
+    ) {}
 }

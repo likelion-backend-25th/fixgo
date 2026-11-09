@@ -5,6 +5,7 @@ import net.likelion.bebc25.fixgo.admin.entity.LaborRate;
 import net.likelion.bebc25.fixgo.admin.entity.RateType;
 import net.likelion.bebc25.fixgo.admin.repository.LaborRateRepository;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
+import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
 import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
 import net.likelion.bebc25.fixgo.auth.entity.Role;
 import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
@@ -12,12 +13,14 @@ import net.likelion.bebc25.fixgo.product.entity.Category;
 import net.likelion.bebc25.fixgo.product.entity.Product;
 import net.likelion.bebc25.fixgo.product.entity.ProductModel;
 import net.likelion.bebc25.fixgo.product.repository.ProductModelRepository;
+import net.likelion.bebc25.fixgo.repair.dto.repair.EstimateItemResponse;
 import net.likelion.bebc25.fixgo.repair.dto.repair.EstimateResponse;
 import net.likelion.bebc25.fixgo.repair.entity.RepairWork;
 import net.likelion.bebc25.fixgo.repair.entity.part.RepairPartUsage;
 import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairDecision;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
+import net.likelion.bebc25.fixgo.repair.entity.repair.WarrantyResult;
 import net.likelion.bebc25.fixgo.repair.exception.RepairErrorCode;
 import net.likelion.bebc25.fixgo.repair.exception.RepairException;
 import net.likelion.bebc25.fixgo.repair.repository.RepairPartUsageRepository;
@@ -28,7 +31,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -58,7 +64,35 @@ public class RepairCostService {
             );
         }
 
-        return EstimateResponse.from(repair);
+        return EstimateResponse.from(repair, estimateItems(repair));
+    }
+
+    // 견적 항목은 작업, 그 작업의 부품, 공임, 점검 순서로 만든다.
+    private List<EstimateItemResponse> estimateItems(Repair repair) {
+        List<RepairWork> repairWorks = repairWorkRepository.findByRepairId(repair.getId());
+        List<Long> repairWorkIds = repairWorks.stream()
+                .map(RepairWork::getId)
+                .toList();
+        List<RepairPartUsage> usages = repairWorkIds.isEmpty()
+                ? List.of()
+                : repairPartUsageRepository.findByRepairWorkIdIn(repairWorkIds);
+        Map<Long, List<RepairPartUsage>> usagesByWork = usages.stream()
+                .collect(Collectors.groupingBy(usage -> usage.getRepairWork().getId()));
+
+        List<EstimateItemResponse> items = new ArrayList<>();
+        for (RepairWork repairWork : repairWorks) {
+            items.add(EstimateItemResponse.work(repairWork));
+            for (RepairPartUsage usage : usagesByWork.getOrDefault(repairWork.getId(), List.of())) {
+                items.add(EstimateItemResponse.part(usage));
+            }
+        }
+        if (repair.getLaborRate() > 0) {
+            items.add(EstimateItemResponse.labor(repair.getLaborRate()));
+        }
+        if (repair.getInspectionCost() > 0) {
+            items.add(EstimateItemResponse.inspection(repair.getInspectionCost()));
+        }
+        return items;
     }
 
     // 수리비 계산 및 저장
@@ -70,6 +104,8 @@ public class RepairCostService {
                         RepairErrorCode.REPAIR_NOT_FOUND,
                         "수리 정보를 찾을 수 없습니다."
                 ));
+
+        validateWarrantyDecided(repair);
 
         Product product = repair.getAsReception().getProduct();
 
@@ -243,8 +279,10 @@ public class RepairCostService {
             );
         }
 
-        // A/S 접수 정보 잠금 조회 (접수 상태 변경 전 동시 수정 방지)
-        asReceptionRepository
+        validateWarrantyDecided(repair);
+
+        // A/S 접수 정보 잠금 조회
+        AsReception asReception = asReceptionRepository
                 .findByIdWithLock(repair.getAsReception().getId())
                 .orElseThrow(() -> new RepairException(
                         RepairErrorCode.AS_RECEPTION_NOT_FOUND,
@@ -273,5 +311,15 @@ public class RepairCostService {
                 ));
 
         return getLaborRate(productModel.getCategory(), RateType.INSPECTION_COST);
+    }
+
+    // 무상 또는 유상 판정을 저장한 뒤에만 수리비를 처리할 수 있다.
+    private void validateWarrantyDecided(Repair repair) {
+        if (repair.getWarrantyResult() == WarrantyResult.UNDECIDED) {
+            throw new RepairException(
+                    RepairErrorCode.WARRANTY_RESULT_UNDECIDED,
+                    "무상 또는 유상 판정을 먼저 저장해 주세요."
+            );
+        }
     }
 }

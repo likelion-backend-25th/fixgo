@@ -41,8 +41,8 @@ public class NotificationService {
     public EmailDto.Response sendEmail(EmailDto.CreateRequest request) {
         validateRequest(request);
 
-        String eventkey = UUID.randomUUID().toString();
-        Long id = transactionService.createNotification(request, eventkey);
+        String eventKey = UUID.randomUUID().toString();
+        Long id = transactionService.createNotification(request, eventKey);
 
         return processEmail(id, false);
     }

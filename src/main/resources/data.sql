@@ -1070,7 +1070,7 @@ INSERT INTO member (email, password_hash, name, phone, role, address, profile_im
                     created_by, updated_by)
 SELECT 'technician.demo@fixgo.example',
        '$2a$10$vFJ1GvhwL8vQFOSGsKTjMeH7cQUItVadnGDGRHF1Q8xGefzmSlzMS',
-       '수리기사 더미',
+       '이지훈',
        '010-0000-0000',
        'ROLE_TECHNICIAN',
        '서울시 테스트센터',
@@ -1081,6 +1081,22 @@ SELECT 'technician.demo@fixgo.example',
        0,
        0
     WHERE NOT EXISTS (SELECT 1 FROM member WHERE email = 'technician.demo@fixgo.example');
+
+INSERT INTO member (email, password_hash, name, phone, role, address, profile_img_url, status, created_at, updated_at,
+                    created_by, updated_by)
+SELECT 'max.demo@fixgo.example',
+       '$2a$10$vFJ1GvhwL8vQFOSGsKTjMeH7cQUItVadnGDGRHF1Q8xGefzmSlzMS',
+       '수리기사 맥스',
+       '010-0000-0000',
+       'ROLE_TECHNICIAN',
+       '서울시 테스트센터',
+       '',
+       'ACTIVE',
+       NOW(),
+       NOW(),
+       0,
+       0
+    WHERE NOT EXISTS (SELECT 1 FROM member WHERE email = 'max.demo@fixgo.example');
 
 INSERT INTO product_model (name, model_name, category, warranty_months, is_active, created_at, updated_at, created_by,
                            updated_by)
@@ -1126,7 +1142,7 @@ SELECT (SELECT MIN(id) FROM product_model WHERE model_name = 'FIXGO-DEMO-LAPTOP'
 INSERT INTO as_reception (reception_number, customer_id, product_id, receptionist_id, technician_id,
                           symptom, symptom_detail, memo, return_method, status, status_changed_at, closed_at,
                           file_url, created_at, updated_at, created_by, updated_by)
-SELECT 'AS-261105-8f3a2c10-7b6e-4d90-a123-000000000001',
+SELECT 'AS-STAT-261105-01',
        (SELECT MIN(id) FROM customer WHERE email = 'customer01@fixgo.example'),
        (SELECT id FROM product WHERE serial_number = 'FIXGO-DEMO-SN-01'),
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
@@ -1143,7 +1159,7 @@ SELECT 'AS-261105-8f3a2c10-7b6e-4d90-a123-000000000001',
        '2026-11-05 09:00:00',
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example')
-    WHERE NOT EXISTS (SELECT 1 FROM as_reception WHERE reception_number = 'AS-261105-8f3a2c10-7b6e-4d90-a123-000000000001');
+    WHERE NOT EXISTS (SELECT 1 FROM as_reception WHERE reception_number = 'AS-STAT-261105-01');
 
 -- 02. 이서준 / INSPECTION
 INSERT INTO customer (name, phone, email, zipcode, basic_address, detail_address, created_at, updated_at, created_by,
@@ -1176,7 +1192,7 @@ SELECT (SELECT MIN(id) FROM product_model WHERE model_name = 'FIXGO-DEMO-LAPTOP'
 INSERT INTO as_reception (reception_number, customer_id, product_id, receptionist_id, technician_id,
                           symptom, symptom_detail, memo, return_method, status, status_changed_at, closed_at,
                           file_url, created_at, updated_at, created_by, updated_by)
-SELECT 'AS-261105-8f3a2c10-7b6e-4d90-a123-000000000002',
+SELECT 'AS-STAT-261105-02',
        (SELECT MIN(id) FROM customer WHERE email = 'customer02@fixgo.example'),
        (SELECT id FROM product WHERE serial_number = 'FIXGO-DEMO-SN-02'),
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
@@ -1193,7 +1209,7 @@ SELECT 'AS-261105-8f3a2c10-7b6e-4d90-a123-000000000002',
        '2026-11-05 15:00:00',
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example')
-    WHERE NOT EXISTS (SELECT 1 FROM as_reception WHERE reception_number = 'AS-261105-8f3a2c10-7b6e-4d90-a123-000000000002');
+    WHERE NOT EXISTS (SELECT 1 FROM as_reception WHERE reception_number = 'AS-STAT-261105-02');
 
 -- 03. 박지민 / WARRANTY_REVIEW
 INSERT INTO customer (name, phone, email, zipcode, basic_address, detail_address, created_at, updated_at, created_by,
@@ -1226,7 +1242,7 @@ SELECT (SELECT MIN(id) FROM product_model WHERE model_name = 'FIXGO-DEMO-LAPTOP'
 INSERT INTO as_reception (reception_number, customer_id, product_id, receptionist_id, technician_id,
                           symptom, symptom_detail, memo, return_method, status, status_changed_at, closed_at,
                           file_url, created_at, updated_at, created_by, updated_by)
-SELECT 'AS-261104-8f3a2c10-7b6e-4d90-a123-000000000003',
+SELECT 'AS-STAT-261104-03',
        (SELECT MIN(id) FROM customer WHERE email = 'customer03@fixgo.example'),
        (SELECT id FROM product WHERE serial_number = 'FIXGO-DEMO-SN-03'),
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
@@ -1243,7 +1259,7 @@ SELECT 'AS-261104-8f3a2c10-7b6e-4d90-a123-000000000003',
        '2026-11-04 15:00:00',
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example')
-    WHERE NOT EXISTS (SELECT 1 FROM as_reception WHERE reception_number = 'AS-261104-8f3a2c10-7b6e-4d90-a123-000000000003');
+    WHERE NOT EXISTS (SELECT 1 FROM as_reception WHERE reception_number = 'AS-STAT-261104-03');
 
 -- 04. 최유진 / AWAITING_QUOTE_APPROVAL
 INSERT INTO customer (name, phone, email, zipcode, basic_address, detail_address, created_at, updated_at, created_by,
@@ -1276,7 +1292,7 @@ SELECT (SELECT MIN(id) FROM product_model WHERE model_name = 'FIXGO-DEMO-LAPTOP'
 INSERT INTO as_reception (reception_number, customer_id, product_id, receptionist_id, technician_id,
                           symptom, symptom_detail, memo, return_method, status, status_changed_at, closed_at,
                           file_url, created_at, updated_at, created_by, updated_by)
-SELECT 'AS-261104-8f3a2c10-7b6e-4d90-a123-000000000004',
+SELECT 'AS-STAT-261104-04',
        (SELECT MIN(id) FROM customer WHERE email = 'customer04@fixgo.example'),
        (SELECT id FROM product WHERE serial_number = 'FIXGO-DEMO-SN-04'),
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
@@ -1293,7 +1309,7 @@ SELECT 'AS-261104-8f3a2c10-7b6e-4d90-a123-000000000004',
        '2026-11-04 15:00:00',
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example')
-    WHERE NOT EXISTS (SELECT 1 FROM as_reception WHERE reception_number = 'AS-261104-8f3a2c10-7b6e-4d90-a123-000000000004');
+    WHERE NOT EXISTS (SELECT 1 FROM as_reception WHERE reception_number = 'AS-STAT-261104-04');
 
 -- 05. 정민수 / AWAITING_REPAIR
 INSERT INTO customer (name, phone, email, zipcode, basic_address, detail_address, created_at, updated_at, created_by,
@@ -1326,7 +1342,7 @@ SELECT (SELECT MIN(id) FROM product_model WHERE model_name = 'FIXGO-DEMO-LAPTOP'
 INSERT INTO as_reception (reception_number, customer_id, product_id, receptionist_id, technician_id,
                           symptom, symptom_detail, memo, return_method, status, status_changed_at, closed_at,
                           file_url, created_at, updated_at, created_by, updated_by)
-SELECT 'AS-261103-8f3a2c10-7b6e-4d90-a123-000000000005',
+SELECT 'AS-STAT-261103-05',
        (SELECT MIN(id) FROM customer WHERE email = 'customer05@fixgo.example'),
        (SELECT id FROM product WHERE serial_number = 'FIXGO-DEMO-SN-05'),
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
@@ -1343,7 +1359,7 @@ SELECT 'AS-261103-8f3a2c10-7b6e-4d90-a123-000000000005',
        '2026-11-03 15:00:00',
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example')
-    WHERE NOT EXISTS (SELECT 1 FROM as_reception WHERE reception_number = 'AS-261103-8f3a2c10-7b6e-4d90-a123-000000000005');
+    WHERE NOT EXISTS (SELECT 1 FROM as_reception WHERE reception_number = 'AS-STAT-261103-05');
 
 -- 06. 강수빈 / REPAIR_IN_PROGRESS
 INSERT INTO customer (name, phone, email, zipcode, basic_address, detail_address, created_at, updated_at, created_by,
@@ -1376,7 +1392,7 @@ SELECT (SELECT MIN(id) FROM product_model WHERE model_name = 'FIXGO-DEMO-LAPTOP'
 INSERT INTO as_reception (reception_number, customer_id, product_id, receptionist_id, technician_id,
                           symptom, symptom_detail, memo, return_method, status, status_changed_at, closed_at,
                           file_url, created_at, updated_at, created_by, updated_by)
-SELECT 'AS-261103-8f3a2c10-7b6e-4d90-a123-000000000006',
+SELECT 'AS-STAT-261103-06',
        (SELECT MIN(id) FROM customer WHERE email = 'customer06@fixgo.example'),
        (SELECT id FROM product WHERE serial_number = 'FIXGO-DEMO-SN-06'),
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
@@ -1393,7 +1409,7 @@ SELECT 'AS-261103-8f3a2c10-7b6e-4d90-a123-000000000006',
        '2026-11-03 15:00:00',
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example')
-    WHERE NOT EXISTS (SELECT 1 FROM as_reception WHERE reception_number = 'AS-261103-8f3a2c10-7b6e-4d90-a123-000000000006');
+    WHERE NOT EXISTS (SELECT 1 FROM as_reception WHERE reception_number = 'AS-STAT-261103-06');
 
 -- 07. 조현우 / AWAITING_PAYMENT
 INSERT INTO customer (name, phone, email, zipcode, basic_address, detail_address, created_at, updated_at, created_by,
@@ -1426,7 +1442,7 @@ SELECT (SELECT MIN(id) FROM product_model WHERE model_name = 'FIXGO-DEMO-LAPTOP'
 INSERT INTO as_reception (reception_number, customer_id, product_id, receptionist_id, technician_id,
                           symptom, symptom_detail, memo, return_method, status, status_changed_at, closed_at,
                           file_url, created_at, updated_at, created_by, updated_by)
-SELECT 'AS-261102-8f3a2c10-7b6e-4d90-a123-000000000007',
+SELECT 'AS-STAT-261102-07',
        (SELECT MIN(id) FROM customer WHERE email = 'customer07@fixgo.example'),
        (SELECT id FROM product WHERE serial_number = 'FIXGO-DEMO-SN-07'),
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
@@ -1443,7 +1459,7 @@ SELECT 'AS-261102-8f3a2c10-7b6e-4d90-a123-000000000007',
        '2026-11-02 15:00:00',
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example')
-    WHERE NOT EXISTS (SELECT 1 FROM as_reception WHERE reception_number = 'AS-261102-8f3a2c10-7b6e-4d90-a123-000000000007');
+    WHERE NOT EXISTS (SELECT 1 FROM as_reception WHERE reception_number = 'AS-STAT-261102-07');
 
 -- 08. 윤서연 / AWAITING_SHIPMENT
 INSERT INTO customer (name, phone, email, zipcode, basic_address, detail_address, created_at, updated_at, created_by,
@@ -1476,7 +1492,7 @@ SELECT (SELECT MIN(id) FROM product_model WHERE model_name = 'FIXGO-DEMO-LAPTOP'
 INSERT INTO as_reception (reception_number, customer_id, product_id, receptionist_id, technician_id,
                           symptom, symptom_detail, memo, return_method, status, status_changed_at, closed_at,
                           file_url, created_at, updated_at, created_by, updated_by)
-SELECT 'AS-261102-8f3a2c10-7b6e-4d90-a123-000000000008',
+SELECT 'AS-STAT-261102-08',
        (SELECT MIN(id) FROM customer WHERE email = 'customer08@fixgo.example'),
        (SELECT id FROM product WHERE serial_number = 'FIXGO-DEMO-SN-08'),
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
@@ -1493,7 +1509,7 @@ SELECT 'AS-261102-8f3a2c10-7b6e-4d90-a123-000000000008',
        '2026-11-02 15:00:00',
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example')
-    WHERE NOT EXISTS (SELECT 1 FROM as_reception WHERE reception_number = 'AS-261102-8f3a2c10-7b6e-4d90-a123-000000000008');
+    WHERE NOT EXISTS (SELECT 1 FROM as_reception WHERE reception_number = 'AS-STAT-261102-08');
 
 -- 09. 장도윤 / AWAITING_PICKUP
 INSERT INTO customer (name, phone, email, zipcode, basic_address, detail_address, created_at, updated_at, created_by,
@@ -1526,7 +1542,7 @@ SELECT (SELECT MIN(id) FROM product_model WHERE model_name = 'FIXGO-DEMO-LAPTOP'
 INSERT INTO as_reception (reception_number, customer_id, product_id, receptionist_id, technician_id,
                           symptom, symptom_detail, memo, return_method, status, status_changed_at, closed_at,
                           file_url, created_at, updated_at, created_by, updated_by)
-SELECT 'AS-261101-8f3a2c10-7b6e-4d90-a123-000000000009',
+SELECT 'AS-STAT-261101-09',
        (SELECT MIN(id) FROM customer WHERE email = 'customer09@fixgo.example'),
        (SELECT id FROM product WHERE serial_number = 'FIXGO-DEMO-SN-09'),
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
@@ -1543,7 +1559,7 @@ SELECT 'AS-261101-8f3a2c10-7b6e-4d90-a123-000000000009',
        '2026-11-01 15:00:00',
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example')
-    WHERE NOT EXISTS (SELECT 1 FROM as_reception WHERE reception_number = 'AS-261101-8f3a2c10-7b6e-4d90-a123-000000000009');
+    WHERE NOT EXISTS (SELECT 1 FROM as_reception WHERE reception_number = 'AS-STAT-261101-09');
 
 -- 10. 임지우 / COMPLETED
 INSERT INTO customer (name, phone, email, zipcode, basic_address, detail_address, created_at, updated_at, created_by,
@@ -1576,7 +1592,7 @@ SELECT (SELECT MIN(id) FROM product_model WHERE model_name = 'FIXGO-DEMO-LAPTOP'
 INSERT INTO as_reception (reception_number, customer_id, product_id, receptionist_id, technician_id,
                           symptom, symptom_detail, memo, return_method, status, status_changed_at, closed_at,
                           file_url, created_at, updated_at, created_by, updated_by)
-SELECT 'AS-261101-8f3a2c10-7b6e-4d90-a123-000000000010',
+SELECT 'AS-STAT-261101-10',
        (SELECT MIN(id) FROM customer WHERE email = 'customer10@fixgo.example'),
        (SELECT id FROM product WHERE serial_number = 'FIXGO-DEMO-SN-10'),
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
@@ -1593,7 +1609,7 @@ SELECT 'AS-261101-8f3a2c10-7b6e-4d90-a123-000000000010',
        '2026-11-01 15:00:00',
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example')
-    WHERE NOT EXISTS (SELECT 1 FROM as_reception WHERE reception_number = 'AS-261101-8f3a2c10-7b6e-4d90-a123-000000000010');
+    WHERE NOT EXISTS (SELECT 1 FROM as_reception WHERE reception_number = 'AS-STAT-261101-10');
 
 
 -- 노트북 부품 더미데이터
@@ -1782,7 +1798,7 @@ WHERE p.name IN (
 
 
 -- 다량 재고 수정 테스트용 완료 수리 1건
--- 기존 완료 접수(화면 파손, AS-261101-...010)와 그 담당 기사에 연결한다.
+-- 기존 완료 접수(화면 파손, AS-STAT-261101-10)와 그 담당 기사에 연결한다.
 -- 사용 부품은 해당 노트북과 호환되고, 재고가 사용 수량 이상인 ACTIVE 부품만 넣는다.
 INSERT INTO repair (as_reception_id, technician_id, diagnosis, work_note, repair_decision, warranty_result, reason,
                     labor_rate, inspection_cost, final_amount, status, reason_for_rejection, confirmed_at,
@@ -1805,7 +1821,7 @@ SELECT ar.id,
        ar.technician_id,
        ar.technician_id
 FROM as_reception ar
-WHERE ar.reception_number = 'AS-261101-8f3a2c10-7b6e-4d90-a123-000000000010'
+WHERE ar.reception_number = 'AS-STAT-261101-10'
   AND ar.status = 'COMPLETED'
   AND NOT EXISTS (SELECT 1 FROM repair r WHERE r.as_reception_id = ar.id);
 
@@ -1819,7 +1835,7 @@ SELECT r.id,
        r.technician_id
 FROM repair r
          JOIN as_reception ar ON ar.id = r.as_reception_id
-WHERE ar.reception_number = 'AS-261101-8f3a2c10-7b6e-4d90-a123-000000000010'
+WHERE ar.reception_number = 'AS-STAT-261101-10'
   AND NOT EXISTS (SELECT 1
                   FROM repair_work rw
                   WHERE rw.repair_id = r.id
@@ -1837,7 +1853,7 @@ FROM repair_work rw
          JOIN product pr ON pr.id = ar.product_id
          JOIN part p ON p.name = '14인치 FHD IPS 노트북 LCD 패널 모듈 (1920x1080, 30핀 eDP, 무광, 슬림 베젤)'
          JOIN part_compatibility pc ON pc.part_id = p.id AND pc.product_model_id = pr.product_model_id
-WHERE ar.reception_number = 'AS-261101-8f3a2c10-7b6e-4d90-a123-000000000010'
+WHERE ar.reception_number = 'AS-STAT-261101-10'
   AND rw.work_name = '14인치 FHD LCD 패널 및 eDP 케이블 교체'
   AND r.status = 'COMPLETED'
   AND p.status = 'ACTIVE'
@@ -1859,7 +1875,7 @@ FROM repair_work rw
          JOIN product pr ON pr.id = ar.product_id
          JOIN part p ON p.name = '14인치 노트북 LCD 패널 연결용 30핀 eDP 디스플레이 플렉스 케이블'
          JOIN part_compatibility pc ON pc.part_id = p.id AND pc.product_model_id = pr.product_model_id
-WHERE ar.reception_number = 'AS-261101-8f3a2c10-7b6e-4d90-a123-000000000010'
+WHERE ar.reception_number = 'AS-STAT-261101-10'
   AND rw.work_name = '14인치 FHD LCD 패널 및 eDP 케이블 교체'
   AND r.status = 'COMPLETED'
   AND p.status = 'ACTIVE'
@@ -1884,7 +1900,336 @@ FROM (SELECT '전원 불량' AS name, '전원 공급 및 전원 버튼 보드 �
       UNION ALL SELECT '화면 파손', 'LCD 패널 및 eDP 케이블 교체') v
 WHERE NOT EXISTS (SELECT 1 FROM repair_preset p WHERE p.name = v.name);
 
--- 상태별 수리(repair) 더미: 접수 ...002~006에 연결
+-- 결제 대기, 배송 대기, 수령 대기는 수리가 끝난 접수다.
+-- 견적서와 수리내역서를 조회할 수 있도록 확정된 완료 수리를 연결한다.
+INSERT INTO repair (as_reception_id, technician_id, diagnosis, work_note, repair_decision, warranty_result, reason,
+                    labor_rate, inspection_cost, final_amount, status, reason_for_rejection, confirmed_at,
+                    created_at, updated_at, created_by, updated_by)
+SELECT ar.id,
+       ar.technician_id,
+       '냉각팬 베어링 소음으로 고회전 시 진동이 발생함',
+       'CPU 쿨링팬을 교체하고 유휴, 부하 상태에서 소음이 사라졌는지 확인함',
+       'REPAIRABLE',
+       'PAID',
+       '보증 기간 내이나 이물 유입에 따른 팬 손상으로 유상 수리',
+       50000,
+       0,
+       79000,
+       'COMPLETED',
+       NULL,
+       '2026-11-02 14:00:00',
+       '2026-11-02 11:00:00',
+       '2026-11-02 15:00:00',
+       ar.technician_id,
+       ar.technician_id
+FROM as_reception ar
+WHERE ar.reception_number = 'AS-STAT-261102-007'
+  AND ar.status = 'AWAITING_PAYMENT'
+  AND NOT EXISTS (SELECT 1 FROM repair r WHERE r.as_reception_id = ar.id);
+
+INSERT INTO repair_work (repair_id, repair_preset_name, work_name, created_at, updated_at, created_by, updated_by)
+SELECT r.id, '소음 발생', 'CPU 쿨링팬 교체', '2026-11-02 12:00:00', '2026-11-02 14:00:00', r.technician_id, r.technician_id
+FROM repair r
+         JOIN as_reception ar ON ar.id = r.as_reception_id
+WHERE ar.reception_number = 'AS-STAT-261102-007'
+  AND NOT EXISTS (SELECT 1 FROM repair_work rw WHERE rw.repair_id = r.id AND rw.work_name = 'CPU 쿨링팬 교체');
+
+INSERT INTO repair_part_usage (repair_work_id, part_id, quantity, unit_price, created_at)
+SELECT rw.id, p.id, 1, p.unit_price, '2026-11-02 12:30:00'
+FROM repair_work rw
+         JOIN repair r ON r.id = rw.repair_id
+         JOIN as_reception ar ON ar.id = r.as_reception_id
+         JOIN product pr ON pr.id = ar.product_id
+         JOIN part p ON p.name = '노트북 CPU 쿨링팬 (4핀 PWM, 좌측 배기, 방진 고무 마운트 포함)'
+         JOIN part_compatibility pc ON pc.part_id = p.id AND pc.product_model_id = pr.product_model_id
+WHERE ar.reception_number = 'AS-STAT-261102-007'
+  AND rw.work_name = 'CPU 쿨링팬 교체'
+  AND p.status = 'ACTIVE'
+  AND NOT EXISTS (SELECT 1 FROM repair_part_usage u WHERE u.repair_work_id = rw.id AND u.part_id = p.id);
+
+INSERT INTO repair (as_reception_id, technician_id, diagnosis, work_note, repair_decision, warranty_result, reason,
+                    labor_rate, inspection_cost, final_amount, status, reason_for_rejection, confirmed_at,
+                    created_at, updated_at, created_by, updated_by)
+SELECT ar.id,
+       ar.technician_id,
+       '무선랜 카드 인식 불가로 와이파이가 연결되지 않음',
+       'Wi-Fi 6 무선랜 카드를 교체하고 2.4GHz, 5GHz 연결을 확인함',
+       'REPAIRABLE',
+       'PAID',
+       '보증 기간 내이나 단자 파손으로 유상 수리',
+       50000,
+       0,
+       75000,
+       'COMPLETED',
+       NULL,
+       '2026-11-02 14:10:00',
+       '2026-11-02 11:10:00',
+       '2026-11-02 15:00:00',
+       ar.technician_id,
+       ar.technician_id
+FROM as_reception ar
+WHERE ar.reception_number = 'AS-STAT-261102-008'
+  AND ar.status = 'AWAITING_SHIPMENT'
+  AND NOT EXISTS (SELECT 1 FROM repair r WHERE r.as_reception_id = ar.id);
+
+INSERT INTO repair_work (repair_id, repair_preset_name, work_name, created_at, updated_at, created_by, updated_by)
+SELECT r.id, '와이파이 불량', '무선랜 카드 교체', '2026-11-02 12:10:00', '2026-11-02 14:10:00', r.technician_id, r.technician_id
+FROM repair r
+         JOIN as_reception ar ON ar.id = r.as_reception_id
+WHERE ar.reception_number = 'AS-STAT-261102-008'
+  AND NOT EXISTS (SELECT 1 FROM repair_work rw WHERE rw.repair_id = r.id AND rw.work_name = '무선랜 카드 교체');
+
+INSERT INTO repair_part_usage (repair_work_id, part_id, quantity, unit_price, created_at)
+SELECT rw.id, p.id, 1, p.unit_price, '2026-11-02 12:40:00'
+FROM repair_work rw
+         JOIN repair r ON r.id = rw.repair_id
+         JOIN as_reception ar ON ar.id = r.as_reception_id
+         JOIN product pr ON pr.id = ar.product_id
+         JOIN part p ON p.name = 'Intel AX201 Wi-Fi 6 / Bluetooth 5.2 무선랜 카드 (M.2 2230, CNVi)'
+         JOIN part_compatibility pc ON pc.part_id = p.id AND pc.product_model_id = pr.product_model_id
+WHERE ar.reception_number = 'AS-STAT-261102-008'
+  AND rw.work_name = '무선랜 카드 교체'
+  AND p.status = 'ACTIVE'
+  AND NOT EXISTS (SELECT 1 FROM repair_part_usage u WHERE u.repair_work_id = rw.id AND u.part_id = p.id);
+
+INSERT INTO repair (as_reception_id, technician_id, diagnosis, work_note, repair_decision, warranty_result, reason,
+                    labor_rate, inspection_cost, final_amount, status, reason_for_rejection, confirmed_at,
+                    created_at, updated_at, created_by, updated_by)
+SELECT ar.id,
+       ar.technician_id,
+       '터치패드 좌클릭이 간헐적으로 인식되지 않음',
+       '클릭패드 모듈을 교체하고 클릭, 제스처 동작을 확인함',
+       'REPAIRABLE',
+       'PAID',
+       '보증 기간 내이나 액체 유입 흔적으로 유상 수리',
+       50000,
+       0,
+       92000,
+       'COMPLETED',
+       NULL,
+       '2026-11-01 14:20:00',
+       '2026-11-01 11:20:00',
+       '2026-11-01 15:00:00',
+       ar.technician_id,
+       ar.technician_id
+FROM as_reception ar
+WHERE ar.reception_number = 'AS-STAT-261101-009'
+  AND ar.status = 'AWAITING_PICKUP'
+  AND NOT EXISTS (SELECT 1 FROM repair r WHERE r.as_reception_id = ar.id);
+
+INSERT INTO repair_work (repair_id, repair_preset_name, work_name, created_at, updated_at, created_by, updated_by)
+SELECT r.id, '터치패드 불량', '클릭패드 모듈 교체', '2026-11-01 12:20:00', '2026-11-01 14:20:00', r.technician_id, r.technician_id
+FROM repair r
+         JOIN as_reception ar ON ar.id = r.as_reception_id
+WHERE ar.reception_number = 'AS-STAT-261101-009'
+  AND NOT EXISTS (SELECT 1 FROM repair_work rw WHERE rw.repair_id = r.id AND rw.work_name = '클릭패드 모듈 교체');
+
+INSERT INTO repair_part_usage (repair_work_id, part_id, quantity, unit_price, created_at)
+SELECT rw.id, p.id, 1, p.unit_price, '2026-11-01 12:40:00'
+FROM repair_work rw
+         JOIN repair r ON r.id = rw.repair_id
+         JOIN as_reception ar ON ar.id = r.as_reception_id
+         JOIN product pr ON pr.id = ar.product_id
+         JOIN part p ON p.name = '노트북 클릭패드 터치패드 모듈 (좌우 물리 버튼 일체형, 멀티터치, 팜레스트 케이블 포함)'
+         JOIN part_compatibility pc ON pc.part_id = p.id AND pc.product_model_id = pr.product_model_id
+WHERE ar.reception_number = 'AS-STAT-261101-009'
+  AND rw.work_name = '클릭패드 모듈 교체'
+  AND p.status = 'ACTIVE'
+  AND NOT EXISTS (SELECT 1 FROM repair_part_usage u WHERE u.repair_work_id = rw.id AND u.part_id = p.id);
+
+-- 시드 접수마다 고객 안내 링크를 발급한다. 화면에는 /portal/{token} 으로 보여 준다.
+INSERT INTO customer_portal_link (as_reception_id, token, expires_at)
+SELECT ar.id,
+       CONCAT('fixgo-demo-portal-', LPAD(RIGHT(ar.reception_number, 2), 2, '0')),
+       '2026-12-09 09:00:00'
+FROM as_reception ar
+WHERE ar.reception_number LIKE 'AS-STAT-26%'
+  AND NOT EXISTS (SELECT 1 FROM customer_portal_link link WHERE link.as_reception_id = ar.id);
+
+-- 통계 화면용 더미데이터
+-- 기존 수리기사 이지훈을 포함해 10명, 2025-12부터 2026-11까지 월 5건.
+-- 완료 건은 수리 시작/완료 이력, 결제, 배송을 함께 넣어 기간 통계가 비지 않게 한다.
+
+INSERT INTO product_model (name, model_name, category, warranty_months, is_active, created_at, updated_at, created_by,
+                           updated_by)
+SELECT '더미 스마트폰',
+       'FIXGO-DEMO-PHONE',
+       'PHONE',
+       12,
+       TRUE,
+       NOW(),
+       NOW(),
+       0,
+       0
+    WHERE NOT EXISTS (SELECT 1 FROM product_model WHERE model_name = 'FIXGO-DEMO-PHONE');
+
+-- 통계 더미 스마트폰 서류에 표시할 부품. 노트북 부품과 같이 모델 호환을 남긴다.
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '스마트폰 USB-C 충전 포트 기판', 18000, 30, 40, 'ACTIVE', 0, NOW(), NOW(), 0, 0
+    WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '스마트폰 USB-C 충전 포트 기판');
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '스마트폰 리튬이온 배터리 팩', 35000, 25, 40, 'ACTIVE', 0, NOW(), NOW(), 0, 0
+    WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '스마트폰 리튬이온 배터리 팩');
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '스마트폰 OLED 디스플레이 모듈', 120000, 40, 20, 'ACTIVE', 0, NOW(), NOW(), 0, 0
+    WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '스마트폰 OLED 디스플레이 모듈');
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '스마트폰 전원 버튼 플렉스 케이블', 9000, 20, 40, 'ACTIVE', 0, NOW(), NOW(), 0, 0
+    WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '스마트폰 전원 버튼 플렉스 케이블');
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '스마트폰 방열 구리 플레이트', 7000, 15, 40, 'ACTIVE', 0, NOW(), NOW(), 0, 0
+    WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '스마트폰 방열 구리 플레이트');
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id,
+       (SELECT MIN(id) FROM product_model WHERE model_name = 'FIXGO-DEMO-PHONE')
+FROM part p
+WHERE p.name IN (
+                 '스마트폰 USB-C 충전 포트 기판',
+                 '스마트폰 리튬이온 배터리 팩',
+                 '스마트폰 OLED 디스플레이 모듈',
+                 '스마트폰 전원 버튼 플렉스 케이블',
+                 '스마트폰 방열 구리 플레이트'
+    )
+  AND NOT EXISTS (SELECT 1
+                  FROM part_compatibility pc
+                  WHERE pc.part_id = p.id
+                    AND pc.product_model_id = (SELECT MIN(id) FROM product_model WHERE model_name = 'FIXGO-DEMO-PHONE'));
+
+INSERT INTO member (email, password_hash, name, phone, role, address, profile_img_url, status, created_at, updated_at,
+                    created_by, updated_by)
+WITH RECURSIVE nums AS (
+    SELECT 2 AS n
+    UNION ALL
+    SELECT n + 1 FROM nums WHERE n < 10
+)
+SELECT CONCAT('stat.tech', LPAD(n, 2, '0'), '@fixgo.example'),
+       '$2a$10$vFJ1GvhwL8vQFOSGsKTjMeH7cQUItVadnGDGRHF1Q8xGefzmSlzMS',
+       ELT(n - 1, '김도윤', '이서연', '박민재', '최하준', '정예린', '한지호', '오수아', '윤태민', '장하늘'),
+       CONCAT('010-8100-', LPAD(n, 4, '0')),
+       'ROLE_TECHNICIAN',
+       '서울시 테스트센터',
+       '',
+       'ACTIVE',
+       NOW(),
+       NOW(),
+       0,
+       0
+FROM nums
+WHERE NOT EXISTS (SELECT 1
+                  FROM member m
+                  WHERE m.email = CONCAT('stat.tech', LPAD(nums.n, 2, '0'), '@fixgo.example'));
+
+DROP TEMPORARY TABLE IF EXISTS stat_seed;
+CREATE TEMPORARY TABLE stat_seed AS
+WITH RECURSIVE nums AS (
+    SELECT 0 AS n
+    UNION ALL
+    SELECT n + 1 FROM nums WHERE n < 59
+)
+SELECT n,
+       CASE
+           WHEN n DIV 5 = 11 AND n MOD 5 = 4 THEN TIMESTAMP('2026-11-08 10:00:00')
+           ELSE DATE_ADD(DATE_ADD(TIMESTAMP('2025-12-03 10:00:00'), INTERVAL (n DIV 5) MONTH), INTERVAL (n MOD 5) DAY)
+END AS created_at,
+       MOD((n DIV 5) + (n MOD 5) * 2, 10) AS tech_index,
+       CASE
+           WHEN MOD((n DIV 5) + (n MOD 5) * 2, 10) = 0 THEN 'technician.demo@fixgo.example'
+           ELSE CONCAT('stat.tech', LPAD(MOD((n DIV 5) + (n MOD 5) * 2, 10) + 1, 2, '0'), '@fixgo.example')
+END COLLATE utf8mb4_unicode_ci AS tech_email,
+       CASE WHEN n MOD 2 = 0 THEN 'FIXGO-DEMO-LAPTOP' ELSE 'FIXGO-DEMO-PHONE' END COLLATE utf8mb4_unicode_ci AS model_name,
+       ELT(n MOD 5 + 1, '전원 불량', '배터리 소모', '화면 파손', '키보드 불량', '과열') AS symptom,
+       CASE n MOD 5
+           WHEN 0 THEN 'COMPLETED'
+           WHEN 1 THEN 'COMPLETED'
+           WHEN 2 THEN 'REPAIR_IN_PROGRESS'
+           WHEN 3 THEN 'AWAITING_PAYMENT'
+           ELSE 'INSPECTION'
+END AS status,
+       CASE
+           WHEN n MOD 5 IN (0, 1) AND n MOD 4 = 3 THEN 'PICKUP'
+           ELSE 'DELIVERY'
+END AS return_method
+FROM nums;
+
+ALTER TABLE stat_seed
+    ADD COLUMN complete_at DATETIME,
+    ADD COLUMN reception_number VARCHAR(40) COLLATE utf8mb4_unicode_ci;
+
+UPDATE stat_seed
+SET complete_at = DATE_ADD(created_at, INTERVAL (8 + tech_index * 3) HOUR),
+    reception_number = CONCAT('AS-STAT-', DATE_FORMAT(created_at, '%y%m%d'), '-', LPAD(n, 2, '0'))
+WHERE n BETWEEN 0 AND 59;
+
+INSERT INTO customer (name, phone, email, zipcode, basic_address, detail_address, created_at, updated_at, created_by,
+                      updated_by)
+SELECT CONCAT('통계고객 ', LPAD(n + 1, 2, '0')),
+       CONCAT('010-8200-', LPAD(n, 4, '0')),
+       CONCAT('stat.customer', LPAD(n, 2, '0'), '@fixgo.example'),
+       '06200',
+       CONCAT('서울시 강남구 통계로 ', n + 1),
+       '1층',
+       created_at,
+       created_at,
+       0,
+       0
+FROM stat_seed
+WHERE NOT EXISTS (SELECT 1
+                  FROM customer c
+                  WHERE c.email = CONCAT('stat.customer', LPAD(stat_seed.n, 2, '0'), '@fixgo.example'));
+
+INSERT INTO product (product_model_id, customer_id, serial_number, manufactured_at, purchased_at, created_at,
+                     updated_at, created_by, updated_by)
+SELECT (SELECT MIN(id) FROM product_model WHERE model_name = s.model_name COLLATE utf8mb4_unicode_ci),
+       (SELECT MIN(id) FROM customer WHERE email = CONCAT('stat.customer', LPAD(s.n, 2, '0'), '@fixgo.example')),
+       CONCAT('STAT-SN-', LPAD(s.n, 2, '0')),
+       '2025-06-01 00:00:00',
+       '2025-09-01 00:00:00',
+       s.created_at,
+       s.created_at,
+       0,
+       0
+FROM stat_seed s
+WHERE NOT EXISTS (SELECT 1 FROM product p WHERE p.serial_number = CONCAT('STAT-SN-', LPAD(s.n, 2, '0')));
+
+INSERT INTO as_reception (reception_number, customer_id, product_id, receptionist_id, technician_id,
+                          symptom, symptom_detail, memo, return_method, status, status_changed_at, closed_at,
+                          file_url, created_at, updated_at, created_by, updated_by)
+SELECT s.reception_number,
+       (SELECT MIN(id) FROM customer WHERE email = CONCAT('stat.customer', LPAD(s.n, 2, '0'), '@fixgo.example')),
+       (SELECT id FROM product WHERE serial_number = CONCAT('STAT-SN-', LPAD(s.n, 2, '0'))),
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
+       (SELECT id FROM member WHERE email = s.tech_email COLLATE utf8mb4_unicode_ci),
+       s.symptom,
+       CONCAT(s.symptom, ' 증상으로 점검을 요청합니다.'),
+       '통계 더미데이터',
+       s.return_method,
+       CASE
+           WHEN s.status = 'COMPLETED' AND s.n MOD 4 = 2 THEN 'AWAITING_SHIPMENT'
+           ELSE s.status
+           END,
+       CASE WHEN s.status = 'COMPLETED' THEN s.complete_at ELSE s.created_at END,
+       CASE WHEN s.status = 'COMPLETED' AND s.n MOD 4 <> 2 THEN s.complete_at ELSE NULL END,
+       NULL,
+       s.created_at,
+       CASE WHEN s.status = 'COMPLETED' THEN s.complete_at ELSE s.created_at END,
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
+       (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example')
+FROM stat_seed s
+WHERE NOT EXISTS (SELECT 1 FROM as_reception ar
+                  WHERE ar.reception_number = s.reception_number COLLATE utf8mb4_unicode_ci);
+
+-- 상태별 수리(repair) 더미: 접수 ...003~006에 연결
+-- 진행/거절 상태 데이터와 통계용 완료 수리 데이터는 각각 별도 INSERT로 유지한다.
 INSERT INTO repair (as_reception_id, technician_id, diagnosis, work_note, repair_decision, warranty_result, reason,
                     labor_rate, inspection_cost, final_amount, status, reason_for_rejection, confirmed_at,
                     created_at, updated_at, created_by, updated_by)
@@ -1905,14 +2250,234 @@ SELECT ar.id,
        NOW(),
        ar.technician_id,
        ar.technician_id
-FROM (SELECT 'AS-261104-8f3a2c10-7b6e-4d90-a123-000000000003' AS rn,
+FROM (SELECT 'AS-STAT-261104-03' AS rn,
              'REJECTED' AS status,
              '패널 손상 범위가 넓어 수리가 어려움' AS diagnosis,
              'UNREPAIRABLE' AS decision,
              '고객이 견적 확인 후 수리를 거부함' AS rejection
-      UNION ALL SELECT 'AS-261105-8f3a2c10-7b6e-4d90-a123-000000000002', 'DIAGNOSING', '충전 포트 접촉 불량 의심', NULL, NULL
-      UNION ALL SELECT 'AS-261104-8f3a2c10-7b6e-4d90-a123-000000000004', 'REQUESTED', '키보드 일부 키 입력 불량', NULL, NULL
-      UNION ALL SELECT 'AS-261103-8f3a2c10-7b6e-4d90-a123-000000000005', 'APPROVED', '배터리 성능 저하 확인', 'REPAIRABLE', NULL
-      UNION ALL SELECT 'AS-261103-8f3a2c10-7b6e-4d90-a123-000000000006', 'REPAIRING', '쿨링팬 동작 불량으로 과열', 'REPAIRABLE', NULL) v
+      UNION ALL SELECT 'AS-STAT-261105-02', 'DIAGNOSING', '충전 포트 접촉 불량 의심', NULL, NULL
+      UNION ALL SELECT 'AS-STAT-261104-04', 'REQUESTED', '키보드 일부 키 입력 불량', NULL, NULL
+      UNION ALL SELECT 'AS-STAT-261103-05', 'APPROVED', '배터리 성능 저하 확인', 'REPAIRABLE', NULL
+      UNION ALL SELECT 'AS-STAT-261103-06', 'REPAIRING', '쿨링팬 동작 불량으로 과열', 'REPAIRABLE', NULL) v
          JOIN as_reception ar ON ar.reception_number = v.rn
 WHERE NOT EXISTS (SELECT 1 FROM repair r WHERE r.as_reception_id = ar.id);
+
+-- 통계용 완료 접수(60건)에 완료 수리 데이터를 연결한다.
+INSERT INTO repair (as_reception_id, technician_id, diagnosis, work_note, repair_decision, warranty_result, reason,
+                    labor_rate, inspection_cost, final_amount, status, reason_for_rejection, confirmed_at,
+                    created_at, updated_at, created_by, updated_by)
+SELECT ar.id,
+       ar.technician_id,
+       CONCAT(s.symptom, ' 원인을 확인하고 부품을 교체함'),
+       CONCAT(s.symptom, ' 부품을 교체하고 동작을 확인함'),
+       'REPAIRABLE',
+       CASE WHEN s.n MOD 2 = 0 THEN 'PAID' ELSE 'FREE' END,
+       '통계 더미데이터',
+       30000,
+       0,
+       50000 + s.n * 2500,
+       'COMPLETED',
+       NULL,
+       DATE_ADD(s.created_at, INTERVAL 8 HOUR),
+       s.created_at,
+       DATE_ADD(s.created_at, INTERVAL 8 HOUR),
+       ar.technician_id,
+       ar.technician_id
+FROM stat_seed s
+         JOIN as_reception ar ON ar.reception_number = s.reception_number COLLATE utf8mb4_unicode_ci
+WHERE s.status = 'COMPLETED'
+  AND NOT EXISTS (SELECT 1 FROM repair r WHERE r.as_reception_id = ar.id);
+
+-- 결제 대기도 수리가 끝난 접수다. 견적서와 수리내역서를 조회할 수 있게 확정된 완료 수리를 연결한다.
+INSERT INTO repair (as_reception_id, technician_id, diagnosis, work_note, repair_decision, warranty_result, reason,
+                    labor_rate, inspection_cost, final_amount, status, reason_for_rejection, confirmed_at,
+                    created_at, updated_at, created_by, updated_by)
+SELECT ar.id,
+       ar.technician_id,
+       CONCAT(ar.symptom, ' 원인을 확인하고 부품을 교체함'),
+       CONCAT(ar.symptom, ' 부품을 교체하고 동작을 확인함'),
+       'REPAIRABLE',
+       CASE WHEN CAST(RIGHT(ar.reception_number, 2) AS UNSIGNED) MOD 2 = 0 THEN 'PAID' ELSE 'FREE' END,
+       '통계 더미데이터',
+       30000,
+       0,
+       50000 + CAST(RIGHT(ar.reception_number, 2) AS UNSIGNED) * 2500,
+       'COMPLETED',
+       NULL,
+       DATE_ADD(ar.created_at, INTERVAL 8 HOUR),
+       ar.created_at,
+       DATE_ADD(ar.created_at, INTERVAL 8 HOUR),
+       ar.technician_id,
+       ar.technician_id
+FROM as_reception ar
+WHERE ar.reception_number LIKE 'AS-STAT-%'
+  AND ar.status = 'AWAITING_PAYMENT'
+  AND NOT EXISTS (SELECT 1 FROM repair r WHERE r.as_reception_id = ar.id);
+
+-- 견적서와 수리내역서에 작업, 부품, 공임이 나오도록 완료·결제 대기 건에 넣는다.
+INSERT INTO repair_work (repair_id, repair_preset_name, work_name, created_at, updated_at, created_by, updated_by)
+SELECT r.id,
+       ar.symptom,
+       CONCAT(ar.symptom, ' 부품 교체'),
+       r.created_at,
+       r.confirmed_at,
+       r.technician_id,
+       r.technician_id
+FROM repair r
+         JOIN as_reception ar ON ar.id = r.as_reception_id
+WHERE ar.reception_number LIKE 'AS-STAT-%'
+  AND ar.status IN ('COMPLETED', 'AWAITING_PAYMENT')
+  AND NOT EXISTS (SELECT 1 FROM repair_work rw WHERE rw.repair_id = r.id);
+
+INSERT INTO repair_part_usage (repair_work_id, part_id, quantity, unit_price, created_at)
+SELECT rw.id,
+       p.id,
+       1,
+       r.final_amount - r.labor_rate,
+       rw.created_at
+FROM repair_work rw
+         JOIN repair r ON r.id = rw.repair_id
+         JOIN as_reception ar ON ar.id = r.as_reception_id
+         JOIN product pr ON pr.id = ar.product_id
+         JOIN product_model pm ON pm.id = pr.product_model_id
+         JOIN part p ON p.name = CASE
+                                     WHEN pm.category = 'PHONE' AND ar.symptom = '전원 불량' THEN '스마트폰 USB-C 충전 포트 기판'
+                                     WHEN pm.category = 'PHONE' AND ar.symptom = '배터리 소모' THEN '스마트폰 리튬이온 배터리 팩'
+                                     WHEN pm.category = 'PHONE' AND ar.symptom = '화면 파손' THEN '스마트폰 OLED 디스플레이 모듈'
+                                     WHEN pm.category = 'PHONE' AND ar.symptom = '키보드 불량' THEN '스마트폰 전원 버튼 플렉스 케이블'
+                                     WHEN pm.category = 'PHONE' THEN '스마트폰 방열 구리 플레이트'
+                                     WHEN ar.symptom = '전원 불량' THEN '65W USB-C PD 노트북 전원 어댑터 (20V 3.25A, 1.8m 케이블, 한국형 플러그)'
+                                     WHEN ar.symptom = '배터리 소모' THEN '노트북 내장 리튬이온 배터리 팩 (11.55V, 50Wh, 3셀, 4핀 커넥터)'
+                                     WHEN ar.symptom = '화면 파손' THEN '14인치 FHD IPS 노트북 LCD 패널 모듈 (1920x1080, 30핀 eDP, 무광, 슬림 베젤)'
+                                     WHEN ar.symptom = '키보드 불량' THEN '노트북 팜레스트 일체형 한국어 키보드 모듈 (펜타그래프, 화이트 백라이트, 스크류 고정형)'
+                                     ELSE '노트북 CPU 쿨링팬 (4핀 PWM, 좌측 배기, 방진 고무 마운트 포함)'
+    END
+    AND p.status = 'ACTIVE'
+WHERE ar.reception_number LIKE 'AS-STAT-%'
+  AND ar.status IN ('COMPLETED', 'AWAITING_PAYMENT')
+  AND NOT EXISTS (SELECT 1 FROM repair_part_usage u WHERE u.repair_work_id = rw.id AND u.part_id = p.id);
+
+INSERT INTO as_status_history (as_reception_id, from_status, to_status, reason, changed_by, created_at)
+SELECT ar.id,
+       'APPROVED',
+       'REPAIRING',
+       '수리 시작',
+       ar.receptionist_id,
+       DATE_ADD(s.created_at, INTERVAL 2 HOUR)
+FROM stat_seed s
+         JOIN as_reception ar ON ar.reception_number = s.reception_number COLLATE utf8mb4_unicode_ci
+WHERE s.status = 'COMPLETED'
+  AND NOT EXISTS (SELECT 1
+                  FROM as_status_history h
+                  WHERE h.as_reception_id = ar.id
+                    AND h.to_status = 'REPAIRING');
+
+INSERT INTO as_status_history (as_reception_id, from_status, to_status, reason, changed_by, created_at)
+SELECT ar.id,
+       'REPAIRING',
+       'COMPLETED',
+       '수리 완료',
+       ar.technician_id,
+       s.complete_at
+FROM stat_seed s
+         JOIN as_reception ar ON ar.reception_number = s.reception_number COLLATE utf8mb4_unicode_ci
+WHERE s.status = 'COMPLETED'
+  AND NOT EXISTS (SELECT 1
+                  FROM as_status_history h
+                  WHERE h.as_reception_id = ar.id
+                    AND h.from_status = 'REPAIRING'
+                    AND h.to_status = 'COMPLETED');
+
+INSERT INTO payment_bill (as_reception_id, amount, status, type, paid_at, created_at, updated_at, created_by, updated_by)
+SELECT ar.id,
+       50000 + s.n * 2500,
+       CASE WHEN s.status = 'COMPLETED' THEN 'PAID' ELSE 'UNPAID' END,
+       'REPAIR',
+       CASE WHEN s.status = 'COMPLETED' THEN s.complete_at ELSE NULL END,
+       s.created_at,
+       CASE WHEN s.status = 'COMPLETED' THEN s.complete_at ELSE s.created_at END,
+       ar.receptionist_id,
+       ar.receptionist_id
+FROM stat_seed s
+         JOIN as_reception ar ON ar.reception_number = s.reception_number COLLATE utf8mb4_unicode_ci
+WHERE s.status IN ('COMPLETED', 'AWAITING_PAYMENT')
+  AND NOT EXISTS (SELECT 1 FROM payment_bill pb WHERE pb.as_reception_id = ar.id);
+
+INSERT INTO payment_attempt (payment_bill_id, order_id, payment_key, amount, method, status, approved_at, created_at,
+                             updated_at)
+SELECT pb.id,
+       CONCAT('STAT-ORDER-', s.reception_number),
+       CONCAT('STAT-KEY-', s.reception_number),
+       pb.amount,
+       'CARD',
+       'DONE',
+       s.complete_at,
+       s.created_at,
+       s.complete_at
+FROM stat_seed s
+         JOIN as_reception ar ON ar.reception_number = s.reception_number COLLATE utf8mb4_unicode_ci
+         JOIN payment_bill pb ON pb.as_reception_id = ar.id
+WHERE s.status = 'COMPLETED'
+  AND NOT EXISTS (SELECT 1 FROM payment_attempt pa
+                  WHERE pa.order_id = CONCAT('STAT-ORDER-', s.reception_number) COLLATE utf8mb4_unicode_ci);
+
+INSERT INTO payment_refund (payment_attempt_id, transaction_key, cancel_amount, cancel_reason, status, canceled_at,
+                            created_at, updated_at, created_by, updated_by)
+SELECT pa.id,
+       CONCAT('STAT-REFUND-', s.reception_number),
+       10000,
+       '통계 더미 부분 환불',
+       'DONE',
+       DATE_ADD(s.complete_at, INTERVAL 1 DAY),
+       DATE_ADD(s.complete_at, INTERVAL 1 DAY),
+       DATE_ADD(s.complete_at, INTERVAL 1 DAY),
+       ar.receptionist_id,
+       ar.receptionist_id
+FROM stat_seed s
+         JOIN as_reception ar ON ar.reception_number = s.reception_number COLLATE utf8mb4_unicode_ci
+         JOIN payment_attempt pa ON pa.order_id = CONCAT('STAT-ORDER-', s.reception_number) COLLATE utf8mb4_unicode_ci
+WHERE s.status = 'COMPLETED'
+  AND s.n MOD 5 = 0
+  AND (s.n DIV 5) MOD 3 = 0
+  AND NOT EXISTS (SELECT 1 FROM payment_refund pr
+                  WHERE pr.transaction_key = CONCAT('STAT-REFUND-', s.reception_number) COLLATE utf8mb4_unicode_ci);
+
+INSERT INTO shipment (as_reception_id, return_method, recipient_name, recipient_phone, address, address_detail,
+                      courier, courier_code, tracking_number, status, shipped_at, completed_at, created_at, updated_at,
+                      created_by, updated_by)
+SELECT ar.id,
+       s.return_method,
+       c.name,
+       c.phone,
+       c.basic_address,
+       c.detail_address,
+       CASE WHEN s.return_method = 'DELIVERY' THEN 'CJ대한통운' ELSE NULL END,
+       CASE WHEN s.return_method = 'DELIVERY' THEN '04' ELSE NULL END,
+       CASE WHEN s.return_method = 'DELIVERY' THEN CONCAT('STAT', LPAD(s.n, 6, '0')) ELSE NULL END,
+       CASE s.n MOD 4
+    WHEN 0 THEN 'DELIVERED'
+           WHEN 1 THEN 'SHIPPING'
+           WHEN 2 THEN 'READY'
+           ELSE 'PICKED_UP'
+END,
+       CASE WHEN s.n MOD 4 IN (0, 1) THEN DATE_ADD(s.created_at, INTERVAL 1 DAY) ELSE NULL END,
+       CASE WHEN s.n MOD 4 IN (0, 3) THEN s.complete_at ELSE NULL END,
+       DATE_ADD(s.created_at, INTERVAL 1 DAY),
+       s.complete_at,
+       ar.receptionist_id,
+       ar.receptionist_id
+FROM stat_seed s
+         JOIN as_reception ar ON ar.reception_number = s.reception_number COLLATE utf8mb4_unicode_ci
+         JOIN customer c ON c.id = ar.customer_id
+WHERE s.status = 'COMPLETED'
+  AND NOT EXISTS (SELECT 1 FROM shipment sh WHERE sh.as_reception_id = ar.id);
+
+DROP TEMPORARY TABLE IF EXISTS stat_seed;
+
+-- 통계 더미처럼 접수 INSERT 이후에 생긴 건도 고객 안내 링크를 발급한다.
+INSERT INTO customer_portal_link (as_reception_id, token, expires_at)
+SELECT ar.id,
+       CONCAT('fixgo-portal-', ar.id),
+       DATE_ADD(NOW(), INTERVAL 30 DAY)
+FROM as_reception ar
+WHERE NOT EXISTS (SELECT 1 FROM customer_portal_link link WHERE link.as_reception_id = ar.id);

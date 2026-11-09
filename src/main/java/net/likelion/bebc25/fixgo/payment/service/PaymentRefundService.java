@@ -35,6 +35,15 @@ public class PaymentRefundService {
             throw new PaymentException(PaymentErrorCode.REFUND_IN_PROGRESS, "이미 환불 처리 중입니다.");
         }
 
+        // 현금은 직원이 현장에서 돌려주므로 토스 호출 없이 바로 완료한다.
+        if (attempt.getMethod() == PaymentMethod.CASH) {
+            PaymentRefund refund = paymentRefundRepository.save(
+                    PaymentRefund.create(attempt, request.cancelReason(), memberId));
+            refund.markDone(null, LocalDateTime.now());
+            attempt.getPaymentBill().markRefunded();
+            return RefundDto.PreparedRefund.completed(refund.getId());
+        }
+
         // 결제 수단에 따라 토스에 전달할 계좌를 결정한다.
         RefundDto.RefundAccount refundAccount = switch (attempt.getMethod()) {
             case CARD -> null; // 카드 환불에는 계좌가 필요 없다.
@@ -50,7 +59,7 @@ public class PaymentRefundService {
         // PaymentRefund 생성 후 저장
         PaymentRefund refund = paymentRefundRepository.save(
                 PaymentRefund.create(attempt, request.cancelReason(), memberId));
-        return new RefundDto.PreparedRefund(refund.getId(), attempt.getPaymentKey(), refundAccount);
+        return new RefundDto.PreparedRefund(refund.getId(), attempt.getPaymentKey(), refundAccount, false);
     }
 
     /**

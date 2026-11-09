@@ -651,5 +651,69 @@ public class PaymentAttemptServiceTest {
                     .isInstanceOf(IllegalStateException.class);
         }
     }
-}
 
+    @Nested
+    @DisplayName("payByCash")
+    class PayByCash {
+        @Test
+        @DisplayName("현금 결제하면 결제 시도는 DONE(CASH), 청구서는 PAID가 된다.")
+        void payByCash_marksDoneAndPaid() {
+            PaymentBill bill = issueBill();
+
+            paymentAttemptService.payByCash(bill.getId(), 1L);
+            em.flush();
+            em.clear();
+
+            PaymentAttempt attempt = paymentAttemptRepository.findAllByPaymentBillId(bill.getId()).getFirst();
+            assertThat(attempt.getStatus()).isEqualTo(PaymentAttemptStatus.DONE);
+            assertThat(attempt.getMethod()).isEqualTo(PaymentMethod.CASH);
+            assertThat(paymentBillRepository.findById(bill.getId()).orElseThrow().getStatus())
+                    .isEqualTo(PaymentBillStatus.PAID);
+        }
+
+        @Test
+        @DisplayName("고객이 열어둔 READY 시도가 있으면 새로 만들지 않고 재사용한다.")
+        void payByCash_reusesReadyAttempt() {
+            PaymentBill bill = issueBill();
+            PaymentAttempt ready = startAndFindAttempt(asReceptionId);
+
+            paymentAttemptService.payByCash(bill.getId(), 1L);
+            em.flush();
+            em.clear();
+
+            assertThat(paymentAttemptRepository.findAllByPaymentBillId(bill.getId()))
+                    .singleElement()
+                    .satisfies(a -> {
+                        assertThat(a.getId()).isEqualTo(ready.getId());
+                        assertThat(a.getStatus()).isEqualTo(PaymentAttemptStatus.DONE);
+                    });
+        }
+
+        @Test
+        @DisplayName("가상계좌 입금 대기 중이면 현금 결제할 수 없다.")
+        void payByCash_rejectsWaitingForDeposit() {
+            PaymentBill bill = issueBill();
+            PaymentAttempt attempt = startAndFindAttempt(asReceptionId);
+            attempt.markInProgress();
+            attempt.markWaitingForDeposit("payment-key");
+
+            assertThatThrownBy(() -> paymentAttemptService.payByCash(bill.getId(), 1L))
+                    .isInstanceOf(PaymentException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(PaymentErrorCode.PAYMENT_IN_PROGRESS);
+            assertThat(bill.getStatus()).isEqualTo(PaymentBillStatus.UNPAID);
+        }
+
+        @Test
+        @DisplayName("이미 결제된 청구서는 현금 결제할 수 없다.")
+        void payByCash_rejectsPaidBill() {
+            PaymentBill bill = issueBill();
+            paymentAttemptService.payByCash(bill.getId(), 1L);
+
+            assertThatThrownBy(() -> paymentAttemptService.payByCash(bill.getId(), 1L))
+                    .isInstanceOf(PaymentException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(PaymentErrorCode.BILL_NOT_PAYABLE);
+        }
+    }
+}

@@ -93,9 +93,10 @@ public class PaymentQueryService {
             return false;
         }
 
-        // 현재 환불 서비스는 카드와 가상계좌 환불만 지원한다.
+        // 카드, 가상계좌(토스 환불)와 현금(현장 환불)만 지원한다.
         if (payment.getMethod() != PaymentMethod.CARD
-                && payment.getMethod() != PaymentMethod.VIRTUAL_ACCOUNT) {
+                && payment.getMethod() != PaymentMethod.VIRTUAL_ACCOUNT
+                && payment.getMethod() != PaymentMethod.CASH) {
             return false;
         }
 
@@ -149,8 +150,13 @@ public class PaymentQueryService {
                         .orElseThrow(() -> new IllegalStateException("결제 완료된 청구서에 완료된 결제 시도가 없습니다. billId=" + bill.getId()));
                 yield PaymentDto.CustomerPaymentView.paid(bill, doneAttempt);
             }
-            // TODO: 환불 기능 구현 시 고객에게 보여줄 내용
-            case REFUNDED -> throw new IllegalStateException("환불은 아직 미구현입니다.");
+            case REFUNDED -> {
+                // 환불 후에도 성공한 결제 시도(DONE)는 남아 있다.
+                PaymentAttempt doneAttempt = paymentAttemptRepository
+                        .findByPaymentBillIdAndStatus(bill.getId(), PaymentAttemptStatus.DONE)
+                        .orElseThrow(() -> new IllegalStateException("환불된 청구서에 완료된 결제 시도가 없습니다. billId=" + bill.getId()));
+                yield PaymentDto.CustomerPaymentView.refunded(bill, doneAttempt);
+            }
         };
     }
 }
