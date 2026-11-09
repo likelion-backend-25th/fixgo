@@ -15,6 +15,7 @@ import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
 import net.likelion.bebc25.fixgo.config.JpaConfig;
 import net.likelion.bebc25.fixgo.portal.repository.CustomerPortalLinkRepository;
 import net.likelion.bebc25.fixgo.portal.service.CustomerPortalLinkService;
+import net.likelion.bebc25.fixgo.product.repository.ProductModelRepository;
 import net.likelion.bebc25.fixgo.shipment.entity.ReturnMethod;
 import net.likelion.bebc25.fixgo.support.AsReceptionFixture;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,6 +58,8 @@ class AsReceptionServiceTest {
     private AsReceptionFixture asReceptionFixture;
     @Autowired
     private EntityManager entityManager;
+    @Autowired
+    private ProductModelRepository productModelRepository;
 
     private static final String REASSIGNMENT_REASON = "Schedule change";
 
@@ -71,6 +74,53 @@ class AsReceptionServiceTest {
         technician = memberRepository.save(new Member(
                 "technician@test.com", "password", "수리기사", "010-3333-4444",
                 "서울시", Role.ROLE_TECHNICIAN, "profile.png"));
+    }
+
+    @Test
+    @DisplayName("접수 상세조회에 접수 제품의 모델명이 포함된다")
+    void getReception_includesProductModelName() {
+        Long id = reception.getId();
+        String expectedModelName = productModelRepository
+                .findById(reception.getProduct().getProductModelId()).orElseThrow().getModelName();
+        entityManager.flush();
+        entityManager.clear();
+
+        var response = asReceptionService.getReception(id);
+
+        assertThat(response.modelName()).isEqualTo(expectedModelName);
+        assertThat(response.product().getId()).isEqualTo(reception.getProduct().getId());
+    }
+
+    @Test
+    @DisplayName("접수증에 고객, 제품, 접수 및 담당자 정보가 포함된다")
+    void getReceptionReceipt_returnsDocumentFields() {
+        String expectedModelName = productModelRepository
+                .findById(reception.getProduct().getProductModelId()).orElseThrow().getModelName();
+        var response = asReceptionService.getReceptionReceipt(reception.getId());
+        var customer = reception.getCustomer();
+
+        assertThat(response.receptionNumber()).isEqualTo(reception.getReceptionNumber());
+        assertThat(response.createdAt()).isEqualTo(reception.getCreatedAt());
+        assertThat(response.customerName()).isEqualTo(customer.getName());
+        assertThat(response.customerPhone()).isEqualTo(customer.getPhone());
+        assertThat(response.customerEmail()).isEqualTo(customer.getEmail());
+        assertThat(response.zipcode()).isEqualTo(customer.getZipcode());
+        assertThat(response.basicAddress()).isEqualTo(customer.getBasicAddress());
+        assertThat(response.detailAddress()).isEqualTo(customer.getDetailAddress());
+        assertThat(response.modelName()).isEqualTo(expectedModelName);
+        assertThat(response.serialNumber()).isEqualTo(reception.getProduct().getSerialNumber());
+        assertThat(response.symptom()).isEqualTo(reception.getSymptom());
+        assertThat(response.returnMethod()).isEqualTo(reception.getReturnMethod());
+        assertThat(response.receptionistName()).isEqualTo(reception.getReceptionist().getName());
+        assertThat(response.technicianName()).isEqualTo(reception.getTechnician().getName());
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 접수의 접수증을 조회하면 404를 반환한다")
+    void getReceptionReceipt_receptionNotFound() {
+        assertThatThrownBy(() -> asReceptionService.getReceptionReceipt(Long.MAX_VALUE))
+                .isInstanceOfSatisfying(ResponseStatusException.class, exception ->
+                        assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND));
     }
 
     @Test

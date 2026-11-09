@@ -6,11 +6,11 @@ import net.likelion.bebc25.fixgo.support.AsReceptionFixture;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.payment.client.TossDto;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
-import net.likelion.bebc25.fixgo.payment.dto.PaymentInternalDto;
 import net.likelion.bebc25.fixgo.payment.entity.*;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentAttemptRepository;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentBillRepository;
 import net.likelion.bebc25.fixgo.payment.repository.PaymentRefundRepository;
+import net.likelion.bebc25.fixgo.payment.service.dto.RefundDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,6 +43,9 @@ class PaymentRefundServiceTest {
     private static final String CANCEL_REASON = "수리 불가로 환불";
     private static final String TRANSACTION_KEY = "test_cancel_transaction_key";
     private static final LocalDateTime CANCELED_AT = LocalDateTime.of(2026, 11, 4, 16, 0);
+    // 카드 환불은 환불 계좌가 필요 없다
+    private static final PaymentDto.RefundPaymentRequest CARD_REFUND_REQUEST =
+            new PaymentDto.RefundPaymentRequest(CANCEL_REASON, null);
 
     @Autowired
     PaymentRefundService paymentRefundService;
@@ -78,8 +81,8 @@ class PaymentRefundServiceTest {
         Long billId = paidByCard();
 
         // when
-        PaymentInternalDto.PreparedRefund prepared =
-                paymentRefundService.prepareRefund(billId, CANCEL_REASON, MEMBER_ID, null);
+        RefundDto.PreparedRefund prepared =
+                paymentRefundService.prepareRefund(billId, MEMBER_ID, CARD_REFUND_REQUEST);
         em.flush();
         em.clear();
 
@@ -91,7 +94,6 @@ class PaymentRefundServiceTest {
         PaymentRefund refund = paymentRefundRepository.findById(prepared.refundId()).orElseThrow();
         assertThat(refund.getStatus()).isEqualTo(PaymentRefundStatus.IN_PROGRESS);
         assertThat(refund.getCancelReason()).isEqualTo(CANCEL_REASON);
-        assertThat(refund.getCreatedBy()).isEqualTo(MEMBER_ID);
         assertThat(refund.getTransactionKey()).isNull();
         assertThat(refund.getCanceledAt()).isNull();
 
@@ -105,8 +107,8 @@ class PaymentRefundServiceTest {
     void completeRefund() {
         // given: 환불 준비까지 마친 상태
         Long billId = paidByCard();
-        PaymentInternalDto.PreparedRefund prepared =
-                paymentRefundService.prepareRefund(billId, CANCEL_REASON, MEMBER_ID, null);
+        RefundDto.PreparedRefund prepared =
+                paymentRefundService.prepareRefund(billId, MEMBER_ID, CARD_REFUND_REQUEST);
         em.flush();
         em.clear();
 

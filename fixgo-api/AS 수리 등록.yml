@@ -1,12 +1,11 @@
 info:
   name: AS 수리 등록
   type: http
-  seq: 29
+  seq: 31
 
 http:
   method: POST
   url: "{{baseUrl}}/as/repairs"
-  auth: inherit
   body:
     type: json
     data: |-
@@ -19,6 +18,7 @@ http:
         "finalAmount": 0,
         "status": "DIAGNOSING"
       }
+  auth: inherit
 
 settings:
   encodeUrl: true

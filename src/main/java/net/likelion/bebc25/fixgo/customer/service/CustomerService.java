@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.customer.dto.CustomerDto;
 import net.likelion.bebc25.fixgo.customer.entity.Customer;
 import net.likelion.bebc25.fixgo.customer.repository.CustomerRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,6 +70,20 @@ public class CustomerService {
             return List.of();
         }
     }
+
+    public Page<CustomerDto.Response> searchPage(CustomerDto.SearchRequest request, Pageable pageable) {
+        if (request.name() != null && !request.name().isBlank()) {
+            return customerRepository.findByNameContaining(request.name(), pageable).map(CustomerDto.Response::from);
+        }
+        if (request.phone() != null && !request.phone().isBlank()) {
+            return customerRepository.findByPhoneContaining(request.phone(), pageable).map(CustomerDto.Response::from);
+        }
+        if (request.email() != null && !request.email().isBlank()) {
+            return customerRepository.findByEmailContaining(request.email(), pageable).map(CustomerDto.Response::from);
+        }
+        return Page.empty(pageable);
+    }
+
 
     // 고객 정보 수정
     @Transactional

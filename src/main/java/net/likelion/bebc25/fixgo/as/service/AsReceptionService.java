@@ -16,6 +16,7 @@ import net.likelion.bebc25.fixgo.customer.entity.Customer;
 import net.likelion.bebc25.fixgo.customer.repository.CustomerRepository;
 import net.likelion.bebc25.fixgo.portal.service.CustomerPortalLinkService;
 import net.likelion.bebc25.fixgo.product.entity.Product;
+import net.likelion.bebc25.fixgo.product.repository.ProductModelRepository;
 import net.likelion.bebc25.fixgo.product.repository.ProductRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -42,6 +43,7 @@ public class AsReceptionService {
     private final MemberRepository memberRepository;
     private final CustomerPortalLinkService customerPortalLinkService;
     private final AsTechnicianAssignmentHistoryRepository assignmentHistoryRepository;
+    private final ProductModelRepository productModelRepository;
 
     // 접수 등록
     @Transactional
@@ -84,7 +86,7 @@ public class AsReceptionService {
         );
 
         // 고객 포털 링크 발급
-        String customerLink = customerPortalLinkService.issueLink(asReception.getId());
+        String customerLink = customerPortalLinkService.createLink(asReception.getId());
 
         // 최초 접수 상태 이력 저장
         asStatusHistoryService.record(asReception, null, AsReceptionStatus.RECEIVED.name(), "A/S 최초 접수", receptionist);
@@ -130,12 +132,27 @@ public class AsReceptionService {
 
     // 접수 상세 조회
     public AsReceptionDto.DetailResponse getReception(Long id) {
+        AsReception reception = asReceptionRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 접수입니다."));
+        return AsReceptionDto.DetailResponse.from(reception, getModelName(reception));
+    }
+
+    // 접수증 조회
+    public AsReceptionDto.ReceptionReceiptResponse getReceptionReceipt(Long id) {
         AsReception reception = asReceptionRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "존재하지 않는 접수입니다."
+                        HttpStatus.NOT_FOUND, "존재하지 않는 접수입니다."
                 ));
-        return AsReceptionDto.DetailResponse.from(reception);
+
+        return AsReceptionDto.ReceptionReceiptResponse.from(reception, getModelName(reception));
+    }
+
+    private String getModelName(AsReception reception) {
+        return productModelRepository
+                .findById(reception.getProduct().getProductModelId())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "존재하지 않는 제품 모델입니다."
+                ))
+                .getModelName();
     }
 
     @Transactional
@@ -169,7 +186,7 @@ public class AsReceptionService {
             );
         }
 
-        return AsReceptionDto.DetailResponse.from(reception);
+        return AsReceptionDto.DetailResponse.from(reception, getModelName(reception));
     }
 
     // 담당 기사 재배정
@@ -213,7 +230,7 @@ public class AsReceptionService {
                 changedBy
         ));
 
-        return AsReceptionDto.DetailResponse.from(reception);
+        return AsReceptionDto.DetailResponse.from(reception, getModelName(reception));
     }
 
     @Transactional(readOnly = true)

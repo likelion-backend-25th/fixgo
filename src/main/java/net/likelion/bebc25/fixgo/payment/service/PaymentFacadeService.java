@@ -4,15 +4,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.likelion.bebc25.fixgo.payment.client.TossDto;
 import net.likelion.bebc25.fixgo.payment.client.TossPaymentsClient;
-import net.likelion.bebc25.fixgo.payment.dto.PaymentInternalDto;
+import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentAttemptStatus;
 import net.likelion.bebc25.fixgo.payment.exception.PaymentErrorCode;
 import net.likelion.bebc25.fixgo.payment.exception.PaymentException;
+import net.likelion.bebc25.fixgo.payment.service.dto.RefundDto;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestClientResponseException;
 
 import java.time.LocalDateTime;
 
@@ -74,30 +74,45 @@ public class PaymentFacadeService {
         }
     }
 
-    public void refundPayment(
-            Long billId, String cancelReason, Long memberId, PaymentInternalDto.RefundAccount refundAccount
-    ) {
-        PaymentInternalDto.PreparedRefund prepared = paymentRefundService.prepareRefund(billId, cancelReason, memberId, refundAccount);
-        TossDto.CancelRequest.RefundReceiveAccount tossAccount = TossDto.CancelRequest.RefundReceiveAccount.from(prepared.refundAccount());
+    /**
+     * 결제 완료된 청구서를 환불한다. (카드, 가상계좌)
+     * <p>
+     * 흐름: 환불 준비(PaymentRefund를 IN_PROGRESS로 커밋) → 토스 취소 호출(트랜잭션 밖) → 결과 반영
+     * <p>
+     * 토스 호출 전에 IN_PROGRESS를 먼저 커밋하므로, 결과를 알 수 없는 실패(5xx, 타임아웃)에서는 IN_PROGRESS로 남는다.
+     * IN_PROGRESS로 남은 환불은 스케줄러가 토스 결제 조회로 실제 상태를 확인해 정리한다. (reconcileStuckRefunds)
+     * IN_PROGRESS인 동안에는 같은 청구서로 새 환불을 시작할 수 없으므로 중복 환불 요청이 일어나지 않는다.
+     *
+     * @param billId   환불할 청구서
+     * @param memberId 환불을 처리하는 직원
+     * @param request  환불 사유, 환불 계좌(가상계좌만 필수)
+     */
+    public void refundPayment(Long billId, Long memberId, PaymentDto.RefundPaymentRequest request) {
+        RefundDto.PreparedRefund prepared = paymentRefundService.prepareRefund(billId, memberId, request);
 
         TossDto.CancelResponse response;
         try {
-            response = tossPaymentsClient.cancel(prepared.paymentKey(), cancelReason, tossAccount);
-        } catch (RestClientResponseException e) {
-            // 토스가 명확히 거절했다(한도 초과 등). 결제되지 않았으므로 FAILED로 기록한다.
+            response = tossPaymentsClient.cancel(prepared.paymentKey(), request.cancelReason(),
+                                                 TossDto.CancelRequest.RefundReceiveAccount.from(prepared.refundAccount()));
+        } catch (HttpClientErrorException e) {
             TossDto.ErrorResponse error = e.getResponseBodyAs(TossDto.ErrorResponse.class);
             String code = (error != null) ? error.code() : "TOSS_HTTP_" + e.getStatusCode().value();
             String message = (error != null) ? error.message() : e.getMessage();
+            // 토스에 이미 취소로 되어있는 경우. FAILED로 기록하지 않고 스케줄러가 조회로 정리한다.
+            if ("ALREADY_CANCELED_PAYMENT".equals(code)) {
+                throw new PaymentException(PaymentErrorCode.REFUND_PENDING, "환불 확인 중입니다.");
+            }
+            // 4xx: 토스가 확정적으로 거절했다. 환불 실패로 기록한다.
             paymentRefundService.failRefund(prepared.refundId(), code, message);
-            throw e;
-        } catch (ResourceAccessException e) {
-            // 응답을 받지 못했다(타임아웃, 연결 실패). 승인됐는지 알 수 없으므로 FAILED로 바꾸지 않고 IN_PROGRESS로 둔다.
-            // TODO: 토스 결제 조회 API로 실제 상태를 확인해 정리
-            throw e;
+            throw new PaymentException(PaymentErrorCode.TOSS_REJECTED, message);
+        } catch (HttpServerErrorException | ResourceAccessException e) {
+            // 5xx, 타임아웃: 토스에서 취소됐는지 알 수 없다. 실패로 단정하면 돈은 환불됐는데 FAILED가 될 수 있다.
+            // IN_PROGRESS로 두고, 스케줄러가 토스 조회로 정리한다.
+            throw new PaymentException(PaymentErrorCode.REFUND_PENDING, "환불 확인 중입니다.");
         }
 
-        TossDto.CancelResponse.Cancel cancel = response.cancels().getFirst();
-
+        // 환불 완료 처리한다.
+        TossDto.Cancel cancel = response.cancels().getFirst();
         paymentRefundService.completeRefund(prepared.refundId(), cancel.transactionKey(), cancel.canceledAt().toLocalDateTime());
     }
 
@@ -143,11 +158,25 @@ public class PaymentFacadeService {
                 TossDto.ConfirmResponse payment = tossPaymentsClient.getByOrderId(orderId);
                 paymentAttemptService.reconcile(payment);
             } catch (HttpClientErrorException.NotFound e) {
-                // 인증을 마친 결제만 IN_PROGRESS가 되므로 토스에 결제가 있어야 한다. 실패로 단정하지 않고 사람이 확인한다.
+                // 인증을 마친 결제만 IN_PROGRESS가 되므로 토스에 결제가 있어야 한다.
                 log.error("토스에 결제가 없음. orderId={}", orderId);
             } catch (Exception e) {
                 // 조회 타임아웃, 토스 5xx, 반영 중 예외 등. 다음 주기에 다시 시도한다.
-                log.warn("실패. orderId={}", orderId, e);
+                log.warn("승인 정리 실패. orderId={}", orderId, e);
+            }
+        }
+    }
+
+    /**
+     * 토스 응답을 받지 못해 IN_PROGRESS로 남은 환불을 토스 결제 조회 결과로 정리한다.
+     * 취소를 다시 요청하지 않고 조회만 한다. 가상계좌 환불 계좌는 저장하지 않으므로 같은 요청을 다시 보낼 수 없다.
+     */
+    public void reconcileStuckRefunds(LocalDateTime cutoff) {
+        for (RefundDto.StuckRefund stuck : paymentRefundService.findStuck(cutoff)) {
+            try {
+                paymentRefundService.reconcile(stuck.refundId(), tossPaymentsClient.getByPaymentKey(stuck.paymentKey()));
+            } catch (Exception e) {
+                log.warn("환불 정리 실패. 다음 주기에 재시도. refundId={}", stuck.refundId(), e);
             }
         }
     }

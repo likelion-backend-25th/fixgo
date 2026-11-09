@@ -55,6 +55,17 @@ public class MemberController {
         return ResponseEntity.ok(memberService.getDeletedMembers(pageable));
     }
 
+    @GetMapping("/technicians")
+    @PreAuthorize("hasAnyRole('RECEPTIONIST', 'ADMIN')")
+    public ResponseEntity<Page<MemberDto.TechnicianResponse>> getAssignableTechnicians(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "NAME") MemberDto.TechnicianSort sortBy,
+            @RequestParam(defaultValue = "ASC") Sort.Direction direction,
+            @PageableDefault(size = 20) Pageable pageable
+    ) {
+        return ResponseEntity.ok(memberService.getAssignableTechnicians(keyword, sortBy, direction, pageable));
+    }
+
     @GetMapping("/{memberId}")
     public ResponseEntity<MemberDto.DetailResponse> getMemberProfile(
             @PathVariable Long memberId

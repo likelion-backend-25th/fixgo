@@ -339,35 +339,29 @@ Response Body (HTTP 200 OK)
 ## 고객 관리 - 고객 조회
 
 - 엔드포인트: `GET /api/v1/customers`
+- 접근 권한: 인증된 사용자
+- `name`, `phone`, `email` 중 비어 있지 않은 첫 번째 조건으로 부분 일치 검색한다. 결과는 JSON 배열이다.
+
+## A/S 접수 모달 - 고객 및 시리얼번호 검색
+
+- 고객 검색: `GET /api/v1/customers/search?name=김민수&page=0&size=20`
+- 시리얼번호 검색: `GET /api/v1/products/search?serialNumber=SN-123&page=0&size=20`
+- 접근 권한: 인증된 사용자
+- 고객 검색은 기존 고객 조회와 같은 조건과 우선순위를 사용한다. 시리얼번호는 앞뒤 공백을 제거한 후 부분 일치 검색한다. 검색어가 없거나 공백이면 빈 페이지를 반환한다.
+- 페이지 번호는 0부터 시작한다. 기본값은 `page=0`, `size=20`, ID 오름차순이다.
+- HTTP 200 응답은 `content`(조회 결과), `number`(현재 페이지 번호), `size`(페이지 크기), `totalElements`(전체 결과 수), `totalPages`(전체 페이지 수)를 포함한다. `content`의 항목은 기존 배열 조회 API와 같은 형식이다.
+
+## A/S 접수 모달 - 배정 가능한 기사 조회
+
+- 엔드포인트: `GET /api/v1/member/technicians?keyword=김&sortBy=INSPECTION_WAITING_COUNT&direction=ASC&page=0&size=20`
 - 접근 권한: 관리자, 접수 담당자
-- 등록된 고객 목록을 조회하고 고객명 또는 연락처를 기준으로 검색한다.
-
-Response Body (HTTP 200 OK)
-
-```json
-{
-  "content": [
-    {
-      "id": 1,
-      "name": "김민수",
-      "phone": "010-2222-1818",
-      "email": "minsu@example.com",
-      "createdAt": "2026-10-28T09:30:00"
-    },
-    {
-      "id": 2,
-      "name": "한소희",
-      "phone": "010-5555-1212",
-      "email": "sohee@example.com",
-      "createdAt": "2026-10-28T10:00:00"
-    }
-  ],
-  "page": 0,
-  "size": 20,
-  "totalElements": 2,
-  "totalPages": 1
-}
-```
+- 활성 기사만 조회한다. `keyword`는 기사명 부분 일치 검색이며 생략하면 전체 활성 기사를 조회한다.
+- 기본값은 `page=0`, `size=20`, `sortBy=NAME`, `direction=ASC`다. `sortBy`는 `NAME`, `INSPECTION_WAITING_COUNT`, `REPAIR_IN_PROGRESS_COUNT`, `ESTIMATED_DURATION_MINUTES`를 지원한다. 예상 시간 데이터가 없는 기사는 해당 열로 정렬할 때 마지막에 표시한다.
+- 응답은 `content`, `number`, `size`, `totalElements`, `totalPages`를 포함한다. `content`에는 아래 항목이 들어간다.
+  - `technicianId`, `name`, `email`, `status`. 선택한 `technicianId`를 접수 등록 또는 기사 재배정 요청에 사용한다.
+  - `inspectionWaitingCount`. 기사에게 배정된 접수 중 `RECEIVED` 상태이고 수리 기록이 생성되기 전인 건수다.
+  - `repairInProgressCount`. 해당 기사의 수리 기록 중 `REPAIRING` 상태인 건수다. 수리 기록이 없는 접수 건은 접수 담당 기사와 `REPAIR_IN_PROGRESS` 상태를 기준으로 포함한다.
+  - `estimatedDurationMinutes`. 완료 이력의 수리 시작부터 수리 완료까지 걸린 시간의 건당 평균(분)이다. 시작과 완료 이력이 모두 있는 건이 없으면 `null`을 반환한다.
 
 ## 고객 관리 - 고객 상세
 

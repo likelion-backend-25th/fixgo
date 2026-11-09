@@ -1,7 +1,7 @@
 info:
   name: 제품 정보 수정
   type: http
-  seq: 14
+  seq: 16
 
 http:
   method: PATCH

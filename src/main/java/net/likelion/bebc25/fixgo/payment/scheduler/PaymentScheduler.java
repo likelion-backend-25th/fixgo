@@ -28,5 +28,9 @@ public class PaymentScheduler {
             log.info("입금 기한 만료 처리. count={}", count);
         }
     }
-
+    
+    @Scheduled(fixedDelay = 60_000)
+    public void reconcileRefunds() {
+        paymentFacadeService.reconcileStuckRefunds(LocalDateTime.now().minusMinutes(2));
+    }
 }

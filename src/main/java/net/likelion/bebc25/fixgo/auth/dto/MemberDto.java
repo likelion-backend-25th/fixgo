@@ -68,6 +68,20 @@ public class MemberDto {
         }
     }
 
+    public enum TechnicianSort {
+        NAME, INSPECTION_WAITING_COUNT, REPAIR_IN_PROGRESS_COUNT, ESTIMATED_DURATION_MINUTES
+    }
+
+    public record TechnicianResponse(
+            Long technicianId,
+            String name,
+            String email,
+            Status status,
+            long inspectionWaitingCount,
+            long repairInProgressCount,
+            Double estimatedDurationMinutes
+    ) {}
+
     public record DetailResponse(
             Long id,
             String email,

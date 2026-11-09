@@ -1,0 +1,37 @@
+info:
+  name: 수리 대상 제품 등록
+  type: http
+  seq: 30
+
+http:
+  method: POST
+  url: "{{baseUrl}}/products"
+  body:
+    type: json
+    data: |-
+      {
+        "productModelId": 1,
+        "customerId": 1,
+        "serialNumber": "FIXGO-BRUNO-SN-001",
+        "manufacturedAt": "2026-01-01T00:00:00",
+        "purchasedAt": "2026-03-01T00:00:00"
+      }
+  auth: inherit
+
+runtime:
+  actions:
+    - type: set-variable
+      phase: after-response
+      selector:
+        expression: res.body.id
+        method: jsonq
+      variable:
+        name: productId
+        scope: runtime
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
