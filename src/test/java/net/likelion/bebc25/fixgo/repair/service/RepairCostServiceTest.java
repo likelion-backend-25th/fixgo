@@ -81,9 +81,11 @@ class RepairCostServiceTest {
         when(reception.getId()).thenReturn(receptionId);
         when(reception.getReceptionNumber()).thenReturn("AS-1");
         when(repair.getConfirmedAt()).thenReturn(confirmedAt);
+        when(repair.getId()).thenReturn(5L);
         when(repair.getLaborRate()).thenReturn(50000);
         when(repair.getInspectionCost()).thenReturn(10000);
         when(repair.getFinalAmount()).thenReturn(70000);
+        when(repairWorkRepository.findByRepairId(5L)).thenReturn(List.of());
 
         var response = repairCostService.getEstimate(receptionId);
 
@@ -93,6 +95,50 @@ class RepairCostServiceTest {
         assertThat(response.laborRate()).isEqualTo(50000);
         assertThat(response.inspectionCost()).isEqualTo(10000);
         assertThat(response.totalAmount()).isEqualTo(70000);
+        assertThat(response.items()).extracting(item -> item.category())
+                .containsExactly("공임", "점검");
+        assertThat(response.items()).extracting(item -> item.amount())
+                .containsExactly(50000, 10000);
+    }
+
+    @Test
+    @DisplayName("견적서 항목에 작업과 부품, 공임을 포함한다")
+    void getEstimate_includesWorkAndPartItems() {
+        Repair repair = mock(Repair.class);
+        AsReception reception = mock(AsReception.class);
+        RepairWork work = mock(RepairWork.class);
+        RepairPartUsage usage = mock(RepairPartUsage.class);
+        Part part = mock(Part.class);
+
+        when(repairRepository.findByAsReception_Id(1L)).thenReturn(Optional.of(repair));
+        when(repair.getAsReception()).thenReturn(reception);
+        when(reception.getId()).thenReturn(1L);
+        when(reception.getReceptionNumber()).thenReturn("AS-1");
+        when(repair.getConfirmedAt()).thenReturn(LocalDateTime.of(2026, 1, 1, 10, 0));
+        when(repair.getId()).thenReturn(5L);
+        when(repair.getLaborRate()).thenReturn(50000);
+        when(repair.getInspectionCost()).thenReturn(0);
+        when(repair.getFinalAmount()).thenReturn(239000);
+        when(work.getId()).thenReturn(10L);
+        when(work.getWorkName()).thenReturn("패널 교체");
+        when(work.getRepairPresetName()).thenReturn("화면 파손");
+        when(part.getName()).thenReturn("LCD 패널");
+        when(usage.getRepairWork()).thenReturn(work);
+        when(usage.getPart()).thenReturn(part);
+        when(usage.getQuantity()).thenReturn(1);
+        when(usage.getUnitPrice()).thenReturn(189000);
+        when(repairWorkRepository.findByRepairId(5L)).thenReturn(List.of(work));
+        when(repairPartUsageRepository.findByRepairWorkIdIn(List.of(10L))).thenReturn(List.of(usage));
+
+        var response = repairCostService.getEstimate(1L);
+
+        assertThat(response.items()).extracting(item -> item.category())
+                .containsExactly("작업", "부품", "공임");
+        assertThat(response.items().get(0).name()).isEqualTo("패널 교체 (화면 파손)");
+        assertThat(response.items().get(0).amount()).isNull();
+        assertThat(response.items().get(1).quantity()).isEqualTo(1);
+        assertThat(response.items().get(1).amount()).isEqualTo(189000);
+        assertThat(response.items().get(2).amount()).isEqualTo(50000);
     }
 
     @Test

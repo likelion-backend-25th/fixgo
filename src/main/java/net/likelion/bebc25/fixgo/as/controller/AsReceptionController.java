@@ -8,9 +8,11 @@ import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
 import net.likelion.bebc25.fixgo.as.service.AsReceptionService;
 import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
 import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
+import net.likelion.bebc25.fixgo.portal.dto.CustomerPortalLinkResponse;
 import net.likelion.bebc25.fixgo.repair.dto.repair.EstimateResponse;
-import net.likelion.bebc25.fixgo.repair.service.RepairCostService;
+import net.likelion.bebc25.fixgo.repair.dto.repair.RepairResponse;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairStatementResponse;
+import net.likelion.bebc25.fixgo.repair.service.RepairCostService;
 import net.likelion.bebc25.fixgo.repair.service.RepairHistoryService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -124,6 +126,12 @@ public class AsReceptionController {
         return asReceptionService.getTechnicianAssignmentHistory(receptionId);
     }
 
+    // 고객 안내 링크 조회
+    @GetMapping("/{id}/portal-link")
+    public ResponseEntity<CustomerPortalLinkResponse> getPortalLink(@PathVariable Long id) {
+        return ResponseEntity.ok(asReceptionService.getPortalLink(id));
+    }
+
     // 접수증 조회
     @PreAuthorize("hasAnyRole('RECEPTIONIST', 'ADMIN')")
     @GetMapping("/{id}/documents/reception-receipt")
@@ -149,6 +157,45 @@ public class AsReceptionController {
             @PathVariable Long id
     ) {
         return ResponseEntity.ok(repairHistoryService.getRepairStatement(id));
+    }
+
+    // 기사 전용 접수 상세 조회
+    @GetMapping("/my")
+    @PreAuthorize("hasRole('TECHNICIAN')")
+    public ResponseEntity<Page<AsReceptionDto.ListResponse>> getMyReceptions(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) AsReceptionStatus status,
+            @PageableDefault(size = 20, sort = "createdAt",
+                    direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        var request = new AsReceptionDto.ReceptionSearchRequest(
+                keyword, status, userDetails.getId()
+        );
+        return ResponseEntity.ok(asReceptionService.getReceptions(request, pageable));
+    }
+
+    @GetMapping("/my/{id}")
+    @PreAuthorize("hasRole('TECHNICIAN')")
+    public ResponseEntity<AsReceptionDto.MyReceptionDetailResponse> getMyReception(
+            @PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        return ResponseEntity.ok(
+                asReceptionService.getMyReception(id, userDetails.getId())
+        );
+    }
+
+    // 담당 기사가 접수 건의 점검을 시작한다.
+    @PostMapping("/my/{id}/inspection/start")
+    @PreAuthorize("hasRole('TECHNICIAN')")
+    public ResponseEntity<RepairResponse> startMyInspection(
+            @PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        return ResponseEntity.ok(
+                asReceptionService.startMyInspection(id, userDetails.getId())
+        );
     }
 
 }

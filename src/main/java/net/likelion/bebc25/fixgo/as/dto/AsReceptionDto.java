@@ -10,6 +10,7 @@ import net.likelion.bebc25.fixgo.as.entity.AsTechnicianAssignmentHistory;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.customer.entity.Customer;
 import net.likelion.bebc25.fixgo.product.entity.Product;
+import net.likelion.bebc25.fixgo.repair.dto.repair.RepairResponse;
 import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
 import net.likelion.bebc25.fixgo.shipment.entity.ReturnMethod;
@@ -125,6 +126,11 @@ public class AsReceptionDto {
             );
         }
     }
+
+    public record MyReceptionDetailResponse(
+            DetailResponse reception,
+            RepairResponse repair
+    ) {}
 
     public record DetailResponse(
             Long id,

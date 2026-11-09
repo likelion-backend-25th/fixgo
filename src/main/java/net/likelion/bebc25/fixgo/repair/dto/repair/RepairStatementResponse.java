@@ -14,6 +14,7 @@ public record RepairStatementResponse(
         String technicianName,
         String workNote,
         List<RepairWorkHistoryResponse> repairWorks,
+        int laborCost,
         int finalAmount
 ) {
 
@@ -31,6 +32,8 @@ public record RepairStatementResponse(
                 repair.getTechnician().getName(),
                 repair.getWorkNote(),
                 repairWorks,
+                // laborRate 컬럼에는 확정된 공임비 합계가 저장된다.
+                repair.getLaborRate(),
                 repair.getFinalAmount()
         );
     }

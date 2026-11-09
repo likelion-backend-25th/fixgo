@@ -4,6 +4,7 @@ import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 // 견적서 조회 응답 DTO
 public record EstimateResponse(
@@ -12,9 +13,10 @@ public record EstimateResponse(
         LocalDateTime confirmedAt,
         int laborRate,
         int inspectionCost,
-        int totalAmount
+        int totalAmount,
+        List<EstimateItemResponse> items
 ) {
-    public static EstimateResponse from(Repair repair) {
+    public static EstimateResponse from(Repair repair, List<EstimateItemResponse> items) {
         AsReception reception = repair.getAsReception();
 
         return new EstimateResponse(
@@ -23,7 +25,8 @@ public record EstimateResponse(
                 repair.getConfirmedAt(),
                 repair.getLaborRate(),
                 repair.getInspectionCost(),
-                repair.getFinalAmount()
+                repair.getFinalAmount(),
+                items
         );
     }
 }

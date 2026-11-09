@@ -1080,6 +1080,22 @@ SELECT 'technician.demo@fixgo.example',
        0
 WHERE NOT EXISTS (SELECT 1 FROM member WHERE email = 'technician.demo@fixgo.example');
 
+INSERT INTO member (email, password_hash, name, phone, role, address, profile_img_url, status, created_at, updated_at,
+                    created_by, updated_by)
+SELECT 'max.demo@fixgo.example',
+       '$2a$10$vFJ1GvhwL8vQFOSGsKTjMeH7cQUItVadnGDGRHF1Q8xGefzmSlzMS',
+       '수리기사 맥스',
+       '010-0000-0000',
+       'ROLE_TECHNICIAN',
+       '서울시 테스트센터',
+       '',
+       'ACTIVE',
+       NOW(),
+       NOW(),
+       0,
+       0
+WHERE NOT EXISTS (SELECT 1 FROM member WHERE email = 'max.demo@fixgo.example');
+
 INSERT INTO product_model (name, model_name, category, warranty_months, is_active, created_at, updated_at, created_by,
                            updated_by)
 SELECT '더미 노트북',
@@ -1867,6 +1883,152 @@ WHERE ar.reception_number = 'AS-261101-8f3a2c10-7b6e-4d90-a123-000000000010'
                   WHERE u.repair_work_id = rw.id
                     AND u.part_id = p.id);
 
+-- 결제 대기, 배송 대기, 수령 대기는 수리가 끝난 접수다.
+-- 견적서와 수리내역서를 조회할 수 있도록 확정된 완료 수리를 연결한다.
+INSERT INTO repair (as_reception_id, technician_id, diagnosis, work_note, repair_decision, warranty_result, reason,
+                    labor_rate, inspection_cost, final_amount, status, reason_for_rejection, confirmed_at,
+                    created_at, updated_at, created_by, updated_by)
+SELECT ar.id,
+       ar.technician_id,
+       '냉각팬 베어링 소음으로 고회전 시 진동이 발생함',
+       'CPU 쿨링팬을 교체하고 유휴, 부하 상태에서 소음이 사라졌는지 확인함',
+       'REPAIRABLE',
+       'PAID',
+       '보증 기간 내이나 이물 유입에 따른 팬 손상으로 유상 수리',
+       50000,
+       0,
+       79000,
+       'COMPLETED',
+       NULL,
+       '2026-11-02 14:00:00',
+       '2026-11-02 11:00:00',
+       '2026-11-02 15:00:00',
+       ar.technician_id,
+       ar.technician_id
+FROM as_reception ar
+WHERE ar.reception_number = 'AS-261102-8f3a2c10-7b6e-4d90-a123-000000000007'
+  AND ar.status = 'AWAITING_PAYMENT'
+  AND NOT EXISTS (SELECT 1 FROM repair r WHERE r.as_reception_id = ar.id);
+
+INSERT INTO repair_work (repair_id, repair_preset_name, work_name, created_at, updated_at, created_by, updated_by)
+SELECT r.id, '소음 발생', 'CPU 쿨링팬 교체', '2026-11-02 12:00:00', '2026-11-02 14:00:00', r.technician_id, r.technician_id
+FROM repair r
+         JOIN as_reception ar ON ar.id = r.as_reception_id
+WHERE ar.reception_number = 'AS-261102-8f3a2c10-7b6e-4d90-a123-000000000007'
+  AND NOT EXISTS (SELECT 1 FROM repair_work rw WHERE rw.repair_id = r.id AND rw.work_name = 'CPU 쿨링팬 교체');
+
+INSERT INTO repair_part_usage (repair_work_id, part_id, quantity, unit_price, created_at)
+SELECT rw.id, p.id, 1, p.unit_price, '2026-11-02 12:30:00'
+FROM repair_work rw
+         JOIN repair r ON r.id = rw.repair_id
+         JOIN as_reception ar ON ar.id = r.as_reception_id
+         JOIN product pr ON pr.id = ar.product_id
+         JOIN part p ON p.name = '노트북 CPU 쿨링팬 (4핀 PWM, 좌측 배기, 방진 고무 마운트 포함)'
+         JOIN part_compatibility pc ON pc.part_id = p.id AND pc.product_model_id = pr.product_model_id
+WHERE ar.reception_number = 'AS-261102-8f3a2c10-7b6e-4d90-a123-000000000007'
+  AND rw.work_name = 'CPU 쿨링팬 교체'
+  AND p.status = 'ACTIVE'
+  AND NOT EXISTS (SELECT 1 FROM repair_part_usage u WHERE u.repair_work_id = rw.id AND u.part_id = p.id);
+
+INSERT INTO repair (as_reception_id, technician_id, diagnosis, work_note, repair_decision, warranty_result, reason,
+                    labor_rate, inspection_cost, final_amount, status, reason_for_rejection, confirmed_at,
+                    created_at, updated_at, created_by, updated_by)
+SELECT ar.id,
+       ar.technician_id,
+       '무선랜 카드 인식 불가로 와이파이가 연결되지 않음',
+       'Wi-Fi 6 무선랜 카드를 교체하고 2.4GHz, 5GHz 연결을 확인함',
+       'REPAIRABLE',
+       'PAID',
+       '보증 기간 내이나 단자 파손으로 유상 수리',
+       50000,
+       0,
+       75000,
+       'COMPLETED',
+       NULL,
+       '2026-11-02 14:10:00',
+       '2026-11-02 11:10:00',
+       '2026-11-02 15:00:00',
+       ar.technician_id,
+       ar.technician_id
+FROM as_reception ar
+WHERE ar.reception_number = 'AS-261102-8f3a2c10-7b6e-4d90-a123-000000000008'
+  AND ar.status = 'AWAITING_SHIPMENT'
+  AND NOT EXISTS (SELECT 1 FROM repair r WHERE r.as_reception_id = ar.id);
+
+INSERT INTO repair_work (repair_id, repair_preset_name, work_name, created_at, updated_at, created_by, updated_by)
+SELECT r.id, '와이파이 불량', '무선랜 카드 교체', '2026-11-02 12:10:00', '2026-11-02 14:10:00', r.technician_id, r.technician_id
+FROM repair r
+         JOIN as_reception ar ON ar.id = r.as_reception_id
+WHERE ar.reception_number = 'AS-261102-8f3a2c10-7b6e-4d90-a123-000000000008'
+  AND NOT EXISTS (SELECT 1 FROM repair_work rw WHERE rw.repair_id = r.id AND rw.work_name = '무선랜 카드 교체');
+
+INSERT INTO repair_part_usage (repair_work_id, part_id, quantity, unit_price, created_at)
+SELECT rw.id, p.id, 1, p.unit_price, '2026-11-02 12:40:00'
+FROM repair_work rw
+         JOIN repair r ON r.id = rw.repair_id
+         JOIN as_reception ar ON ar.id = r.as_reception_id
+         JOIN product pr ON pr.id = ar.product_id
+         JOIN part p ON p.name = 'Intel AX201 Wi-Fi 6 / Bluetooth 5.2 무선랜 카드 (M.2 2230, CNVi)'
+         JOIN part_compatibility pc ON pc.part_id = p.id AND pc.product_model_id = pr.product_model_id
+WHERE ar.reception_number = 'AS-261102-8f3a2c10-7b6e-4d90-a123-000000000008'
+  AND rw.work_name = '무선랜 카드 교체'
+  AND p.status = 'ACTIVE'
+  AND NOT EXISTS (SELECT 1 FROM repair_part_usage u WHERE u.repair_work_id = rw.id AND u.part_id = p.id);
+
+INSERT INTO repair (as_reception_id, technician_id, diagnosis, work_note, repair_decision, warranty_result, reason,
+                    labor_rate, inspection_cost, final_amount, status, reason_for_rejection, confirmed_at,
+                    created_at, updated_at, created_by, updated_by)
+SELECT ar.id,
+       ar.technician_id,
+       '터치패드 좌클릭이 간헐적으로 인식되지 않음',
+       '클릭패드 모듈을 교체하고 클릭, 제스처 동작을 확인함',
+       'REPAIRABLE',
+       'PAID',
+       '보증 기간 내이나 액체 유입 흔적으로 유상 수리',
+       50000,
+       0,
+       92000,
+       'COMPLETED',
+       NULL,
+       '2026-11-01 14:20:00',
+       '2026-11-01 11:20:00',
+       '2026-11-01 15:00:00',
+       ar.technician_id,
+       ar.technician_id
+FROM as_reception ar
+WHERE ar.reception_number = 'AS-261101-8f3a2c10-7b6e-4d90-a123-000000000009'
+  AND ar.status = 'AWAITING_PICKUP'
+  AND NOT EXISTS (SELECT 1 FROM repair r WHERE r.as_reception_id = ar.id);
+
+INSERT INTO repair_work (repair_id, repair_preset_name, work_name, created_at, updated_at, created_by, updated_by)
+SELECT r.id, '터치패드 불량', '클릭패드 모듈 교체', '2026-11-01 12:20:00', '2026-11-01 14:20:00', r.technician_id, r.technician_id
+FROM repair r
+         JOIN as_reception ar ON ar.id = r.as_reception_id
+WHERE ar.reception_number = 'AS-261101-8f3a2c10-7b6e-4d90-a123-000000000009'
+  AND NOT EXISTS (SELECT 1 FROM repair_work rw WHERE rw.repair_id = r.id AND rw.work_name = '클릭패드 모듈 교체');
+
+INSERT INTO repair_part_usage (repair_work_id, part_id, quantity, unit_price, created_at)
+SELECT rw.id, p.id, 1, p.unit_price, '2026-11-01 12:40:00'
+FROM repair_work rw
+         JOIN repair r ON r.id = rw.repair_id
+         JOIN as_reception ar ON ar.id = r.as_reception_id
+         JOIN product pr ON pr.id = ar.product_id
+         JOIN part p ON p.name = '노트북 클릭패드 터치패드 모듈 (좌우 물리 버튼 일체형, 멀티터치, 팜레스트 케이블 포함)'
+         JOIN part_compatibility pc ON pc.part_id = p.id AND pc.product_model_id = pr.product_model_id
+WHERE ar.reception_number = 'AS-261101-8f3a2c10-7b6e-4d90-a123-000000000009'
+  AND rw.work_name = '클릭패드 모듈 교체'
+  AND p.status = 'ACTIVE'
+  AND NOT EXISTS (SELECT 1 FROM repair_part_usage u WHERE u.repair_work_id = rw.id AND u.part_id = p.id);
+
+-- 시드 접수마다 고객 안내 링크를 발급한다. 화면에는 /portal/{token} 으로 보여 준다.
+INSERT INTO customer_portal_link (as_reception_id, token, expires_at)
+SELECT ar.id,
+       CONCAT('fixgo-demo-portal-', LPAD(RIGHT(ar.reception_number, 2), 2, '0')),
+       '2026-12-09 09:00:00'
+FROM as_reception ar
+WHERE ar.reception_number LIKE 'AS-2611%-8f3a2c10-7b6e-4d90-a123-0000000000%'
+  AND NOT EXISTS (SELECT 1 FROM customer_portal_link link WHERE link.as_reception_id = ar.id);
+
 -- 통계 화면용 더미데이터
 -- 기존 수리기사 더미를 포함해 10명, 2025-12부터 2026-11까지 월 5건.
 -- 완료 건은 수리 시작/완료 이력, 결제, 배송을 함께 넣어 기간 통계가 비지 않게 한다.
@@ -1883,6 +2045,48 @@ SELECT '더미 스마트폰',
        0,
        0
 WHERE NOT EXISTS (SELECT 1 FROM product_model WHERE model_name = 'FIXGO-DEMO-PHONE');
+
+-- 통계 더미 스마트폰 서류에 표시할 부품. 노트북 부품과 같이 모델 호환을 남긴다.
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '스마트폰 USB-C 충전 포트 기판', 18000, 30, 40, 'ACTIVE', 0, NOW(), NOW(), 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '스마트폰 USB-C 충전 포트 기판');
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '스마트폰 리튬이온 배터리 팩', 35000, 25, 40, 'ACTIVE', 0, NOW(), NOW(), 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '스마트폰 리튬이온 배터리 팩');
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '스마트폰 OLED 디스플레이 모듈', 120000, 40, 20, 'ACTIVE', 0, NOW(), NOW(), 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '스마트폰 OLED 디스플레이 모듈');
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '스마트폰 전원 버튼 플렉스 케이블', 9000, 20, 40, 'ACTIVE', 0, NOW(), NOW(), 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '스마트폰 전원 버튼 플렉스 케이블');
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version, created_at, updated_at,
+                  created_by, updated_by)
+SELECT '스마트폰 방열 구리 플레이트', 7000, 15, 40, 'ACTIVE', 0, NOW(), NOW(), 0, 0
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = '스마트폰 방열 구리 플레이트');
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id,
+       (SELECT MIN(id) FROM product_model WHERE model_name = 'FIXGO-DEMO-PHONE')
+FROM part p
+WHERE p.name IN (
+    '스마트폰 USB-C 충전 포트 기판',
+    '스마트폰 리튬이온 배터리 팩',
+    '스마트폰 OLED 디스플레이 모듈',
+    '스마트폰 전원 버튼 플렉스 케이블',
+    '스마트폰 방열 구리 플레이트'
+)
+  AND NOT EXISTS (SELECT 1
+                  FROM part_compatibility pc
+                  WHERE pc.part_id = p.id
+                    AND pc.product_model_id = (SELECT MIN(id) FROM product_model WHERE model_name = 'FIXGO-DEMO-PHONE'));
 
 INSERT INTO member (email, password_hash, name, phone, role, address, profile_img_url, status, created_at, updated_at,
                     created_by, updated_by)
@@ -1967,7 +2171,7 @@ WHERE NOT EXISTS (SELECT 1
 
 INSERT INTO product (product_model_id, customer_id, serial_number, manufactured_at, purchased_at, created_at,
                      updated_at, created_by, updated_by)
-SELECT (SELECT MIN(id) FROM product_model WHERE model_name = s.model_name),
+SELECT (SELECT MIN(id) FROM product_model WHERE model_name = s.model_name COLLATE utf8mb4_unicode_ci),
        (SELECT MIN(id) FROM customer WHERE email = CONCAT('stat.customer', LPAD(s.n, 2, '0'), '@fixgo.example')),
        CONCAT('STAT-SN-', LPAD(s.n, 2, '0')),
        '2025-06-01 00:00:00',
@@ -1986,7 +2190,7 @@ SELECT s.reception_number,
        (SELECT MIN(id) FROM customer WHERE email = CONCAT('stat.customer', LPAD(s.n, 2, '0'), '@fixgo.example')),
        (SELECT id FROM product WHERE serial_number = CONCAT('STAT-SN-', LPAD(s.n, 2, '0'))),
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
-       (SELECT id FROM member WHERE email = s.tech_email),
+       (SELECT id FROM member WHERE email = s.tech_email COLLATE utf8mb4_unicode_ci),
        s.symptom,
        CONCAT(s.symptom, ' 증상으로 점검을 요청합니다.'),
        '통계 더미데이터',
@@ -2000,7 +2204,8 @@ SELECT s.reception_number,
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example'),
        (SELECT id FROM member WHERE email = 'reception.demo@fixgo.example')
 FROM stat_seed s
-WHERE NOT EXISTS (SELECT 1 FROM as_reception ar WHERE ar.reception_number = s.reception_number);
+WHERE NOT EXISTS (SELECT 1 FROM as_reception ar
+                  WHERE ar.reception_number = s.reception_number COLLATE utf8mb4_unicode_ci);
 
 INSERT INTO repair (as_reception_id, technician_id, diagnosis, work_note, repair_decision, warranty_result, reason,
                     labor_rate, inspection_cost, final_amount, status, reason_for_rejection, confirmed_at,
@@ -2008,7 +2213,7 @@ INSERT INTO repair (as_reception_id, technician_id, diagnosis, work_note, repair
 SELECT ar.id,
        ar.technician_id,
        CONCAT(s.symptom, ' 원인을 확인하고 부품을 교체함'),
-       '통계 더미 수리',
+       CONCAT(s.symptom, ' 부품을 교체하고 동작을 확인함'),
        'REPAIRABLE',
        CASE WHEN s.n MOD 2 = 0 THEN 'PAID' ELSE 'FREE' END,
        '통계 더미데이터',
@@ -2023,9 +2228,78 @@ SELECT ar.id,
        ar.technician_id,
        ar.technician_id
 FROM stat_seed s
-         JOIN as_reception ar ON ar.reception_number = s.reception_number
+         JOIN as_reception ar ON ar.reception_number = s.reception_number COLLATE utf8mb4_unicode_ci
 WHERE s.status = 'COMPLETED'
   AND NOT EXISTS (SELECT 1 FROM repair r WHERE r.as_reception_id = ar.id);
+
+-- 결제 대기도 수리가 끝난 접수다. 견적서와 수리내역서를 조회할 수 있게 확정된 완료 수리를 연결한다.
+INSERT INTO repair (as_reception_id, technician_id, diagnosis, work_note, repair_decision, warranty_result, reason,
+                    labor_rate, inspection_cost, final_amount, status, reason_for_rejection, confirmed_at,
+                    created_at, updated_at, created_by, updated_by)
+SELECT ar.id,
+       ar.technician_id,
+       CONCAT(ar.symptom, ' 원인을 확인하고 부품을 교체함'),
+       CONCAT(ar.symptom, ' 부품을 교체하고 동작을 확인함'),
+       'REPAIRABLE',
+       CASE WHEN CAST(RIGHT(ar.reception_number, 2) AS UNSIGNED) MOD 2 = 0 THEN 'PAID' ELSE 'FREE' END,
+       '통계 더미데이터',
+       30000,
+       0,
+       50000 + CAST(RIGHT(ar.reception_number, 2) AS UNSIGNED) * 2500,
+       'COMPLETED',
+       NULL,
+       DATE_ADD(ar.created_at, INTERVAL 8 HOUR),
+       ar.created_at,
+       DATE_ADD(ar.created_at, INTERVAL 8 HOUR),
+       ar.technician_id,
+       ar.technician_id
+FROM as_reception ar
+WHERE ar.reception_number LIKE 'AS-STAT-%'
+  AND ar.status = 'AWAITING_PAYMENT'
+  AND NOT EXISTS (SELECT 1 FROM repair r WHERE r.as_reception_id = ar.id);
+
+-- 견적서와 수리내역서에 작업, 부품, 공임이 나오도록 완료·결제 대기 건에 넣는다.
+INSERT INTO repair_work (repair_id, repair_preset_name, work_name, created_at, updated_at, created_by, updated_by)
+SELECT r.id,
+       ar.symptom,
+       CONCAT(ar.symptom, ' 부품 교체'),
+       r.created_at,
+       r.confirmed_at,
+       r.technician_id,
+       r.technician_id
+FROM repair r
+         JOIN as_reception ar ON ar.id = r.as_reception_id
+WHERE ar.reception_number LIKE 'AS-STAT-%'
+  AND ar.status IN ('COMPLETED', 'AWAITING_PAYMENT')
+  AND NOT EXISTS (SELECT 1 FROM repair_work rw WHERE rw.repair_id = r.id);
+
+INSERT INTO repair_part_usage (repair_work_id, part_id, quantity, unit_price, created_at)
+SELECT rw.id,
+       p.id,
+       1,
+       r.final_amount - r.labor_rate,
+       rw.created_at
+FROM repair_work rw
+         JOIN repair r ON r.id = rw.repair_id
+         JOIN as_reception ar ON ar.id = r.as_reception_id
+         JOIN product pr ON pr.id = ar.product_id
+         JOIN product_model pm ON pm.id = pr.product_model_id
+         JOIN part p ON p.name = CASE
+             WHEN pm.category = 'PHONE' AND ar.symptom = '전원 불량' THEN '스마트폰 USB-C 충전 포트 기판'
+             WHEN pm.category = 'PHONE' AND ar.symptom = '배터리 소모' THEN '스마트폰 리튬이온 배터리 팩'
+             WHEN pm.category = 'PHONE' AND ar.symptom = '화면 파손' THEN '스마트폰 OLED 디스플레이 모듈'
+             WHEN pm.category = 'PHONE' AND ar.symptom = '키보드 불량' THEN '스마트폰 전원 버튼 플렉스 케이블'
+             WHEN pm.category = 'PHONE' THEN '스마트폰 방열 구리 플레이트'
+             WHEN ar.symptom = '전원 불량' THEN '65W USB-C PD 노트북 전원 어댑터 (20V 3.25A, 1.8m 케이블, 한국형 플러그)'
+             WHEN ar.symptom = '배터리 소모' THEN '노트북 내장 리튬이온 배터리 팩 (11.55V, 50Wh, 3셀, 4핀 커넥터)'
+             WHEN ar.symptom = '화면 파손' THEN '14인치 FHD IPS 노트북 LCD 패널 모듈 (1920x1080, 30핀 eDP, 무광, 슬림 베젤)'
+             WHEN ar.symptom = '키보드 불량' THEN '노트북 팜레스트 일체형 한국어 키보드 모듈 (펜타그래프, 화이트 백라이트, 스크류 고정형)'
+             ELSE '노트북 CPU 쿨링팬 (4핀 PWM, 좌측 배기, 방진 고무 마운트 포함)'
+         END
+            AND p.status = 'ACTIVE'
+WHERE ar.reception_number LIKE 'AS-STAT-%'
+  AND ar.status IN ('COMPLETED', 'AWAITING_PAYMENT')
+  AND NOT EXISTS (SELECT 1 FROM repair_part_usage u WHERE u.repair_work_id = rw.id AND u.part_id = p.id);
 
 INSERT INTO as_status_history (as_reception_id, from_status, to_status, reason, changed_by, created_at)
 SELECT ar.id,
@@ -2035,7 +2309,7 @@ SELECT ar.id,
        ar.receptionist_id,
        DATE_ADD(s.created_at, INTERVAL 2 HOUR)
 FROM stat_seed s
-         JOIN as_reception ar ON ar.reception_number = s.reception_number
+         JOIN as_reception ar ON ar.reception_number = s.reception_number COLLATE utf8mb4_unicode_ci
 WHERE s.status = 'COMPLETED'
   AND NOT EXISTS (SELECT 1
                   FROM as_status_history h
@@ -2050,7 +2324,7 @@ SELECT ar.id,
        ar.technician_id,
        s.complete_at
 FROM stat_seed s
-         JOIN as_reception ar ON ar.reception_number = s.reception_number
+         JOIN as_reception ar ON ar.reception_number = s.reception_number COLLATE utf8mb4_unicode_ci
 WHERE s.status = 'COMPLETED'
   AND NOT EXISTS (SELECT 1
                   FROM as_status_history h
@@ -2069,7 +2343,7 @@ SELECT ar.id,
        ar.receptionist_id,
        ar.receptionist_id
 FROM stat_seed s
-         JOIN as_reception ar ON ar.reception_number = s.reception_number
+         JOIN as_reception ar ON ar.reception_number = s.reception_number COLLATE utf8mb4_unicode_ci
 WHERE s.status IN ('COMPLETED', 'AWAITING_PAYMENT')
   AND NOT EXISTS (SELECT 1 FROM payment_bill pb WHERE pb.as_reception_id = ar.id);
 
@@ -2085,10 +2359,11 @@ SELECT pb.id,
        s.created_at,
        s.complete_at
 FROM stat_seed s
-         JOIN as_reception ar ON ar.reception_number = s.reception_number
+         JOIN as_reception ar ON ar.reception_number = s.reception_number COLLATE utf8mb4_unicode_ci
          JOIN payment_bill pb ON pb.as_reception_id = ar.id
 WHERE s.status = 'COMPLETED'
-  AND NOT EXISTS (SELECT 1 FROM payment_attempt pa WHERE pa.order_id = CONCAT('STAT-ORDER-', s.reception_number));
+  AND NOT EXISTS (SELECT 1 FROM payment_attempt pa
+                  WHERE pa.order_id = CONCAT('STAT-ORDER-', s.reception_number) COLLATE utf8mb4_unicode_ci);
 
 INSERT INTO payment_refund (payment_attempt_id, transaction_key, cancel_amount, cancel_reason, status, canceled_at,
                             created_at, updated_at, created_by, updated_by)
@@ -2103,12 +2378,13 @@ SELECT pa.id,
        ar.receptionist_id,
        ar.receptionist_id
 FROM stat_seed s
-         JOIN as_reception ar ON ar.reception_number = s.reception_number
-         JOIN payment_attempt pa ON pa.order_id = CONCAT('STAT-ORDER-', s.reception_number)
+         JOIN as_reception ar ON ar.reception_number = s.reception_number COLLATE utf8mb4_unicode_ci
+         JOIN payment_attempt pa ON pa.order_id = CONCAT('STAT-ORDER-', s.reception_number) COLLATE utf8mb4_unicode_ci
 WHERE s.status = 'COMPLETED'
   AND s.n MOD 5 = 0
   AND (s.n DIV 5) MOD 3 = 0
-  AND NOT EXISTS (SELECT 1 FROM payment_refund pr WHERE pr.transaction_key = CONCAT('STAT-REFUND-', s.reception_number));
+  AND NOT EXISTS (SELECT 1 FROM payment_refund pr
+                  WHERE pr.transaction_key = CONCAT('STAT-REFUND-', s.reception_number) COLLATE utf8mb4_unicode_ci);
 
 INSERT INTO shipment (as_reception_id, return_method, recipient_name, recipient_phone, address, address_detail,
                       courier, courier_code, tracking_number, status, shipped_at, completed_at, created_at, updated_at,
@@ -2135,9 +2411,17 @@ SELECT ar.id,
        ar.receptionist_id,
        ar.receptionist_id
 FROM stat_seed s
-         JOIN as_reception ar ON ar.reception_number = s.reception_number
+         JOIN as_reception ar ON ar.reception_number = s.reception_number COLLATE utf8mb4_unicode_ci
          JOIN customer c ON c.id = ar.customer_id
 WHERE s.status = 'COMPLETED'
   AND NOT EXISTS (SELECT 1 FROM shipment sh WHERE sh.as_reception_id = ar.id);
 
 DROP TEMPORARY TABLE IF EXISTS stat_seed;
+
+-- 통계 더미처럼 접수 INSERT 이후에 생긴 건도 고객 안내 링크를 발급한다.
+INSERT INTO customer_portal_link (as_reception_id, token, expires_at)
+SELECT ar.id,
+       CONCAT('fixgo-portal-', ar.id),
+       DATE_ADD(NOW(), INTERVAL 30 DAY)
+FROM as_reception ar
+WHERE NOT EXISTS (SELECT 1 FROM customer_portal_link link WHERE link.as_reception_id = ar.id);

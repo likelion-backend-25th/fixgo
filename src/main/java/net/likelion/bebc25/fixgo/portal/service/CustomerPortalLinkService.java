@@ -3,6 +3,7 @@ package net.likelion.bebc25.fixgo.portal.service;
 import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
+import net.likelion.bebc25.fixgo.portal.dto.CustomerPortalLinkResponse;
 import net.likelion.bebc25.fixgo.portal.entity.CustomerPortalLink;
 import net.likelion.bebc25.fixgo.portal.exception.PortalErrorCode;
 import net.likelion.bebc25.fixgo.portal.exception.PortalException;
@@ -44,6 +45,16 @@ public class CustomerPortalLinkService {
         LocalDateTime expiresAt = LocalDateTime.now().plusDays(validDays);
         customerPortalLinkRepository.save(CustomerPortalLink.create(asReception, token, expiresAt));
         return token;
+    }
+
+    /**
+     * 접수에 발급된 고객 안내 링크를 조회한다.
+     */
+    @Transactional(readOnly = true)
+    public CustomerPortalLinkResponse getLink(Long asReceptionId) {
+        CustomerPortalLink link = customerPortalLinkRepository.findByAsReceptionId(asReceptionId)
+                .orElseThrow(() -> new PortalException(PortalErrorCode.LINK_NOT_FOUND, "발급된 고객 안내 링크가 없습니다."));
+        return CustomerPortalLinkResponse.from(link);
     }
 
     /**
