@@ -1,0 +1,25 @@
+info:
+  name: AI 동작 테스트
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{baseUrl}}/ai/chat/stream"
+  headers:
+    - name: Accept
+      value: text/event-stream
+  body:
+    type: json
+    data: |-
+      {
+        "text":"아까 보낸 숫자들 중에 1 ~ 9 까지 중 빠진 숫자가 있어?"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
