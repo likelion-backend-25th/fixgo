@@ -3,6 +3,7 @@ package net.likelion.bebc25.fixgo.portal.service;
 import jakarta.persistence.EntityManager;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.config.JpaConfig;
+import net.likelion.bebc25.fixgo.portal.dto.CustomerPortalLinkResponse;
 import net.likelion.bebc25.fixgo.portal.entity.CustomerPortalLink;
 import net.likelion.bebc25.fixgo.portal.exception.PortalErrorCode;
 import net.likelion.bebc25.fixgo.portal.exception.PortalException;
@@ -81,6 +82,31 @@ class CustomerPortalLinkServiceTest {
         void receptionNotFound() {
             assertThatThrownBy(() -> customerPortalLinkService.createLink(-1L))
                     .isInstanceOf(IllegalStateException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("getLink")
+    class GetLink {
+
+        @Test
+        @DisplayName("발급된 토큰과 만료 시각을 반환한다.")
+        void returnsIssuedLink() {
+            String token = customerPortalLinkService.createLink(asReceptionId);
+
+            CustomerPortalLinkResponse response = customerPortalLinkService.getLink(asReceptionId);
+
+            assertThat(response.token()).isEqualTo(token);
+            assertThat(response.expiresAt()).isAfter(LocalDateTime.now());
+        }
+
+        @Test
+        @DisplayName("발급된 링크가 없으면 LINK_NOT_FOUND")
+        void notFound() {
+            assertThatThrownBy(() -> customerPortalLinkService.getLink(asReceptionId))
+                    .isInstanceOf(PortalException.class)
+                    .extracting("errorCode")
+                    .isEqualTo(PortalErrorCode.LINK_NOT_FOUND);
         }
     }
 

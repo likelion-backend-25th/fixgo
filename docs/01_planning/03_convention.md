@@ -136,7 +136,6 @@ CourseEnrollmentExpiredException("수강 기간이 만료되었습니다.");
 
 - Controller 계층:
     - 클라이언트 요청 파라미터 바인딩 및 `@Valid` 기반 유효성 검증 수행.
-    - Service 계층 호출 후 표준 응답 규격(`CommonResponse<T>`)으로 감싸서 반환.
     - 비즈니스 로직 및 직접적인 데이터 조작 일체 금지.
 - Service 계층:
     - 비즈니스 흐름 제어, 도메인 상태 변경, 트랜잭션 경계 설정.

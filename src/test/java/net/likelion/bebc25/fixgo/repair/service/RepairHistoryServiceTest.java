@@ -71,6 +71,7 @@ class RepairHistoryServiceTest {
         given(repair.getTechnician()).willReturn(technician);
         given(technician.getName()).willReturn("테스트 기사");
         given(repair.getWorkNote()).willReturn("교체 후 동작 확인");
+        given(repair.getLaborRate()).willReturn(30000);
         given(repair.getFinalAmount()).willReturn(90000);
         given(repairWorkRepository.findByRepairId(repairId)).willReturn(List.of(work));
         given(repairPartUsageRepository.findByRepairWorkIdIn(List.of(workId))).willReturn(List.of(usage));
@@ -87,6 +88,7 @@ class RepairHistoryServiceTest {
         assertThat(response.technicianName()).isEqualTo("테스트 기사");
         assertThat(response.workNote()).isEqualTo("교체 후 동작 확인");
         assertThat(response.issuedAt()).isNotNull();
+        assertThat(response.laborCost()).isEqualTo(30000);
         assertThat(response.finalAmount()).isEqualTo(90000);
         assertThat(response.repairWorks()).singleElement().satisfies(workResponse -> {
             assertThat(workResponse.workName()).isEqualTo("모터 교체");
