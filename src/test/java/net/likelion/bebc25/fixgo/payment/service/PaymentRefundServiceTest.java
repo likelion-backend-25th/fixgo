@@ -131,4 +131,31 @@ class PaymentRefundServiceTest {
         PaymentAttempt attempt = paymentAttemptRepository.findById(refund.getPaymentAttempt().getId()).orElseThrow();
         assertThat(attempt.getStatus()).isEqualTo(PaymentAttemptStatus.DONE);
     }
+
+    @Test
+    @DisplayName("현금 환불: 토스 호출 없이 준비 단계에서 바로 완료되고 청구서는 REFUNDED가 된다.")
+    void prepareRefund_cashCompletesImmediately() {
+        // given: 현장 현금 결제 완료
+        PaymentBill bill = paymentBillRepository.save(PaymentBill.create(reception, 30_000L, PaymentBillType.REPAIR));
+        paymentAttemptService.payByCash(bill.getId(), MEMBER_ID);
+        em.flush();
+        em.clear();
+
+        // when
+        RefundDto.PreparedRefund prepared =
+                paymentRefundService.prepareRefund(bill.getId(), MEMBER_ID, CARD_REFUND_REQUEST);
+        em.flush();
+        em.clear();
+
+        // then: 퍼사드가 토스를 부르지 않도록 완료 표시
+        assertThat(prepared.completed()).isTrue();
+        assertThat(prepared.paymentKey()).isNull();
+
+        // then: 환불 기록은 바로 DONE, 청구서는 REFUNDED
+        PaymentRefund refund = paymentRefundRepository.findById(prepared.refundId()).orElseThrow();
+        assertThat(refund.getStatus()).isEqualTo(PaymentRefundStatus.DONE);
+        assertThat(refund.getCanceledAt()).isNotNull();
+        assertThat(paymentBillRepository.findById(bill.getId()).orElseThrow().getStatus())
+                .isEqualTo(PaymentBillStatus.REFUNDED);
+    }
 }

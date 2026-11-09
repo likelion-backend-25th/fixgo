@@ -60,6 +60,35 @@ public class PaymentAttemptService {
     }
 
     /**
+     * 현장 현금 결제. 직원이 처리하며 결제 시도는 바로 DONE, 청구서는 PAID가 된다.
+     * 진행 중인 온라인 결제나 발급된 가상계좌가 있으면 막는다. 가상계좌는 토스에서 먼저 취소해야 이중 결제가 안 생긴다.
+     * 고객이 열어둔 READY 시도는 재사용한다. 이후 고객이 결제창에서 승인을 시도해도 prepareConfirm에서 막힌다.
+     */
+    @Transactional
+    public void payByCash(Long billId, Long staffId) {
+        PaymentBill bill = paymentBillRepository.findByIdForUpdate(billId)
+                .orElseThrow(() -> new PaymentException(PaymentErrorCode.BILL_NOT_FOUND, "Bill이 존재하지 않습니다."));
+
+        if (bill.getStatus() != PaymentBillStatus.UNPAID) {
+            throw new PaymentException(PaymentErrorCode.BILL_NOT_PAYABLE, "결제할 수 없는 Bill입니다.");
+        }
+
+        List<PaymentAttempt> attempts = paymentAttemptRepository.findAllByPaymentBillId(billId);
+        if (attempts.stream().anyMatch(a -> a.getStatus().blocksNewAttempt())) {
+            throw new PaymentException(PaymentErrorCode.PAYMENT_IN_PROGRESS,
+                    "진행 중인 결제나 발급된 가상계좌가 있습니다. 가상계좌는 먼저 취소해 주세요.");
+        }
+
+        PaymentAttempt attempt = attempts.stream()
+                .filter(a -> a.getStatus() == PaymentAttemptStatus.READY)
+                .findFirst()
+                .orElseGet(() -> paymentAttemptRepository.save(PaymentAttempt.create(bill)));
+
+        attempt.markCashDone(staffId);
+        bill.markPaid(attempt.getApprovedAt());
+    }
+
+    /**
      * 승인 준비: 승인 가능한 상태인지 검증하고 IN_PROGRESS로 바꾼다.
      */
     @Transactional
