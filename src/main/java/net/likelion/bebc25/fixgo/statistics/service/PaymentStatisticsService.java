@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -20,7 +21,8 @@ public class PaymentStatisticsService {
     private final PaymentStatisticsRepository paymentStatisticsRepository;
 
     // 결제 통계 조회
-    public PaymentStatisticsDto getPaymentStatistics(LocalDate startDate, LocalDate endDate) {
+    public PaymentStatisticsDto.PaymentStatisticsResponse getPaymentStatistics(LocalDate startDate,
+                                                                               LocalDate endDate) {
         // 날짜 유효성 검사
         if (startDate == null || endDate == null) {
             throw new IllegalArgumentException("조회 시작일과 종료일은 필수입니다.");
@@ -48,7 +50,11 @@ public class PaymentStatisticsService {
         // 순수 수납액 계산 (결제와 환불이 각각 발생한 시점을 기준으로 계산)
         Long netCollectedAmount = totalPaidAmount - totalRefundAmount;
 
-        return new PaymentStatisticsDto(startDate, endDate, totalPaidAmount, totalRefundAmount, netCollectedAmount,
-                                        unpaidCount);
+        return new PaymentStatisticsDto.PaymentStatisticsResponse(startDate, endDate, totalPaidAmount,
+                                                                  totalRefundAmount, netCollectedAmount, unpaidCount);
+    }
+
+    public List<PaymentStatisticsDto.UnpaidBillResponse> getUnpaidBills() {
+        return paymentStatisticsRepository.findUnpaidBills();
     }
 }

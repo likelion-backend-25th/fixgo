@@ -79,7 +79,8 @@ class PaymentStatisticsServiceTest {
         createDoneAttempt(bill2, "payment_key_2", LocalDateTime.of(2026, 10, 20, 15, 30));
 
         // when
-        PaymentStatisticsDto response = paymentStatisticsService.getPaymentStatistics(startDate, endDate);
+        PaymentStatisticsDto.PaymentStatisticsResponse response = paymentStatisticsService.getPaymentStatistics(
+                startDate, endDate);
 
         // then
         assertThat(response.startDate()).isEqualTo(startDate);
