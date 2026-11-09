@@ -21,7 +21,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<TokenDto.Response> login(
-            @RequestBody LoginDto.LoginRequest request
+            @RequestBody @Valid LoginDto.LoginRequest request
     ) {
         return ResponseEntity.ok(loginService.login(request));
     }

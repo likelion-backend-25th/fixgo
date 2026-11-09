@@ -1,5 +1,7 @@
 package net.likelion.bebc25.fixgo.auth.dto;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.entity.Role;
 import net.likelion.bebc25.fixgo.auth.entity.Status;
@@ -7,13 +9,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 public class MemberDto {
     public record CreateRequest(
-            String email,
-            String password,
-            String name,
-            String phone,
-            String address,
-            Role role,
-            String profileImgUrl
+            @Email @NotNull String email,
+            @NotNull String password,
+            @NotNull String name,
+            @NotNull String phone,
+            @NotNull String address,
+            @NotNull Role role,
+            @NotNull String profileImgUrl
     ) {
         public Member toEntity(PasswordEncoder passwordEncoder) {
             String passwordHash = passwordEncoder.encode(password);
@@ -28,26 +30,26 @@ public class MemberDto {
     ) {}
 
     public record StatusChangeRequest(
-            String email,
-            Status status
+            @Email @NotNull String email,
+            @NotNull Status status
     ) {}
 
     public record RoleChangeRequest(
-            String email,
-            Role role
+            @Email @NotNull String email,
+            @NotNull Role role
     ) {}
 
     public record PasswordUpdateRequest(
-            String email,
-            String password
+            @Email @NotNull String email,
+            @NotNull String password
     ) {}
 
     public record ProfileUpdateRequest(
-            String email,
-            String name,
-            String phone,
-            String address,
-            String profileImgUrl
+            @Email @NotNull String email,
+            @NotNull String name,
+            @NotNull String phone,
+            @NotNull String address,
+            @NotNull String profileImgUrl
     ) {}
 
     public record BriefResponse(
