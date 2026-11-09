@@ -27,8 +27,9 @@ public class ModelStatisticsService {
                 AsReceptionStatus.COMPLETED, startDateTime, endDateTime);
 
         return statistics.stream().map(statistic -> {
-            List<ModelStatisticsRepository.ModelSymptomStatistics> symptoms = modelStatisticsRepository.findModelSymptomStatistics(
-                    statistic.getModelId(), startDateTime, endDateTime);
+            List<ModelStatisticsRepository.ModelSymptomStatistics> symptoms =
+                    modelStatisticsRepository.findModelSymptomStatistics(
+                            statistic.getModelId(), startDateTime, endDateTime);
 
             String mainSymptom = symptoms.isEmpty() ? null : symptoms.get(0).getSymptomName();
 
@@ -47,8 +48,8 @@ public class ModelStatisticsService {
         LocalDateTime startDateTime = startOfPeriod(startDate, endDate);
         LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay();
 
-        List<ModelStatisticsRepository.ModelSymptomStatistics> statistics = modelStatisticsRepository.findModelSymptomStatistics(
-                modelId, startDateTime, endDateTime);
+        List<ModelStatisticsRepository.ModelSymptomStatistics> statistics =
+                modelStatisticsRepository.findModelSymptomStatistics(modelId, startDateTime, endDateTime);
 
         long totalCount = statistics.stream().mapToLong(ModelStatisticsRepository.ModelSymptomStatistics::getCount)
                                     .sum();

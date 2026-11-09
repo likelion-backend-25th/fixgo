@@ -27,23 +27,27 @@ public class TechnicianStatisticsService {
         LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay();
 
         // 기사별 배정, 완료, 진행 건수 조회
-        List<TechnicianStatisticsRepository.TechnicianStatistics> statistics = technicianStatisticsRepository.findTechnicianStatistics(
-                Role.ROLE_TECHNICIAN, AsReceptionStatus.COMPLETED, startDateTime, endDateTime);
+        List<TechnicianStatisticsRepository.TechnicianStatistics> statistics =
+                technicianStatisticsRepository.findTechnicianStatistics(
+                        Role.ROLE_TECHNICIAN, AsReceptionStatus.COMPLETED, startDateTime, endDateTime);
 
         // 기사별 승인 완료 매출 조회
-        Map<Long, Long> revenueMap = technicianStatisticsRepository.findTechnicianRevenue(PaymentAttemptStatus.DONE,
-                                                                                         startDateTime, endDateTime)
-                                                                   .stream().collect(
-                        Collectors.toMap(TechnicianStatisticsRepository.TechnicianRevenue::getTechnicianId,
-                                         TechnicianStatisticsRepository.TechnicianRevenue::getRevenue));
+        Map<Long, Long> revenueMap = technicianStatisticsRepository
+                .findTechnicianRevenue(PaymentAttemptStatus.DONE, startDateTime, endDateTime)
+                .stream()
+                .collect(Collectors.toMap(
+                        TechnicianStatisticsRepository.TechnicianRevenue::getTechnicianId,
+                        TechnicianStatisticsRepository.TechnicianRevenue::getRevenue
+                ));
 
         // 평균 소요 시간 조회
-        Map<Long, Double> durationMap = technicianStatisticsRepository.findTechnicianAverageDurations(startDateTime,
-                                                                                                     endDateTime)
-                                                                      .stream()
-                                                                      .collect(Collectors.toMap(
-                                                                              TechnicianStatisticsRepository.TechnicianAverageDuration::getTechnicianId,
-                                                                              result -> result.getAverageDurationSeconds() / 60.0));
+        Map<Long, Double> durationMap = technicianStatisticsRepository
+                .findTechnicianAverageDurations(startDateTime, endDateTime)
+                .stream()
+                .collect(Collectors.toMap(
+                        TechnicianStatisticsRepository.TechnicianAverageDuration::getTechnicianId,
+                        result -> result.getAverageDurationSeconds() / 60.0
+                ));
 
         // 통계 데이터 결합
         return statistics.stream().map(statistic -> new TechnicianStatisticsDto(statistic.getTechnicianId(),

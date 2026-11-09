@@ -26,8 +26,8 @@ public class LongPendingStatisticsService {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime threshold = now.minusDays(LONG_PENDING_DAYS);
 
-        List<LongPendingStatisticsRepository.LongPendingStatistics> statistics = longPendingStatisticsRepository.findLongPendingReceptions(
-                AsReceptionStatus.COMPLETED, threshold);
+        List<LongPendingStatisticsRepository.LongPendingStatistics> statistics =
+                longPendingStatisticsRepository.findLongPendingReceptions(AsReceptionStatus.COMPLETED, threshold);
 
         return statistics.stream().map(statistic -> {
             long elapsedDays = ChronoUnit.DAYS.between(statistic.getStatusChangedAt().toLocalDate(), now.toLocalDate());
