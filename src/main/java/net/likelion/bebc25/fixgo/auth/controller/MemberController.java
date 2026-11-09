@@ -1,5 +1,6 @@
 package net.likelion.bebc25.fixgo.auth.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.auth.dto.MemberDto;
 import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
@@ -30,7 +31,7 @@ public class MemberController {
     @PatchMapping("/me/password")
     public ResponseEntity<Void> updatePassword(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestBody MemberDto.PasswordUpdateRequest request
+            @RequestBody @Valid MemberDto.PasswordUpdateRequest request
     ) {
         Long loginMemberId = userDetails.getId();
         memberService.changePassword(loginMemberId, request);
@@ -39,7 +40,7 @@ public class MemberController {
 
     @GetMapping
     public ResponseEntity<Page<MemberDto.BriefResponse>> getMember(
-            @ModelAttribute MemberDto.MemberSearchRequest request,
+            @ModelAttribute @Valid MemberDto.MemberSearchRequest request,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable
     ) {

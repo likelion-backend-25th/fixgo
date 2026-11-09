@@ -1,5 +1,6 @@
 package net.likelion.bebc25.fixgo.auth.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.auth.dto.MemberDto;
 import net.likelion.bebc25.fixgo.auth.service.MemberService;
@@ -18,7 +19,7 @@ public class AdminController {
 
     @PostMapping()
     public ResponseEntity<MemberDto.DetailResponse> createMember(
-            @RequestBody MemberDto.CreateRequest request
+            @RequestBody @Valid MemberDto.CreateRequest request
     ) {
         MemberDto.DetailResponse response = memberService.signup(request);
         return ResponseEntity.created(URI.create("/api/v1/member" + response.id())).body(response);
@@ -26,7 +27,7 @@ public class AdminController {
 
     @PatchMapping("/status")
     public ResponseEntity<MemberDto.BriefResponse> updateStatus(
-            @RequestBody MemberDto.StatusChangeRequest request
+            @RequestBody @Valid MemberDto.StatusChangeRequest request
     ) {
 
         return ResponseEntity.ok(memberService.changeStatus(request));
@@ -34,14 +35,14 @@ public class AdminController {
 
     @PatchMapping("/role")
     public ResponseEntity<MemberDto.BriefResponse> updateRole(
-            @RequestBody MemberDto.RoleChangeRequest request
+            @RequestBody @Valid MemberDto.RoleChangeRequest request
     ) {
         return ResponseEntity.ok(memberService.changeRole(request));
     }
 
     @PatchMapping("/profile")
     public ResponseEntity<MemberDto.DetailResponse> updateProfile(
-            @RequestBody MemberDto.ProfileUpdateRequest request
+            @RequestBody @Valid MemberDto.ProfileUpdateRequest request
     ) {
         return ResponseEntity.ok(memberService.updateProfile(request));
     }
