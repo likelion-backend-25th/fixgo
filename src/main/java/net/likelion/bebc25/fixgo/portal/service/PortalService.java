@@ -1,11 +1,15 @@
 package net.likelion.bebc25.fixgo.portal.service;
 
 import lombok.RequiredArgsConstructor;
+import net.likelion.bebc25.fixgo.as.dto.AsReceptionDto;
+import net.likelion.bebc25.fixgo.as.service.AsReceptionService;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
 import net.likelion.bebc25.fixgo.payment.service.PaymentAttemptService;
 import net.likelion.bebc25.fixgo.payment.service.PaymentFacadeService;
 import net.likelion.bebc25.fixgo.payment.service.PaymentQueryService;
 import net.likelion.bebc25.fixgo.portal.dto.PortalResponse;
+import net.likelion.bebc25.fixgo.repair.dto.repair.CustomerQuoteView;
+import net.likelion.bebc25.fixgo.repair.service.RepairQuoteService;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,10 +19,12 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class PortalService {
+    private final AsReceptionService asReceptionService;
     private final PaymentQueryService paymentQueryService;
     private final CustomerPortalLinkService customerPortalLinkService;
     private final PaymentAttemptService paymentAttemptService;
     private final PaymentFacadeService paymentFacadeService;
+    private final RepairQuoteService repairQuoteService;
 
     /**
      * 토큰이 없거나 만료되면 PortalException이 발생한다.
@@ -26,9 +32,27 @@ public class PortalService {
     public PortalResponse getPortal(String token) {
         Long asReceptionId = customerPortalLinkService.resolveAsReceptionId(token);
 
-        PaymentDto.PaymentSummaryResponse paymentSummary = paymentQueryService.getSummary(asReceptionId);
+        AsReceptionDto.CustomerReceptionView reception = asReceptionService.getCustomerView(asReceptionId);
+        CustomerQuoteView quote = repairQuoteService.findCustomerView(asReceptionId).orElse(null);
+        PaymentDto.CustomerPaymentView payment = paymentQueryService.findCustomerView(asReceptionId).orElse(null);
 
-        return new PortalResponse(paymentSummary);
+        return new PortalResponse(reception, quote, payment);
+    }
+
+    /**
+     * 토큰으로 접수번호를 가져온 후 견적 승인에 넘긴다.
+     */
+    public void approveQuote(String token) {
+        Long asReceptionId = customerPortalLinkService.resolveAsReceptionId(token);
+        repairQuoteService.approveByCustomer(asReceptionId);
+    }
+
+    /**
+     * 토큰으로 접수번호를 가져온 후 견적 거부에 넘긴다. 거부하면 점검비 청구서가 발행된다.
+     */
+    public void rejectQuote(String token) {
+        Long asReceptionId = customerPortalLinkService.resolveAsReceptionId(token);
+        repairQuoteService.rejectByCustomer(asReceptionId);
     }
 
     /**

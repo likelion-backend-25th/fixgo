@@ -1,6 +1,7 @@
 package net.likelion.bebc25.fixgo.as.service;
 
 import lombok.RequiredArgsConstructor;
+import net.likelion.bebc25.fixgo.as.dto.AsReceptionDto;
 import net.likelion.bebc25.fixgo.as.dto.AsStatusHistoryDto;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -37,6 +39,15 @@ public class AsStatusHistoryService {
         return asStatusHistoryRepository.findHistoryByReceptionId(receptionId)
                 .stream()
                 .map(AsStatusHistoryDto::from)
+                .toList();
+    }
+
+    // 고객 포탈용 이력 (상태와 시각만, 최신순)
+    public List<AsReceptionDto.CustomerReceptionView.StatusHistoryItem> getCustomerHistory(Long receptionId) {
+        return asStatusHistoryRepository.findHistoryByReceptionId(receptionId)
+                .stream()
+                .map(AsReceptionDto.CustomerReceptionView.StatusHistoryItem::from)
+                .flatMap(Optional::stream)
                 .toList();
     }
 }

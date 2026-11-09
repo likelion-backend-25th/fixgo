@@ -1,6 +1,7 @@
 package net.likelion.bebc25.fixgo.repair.service;
 
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
+import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
 import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
@@ -78,6 +79,7 @@ class RepairStatusServiceTest {
     void changeDiagnosingToRequested() {
         prepareStatusChange(RepairStatus.DIAGNOSING);
         prepareValidStatusChange();
+        when(asReception.getStatus()).thenReturn(AsReceptionStatus.INSPECTION);
 
         repairStatusService.changeStatus(
                 repair,
@@ -96,6 +98,16 @@ class RepairStatusServiceTest {
                 null,
                 changedBy
         );
+
+        // 접수 상태도 함께 바뀌고 별도 이력이 남는다.
+        verify(asReception).changeStatus(AsReceptionStatus.AWAITING_QUOTE_APPROVAL);
+        verify(asStatusHistoryService).record(
+                asReception,
+                "INSPECTION",
+                "AWAITING_QUOTE_APPROVAL",
+                null,
+                changedBy
+        );
     }
 
     @Test
@@ -103,6 +115,7 @@ class RepairStatusServiceTest {
     void changeRequestedToApproved() {
         prepareStatusChange(RepairStatus.REQUESTED);
         prepareValidStatusChange();
+        when(asReception.getStatus()).thenReturn(AsReceptionStatus.AWAITING_QUOTE_APPROVAL);
 
         repairStatusService.changeStatus(
                 repair,
@@ -119,6 +132,16 @@ class RepairStatusServiceTest {
                 null,
                 changedBy
         );
+
+        // 접수 상태도 함께 바뀌고 별도 이력이 남는다.
+        verify(asReception).changeStatus(AsReceptionStatus.AWAITING_REPAIR);
+        verify(asStatusHistoryService).record(
+                asReception,
+                "AWAITING_QUOTE_APPROVAL",
+                "AWAITING_REPAIR",
+                null,
+                changedBy
+        );
     }
 
     @Test
@@ -126,6 +149,7 @@ class RepairStatusServiceTest {
     void changeRequestedToRejected() {
         prepareStatusChange(RepairStatus.REQUESTED);
         prepareValidStatusChange();
+        when(asReception.getStatus()).thenReturn(AsReceptionStatus.AWAITING_QUOTE_APPROVAL);
 
         repairStatusService.changeStatus(
                 repair,
@@ -142,6 +166,16 @@ class RepairStatusServiceTest {
                 null,
                 changedBy
         );
+
+        // 접수 상태도 함께 바뀌고 별도 이력이 남는다.
+        verify(asReception).changeStatus(AsReceptionStatus.AWAITING_PAYMENT);
+        verify(asStatusHistoryService).record(
+                asReception,
+                "AWAITING_QUOTE_APPROVAL",
+                "AWAITING_PAYMENT",
+                null,
+                changedBy
+        );
     }
 
     @Test
@@ -149,6 +183,7 @@ class RepairStatusServiceTest {
     void changeApprovedToRepairing() {
         prepareStatusChange(RepairStatus.APPROVED);
         prepareValidStatusChange();
+        when(asReception.getStatus()).thenReturn(AsReceptionStatus.AWAITING_REPAIR);
 
         repairStatusService.changeStatus(
                 repair,
@@ -162,6 +197,16 @@ class RepairStatusServiceTest {
                 asReception,
                 "APPROVED",
                 "REPAIRING",
+                null,
+                changedBy
+        );
+
+        // 접수 상태도 함께 바뀌고 별도 이력이 남는다.
+        verify(asReception).changeStatus(AsReceptionStatus.REPAIR_IN_PROGRESS);
+        verify(asStatusHistoryService).record(
+                asReception,
+                "AWAITING_REPAIR",
+                "REPAIR_IN_PROGRESS",
                 null,
                 changedBy
         );
@@ -188,6 +233,23 @@ class RepairStatusServiceTest {
                 null,
                 changedBy
         );
+
+        // 수리 완료는 아직 접수 상태 전환이 정해지지 않아 접수 상태를 바꾸지 않는다.
+        verify(asReception, never()).changeStatus(any());
+    }
+
+    @Test
+    @DisplayName("접수 상태가 이미 목표 상태면 수리 이력만 남기고 접수 이력은 중복으로 남기지 않는다.")
+    void skipReceptionHistoryWhenAlreadySynced() {
+        prepareStatusChange(RepairStatus.APPROVED);
+        prepareValidStatusChange();
+        when(asReception.getStatus()).thenReturn(AsReceptionStatus.REPAIR_IN_PROGRESS);
+
+        repairStatusService.changeStatus(repair, RepairStatus.REPAIRING, updatedBy);
+
+        verify(asStatusHistoryService).record(asReception, "APPROVED", "REPAIRING", null, changedBy);
+        verify(asReception, never()).changeStatus(any());
+        verifyNoMoreInteractions(asStatusHistoryService);
     }
 
     @Test

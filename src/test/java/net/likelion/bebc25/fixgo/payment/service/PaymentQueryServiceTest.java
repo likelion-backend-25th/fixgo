@@ -69,14 +69,9 @@ class PaymentQueryServiceTest {
     }
 
     @Test
-    @DisplayName("청구서가 없으면 NOT_ISSUED이고 나머지 값은 모두 비어 있다.")
+    @DisplayName("청구서가 없으면 결제 영역이 비어 있다.")
     void notIssued() {
-        PaymentDto.PaymentSummaryResponse summary = paymentQueryService.getSummary(asReceptionId);
-
-        assertThat(summary.status()).isEqualTo(PaymentDto.PaymentSummaryResponse.Status.NOT_ISSUED);
-        assertThat(summary.amount()).isNull();
-        assertThat(summary.paymentMethod()).isNull();
-        assertThat(summary.paidAt()).isNull();
+        assertThat(paymentQueryService.findCustomerView(asReceptionId)).isEmpty();
     }
 
     @Test
@@ -84,9 +79,9 @@ class PaymentQueryServiceTest {
     void unpaid() {
         issueBill();
 
-        PaymentDto.PaymentSummaryResponse summary = paymentQueryService.getSummary(asReceptionId);
+        PaymentDto.CustomerPaymentView summary = paymentQueryService.findCustomerView(asReceptionId).orElseThrow();
 
-        assertThat(summary.status()).isEqualTo(PaymentDto.PaymentSummaryResponse.Status.UNPAID);
+        assertThat(summary.status()).isEqualTo(PaymentDto.CustomerPaymentView.Status.UNPAID);
         assertThat(summary.orderName()).isEqualTo("A/S 수리비");
         assertThat(summary.amount()).isEqualTo(30_000L);
         assertThat(summary.paymentMethod()).isNull();
@@ -99,9 +94,9 @@ class PaymentQueryServiceTest {
         PaymentBill bill = issueBill();
         paymentAttemptService.startPayment(asReceptionId);
 
-        PaymentDto.PaymentSummaryResponse summary = paymentQueryService.getSummary(asReceptionId);
+        PaymentDto.CustomerPaymentView summary = paymentQueryService.findCustomerView(asReceptionId).orElseThrow();
 
-        assertThat(summary.status()).isEqualTo(PaymentDto.PaymentSummaryResponse.Status.UNPAID);
+        assertThat(summary.status()).isEqualTo(PaymentDto.CustomerPaymentView.Status.UNPAID);
     }
 
     @Test
@@ -117,10 +112,10 @@ class PaymentQueryServiceTest {
         em.clear();
 
         // when
-        PaymentDto.PaymentSummaryResponse summary = paymentQueryService.getSummary(asReceptionId);
+        PaymentDto.CustomerPaymentView summary = paymentQueryService.findCustomerView(asReceptionId).orElseThrow();
 
         // then
-        assertThat(summary.status()).isEqualTo(PaymentDto.PaymentSummaryResponse.Status.PAID);
+        assertThat(summary.status()).isEqualTo(PaymentDto.CustomerPaymentView.Status.PAID);
         assertThat(summary.amount()).isEqualTo(30_000L);
         assertThat(summary.paymentMethod()).isEqualTo(PaymentMethod.CARD);
         assertThat(summary.paidAt()).isEqualTo(LocalDateTime.of(2026, 11, 2, 15, 30));
@@ -136,7 +131,7 @@ class PaymentQueryServiceTest {
         em.clear();
 
         // when & then
-        assertThatThrownBy(() -> paymentQueryService.getSummary(asReceptionId))
+        assertThatThrownBy(() -> paymentQueryService.findCustomerView(asReceptionId))
                 .isInstanceOf(IllegalStateException.class);
     }
 
@@ -154,10 +149,10 @@ class PaymentQueryServiceTest {
         em.clear();
 
         // when
-        PaymentDto.PaymentSummaryResponse summary = paymentQueryService.getSummary(asReceptionId);
+        PaymentDto.CustomerPaymentView summary = paymentQueryService.findCustomerView(asReceptionId).orElseThrow();
 
         // then
-        assertThat(summary.status()).isEqualTo(PaymentDto.PaymentSummaryResponse.Status.WAITING_FOR_DEPOSIT);
+        assertThat(summary.status()).isEqualTo(PaymentDto.CustomerPaymentView.Status.WAITING_FOR_DEPOSIT);
         assertThat(summary.amount()).isEqualTo(30_000L);
         assertThat(summary.paymentMethod()).isEqualTo(PaymentMethod.VIRTUAL_ACCOUNT);
         assertThat(summary.paidAt()).isNull();
@@ -180,7 +175,7 @@ class PaymentQueryServiceTest {
         em.clear();
 
         // when & then
-        assertThatThrownBy(() -> paymentQueryService.getSummary(asReceptionId))
+        assertThatThrownBy(() -> paymentQueryService.findCustomerView(asReceptionId))
                 .isInstanceOf(IllegalStateException.class);
     }
 }
