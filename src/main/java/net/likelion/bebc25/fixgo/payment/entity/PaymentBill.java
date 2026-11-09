@@ -77,6 +77,7 @@ public class PaymentBill extends BaseEntity {
         }
         changeStatus(PaymentBillStatus.PAID);
         this.paidAt = paidAt;
+        asReception.advanceAfterPayment();
     }
 
     // Refunded로 상태를 변경한다.

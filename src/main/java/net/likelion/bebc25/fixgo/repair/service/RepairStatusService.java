@@ -6,8 +6,11 @@ import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
 import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
+import net.likelion.bebc25.fixgo.payment.entity.PaymentBillType;
+import net.likelion.bebc25.fixgo.payment.service.PaymentBillService;
 import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
+import net.likelion.bebc25.fixgo.repair.entity.repair.WarrantyResult;
 import net.likelion.bebc25.fixgo.repair.exception.RepairErrorCode;
 import net.likelion.bebc25.fixgo.repair.exception.RepairException;
 import net.likelion.bebc25.fixgo.repair.repository.RepairRepository;
@@ -21,6 +24,7 @@ public class RepairStatusService {
     private final AsStatusHistoryService asStatusHistoryService;
     private final MemberRepository memberRepository;
     private final RepairRepository repairRepository;
+    private final PaymentBillService paymentBillService;
 
     @Transactional
     public void changeStatus(Repair repair, RepairStatus newStatus, String updatedBy) {
@@ -91,6 +95,17 @@ public class RepairStatusService {
 
         // 접수 상태 동기화. 접수 상태 전환은 별도 행으로 남기며, 고객 포탈 진행이력은 이 행만 보여 준다.
         AsReceptionStatus receptionStatus = toReceptionStatus(newStatus);
+        if (newStatus == RepairStatus.COMPLETED
+                && repair.getWarrantyResult() == WarrantyResult.PAID
+                && repair.getFinalAmount() > 0) {
+            paymentBillService.createBill(
+                    asReception.getId(),
+                    (long) repair.getFinalAmount(),
+                    PaymentBillType.REPAIR
+            );
+            receptionStatus = AsReceptionStatus.AWAITING_PAYMENT;
+        }
+
         if (receptionStatus == null) {
             return;
         }
@@ -121,7 +136,7 @@ public class RepairStatusService {
             case APPROVED -> AsReceptionStatus.AWAITING_REPAIR;
             case REJECTED -> AsReceptionStatus.AWAITING_PAYMENT;
             case REPAIRING -> AsReceptionStatus.REPAIR_IN_PROGRESS;
-            // TODO: 수리 완료 시 수리비 청구서 발행과 함께 결제 대기로 전환
+            // 수리 완료 시 청구서를 발행한 건은 changeStatus에서 결제 대기로 전환한다.
             case DIAGNOSING, COMPLETED -> null;
         };
     }
