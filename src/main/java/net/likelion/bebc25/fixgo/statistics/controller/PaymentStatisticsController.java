@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -21,11 +22,16 @@ public class PaymentStatisticsController {
     private final PaymentStatisticsService paymentStatisticsService;
 
     @GetMapping("/payments")
-    public PaymentStatisticsDto getPaymentStatistics(
+    public PaymentStatisticsDto.PaymentStatisticsResponse getPaymentStatistics(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
 
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
     ) {
         return paymentStatisticsService.getPaymentStatistics(startDate, endDate);
+    }
+
+    @GetMapping("/unpaid-bills")
+    public List<PaymentStatisticsDto.UnpaidBillResponse> getUnpaidBills() {
+        return paymentStatisticsService.getUnpaidBills();
     }
 }

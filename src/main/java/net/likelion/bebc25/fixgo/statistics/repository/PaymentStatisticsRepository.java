@@ -4,11 +4,13 @@ import net.likelion.bebc25.fixgo.payment.entity.PaymentAttempt;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentAttemptStatus;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentBillStatus;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentRefundStatus;
+import net.likelion.bebc25.fixgo.statistics.dto.PaymentStatisticsDto;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public interface PaymentStatisticsRepository extends Repository<PaymentAttempt, Long> {
 
@@ -47,4 +49,19 @@ public interface PaymentStatisticsRepository extends Repository<PaymentAttempt, 
     Long countUnpaidBills(
             @Param("billStatus") PaymentBillStatus billStatus
     );
+
+    // 현재 미입금 청구서. 모델명은 제품명, 청구일은 청구서 생성 시각이다.
+    @Query("""
+            select new net.likelion.bebc25.fixgo.statistics.dto.PaymentStatisticsDto$UnpaidBillResponse(
+                b.id, r.receptionNumber, c.name, m.name, b.amount, b.createdAt, b.status
+            )
+            from PaymentBill b
+            join b.asReception r
+            join r.customer c
+            join r.product p
+            left join ProductModel m on m.id = p.productModelId
+            where b.status = net.likelion.bebc25.fixgo.payment.entity.PaymentBillStatus.UNPAID
+            order by b.id desc
+            """)
+    List<PaymentStatisticsDto.UnpaidBillResponse> findUnpaidBills();
 }
