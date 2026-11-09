@@ -1,6 +1,8 @@
 package net.likelion.bebc25.fixgo.repair.service;
 
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
+import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
+import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
 import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
@@ -45,6 +47,9 @@ class RepairServiceTest {
     @Mock
     private RepairStatusService repairStatusService;
 
+    @Mock
+    private AsStatusHistoryService asStatusHistoryService;
+
     private RepairService repairService;
 
     @BeforeEach
@@ -53,7 +58,8 @@ class RepairServiceTest {
                 repairRepository,
                 asReceptionRepository,
                 memberRepository,
-                repairStatusService
+                repairStatusService,
+                asStatusHistoryService
         );
     }
 
@@ -145,6 +151,46 @@ class RepairServiceTest {
         verify(asReceptionRepository).findById(10L);
         verify(memberRepository).findById(20L);
         verify(repairRepository).save(any(Repair.class));
+    }
+
+    @Test
+    @DisplayName("접수 상태에서 수리를 등록하면 점검으로 바뀌고 점검 시작 이력이 남는다.")
+    void createRepairStartsInspectionTest() {
+
+        RepairRequest dto = createRequestDto();
+
+        AsReception asReception = createAsReception();
+        Member technician = createTechnician();
+        Member changedBy = mock(Member.class);
+
+        when(asReception.getStatus()).thenReturn(AsReceptionStatus.RECEIVED);
+        when(asReceptionRepository.findById(10L)).thenReturn(Optional.of(asReception));
+        when(memberRepository.findById(20L)).thenReturn(Optional.of(technician));
+        when(memberRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.of(changedBy));
+
+        repairService.createRepair(dto, TEST_EMAIL);
+
+        verify(asReception).changeStatus(AsReceptionStatus.INSPECTION);
+        verify(asStatusHistoryService).record(asReception, "RECEIVED", "INSPECTION", "점검 시작", changedBy);
+    }
+
+    @Test
+    @DisplayName("이미 점검 이후 상태면 수리 등록 시 접수 상태를 바꾸지 않는다.")
+    void createRepairKeepsLaterStatusTest() {
+
+        RepairRequest dto = createRequestDto();
+
+        AsReception asReception = createAsReception();
+        Member technician = createTechnician();
+
+        when(asReception.getStatus()).thenReturn(AsReceptionStatus.INSPECTION);
+        when(asReceptionRepository.findById(10L)).thenReturn(Optional.of(asReception));
+        when(memberRepository.findById(20L)).thenReturn(Optional.of(technician));
+
+        repairService.createRepair(dto, TEST_EMAIL);
+
+        verify(asReception, never()).changeStatus(any());
+        verifyNoInteractions(asStatusHistoryService);
     }
 
     @Test
@@ -544,6 +590,6 @@ class RepairServiceTest {
                 .findByIdAndTechnician_Id(1L, 1L);
 
         verify(repairStatusService)
-                .changeStatus(repair, RepairStatus.REPAIRING, "technician");
+                .changeStatus(repair, RepairStatus.REPAIRING, "technician", "수리 시작");
     }
 }

@@ -320,7 +320,7 @@ class RepairCostServiceTest {
     }
 
     @Test
-    @DisplayName("기사가 수리비를 확정하면 Repair와 AsReception 상태 변경을 요청한다.")
+    @DisplayName("기사가 수리비를 확정하면 수리 상태를 견적 요청으로 변경한다.")
     void confirmRepairCostSuccess() {
         Long repairId = 1L;
         Long technicianId = 10L;
@@ -354,14 +354,12 @@ class RepairCostServiceTest {
 
         verify(repair).confirmRepairCost();
 
+        // 접수 상태(견적 승인 대기) 변경과 이력은 RepairStatusService가 함께 처리한다.
         verify(repairStatusService).changeStatus(
                 repair,
                 RepairStatus.REQUESTED,
-                username
-        );
-
-        verify(asReception).changeStatus(
-                AsReceptionStatus.AWAITING_QUOTE_APPROVAL
+                username,
+                "수리비 확정"
         );
 
         verify(repairRepository).findByIdWithLock(repairId);

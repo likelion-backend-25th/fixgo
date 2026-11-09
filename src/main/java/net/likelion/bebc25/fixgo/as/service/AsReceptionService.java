@@ -146,6 +146,20 @@ public class AsReceptionService {
         return AsReceptionDto.ReceptionReceiptResponse.from(reception, getModelName(reception));
     }
 
+    // 고객 포탈 접수 영역 조회
+    public AsReceptionDto.CustomerReceptionView getCustomerView(Long id) {
+        AsReception reception = asReceptionRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "존재하지 않는 접수입니다."
+                ));
+
+        return AsReceptionDto.CustomerReceptionView.of(
+                reception,
+                getModelName(reception),
+                asStatusHistoryService.getCustomerHistory(id)
+        );
+    }
+
     private String getModelName(AsReception reception) {
         return productModelRepository
                 .findById(reception.getProduct().getProductModelId())

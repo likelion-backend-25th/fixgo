@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
+import net.likelion.bebc25.fixgo.as.entity.AsStatusHistory;
 import net.likelion.bebc25.fixgo.as.entity.AsTechnicianAssignmentHistory;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.customer.entity.Customer;
@@ -16,6 +17,9 @@ import net.likelion.bebc25.fixgo.shipment.entity.ReturnMethod;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public class AsReceptionDto {
@@ -281,4 +285,66 @@ public class AsReceptionDto {
 
     }
 
+    /**
+     * 고객 포탈 접수 영역.
+     */
+    public record CustomerReceptionView(
+            String receptionNumber,
+            LocalDateTime receivedAt,
+            String customerName,
+            String customerPhone,
+            String modelName,
+            String serialNumber,
+            String symptom,
+            String symptomDetail,
+            AsReceptionStatus status,
+            List<StatusHistoryItem> histories
+    ) {
+        public static CustomerReceptionView of(
+                AsReception reception,
+                String modelName,
+                List<StatusHistoryItem> histories
+        ) {
+            Customer customer = reception.getCustomer();
+
+            return new CustomerReceptionView(
+                    reception.getReceptionNumber(),
+                    reception.getCreatedAt(),
+                    customer.getName(),
+                    customer.getPhone(),
+                    modelName,
+                    reception.getProduct().getSerialNumber(),
+                    reception.getSymptom(),
+                    reception.getSymptomDetail(),
+                    reception.getStatus(),
+                    histories
+            );
+        }
+
+        public record StatusHistoryItem(
+                AsReceptionStatus status,
+                LocalDateTime changedAt
+        ) {
+            /**
+             * 접수 상태 전환 행만 고객에게 보여 준다.
+             * 같은 테이블에 수리 상태 행(예: REPAIRING → COMPLETED)도 쌓이는데, 수리 행의 from은 항상 접수 상태가 아니므로
+             * from(최초 접수는 null)과 to가 모두 접수 상태인 행만 고른다. to만 보면 수리 COMPLETED가 접수 완료로 보인다.
+             */
+            public static Optional<StatusHistoryItem> from(AsStatusHistory history) {
+                boolean fromIsReception = history.getFromStatus() == null
+                        || findReceptionStatus(history.getFromStatus()).isPresent();
+                if (!fromIsReception) {
+                    return Optional.empty();
+                }
+                return findReceptionStatus(history.getToStatus())
+                        .map(status -> new StatusHistoryItem(status, history.getCreatedAt()));
+            }
+
+            private static Optional<AsReceptionStatus> findReceptionStatus(String name) {
+                return Arrays.stream(AsReceptionStatus.values())
+                        .filter(status -> status.name().equals(name))
+                        .findFirst();
+            }
+        }
+    }
 }

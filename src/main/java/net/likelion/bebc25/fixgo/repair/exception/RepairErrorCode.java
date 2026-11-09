@@ -23,6 +23,9 @@ public enum RepairErrorCode implements ErrorCode {
     REPAIR_COST_ALREADY_CONFIRMED(HttpStatus.CONFLICT),
     REPAIR_COST_NOT_CONFIRMED(HttpStatus.CONFLICT),
 
+    // 고객 견적 승인/거부 예외
+    QUOTE_NOT_PENDING(HttpStatus.CONFLICT),
+
     // A/S 접수 예외
     AS_RECEPTION_NOT_FOUND(HttpStatus.NOT_FOUND);
 

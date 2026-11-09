@@ -14,12 +14,29 @@ public class PortalController {
     private final PortalService portalService;
 
     /**
-     * 고객 포탈 화면 데이터를 조회한다.
-     * TODO: 현재는 결제 영역만 있음. 접수, 견적, 점검 영역 추가 필요. PortalService에서  PortalResponse에 모아서 보냄.
+     * 고객 포탈 화면 데이터(접수, 견적, 결제)를 조회한다.
      */
     @GetMapping
     public ResponseEntity<PortalResponse> getPortal(@PathVariable String token) {
         return ResponseEntity.ok(portalService.getPortal(token));
+    }
+
+    /**
+     * 견적을 승인한다. 이후 수리 대기 상태가 된다.
+     */
+    @PostMapping("/quote/approve")
+    public ResponseEntity<Void> approveQuote(@PathVariable String token) {
+        portalService.approveQuote(token);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * 견적을 거부한다. 점검비 청구서가 발행되고 결제 대기 상태가 된다.
+     */
+    @PostMapping("/quote/reject")
+    public ResponseEntity<Void> rejectQuote(@PathVariable String token) {
+        portalService.rejectQuote(token);
+        return ResponseEntity.noContent().build();
     }
 
     /**

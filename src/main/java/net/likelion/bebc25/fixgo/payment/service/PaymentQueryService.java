@@ -116,11 +116,15 @@ public class PaymentQueryService {
         return paymentBillRepository.findPaymentList(normalizedKeyword, status, pageOnly);
     }
 
-    public PaymentDto.PaymentSummaryResponse getSummary(Long asReceptionId) {
-        PaymentBill bill = paymentBillRepository.findByAsReceptionId(asReceptionId).orElse(null);
-        if (bill == null) {
-            return PaymentDto.PaymentSummaryResponse.notIssued();
-        }
+    /**
+     * 고객 포탈 결제 영역. 청구서가 아직 발행되지 않았으면 비어 있다.
+     */
+    public Optional<PaymentDto.CustomerPaymentView> findCustomerView(Long asReceptionId) {
+        return paymentBillRepository.findByAsReceptionId(asReceptionId)
+                .map(this::toCustomerView);
+    }
+
+    private PaymentDto.CustomerPaymentView toCustomerView(PaymentBill bill) {
         return switch (bill.getStatus()) {
             case UNPAID -> {
                 // bill은 입금 전까지 UNPAID다. 입금 대기인지는 attempt를 보고 판단한다.
@@ -128,7 +132,7 @@ public class PaymentQueryService {
                         .findByPaymentBillIdAndStatus(bill.getId(), PaymentAttemptStatus.WAITING_FOR_DEPOSIT);
 
                 if (waitingAttempt.isEmpty()) {
-                    yield PaymentDto.PaymentSummaryResponse.unpaid(bill);
+                    yield PaymentDto.CustomerPaymentView.unpaid(bill);
                 }
 
                 PaymentAttempt attempt = waitingAttempt.get();
@@ -137,18 +141,16 @@ public class PaymentQueryService {
                         .orElseThrow(() -> new IllegalStateException(
                                 "입금 대기 중인 결제 시도에 가상계좌가 없습니다. attemptId=" + attempt.getId()));
 
-                yield PaymentDto.PaymentSummaryResponse.waitingForDeposit(bill, attempt, virtualAccount);
+                yield PaymentDto.CustomerPaymentView.waitingForDeposit(bill, attempt, virtualAccount);
             }
             case PAID -> {
                 PaymentAttempt doneAttempt = paymentAttemptRepository
                         .findByPaymentBillIdAndStatus(bill.getId(), PaymentAttemptStatus.DONE)
                         .orElseThrow(() -> new IllegalStateException("결제 완료된 청구서에 완료된 결제 시도가 없습니다. billId=" + bill.getId()));
-                yield PaymentDto.PaymentSummaryResponse.paid(bill, doneAttempt);
+                yield PaymentDto.CustomerPaymentView.paid(bill, doneAttempt);
             }
             // TODO: 환불 기능 구현 시 고객에게 보여줄 내용
             case REFUNDED -> throw new IllegalStateException("환불은 아직 미구현입니다.");
-
         };
-
     }
 }

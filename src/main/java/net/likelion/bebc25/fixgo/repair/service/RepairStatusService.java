@@ -2,6 +2,7 @@ package net.likelion.bebc25.fixgo.repair.service;
 
 import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
+import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
 import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
@@ -75,19 +76,53 @@ public class RepairStatusService {
                     ));
         }
 
-        String fromStatus = currentStatus.name();
-        String toStatus = newStatus.name();
-
         repair.changeStatus(newStatus);
 
         AsReception asReception = repair.getAsReception();
 
+        // 수리 상태 이력. 기사 통계(수리 소요 시간)가 REPAIRING → COMPLETED 행을 사용하므로 유지한다.
         asStatusHistoryService.record(
                 asReception,
-                fromStatus,
-                toStatus,
+                currentStatus.name(),
+                newStatus.name(),
                 reason,
                 changedBy
         );
+
+        // 접수 상태 동기화. 접수 상태 전환은 별도 행으로 남기며, 고객 포탈 진행이력은 이 행만 보여 준다.
+        AsReceptionStatus receptionStatus = toReceptionStatus(newStatus);
+        if (receptionStatus == null) {
+            return;
+        }
+
+        AsReceptionStatus fromReceptionStatus = asReception.getStatus();
+        if (fromReceptionStatus == receptionStatus) {
+            return;
+        }
+
+        asReception.changeStatus(receptionStatus);
+
+        asStatusHistoryService.record(
+                asReception,
+                fromReceptionStatus.name(),
+                receptionStatus.name(),
+                reason,
+                changedBy
+        );
+    }
+
+    /**
+     * 수리 상태 변경에 따라 바뀌어야 하는 접수 상태. 접수 상태가 바뀌지 않으면 null.
+     * 견적 거부 시에는 점검비를 결제해야 하므로 결제 대기로 보낸다.
+     */
+    static AsReceptionStatus toReceptionStatus(RepairStatus repairStatus) {
+        return switch (repairStatus) {
+            case REQUESTED -> AsReceptionStatus.AWAITING_QUOTE_APPROVAL;
+            case APPROVED -> AsReceptionStatus.AWAITING_REPAIR;
+            case REJECTED -> AsReceptionStatus.AWAITING_PAYMENT;
+            case REPAIRING -> AsReceptionStatus.REPAIR_IN_PROGRESS;
+            // TODO: 수리 완료 시 수리비 청구서 발행과 함께 결제 대기로 전환
+            case DIAGNOSING, COMPLETED -> null;
+        };
     }
 }

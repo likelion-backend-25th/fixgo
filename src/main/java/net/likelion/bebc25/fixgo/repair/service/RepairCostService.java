@@ -5,7 +5,6 @@ import net.likelion.bebc25.fixgo.admin.entity.LaborRate;
 import net.likelion.bebc25.fixgo.admin.entity.RateType;
 import net.likelion.bebc25.fixgo.admin.repository.LaborRateRepository;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
-import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
 import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
 import net.likelion.bebc25.fixgo.auth.entity.Role;
 import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
@@ -244,8 +243,8 @@ public class RepairCostService {
             );
         }
 
-        // A/S 접수 정보 잠금 조회
-        AsReception asReception = asReceptionRepository
+        // A/S 접수 정보 잠금 조회 (접수 상태 변경 전 동시 수정 방지)
+        asReceptionRepository
                 .findByIdWithLock(repair.getAsReception().getId())
                 .orElseThrow(() -> new RepairException(
                         RepairErrorCode.AS_RECEPTION_NOT_FOUND,
@@ -255,16 +254,24 @@ public class RepairCostService {
         // 수리비 확정
         repair.confirmRepairCost();
 
-        // 공통 수리 상태 변경
+        // 공통 수리 상태 변경 (접수 상태는 견적 승인 대기로 함께 바뀌고 이력이 남는다)
         repairStatusService.changeStatus(
                 repair,
                 RepairStatus.REQUESTED,
-                userDetails.getUsername()
+                userDetails.getUsername(),
+                "수리비 확정"
         );
+    }
 
-        // A/S 접수 상태 변경
-        asReception.changeStatus(
-                AsReceptionStatus.AWAITING_QUOTE_APPROVAL
-        );
+    // 견적 거부 시 청구할 점검비 (제품군별 최신 점검비)
+    public int getInspectionCost(Repair repair) {
+        ProductModel productModel = productModelRepository
+                .findById(repair.getAsReception().getProduct().getProductModelId())
+                .orElseThrow(() -> new RepairException(
+                        RepairErrorCode.PRODUCT_MODEL_NOT_FOUND,
+                        "제품 모델을 찾을 수 없습니다."
+                ));
+
+        return getLaborRate(productModel.getCategory(), RateType.INSPECTION_COST);
     }
 }

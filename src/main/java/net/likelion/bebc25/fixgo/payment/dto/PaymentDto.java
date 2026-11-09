@@ -86,14 +86,13 @@ public class PaymentDto {
      * 포털 결제 영역에 보여 줄 현재 결제 상태.
      * 상태에 따라 채워지는 필드가 다르다. 프론트는 status로 화면을 고르고, 해당 화면에서 쓰는 필드만 읽는다.
      * <p>
-     * NOT_ISSUED          : status
      * UNPAID              : status, orderName, amount
      * WAITING_FOR_DEPOSIT : status, orderName, amount, paymentMethod, virtualAccount
      * PAID                : status, orderName, amount, paymentMethod, paidAt
      * <p>
      * 나머지 필드는 null이다. 필드 목록을 상태와 상관없이 같게 유지해 프론트가 하나의 타입으로 받을 수 있게 한다.
      */
-    public record PaymentSummaryResponse(
+    public record CustomerPaymentView(
             Status status,
             String orderName,
             Long amount,
@@ -101,19 +100,8 @@ public class PaymentDto {
             LocalDateTime paidAt,
             VirtualAccountInfo virtualAccount
     ) {
-        public static PaymentSummaryResponse notIssued() {
-            return new PaymentSummaryResponse(
-                    Status.NOT_ISSUED,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null
-            );
-        }
-
-        public static PaymentSummaryResponse unpaid(PaymentBill bill) {
-            return new PaymentSummaryResponse(
+        public static CustomerPaymentView unpaid(PaymentBill bill) {
+            return new CustomerPaymentView(
                     Status.UNPAID,
                     bill.getType().getOrderName(),
                     bill.getAmount(),
@@ -123,8 +111,8 @@ public class PaymentDto {
             );
         }
 
-        public static PaymentSummaryResponse paid(PaymentBill bill, PaymentAttempt doneAttempt) {
-            return new PaymentSummaryResponse(
+        public static CustomerPaymentView paid(PaymentBill bill, PaymentAttempt doneAttempt) {
+            return new CustomerPaymentView(
                     Status.PAID,
                     bill.getType().getOrderName(),
                     bill.getAmount(),
@@ -134,12 +122,12 @@ public class PaymentDto {
             );
         }
 
-        public static PaymentSummaryResponse waitingForDeposit(
+        public static CustomerPaymentView waitingForDeposit(
                 PaymentBill bill,
                 PaymentAttempt attempt,
                 VirtualAccount virtualAccount
         ) {
-            return new PaymentSummaryResponse(
+            return new CustomerPaymentView(
                     Status.WAITING_FOR_DEPOSIT,
                     bill.getType().getOrderName(),
                     bill.getAmount(),
@@ -151,8 +139,8 @@ public class PaymentDto {
             );
         }
 
-        public static PaymentSummaryResponse refunded(PaymentBill bill, PaymentAttempt doneAttempt) {
-            return new PaymentSummaryResponse(
+        public static CustomerPaymentView refunded(PaymentBill bill, PaymentAttempt doneAttempt) {
+            return new CustomerPaymentView(
                     Status.REFUNDED,
                     bill.getType().getOrderName(),
                     bill.getAmount(),
@@ -162,7 +150,7 @@ public class PaymentDto {
             );
         }
 
-        public enum Status {NOT_ISSUED, UNPAID, WAITING_FOR_DEPOSIT, PAID, REFUNDED}
+        public enum Status {UNPAID, WAITING_FOR_DEPOSIT, PAID, REFUNDED}
 
         /**
          * 가상계좌 입금 안내 정보. 고객이 입금할 때 필요한 값만 담는다.

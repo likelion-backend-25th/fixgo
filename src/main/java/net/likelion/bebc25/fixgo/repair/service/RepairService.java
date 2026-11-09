@@ -2,6 +2,8 @@ package net.likelion.bebc25.fixgo.repair.service;
 
 import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
+import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
+import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
 import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
@@ -26,6 +28,7 @@ public class RepairService {
     private final AsReceptionRepository asReceptionRepository;
     private final MemberRepository memberRepository;
     private final RepairStatusService repairStatusService;
+    private final AsStatusHistoryService asStatusHistoryService;
 
     // 수리 등록
     @Transactional
@@ -51,6 +54,19 @@ public class RepairService {
 
         // 수리 정보 저장
         repairRepository.save(repair);
+
+        // 수리 등록 = 점검 시작. 접수 상태를 점검으로 바꾸고 이력을 남긴다.
+        if (asReception.getStatus() == AsReceptionStatus.RECEIVED) {
+            Member changedBy = createdBy == null ? null : memberRepository.findByEmail(createdBy).orElse(null);
+            asReception.changeStatus(AsReceptionStatus.INSPECTION);
+            asStatusHistoryService.record(
+                    asReception,
+                    AsReceptionStatus.RECEIVED.name(),
+                    AsReceptionStatus.INSPECTION.name(),
+                    "점검 시작",
+                    changedBy
+            );
+        }
 
         return new RepairMessageResponse("수리 정보가 등록되었습니다.");
     }
@@ -132,8 +148,8 @@ public class RepairService {
         Repair repair = repairRepository.findByIdAndTechnician_Id(id, technicianId)
                 .orElseThrow(() -> new IllegalArgumentException("본인에게 배정된 수리 건이 아닙니다."));
 
-        // 기존 상태 전이 로직 재사용
-        repairStatusService.changeStatus(repair, RepairStatus.REPAIRING, updatedBy);
+        // 기존 상태 전이 로직 재사용 (접수 상태는 수리 중으로 함께 바뀐다)
+        repairStatusService.changeStatus(repair, RepairStatus.REPAIRING, updatedBy, "수리 시작");
     }
 
     // 수리 상태 변경
