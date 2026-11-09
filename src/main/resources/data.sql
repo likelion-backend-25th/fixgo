@@ -2481,3 +2481,46 @@ SELECT ar.id,
        DATE_ADD(NOW(), INTERVAL 30 DAY)
 FROM as_reception ar
 WHERE NOT EXISTS (SELECT 1 FROM customer_portal_link link WHERE link.as_reception_id = ar.id);
+
+INSERT INTO repair_preset_part (quantity, part_id, repair_preset_id)
+SELECT
+    v.quantity,
+    v.part_id,
+    rp.id
+FROM (
+         SELECT '전원 불량' AS preset_name, 22 AS part_id, 1 AS quantity
+         UNION ALL SELECT '전원 불량', 7, 1
+
+         UNION ALL SELECT '충전 불량', 8, 1
+
+         UNION ALL SELECT '화면 깜빡임', 2, 1
+
+         UNION ALL SELECT '키보드 불량', 4, 1
+         UNION ALL SELECT '키보드 불량', 21, 1
+
+         UNION ALL SELECT '배터리 소모', 6, 1
+
+         UNION ALL SELECT '과열', 12, 1
+         UNION ALL SELECT '과열', 13, 1
+         UNION ALL SELECT '과열', 23, 1
+
+         UNION ALL SELECT '소음 발생', 12, 1
+         UNION ALL SELECT '소음 발생', 20, 1
+
+         UNION ALL SELECT '와이파이 불량', 14, 1
+
+         UNION ALL SELECT '터치패드 불량', 5, 1
+
+         UNION ALL SELECT '화면 파손', 1, 1
+         UNION ALL SELECT '화면 파손', 2, 1
+     ) v
+         JOIN repair_preset rp
+              ON rp.name = v.preset_name
+         JOIN part p
+              ON p.id = v.part_id
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM repair_preset_part existing
+    WHERE existing.repair_preset_id = rp.id
+      AND existing.part_id = v.part_id
+);
