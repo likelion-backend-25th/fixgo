@@ -127,10 +127,20 @@ class ShipmentStatisticsRepositoryTest {
         ReflectionTestUtils.setField(shipment, "recipientName", "홍길동");
         ReflectionTestUtils.setField(shipment, "recipientPhone", "010-0000-0000");
         ReflectionTestUtils.setField(shipment, "status", shipmentStatus);
-        ReflectionTestUtils.setField(shipment, "createdAt", createdAt);
-        ReflectionTestUtils.setField(shipment, "updatedAt", createdAt);
-        ReflectionTestUtils.setField(shipment, "createdBy", member);
-        ReflectionTestUtils.setField(shipment, "updatedBy", member);
+        ReflectionTestUtils.setField(shipment, "createdBy", member.getId());
+        ReflectionTestUtils.setField(shipment, "updatedBy", member.getId());
         entityManager.persist(shipment);
+        entityManager.flush();
+
+        // createdAt은 생성 시 감사로 덮이므로, 기간 밖 건을 만들 때만 저장 후 고친다.
+        entityManager.createNativeQuery("""
+                                                UPDATE shipment
+                                                SET created_at = :createdAt
+                                                WHERE id = :id
+                                                """)
+                     .setParameter("createdAt", createdAt)
+                     .setParameter("id", shipment.getId())
+                     .executeUpdate();
+        entityManager.clear();
     }
 }

@@ -120,8 +120,8 @@ class ShipmentStatisticsServiceTest {
         ReflectionTestUtils.setField(shipment, "status", shipmentStatus);
         ReflectionTestUtils.setField(shipment, "createdAt", now);
         ReflectionTestUtils.setField(shipment, "updatedAt", now);
-        ReflectionTestUtils.setField(shipment, "createdBy", member);
-        ReflectionTestUtils.setField(shipment, "updatedBy", member);
+        ReflectionTestUtils.setField(shipment, "createdBy", member.getId());
+        ReflectionTestUtils.setField(shipment, "updatedBy", member.getId());
         entityManager.persist(shipment);
     }
 }
