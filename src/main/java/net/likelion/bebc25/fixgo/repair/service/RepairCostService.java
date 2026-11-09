@@ -5,7 +5,6 @@ import net.likelion.bebc25.fixgo.admin.entity.LaborRate;
 import net.likelion.bebc25.fixgo.admin.entity.RateType;
 import net.likelion.bebc25.fixgo.admin.repository.LaborRateRepository;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
-import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
 import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
 import net.likelion.bebc25.fixgo.auth.entity.Role;
 import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;

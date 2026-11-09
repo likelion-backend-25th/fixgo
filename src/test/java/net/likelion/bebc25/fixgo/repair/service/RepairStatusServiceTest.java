@@ -5,8 +5,11 @@ import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
 import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
+import net.likelion.bebc25.fixgo.payment.entity.PaymentBillType;
+import net.likelion.bebc25.fixgo.payment.service.PaymentBillService;
 import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
+import net.likelion.bebc25.fixgo.repair.entity.repair.WarrantyResult;
 import net.likelion.bebc25.fixgo.repair.exception.RepairException;
 import net.likelion.bebc25.fixgo.repair.repository.RepairRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,6 +48,9 @@ class RepairStatusServiceTest {
     @Mock
     private RepairRepository repairRepository;
 
+    @Mock
+    private PaymentBillService paymentBillService;
+
     private RepairStatusService repairStatusService;
 
     @BeforeEach
@@ -52,7 +58,8 @@ class RepairStatusServiceTest {
         repairStatusService = new RepairStatusService(
                 asStatusHistoryService,
                 memberRepository,
-                repairRepository
+                repairRepository,
+                paymentBillService
         );
     }
 
@@ -213,10 +220,11 @@ class RepairStatusServiceTest {
     }
 
     @Test
-    @DisplayName("수리 중 상태에서 완료 상태로 변경할 수 있다.")
+    @DisplayName("무상 수리 완료 시 청구서를 발행하지 않는다.")
     void changeRepairingToCompleted() {
         prepareStatusChange(RepairStatus.REPAIRING);
         prepareValidStatusChange();
+        when(repair.getWarrantyResult()).thenReturn(WarrantyResult.FREE);
 
         repairStatusService.changeStatus(
                 repair,
@@ -234,8 +242,27 @@ class RepairStatusServiceTest {
                 changedBy
         );
 
-        // 수리 완료는 아직 접수 상태 전환이 정해지지 않아 접수 상태를 바꾸지 않는다.
+        verifyNoInteractions(paymentBillService);
         verify(asReception, never()).changeStatus(any());
+    }
+
+    @Test
+    @DisplayName("유상 수리 완료 시 수리비 청구서를 발행하고 접수를 결제 대기로 전환한다.")
+    void completePaidRepair() {
+        prepareStatusChange(RepairStatus.REPAIRING);
+        prepareValidStatusChange();
+        when(repair.getWarrantyResult()).thenReturn(WarrantyResult.PAID);
+        when(repair.getFinalAmount()).thenReturn(30_000);
+        when(asReception.getId()).thenReturn(2L);
+        when(asReception.getStatus()).thenReturn(AsReceptionStatus.REPAIR_IN_PROGRESS);
+
+        repairStatusService.changeStatus(repair, RepairStatus.COMPLETED, updatedBy);
+
+        verify(paymentBillService).createBill(2L, 30_000L, PaymentBillType.REPAIR);
+        verify(asReception).changeStatus(AsReceptionStatus.AWAITING_PAYMENT);
+        verify(asStatusHistoryService).record(
+                asReception, "REPAIR_IN_PROGRESS", "AWAITING_PAYMENT", null, changedBy
+        );
     }
 
     @Test

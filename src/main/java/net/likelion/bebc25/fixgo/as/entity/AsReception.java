@@ -138,12 +138,24 @@ public class AsReception extends BaseEntity {
         this.technician = newTechnician;
     }
 
-    /**
-     * A/S 접수 상태 변경
-     */
+    // A/S 접수 상태 변경
     public void changeStatus(AsReceptionStatus status) {
         this.status = status;
         this.statusChangedAt = LocalDateTime.now();
+    }
+
+    // 결제 완료 시 결제 대기 중인 접수를 수령 방식에 따라 배송 대기 또는 방문 수령 대기로 전환
+    public void advanceAfterPayment() {
+
+        if (status != AsReceptionStatus.AWAITING_PAYMENT) {
+            return;
+        }
+
+        changeStatus(switch (returnMethod) {
+            case DELIVERY -> AsReceptionStatus.AWAITING_SHIPMENT;
+            case PICKUP -> AsReceptionStatus.AWAITING_PICKUP;
+        });
+
     }
 
     public record UpdateReceptionRequest(
