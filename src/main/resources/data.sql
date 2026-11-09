@@ -1924,8 +1924,8 @@ SELECT n,
        CASE
            WHEN MOD((n DIV 5) + (n MOD 5) * 2, 10) = 0 THEN 'technician.demo@fixgo.example'
            ELSE CONCAT('stat.tech', LPAD(MOD((n DIV 5) + (n MOD 5) * 2, 10) + 1, 2, '0'), '@fixgo.example')
-       END AS tech_email,
-       CASE WHEN n MOD 2 = 0 THEN 'FIXGO-DEMO-LAPTOP' ELSE 'FIXGO-DEMO-PHONE' END AS model_name,
+       END COLLATE utf8mb4_unicode_ci AS tech_email,
+       CASE WHEN n MOD 2 = 0 THEN 'FIXGO-DEMO-LAPTOP' ELSE 'FIXGO-DEMO-PHONE' END COLLATE utf8mb4_unicode_ci AS model_name,
        ELT(n MOD 5 + 1, '전원 불량', '배터리 소모', '화면 파손', '키보드 불량', '과열') AS symptom,
        CASE n MOD 5
            WHEN 0 THEN 'COMPLETED'
@@ -1942,7 +1942,7 @@ FROM nums;
 
 ALTER TABLE stat_seed
     ADD COLUMN complete_at DATETIME,
-    ADD COLUMN reception_number VARCHAR(40);
+    ADD COLUMN reception_number VARCHAR(40) COLLATE utf8mb4_unicode_ci;
 
 UPDATE stat_seed
 SET complete_at = DATE_ADD(created_at, INTERVAL (8 + tech_index * 3) HOUR),
@@ -2058,14 +2058,16 @@ WHERE s.status = 'COMPLETED'
                     AND h.from_status = 'REPAIRING'
                     AND h.to_status = 'COMPLETED');
 
-INSERT INTO payment_bill (as_reception_id, amount, status, type, paid_at, created_at, updated_at)
+INSERT INTO payment_bill (as_reception_id, amount, status, type, paid_at, created_at, updated_at, created_by, updated_by)
 SELECT ar.id,
        50000 + s.n * 2500,
        CASE WHEN s.status = 'COMPLETED' THEN 'PAID' ELSE 'UNPAID' END,
        'REPAIR',
        CASE WHEN s.status = 'COMPLETED' THEN s.complete_at ELSE NULL END,
        s.created_at,
-       CASE WHEN s.status = 'COMPLETED' THEN s.complete_at ELSE s.created_at END
+       CASE WHEN s.status = 'COMPLETED' THEN s.complete_at ELSE s.created_at END,
+       ar.receptionist_id,
+       ar.receptionist_id
 FROM stat_seed s
          JOIN as_reception ar ON ar.reception_number = s.reception_number
 WHERE s.status IN ('COMPLETED', 'AWAITING_PAYMENT')
@@ -2089,13 +2091,16 @@ WHERE s.status = 'COMPLETED'
   AND NOT EXISTS (SELECT 1 FROM payment_attempt pa WHERE pa.order_id = CONCAT('STAT-ORDER-', s.reception_number));
 
 INSERT INTO payment_refund (payment_attempt_id, transaction_key, cancel_amount, cancel_reason, status, canceled_at,
-                            created_by)
+                            created_at, updated_at, created_by, updated_by)
 SELECT pa.id,
        CONCAT('STAT-REFUND-', s.reception_number),
        10000,
        '통계 더미 부분 환불',
        'DONE',
        DATE_ADD(s.complete_at, INTERVAL 1 DAY),
+       DATE_ADD(s.complete_at, INTERVAL 1 DAY),
+       DATE_ADD(s.complete_at, INTERVAL 1 DAY),
+       ar.receptionist_id,
        ar.receptionist_id
 FROM stat_seed s
          JOIN as_reception ar ON ar.reception_number = s.reception_number
