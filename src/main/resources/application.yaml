@@ -73,3 +73,8 @@ toss:
 portal:
   link:
     valid-days: 30
+
+# 스마트택배
+sweettracker:
+  base-url: https://info.sweettracker.co.kr
+  api-key: ${SWEETTRACKER_API_KEY}
