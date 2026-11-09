@@ -89,6 +89,9 @@ public class PaymentFacadeService {
      */
     public void refundPayment(Long billId, Long memberId, PaymentDto.RefundPaymentRequest request) {
         RefundDto.PreparedRefund prepared = paymentRefundService.prepareRefund(billId, memberId, request);
+        if (prepared.completed()) {
+            return; // 현금 환불은 준비 단계에서 끝난다.
+        }
 
         TossDto.CancelResponse response;
         try {
