@@ -2,6 +2,7 @@ package net.likelion.bebc25.fixgo.shipment.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
 import net.likelion.bebc25.fixgo.shipment.entity.*;
 
 import java.time.LocalDateTime;
@@ -127,4 +128,19 @@ public class ShipmentDto {
             );
         }
     }
+
+    // 배송 관리 통합 목록
+    public record ManagementResponse(
+            Long asReceptionId,
+            Long shipmentId,
+            String receptionNumber,
+            String customerName,
+            String recipientPhone,
+            ReturnMethod returnMethod,
+            AsReceptionStatus asReceptionStatus,
+            ShipmentStatus shipmentStatus,
+            String courier,
+            String trackingNumber,
+            LocalDateTime shippedAt
+    ) {}
 }

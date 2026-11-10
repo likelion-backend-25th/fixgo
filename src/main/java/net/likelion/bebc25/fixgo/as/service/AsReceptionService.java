@@ -24,6 +24,7 @@ import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
 import net.likelion.bebc25.fixgo.repair.entity.repair.WarrantyResult;
 import net.likelion.bebc25.fixgo.repair.repository.RepairRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -52,6 +53,7 @@ public class AsReceptionService {
     private final AsTechnicianAssignmentHistoryRepository assignmentHistoryRepository;
     private final ProductModelRepository productModelRepository;
     private final RepairRepository repairRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     // 접수 등록
     @Transactional
@@ -99,6 +101,16 @@ public class AsReceptionService {
         // 최초 접수 상태 이력 저장
         asStatusHistoryService.record(asReception, null, AsReceptionStatus.RECEIVED.name(), "A/S 최초 접수", receptionist);
 
+        // 접수 완료 이메일 이벤트
+        eventPublisher.publishEvent(
+                new ReceptionCreatedEvent(
+                        asReception.getId(),
+                        asReception.getReceptionNumber(),
+                        customer.getName(),
+                        customer.getEmail(),
+                        customerLink
+                )
+        );
         return AsReceptionDto.CreateReceptionResponse.from(asReception);
     }
 
@@ -331,5 +343,14 @@ public class AsReceptionService {
 
         return RepairResponse.from(repair);
     }
+
+    // A/S 접수 완료 이메일 발송 이벤트
+    public record ReceptionCreatedEvent(
+            Long asReceptionId,
+            String receptionNumber,
+            String customerName,
+            String recipientEmail,
+            String customerLink
+    ) {}
 
 }

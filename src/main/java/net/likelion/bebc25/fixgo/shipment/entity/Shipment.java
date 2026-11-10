@@ -108,9 +108,13 @@ public class Shipment extends BaseEntity {
         if (status != ShipmentStatus.READY) {
             throw new IllegalStateException("배송 대기 상태일 때만 발송할 수 있습니다.");
         }
-        if (courierCode == null || courierCode.isBlank() || trackingNumber == null || trackingNumber.isBlank()) {
-            throw new IllegalStateException("택배사와 운송장번호를 등록해야합니다.");
+        // 
+        if (asReception.getReturnMethod() == ReturnMethod.DELIVERY) {
+            if (courier == null || courier.isBlank() || courierCode == null || courierCode.isBlank() || trackingNumber == null || trackingNumber.isBlank()) {
+                throw new IllegalStateException("택배사와 운송장번호를 등록해야합니다.");
+            }
         }
+
         this.status = ShipmentStatus.SHIPPING;
         this.shippedAt = LocalDateTime.now();
     }

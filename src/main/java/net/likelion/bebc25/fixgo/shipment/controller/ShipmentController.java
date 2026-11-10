@@ -7,6 +7,8 @@ import net.likelion.bebc25.fixgo.shipment.dto.SweetTrackerDto;
 import net.likelion.bebc25.fixgo.shipment.service.ShipmentService;
 import net.likelion.bebc25.fixgo.shipment.service.ShipmentShippingService;
 import net.likelion.bebc25.fixgo.shipment.service.ShipmentTrackingService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -92,4 +94,18 @@ public class ShipmentController {
     public SweetTrackerDto.TrackingResponse trackShipment(@PathVariable Long shipmentId) {
         return shipmentTrackingService.trackShipment(shipmentId);
     }
+
+    // 배송 및 방문 수령 통합 목록 조회
+    @GetMapping("/management")
+    public Page<ShipmentDto.ManagementResponse> getShipmentManagementList(
+            @RequestParam(defaultValue = "ALL") String status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        return shipmentService.getShipmentManagementList(
+                status,
+                PageRequest.of(page, size)
+        );
+    }
+
 }
