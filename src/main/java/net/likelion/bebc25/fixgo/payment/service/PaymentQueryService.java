@@ -88,18 +88,10 @@ public class PaymentQueryService {
         return new PaymentDto.AccountInfo(account.getBankCode(), account.getAccountNumber(), account.getDueAt());
     }
 
-    private boolean isRefundable(PaymentBill bill, PaymentAttempt payment) {
-        if (bill.getStatus() != PaymentBillStatus.PAID || payment == null) {
+    private boolean isRefundable(PaymentBill bill, PaymentAttempt attempt) {
+        if (bill.getStatus() != PaymentBillStatus.PAID || attempt == null) {
             return false;
         }
-
-        // 카드, 가상계좌(토스 환불)와 현금(현장 환불)만 지원한다.
-        if (payment.getMethod() != PaymentMethod.CARD
-                && payment.getMethod() != PaymentMethod.VIRTUAL_ACCOUNT
-                && payment.getMethod() != PaymentMethod.CASH) {
-            return false;
-        }
-
         // 처리 중인 환불이 있으면 중복 요청 버튼을 비활성화한다.
         return !paymentRefundRepository.existsByPaymentAttemptPaymentBillIdAndStatus(
                 bill.getId(), PaymentRefundStatus.IN_PROGRESS);
@@ -128,6 +120,10 @@ public class PaymentQueryService {
     private PaymentDto.CustomerPaymentView toCustomerView(PaymentBill bill) {
         return switch (bill.getStatus()) {
             case UNPAID -> {
+                // 승인 결과를 확인 중이면 결제 버튼 대신 확인 중으로 보여준다.
+                if (paymentAttemptRepository.findByPaymentBillIdAndStatus(bill.getId(), PaymentAttemptStatus.IN_PROGRESS).isPresent()) {
+                    yield PaymentDto.CustomerPaymentView.inProgress(bill);
+                }
                 // bill은 입금 전까지 UNPAID다. 입금 대기인지는 attempt를 보고 판단한다.
                 Optional<PaymentAttempt> waitingAttempt = paymentAttemptRepository
                         .findByPaymentBillIdAndStatus(bill.getId(), PaymentAttemptStatus.WAITING_FOR_DEPOSIT);

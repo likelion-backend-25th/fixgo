@@ -20,6 +20,7 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class PaymentRefundService {
     private final PaymentBillRepository paymentBillRepository;
     private final PaymentRefundRepository paymentRefundRepository;
@@ -46,8 +47,8 @@ public class PaymentRefundService {
 
         // 결제 수단에 따라 토스에 전달할 계좌를 결정한다.
         RefundDto.RefundAccount refundAccount = switch (attempt.getMethod()) {
-            case CARD -> null; // 카드 환불에는 계좌가 필요 없다.
-            case VIRTUAL_ACCOUNT -> { // 필드 검증은 @Vaild가 한다.
+            case CARD, EASY_PAY -> null; // 카드, 간편결제 환불에는 계좌가 필요 없다.
+            case VIRTUAL_ACCOUNT -> { // 필드 검증은 @Valid가 한다.
                 if (request.refundAccount() == null) {
                     throw new PaymentException(PaymentErrorCode.REFUND_ACCOUNT_REQUIRED, "환불 계좌 정보가 필요합니다.");
                 }

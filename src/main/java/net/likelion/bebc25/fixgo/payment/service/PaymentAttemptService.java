@@ -19,6 +19,7 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class PaymentAttemptService {
     private final PaymentBillRepository paymentBillRepository;
     private final PaymentAttemptRepository paymentAttemptRepository;
@@ -76,7 +77,7 @@ public class PaymentAttemptService {
         List<PaymentAttempt> attempts = paymentAttemptRepository.findAllByPaymentBillId(billId);
         if (attempts.stream().anyMatch(a -> a.getStatus().blocksNewAttempt())) {
             throw new PaymentException(PaymentErrorCode.PAYMENT_IN_PROGRESS,
-                    "진행 중인 결제나 발급된 가상계좌가 있습니다. 가상계좌는 먼저 취소해 주세요.");
+                                       "진행 중인 결제나 발급된 가상계좌가 있습니다. 가상계좌는 먼저 취소해 주세요.");
         }
 
         PaymentAttempt attempt = attempts.stream()
@@ -124,8 +125,8 @@ public class PaymentAttemptService {
 
     @Transactional
     public void failConfirm(String orderId, String failureCode, String failureMessage) {
-        PaymentAttempt attempt = paymentAttemptRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new IllegalStateException("Payment Attempt Not Found"));
+        PaymentAttempt attempt = paymentAttemptRepository.findByOrderIdForUpdate(orderId)
+                .orElseThrow(() -> new IllegalStateException("attempt가 존재하지 않습니다."));
 
         attempt.markFailed(failureCode, failureMessage);
     }

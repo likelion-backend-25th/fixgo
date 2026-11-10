@@ -7,7 +7,6 @@ import net.likelion.bebc25.fixgo.payment.service.dto.RefundDto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,20 +18,9 @@ public interface PaymentRefundRepository extends JpaRepository<PaymentRefund, Lo
 
     boolean existsByPaymentAttemptPaymentBillIdAndStatus(Long billId, PaymentRefundStatus status);
 
-    Optional<PaymentRefund> findByPaymentAttemptId(Long paymentAttemptId);
-
-    @Query("select r from PaymentRefund r where r.paymentAttempt.paymentBill.id = :paymentBillId")
-    Optional<PaymentRefund> findByPaymentBillId(
-            @Param("paymentBillId") Long paymentBillId
-    );
-
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select r from PaymentRefund r where r.id = :id")
     Optional<PaymentRefund> findByIdForUpdate(Long id);
-
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select r from PaymentRefund r where r.id = :id AND r.status = :status ")
-    Optional<PaymentRefund> findByIdAndStatusForUpdate(Long id, PaymentRefundStatus status);
 
     @Query("""
             select new net.likelion.bebc25.fixgo.payment.service.dto.RefundDto$StuckRefund(r.id, a.paymentKey)

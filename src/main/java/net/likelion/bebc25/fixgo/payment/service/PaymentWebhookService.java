@@ -78,7 +78,7 @@ public class PaymentWebhookService {
         switch (attempt.getStatus()) {
             case DONE -> {
             }
-            case FAILED -> log.error("만료/취소된 결제에 입금 웩훅. 확인 필요. orderId={}", attempt.getOrderId());
+            case FAILED -> log.error("만료/취소된 결제에 입금 웹훅. 확인 필요. orderId={}", attempt.getOrderId());
             default -> {
                 attempt.markVirtualAccountDone(depositedAt);
                 bill.markPaid(depositedAt);
@@ -88,14 +88,12 @@ public class PaymentWebhookService {
 
     /**
      * 입금 오류 (송금 한도 초과, 네트워크 오류 등). 입금 완료를 입금 대기로 되돌리고 구매자에게 재입금을 안내한다.
-     * 입금 완료 상태가 아니면 가상계좌 발급이나 재전송이므로 무시한다.
-     * 가상계좌 발급은 승인 요청 또는 스케줄러에서 처리한다.
+     * 결제, 청구서, 접수 상태를 모두 되돌려야 한다. 드문 경우 일어나는데, 복잡하므로 직원이 수동 확인하는 것으로 타협한다.
      */
     private void applyDepositError(PaymentAttempt attempt, PaymentBill bill) {
-        if (attempt.getStatus() != PaymentAttemptStatus.DONE) {
-            return;
+        if (attempt.getStatus() == PaymentAttemptStatus.DONE) {
+            log.error("가상계좌 입금 오류 웹훅. 수동 확인 필요. orderId={}", attempt.getOrderId());
         }
-        // TODO: DONE -> WAITING_FOR_DEPOSIT, approvedAt 비우기 / 구매자 재입금 안내
     }
 
     /**
