@@ -8,8 +8,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
-import java.util.List;
 import java.util.NoSuchElementException;
 
 
@@ -111,76 +113,84 @@ public class CustomerServiceTest {
 
     @Test
     @DisplayName("고객명으로 검색한다")
-    void search_byName() {
+    void searchPage_byName() {
         saveCustomer("홍길동", "010-1234-5678", "hong@gmail.com");
         saveCustomer("박길동", "010-1234-4444", "park@gmail.com");
         saveCustomer("김철수", "010-1111-2222", "kim@naver.com");
 
-        List<CustomerDto.Response> responses = customerService.search(
-                new CustomerDto.SearchRequest("길동", null, null)
+        Page<CustomerDto.Response> page = customerService.searchPage(
+                new CustomerDto.SearchRequest("길동", null, null),
+                PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "id"))
         );
 
-        assertThat(responses).hasSize(2);
-        assertThat(responses).extracting(CustomerDto.Response::name)
+        assertThat(page.getContent()).hasSize(2);
+        assertThat(page.getContent()).extracting(CustomerDto.Response::name)
                 .containsExactlyInAnyOrder("홍길동", "박길동");
     }
 
     @Test
     @DisplayName("연락처로 검색한다")
-    void search_byPhone() {
+    void searchPage_byPhone() {
         saveCustomer("홍길동", "010-1234-5678", "hong@gmail.com");
         saveCustomer("박길동", "010-1234-4444", "park@gmail.com");
         saveCustomer("김철수", "010-1111-2222", "kim@naver.com");
 
-        List<CustomerDto.Response> responses = customerService.search(
-                new CustomerDto.SearchRequest(null, "1234", null)
+        Page<CustomerDto.Response> page = customerService.searchPage(
+                new CustomerDto.SearchRequest(null, "1234", null),
+                PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "id"))
         );
 
-        assertThat(responses).hasSize(2);
-        assertThat(responses).extracting(CustomerDto.Response::phone)
+        assertThat(page.getContent()).hasSize(2);
+        assertThat(page.getContent()).extracting(CustomerDto.Response::phone)
                 .containsExactlyInAnyOrder("010-1234-5678", "010-1234-4444");
     }
 
     @Test
     @DisplayName("이메일로 검색한다")
-    void search_byEmail() {
+    void searchPage_byEmail() {
         saveCustomer("홍길동", "010-1234-5678", "hong@gmail.com");
         saveCustomer("박길동", "010-1234-4444", "park@gmail.com");
         saveCustomer("김철수", "010-1111-2222", "kim@naver.com");
 
-        List<CustomerDto.Response> responses = customerService.search(
-                new CustomerDto.SearchRequest(null, null, "gmail")
+        Page<CustomerDto.Response> page = customerService.searchPage(
+                new CustomerDto.SearchRequest(null, null, "gmail"),
+                PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "id"))
         );
 
-        assertThat(responses).hasSize(2);
-        assertThat(responses).extracting(CustomerDto.Response::email)
+        assertThat(page.getContent()).hasSize(2);
+        assertThat(page.getContent()).extracting(CustomerDto.Response::email)
                 .containsExactlyInAnyOrder("hong@gmail.com", "park@gmail.com");
     }
 
     @Test
-    @DisplayName("검색 조건이 모두 비어 있으면 빈 목록을 반환한다")
-    void search_allBlank_returnsEmpty() {
-        saveCustomer("홍길동", "010-1234-5678", "hong@gmail.com");
+    @DisplayName("검색 조건이 없으면 id 내림차순으로 전체 목록을 반환한다")
+    void searchPage_noCondition_returnsAllByIdDesc() {
+        Customer first = saveCustomer("홍길동", "010-1234-5678", "hong@gmail.com");
+        Customer second = saveCustomer("박길동", "010-1234-4444", "park@gmail.com");
 
-        List<CustomerDto.Response> responses = customerService.search(
-                new CustomerDto.SearchRequest("  ", "  ", "  ")
+        Page<CustomerDto.Response> page = customerService.searchPage(
+                new CustomerDto.SearchRequest("  ", "  ", "  "),
+                PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "id"))
         );
 
-        assertThat(responses).isEmpty();
+        assertThat(page.getContent()).hasSize(2);
+        assertThat(page.getContent()).extracting(CustomerDto.Response::id)
+                .containsExactly(second.getId(), first.getId());
     }
 
     @Test
     @DisplayName("이름이 있으면 연락처·이메일 조건보다 이름 검색을 우선한다")
-    void search_nameTakesPriority() {
+    void searchPage_nameTakesPriority() {
         saveCustomer("홍길동", "010-1234-5678", "hong@gmail.com");
         saveCustomer("김철수", "010-9999-8888", "kim@gmail.com");
 
-        List<CustomerDto.Response> responses = customerService.search(
-                new CustomerDto.SearchRequest("홍길동", "9999", "gmail")
+        Page<CustomerDto.Response> page = customerService.searchPage(
+                new CustomerDto.SearchRequest("홍길동", "9999", "gmail"),
+                PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "id"))
         );
 
-        assertThat(responses).hasSize(1);
-        assertThat(responses.getFirst().name()).isEqualTo("홍길동");
+        assertThat(page.getContent()).hasSize(1);
+        assertThat(page.getContent().getFirst().name()).isEqualTo("홍길동");
     }
 
     @Test
