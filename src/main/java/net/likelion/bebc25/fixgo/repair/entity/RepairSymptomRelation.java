@@ -20,11 +20,20 @@ public class RepairSymptomRelation {
     @JoinColumn(name = "repair_preset_id", nullable = false)
     private RepairPreset repairPreset;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "symptom_preset_id", nullable = false)
+    private SymptomPreset symptomPreset;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    public RepairSymptomRelation(RepairPreset repairPreset, LocalDateTime createdAt) {
+    public RepairSymptomRelation(
+            RepairPreset repairPreset,
+            SymptomPreset symptomPreset,
+            LocalDateTime createdAt
+    ) {
         this.repairPreset = repairPreset;
+        this.symptomPreset = symptomPreset;
         this.createdAt = createdAt;
     }
 }

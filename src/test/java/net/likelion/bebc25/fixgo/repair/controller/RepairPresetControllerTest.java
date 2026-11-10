@@ -61,7 +61,8 @@ class RepairPresetControllerTest {
                 now,
                 1L,
                 1L,
-                50000L
+                50000L,
+                40L
         );
     }
 
@@ -86,7 +87,8 @@ class RepairPresetControllerTest {
                                                  """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("액정 수리"))
-                .andExpect(jsonPath("$.basePrice").value(50000));
+                .andExpect(jsonPath("$.basePrice").value(50000))
+                .andExpect(jsonPath("$.estimatedMinutes").value(40));
 
         verify(repairPresetService, times(1))
                 .createPreset(any(RepairPresetRequest.class));
@@ -104,7 +106,8 @@ class RepairPresetControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$[0].name").value("액정 수리"))
-                .andExpect(jsonPath("$[0].basePrice").value(50000));
+                .andExpect(jsonPath("$[0].basePrice").value(50000))
+                .andExpect(jsonPath("$[0].estimatedMinutes").value(40));
 
         verify(repairPresetService, times(1)).getAllPresets();
     }
@@ -120,7 +123,8 @@ class RepairPresetControllerTest {
         mockMvc.perform(get("/api/v1/as/repair-presets/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.name").value("액정 수리"));
+                .andExpect(jsonPath("$.name").value("액정 수리"))
+                .andExpect(jsonPath("$.estimatedMinutes").value(40));
 
         verify(repairPresetService, times(1)).getPreset(1L);
     }
@@ -139,7 +143,8 @@ class RepairPresetControllerTest {
                 LocalDateTime.now(),
                 1L,
                 1L,
-                30000L
+                30000L,
+                30L
         );
 
         when(repairPresetService.updatePreset(eq(1L), any(RepairPresetUpdate.class)))
@@ -157,7 +162,8 @@ class RepairPresetControllerTest {
                                                  """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("배터리 수리"))
-                .andExpect(jsonPath("$.basePrice").value(30000));
+                .andExpect(jsonPath("$.basePrice").value(30000))
+                .andExpect(jsonPath("$.estimatedMinutes").value(30));
 
         verify(repairPresetService, times(1))
                 .updatePreset(eq(1L), any(RepairPresetUpdate.class));
