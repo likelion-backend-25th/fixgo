@@ -3,6 +3,7 @@ package net.likelion.bebc25.fixgo.customer.dto;
 import net.likelion.bebc25.fixgo.customer.entity.Customer;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class CustomerDto {
 
@@ -81,5 +82,60 @@ public class CustomerDto {
                     customer.getUpdatedBy()
             );
         }
+    }
+
+    // 엑셀 파일 한 행 data
+    public record BulkRowResult(
+            int rowNumber,
+            String name,
+            String phone,
+            String email,
+            String zipcode,
+            String basicAddress,
+            String detailAddress,
+            boolean registrable,
+            String reason
+    ) {
+    }
+
+    // 엑셀 파일 검증
+    public record BulkValidateResponse(
+            String fileName,
+            int totalCount,
+            int validCount,
+            int invalidCount,
+            List<BulkRowResult> rows
+    ) {
+    }
+
+    // 등록 대상 data 단건
+    public record BulkCreateItem(
+            int rowNumber,
+            String name,
+            String phone,
+            String email,
+            String zipcode,
+            String basicAddress,
+            String detailAddress
+    ) {
+    }
+
+    public record BulkCreateRequest(
+            List<BulkCreateItem> customers
+    ) {
+    }
+
+    public record BulkFailure(
+            int rowNumber,
+            String reason
+    ) {
+    }
+
+    // data 등록 성공/실패 결과값
+    public record BulkCreateResponse(
+            int successCount,
+            int failCount,
+            List<BulkFailure> failures
+    ) {
     }
 }

@@ -1,0 +1,56 @@
+info:
+  name: 고객 엑셀 일괄 등록
+  type: http
+  seq: 42
+
+http:
+  method: POST
+  url: "{{baseUrl}}/customers/bulk"
+  body:
+    type: json
+    data: |-
+      {
+        "customers": [
+          {
+            "rowNumber": 2,
+            "name": "김고장",
+            "phone": "010-2222-1111",
+            "email": "fixgo1@gmail.com",
+            "zipcode": null,
+            "basicAddress": "OO시 OO구 OO대로 123",
+            "detailAddress": "OOO동 OOO호",
+            "registrable": true,
+            "reason": null
+          },
+          {
+            "rowNumber": 3,
+            "name": "이고장",
+            "phone": "010-4444-3333",
+            "email": "fixgo2@gmail.com",
+            "zipcode": null,
+            "basicAddress": null,
+            "detailAddress": null,
+            "registrable": true,
+            "reason": null
+          },
+          {
+            "rowNumber": 4,
+            "name": "박수리",
+            "phone": "null",
+            "email": "null",
+            "zipcode": null,
+            "basicAddress": null,
+            "detailAddress": null,
+            "registrable": false,
+            "reason": "연락처 형식이 올바르지 않습니다."
+          }
+        ]
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
