@@ -98,12 +98,16 @@ public class ShipmentController {
     // 배송 및 방문 수령 통합 목록 조회
     @GetMapping("/management")
     public Page<ShipmentDto.ManagementResponse> getShipmentManagementList(
+            @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "ALL") String status,
+            @RequestParam(defaultValue = "ALL") String returnMethod,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
         return shipmentService.getShipmentManagementList(
+                keyword,
                 status,
+                returnMethod,
                 PageRequest.of(page, size)
         );
     }
