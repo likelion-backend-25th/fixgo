@@ -5,15 +5,16 @@ info:
 
 http:
   method: POST
-  url: "{{baseUrl}}/ai/chat/stream"
+  url: "{{baseUrl}}/ai/chat"
   headers:
     - name: Accept
       value: text/event-stream
+      disabled: true
   body:
     type: json
     data: |-
       {
-        "text":"아까 보낸 숫자들 중에 1 ~ 9 까지 중 빠진 숫자가 있어?"
+        "text":"A/S 지원되는 모델 정보 좀 불러와줘"
       }
   auth: inherit
 
