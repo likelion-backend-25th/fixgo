@@ -111,6 +111,17 @@ public class PaymentDto {
             );
         }
 
+        public static CustomerPaymentView inProgress(PaymentBill bill) {
+            return new CustomerPaymentView(
+                    Status.IN_PROGRESS,
+                    bill.getType().getOrderName(),
+                    bill.getAmount(),
+                    null,
+                    null,
+                    null
+            );
+        }
+
         public static CustomerPaymentView paid(PaymentBill bill, PaymentAttempt doneAttempt) {
             return new CustomerPaymentView(
                     Status.PAID,
@@ -150,7 +161,7 @@ public class PaymentDto {
             );
         }
 
-        public enum Status {UNPAID, WAITING_FOR_DEPOSIT, PAID, REFUNDED}
+        public enum Status {UNPAID, IN_PROGRESS, WAITING_FOR_DEPOSIT, PAID, REFUNDED}
 
         /**
          * 가상계좌 입금 안내 정보. 고객이 입금할 때 필요한 값만 담는다.

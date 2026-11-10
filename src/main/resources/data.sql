@@ -2314,7 +2314,17 @@ WHERE ar.reception_number LIKE 'AS-STAT-%'
   AND ar.status = 'AWAITING_PAYMENT'
   AND NOT EXISTS (SELECT 1 FROM repair r WHERE r.as_reception_id = ar.id);
 
--- 견적서와 수리내역서에 작업, 부품, 공임이 나오도록 완료·결제 대기 건에 넣는다.
+-- 견적 승인 대기는 고객 포탈에서 견적서와 승인/거부를 볼 수 있게 수리비를 확정한다.
+UPDATE repair r
+    JOIN as_reception ar ON ar.id = r.as_reception_id
+SET r.confirmed_at = r.created_at,
+    r.final_amount = r.labor_rate + 76000
+WHERE ar.reception_number LIKE 'AS-STAT-%'
+  AND ar.status = 'AWAITING_QUOTE_APPROVAL'
+  AND r.status = 'REQUESTED'
+  AND r.confirmed_at IS NULL;
+
+-- 견적서와 수리내역서에 작업, 부품, 공임이 나오도록 완료·결제 대기·견적 승인 대기 건에 넣는다.
 INSERT INTO repair_work (repair_id, repair_preset_name, work_name, created_at, updated_at, created_by, updated_by)
 SELECT r.id,
        ar.symptom,
@@ -2326,7 +2336,7 @@ SELECT r.id,
 FROM repair r
          JOIN as_reception ar ON ar.id = r.as_reception_id
 WHERE ar.reception_number LIKE 'AS-STAT-%'
-  AND ar.status IN ('COMPLETED', 'AWAITING_PAYMENT')
+  AND ar.status IN ('COMPLETED', 'AWAITING_PAYMENT', 'AWAITING_QUOTE_APPROVAL')
   AND NOT EXISTS (SELECT 1 FROM repair_work rw WHERE rw.repair_id = r.id);
 
 INSERT INTO repair_part_usage (repair_work_id, part_id, quantity, unit_price, created_at)
@@ -2354,7 +2364,7 @@ FROM repair_work rw
     END
     AND p.status = 'ACTIVE'
 WHERE ar.reception_number LIKE 'AS-STAT-%'
-  AND ar.status IN ('COMPLETED', 'AWAITING_PAYMENT')
+  AND ar.status IN ('COMPLETED', 'AWAITING_PAYMENT', 'AWAITING_QUOTE_APPROVAL')
   AND NOT EXISTS (SELECT 1 FROM repair_part_usage u WHERE u.repair_work_id = rw.id AND u.part_id = p.id);
 
 INSERT INTO as_status_history (as_reception_id, from_status, to_status, reason, changed_by, created_at)
@@ -2388,16 +2398,14 @@ WHERE s.status = 'COMPLETED'
                     AND h.from_status = 'REPAIRING'
                     AND h.to_status = 'COMPLETED');
 
-INSERT INTO payment_bill (as_reception_id, amount, status, type, paid_at, created_at, updated_at, created_by, updated_by)
+INSERT INTO payment_bill (as_reception_id, amount, status, type, paid_at, created_at, updated_at)
 SELECT ar.id,
        50000 + s.n * 2500,
        CASE WHEN s.status = 'COMPLETED' THEN 'PAID' ELSE 'UNPAID' END,
        'REPAIR',
        CASE WHEN s.status = 'COMPLETED' THEN s.complete_at ELSE NULL END,
        s.created_at,
-       CASE WHEN s.status = 'COMPLETED' THEN s.complete_at ELSE s.created_at END,
-       ar.receptionist_id,
-       ar.receptionist_id
+       CASE WHEN s.status = 'COMPLETED' THEN s.complete_at ELSE s.created_at END
 FROM stat_seed s
          JOIN as_reception ar ON ar.reception_number = s.reception_number COLLATE utf8mb4_unicode_ci
 WHERE s.status IN ('COMPLETED', 'AWAITING_PAYMENT')
@@ -2422,7 +2430,7 @@ WHERE s.status = 'COMPLETED'
                   WHERE pa.order_id = CONCAT('STAT-ORDER-', s.reception_number) COLLATE utf8mb4_unicode_ci);
 
 INSERT INTO payment_refund (payment_attempt_id, transaction_key, cancel_amount, cancel_reason, status, canceled_at,
-                            created_at, updated_at, created_by, updated_by)
+                            created_at, updated_at, created_by)
 SELECT pa.id,
        CONCAT('STAT-REFUND-', s.reception_number),
        10000,
@@ -2431,7 +2439,6 @@ SELECT pa.id,
        DATE_ADD(s.complete_at, INTERVAL 1 DAY),
        DATE_ADD(s.complete_at, INTERVAL 1 DAY),
        DATE_ADD(s.complete_at, INTERVAL 1 DAY),
-       ar.receptionist_id,
        ar.receptionist_id
 FROM stat_seed s
          JOIN as_reception ar ON ar.reception_number = s.reception_number COLLATE utf8mb4_unicode_ci

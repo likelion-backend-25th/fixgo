@@ -13,8 +13,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface PaymentAttemptRepository extends JpaRepository<PaymentAttempt, Long> {
-    Optional<PaymentAttempt> findByOrderIdAndStatus(String orderId, PaymentAttemptStatus status);
-
     Optional<PaymentAttempt> findByPaymentBillIdAndStatus(Long billId, PaymentAttemptStatus status);
 
     List<PaymentAttempt> findAllByPaymentBillId(Long billId);
@@ -23,11 +21,7 @@ public interface PaymentAttemptRepository extends JpaRepository<PaymentAttempt, 
     @Query("select a from PaymentAttempt a where a.orderId = :orderId")
     Optional<PaymentAttempt> findByOrderIdForUpdate(String orderId);
 
-    boolean existsByOrderIdAndStatus(String orderId, PaymentAttemptStatus status);
-
     Optional<PaymentAttempt> findByOrderId(String orderId);
-
-    List<PaymentAttempt> findAllByPaymentBillIdOrderByIdAsc(Long paymentBillId);
 
     List<PaymentAttempt> findAllByStatusAndUpdatedAtBefore(PaymentAttemptStatus status, LocalDateTime cutoff);
 

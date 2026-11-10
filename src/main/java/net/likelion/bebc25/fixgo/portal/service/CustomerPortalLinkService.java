@@ -19,6 +19,7 @@ import java.util.Base64;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CustomerPortalLinkService {
 
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -50,7 +51,6 @@ public class CustomerPortalLinkService {
     /**
      * 접수에 발급된 고객 안내 링크를 조회한다.
      */
-    @Transactional(readOnly = true)
     public CustomerPortalLinkResponse getLink(Long asReceptionId) {
         CustomerPortalLink link = customerPortalLinkRepository.findByAsReceptionId(asReceptionId)
                 .orElseThrow(() -> new PortalException(PortalErrorCode.LINK_NOT_FOUND, "발급된 고객 안내 링크가 없습니다."));
@@ -60,7 +60,6 @@ public class CustomerPortalLinkService {
     /**
      * 토큰으로 A/S 접수 ID를 찾는다.
      */
-    @Transactional(readOnly = true)
     public Long resolveAsReceptionId(String token) {
         CustomerPortalLink link = customerPortalLinkRepository.findByToken(token)
                 .orElseThrow(() -> new PortalException(PortalErrorCode.LINK_NOT_FOUND, "유효하지 않은 링크입니다."));

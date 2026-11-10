@@ -163,6 +163,7 @@ public class PaymentFacadeService {
             } catch (HttpClientErrorException.NotFound e) {
                 // 인증을 마친 결제만 IN_PROGRESS가 되므로 토스에 결제가 있어야 한다.
                 log.error("토스에 결제가 없음. orderId={}", orderId);
+                paymentAttemptService.failConfirm(orderId, "TOSS_NOT_FOUND", "토스에 결제가 없습니다.");
             } catch (Exception e) {
                 // 조회 타임아웃, 토스 5xx, 반영 중 예외 등. 다음 주기에 다시 시도한다.
                 log.warn("승인 정리 실패. orderId={}", orderId, e);

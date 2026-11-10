@@ -4,14 +4,14 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import net.likelion.bebc25.fixgo.common.entity.BaseEntity;
+import net.likelion.bebc25.fixgo.common.entity.BaseTimeEntity;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class PaymentRefund extends BaseEntity {
+public class PaymentRefund extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -38,6 +38,9 @@ public class PaymentRefund extends BaseEntity {
 
     private LocalDateTime canceledAt;
 
+    @Column(nullable = false)
+    private Long createdBy;
+
     public static PaymentRefund create(PaymentAttempt paymentAttempt, String cancelReason, Long requestedBy) {
         if (paymentAttempt == null) {
             throw new IllegalArgumentException("결제 시도는 필수입니다.");
@@ -54,6 +57,7 @@ public class PaymentRefund extends BaseEntity {
         refund.cancelReason = cancelReason;
         refund.cancelAmount = paymentAttempt.getAmount();
         refund.status = PaymentRefundStatus.IN_PROGRESS;
+        refund.createdBy = requestedBy;
 
         return refund;
     }

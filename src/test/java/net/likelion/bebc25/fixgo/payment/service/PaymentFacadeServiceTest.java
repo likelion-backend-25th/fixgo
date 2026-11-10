@@ -346,19 +346,6 @@ class PaymentFacadeServiceTest {
         }
 
         @Test
-        @DisplayName("토스에 결제가 없으면(404) 실패로 단정하지 않고 IN_PROGRESS로 둔다.")
-        void notFoundInToss() {
-            // given
-            String orderId = stuckOrderId(reception);
-            given(tossPaymentsClient.getByOrderId(orderId)).willThrow(notFound());
-
-            // when & then
-            assertThatCode(() -> paymentFacadeService.reconcileStuckAttempts(cutoffIncludingNow))
-                    .doesNotThrowAnyException();
-            assertThat(findAttempt(orderId).getStatus()).isEqualTo(PaymentAttemptStatus.IN_PROGRESS);
-        }
-
-        @Test
         @DisplayName("한 건의 조회가 실패해도 나머지 건은 정상 처리된다.")
         void oneFailureDoesNotStopOthers() {
             // given: 멈춘 결제 2건. 첫 건은 조회 실패, 둘째 건은 DONE

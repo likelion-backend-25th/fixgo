@@ -5,8 +5,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
-import net.likelion.bebc25.fixgo.common.entity.BaseEntity;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import net.likelion.bebc25.fixgo.common.entity.BaseTimeEntity;
 
 import java.time.LocalDateTime;
 
@@ -16,9 +15,8 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Getter
-@EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class PaymentBill extends BaseEntity {
+public class PaymentBill extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

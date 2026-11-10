@@ -19,7 +19,6 @@ public enum PaymentAttemptStatus {
             case READY -> next == DONE || next == IN_PROGRESS || next == FAILED;
             case IN_PROGRESS -> next == WAITING_FOR_DEPOSIT || next == DONE || next == FAILED;
             case WAITING_FOR_DEPOSIT -> next == DONE || next == FAILED;
-            // TODO: 입금 오류 시 토스는 DONE → WAITING_FOR_DEPOSIT으로 되돌릴 수 있음 (드문 경우). 웹훅 처리 때 검토
             case DONE, FAILED -> false;
         };
     }

@@ -11,6 +11,7 @@ import net.likelion.bebc25.fixgo.portal.dto.PortalResponse;
 import net.likelion.bebc25.fixgo.repair.dto.repair.CustomerQuoteView;
 import net.likelion.bebc25.fixgo.repair.service.RepairQuoteService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 고객 포탈 페이지에서 필요한 데이터를 모은다.
@@ -29,6 +30,7 @@ public class PortalService {
     /**
      * 토큰이 없거나 만료되면 PortalException이 발생한다.
      */
+    @Transactional(readOnly = true)
     public PortalResponse getPortal(String token) {
         Long asReceptionId = customerPortalLinkService.resolveAsReceptionId(token);
 
