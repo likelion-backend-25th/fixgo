@@ -1,5 +1,6 @@
 package net.likelion.bebc25.fixgo.product.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
 import net.likelion.bebc25.fixgo.product.dto.ProductModelDto;
@@ -29,7 +30,7 @@ public class ProductModelController {
     // 제품 등록
     @PostMapping
     public ResponseEntity<ProductModelDto.Response> create(
-            @RequestBody ProductModelDto.CreateRequest request,
+            @Valid @RequestBody ProductModelDto.CreateRequest request,
             @AuthenticationPrincipal CustomUserDetails user
     ) {
         Long createdBy = user.getMember().getId();
@@ -52,7 +53,7 @@ public class ProductModelController {
     @PatchMapping("/{id}")
     public ResponseEntity<ProductModelDto.Response> update(
             @PathVariable Long id,
-            @RequestBody ProductModelDto.UpdateRequest request,
+            @Valid @RequestBody ProductModelDto.UpdateRequest request,
             @AuthenticationPrincipal CustomUserDetails user
     ) {
         Long updatedBy = user.getMember().getId();

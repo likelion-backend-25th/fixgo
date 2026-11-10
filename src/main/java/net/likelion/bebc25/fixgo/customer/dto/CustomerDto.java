@@ -1,5 +1,6 @@
 package net.likelion.bebc25.fixgo.customer.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import net.likelion.bebc25.fixgo.customer.entity.Customer;
 
 import java.time.LocalDateTime;
@@ -9,8 +10,11 @@ public class CustomerDto {
 
     // 고객 등록
     public record CreateRequest(
+            @NotBlank(message = "이름은 필수입력항목입니다.")
             String name,
+            @NotBlank(message = "연락처는 필수입력항목입니다.")
             String phone,
+            @NotBlank(message = "이메일은 필수입력항목입니다.")
             String email,
             String zipcode,
             String basicAddress,
@@ -31,8 +35,11 @@ public class CustomerDto {
 
     // 고객 정보 수정
     public record UpdateRequest(
+            @NotBlank(message = "이름은 필수입력항목입니다.")
             String name,
+            @NotBlank(message = "연락처는 필수입력항목입니다.")
             String phone,
+            @NotBlank(message = "이메일은 필수입력항목입니다.")
             String email,
             String zipcode,
             String basicAddress,
@@ -51,6 +58,12 @@ public class CustomerDto {
     // 연락처 중복 확인
     public record DuplicateCheckRequest(
             String phone
+    ) {
+    }
+
+    // 중복 확인 응답
+    public record DuplicateCheckResponse(
+            boolean duplicated
     ) {
     }
 
