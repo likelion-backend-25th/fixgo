@@ -1,6 +1,8 @@
 package net.likelion.bebc25.fixgo.auth.service;
 
 import lombok.RequiredArgsConstructor;
+import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
+import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
 import net.likelion.bebc25.fixgo.auth.dto.MemberDto;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.entity.Role;
@@ -9,8 +11,6 @@ import net.likelion.bebc25.fixgo.auth.exception.AbnormalApproachException;
 import net.likelion.bebc25.fixgo.auth.exception.AuthErrorCode;
 import net.likelion.bebc25.fixgo.auth.exception.EmployeeHasActiveRepairsException;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
-import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
-import net.likelion.bebc25.fixgo.repair.repository.RepairRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -26,7 +26,7 @@ import java.util.NoSuchElementException;
 @RequiredArgsConstructor
 public class MemberService {
     private final MemberRepository memberRepository;
-    private final RepairRepository repairRepository;
+    private final AsReceptionRepository asReceptionRepository;
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
 
@@ -85,10 +85,13 @@ public class MemberService {
     // 상태 변경
     @Transactional
     public MemberDto.BriefResponse changeStatus(MemberDto.StatusChangeRequest request) {
-        Member member = memberRepository.findByEmail(request.email()).orElseThrow(
+        Member member = memberRepository.findByEmailWithLock(request.email()).orElseThrow(
                 () -> new NoSuchElementException("존재하지 않는 계정입니다.")
         );
 
+        if (request.status() != Status.ACTIVE) {
+            ensureNoOpenReceptions(member, "계정 상태를 변경");
+        }
         member.changeStatus(request.status());
         refreshTokenService.revokeRefreshTokens(member.getId());
 
@@ -98,10 +101,13 @@ public class MemberService {
     // 직책 변경
     @Transactional
     public MemberDto.BriefResponse changeRole(MemberDto.RoleChangeRequest request) {
-        Member member = memberRepository.findByEmailAndStatusNot(request.email(), Status.DELETED).orElseThrow(
-                () -> new NoSuchElementException("존재하지 않는 계정입니다.")
-        );
+        Member member = memberRepository.findByEmailWithLock(request.email())
+                .filter(it -> it.getStatus() != Status.DELETED)
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 계정입니다."));
 
+        if (request.role() != Role.ROLE_TECHNICIAN) {
+            ensureNoOpenReceptions(member, "직책을 변경");
+        }
         member.changeRole(request.role());
         refreshTokenService.revokeRefreshTokens(member.getId());
 
@@ -138,18 +144,21 @@ public class MemberService {
 
     @Transactional
     public void deleteMember(Long memberId) {
-        Member member = memberRepository.findByIdAndStatusNot(memberId, Status.DELETED).orElseThrow(
-                () -> new NoSuchElementException("존재하지 않는 계정입니다.")
-        );
-
-        if (member.getRole().equals(Role.ROLE_TECHNICIAN) && !repairRepository.findByTechnician_IdAndStatusNot(memberId, RepairStatus.COMPLETED).isEmpty()) {
-            throw new EmployeeHasActiveRepairsException(
-                    AuthErrorCode.EMPLOYEE_HAS_ACTIVE_REPAIRS,
-                    "현재 진행 중인 A/S 건이 있어 삭제할 수 없습니다."
-            );
-        }
+        Member member = memberRepository.findByIdWithLock(memberId)
+                .filter(it -> it.getStatus() != Status.DELETED)
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 계정입니다."));
+        ensureNoOpenReceptions(member, "삭제");
 
         member.changeStatus(Status.DELETED);
         refreshTokenService.revokeRefreshTokens(memberId);
+    }
+
+    private void ensureNoOpenReceptions(Member member, String action) {
+        if (asReceptionRepository.existsByTechnician_IdAndStatusNot(member.getId(), AsReceptionStatus.COMPLETED)) {
+            throw new EmployeeHasActiveRepairsException(
+                    AuthErrorCode.EMPLOYEE_HAS_ACTIVE_REPAIRS,
+                    "현재 진행 중인 A/S 건이 있어 " + action + "할 수 없습니다."
+            );
+        }
     }
 }

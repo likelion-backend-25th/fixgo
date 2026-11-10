@@ -68,6 +68,7 @@ public interface AsReceptionRepository extends JpaRepository<AsReception, Long> 
     // 접수 ID 와 담당 기사 ID 함께 확인
     Optional<AsReception> findByIdAndTechnician_Id(Long id, Long technicianId);
 
+    boolean existsByTechnician_IdAndStatusNot(Long technicianId, AsReceptionStatus status);
 
     // 배송 및 방문 수령 통합 목록 조회
     @Query(value = """

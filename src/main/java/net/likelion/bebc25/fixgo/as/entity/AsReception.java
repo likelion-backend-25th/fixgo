@@ -151,11 +151,14 @@ public class AsReception extends BaseEntity {
             return;
         }
 
-        changeStatus(switch (returnMethod) {
+        changeStatus(statusAwaitingReturn());
+    }
+
+    public AsReceptionStatus statusAwaitingReturn() {
+        return switch (returnMethod) {
             case DELIVERY -> AsReceptionStatus.AWAITING_SHIPMENT;
             case PICKUP -> AsReceptionStatus.AWAITING_PICKUP;
-        });
-
+        };
     }
 
     public record UpdateReceptionRequest(

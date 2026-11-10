@@ -70,7 +70,7 @@ public interface TechnicianStatisticsRepository extends Repository<AsReception, 
     // 기사별 평균 수리 소요 시간 (초)
     @Query(value = """
             SELECT
-                r.technician_id AS technicianId,
+                ar.technician_id AS technicianId,
                 AVG(
                     TIMESTAMPDIFF(
                         SECOND,
@@ -79,8 +79,10 @@ public interface TechnicianStatisticsRepository extends Repository<AsReception, 
                     )
                 ) AS averageDurationSeconds
             FROM as_status_history complete_history
+            JOIN as_reception ar
+                ON ar.id = complete_history.as_reception_id
             JOIN repair r
-                ON r.as_reception_id = complete_history.as_reception_id
+                ON r.as_reception_id = ar.id
             JOIN as_status_history start_history
                 ON start_history.as_reception_id = complete_history.as_reception_id
                 AND start_history.to_status = 'REPAIRING'
@@ -96,7 +98,7 @@ public interface TechnicianStatisticsRepository extends Repository<AsReception, 
                     AND previous_history.to_status = 'REPAIRING'
                     AND previous_history.created_at < complete_history.created_at
               )
-            GROUP BY r.technician_id
+            GROUP BY ar.technician_id
             """, nativeQuery = true)
     List<TechnicianAverageDuration> findTechnicianAverageDurations(
             @Param("startDateTime") LocalDateTime startDateTime,

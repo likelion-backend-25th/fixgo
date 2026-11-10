@@ -137,19 +137,18 @@ class RepairServiceTest {
         AsReception asReception = createAsReception();
         Member technician = createTechnician();
 
-        when(asReceptionRepository.findById(10L))
+        when(asReceptionRepository.findByIdWithLock(10L))
                 .thenReturn(Optional.of(asReception));
 
-        when(memberRepository.findById(20L))
-                .thenReturn(Optional.of(technician));
+        when(asReception.getTechnician()).thenReturn(technician);
+        when(technician.getId()).thenReturn(20L);
 
         RepairMessageResponse response =
                 repairService.createRepair(dto, TEST_EMAIL);
 
         assertEquals("수리 정보가 등록되었습니다.", response.message());
 
-        verify(asReceptionRepository).findById(10L);
-        verify(memberRepository).findById(20L);
+        verify(asReceptionRepository).findByIdWithLock(10L);
         verify(repairRepository).save(any(Repair.class));
     }
 
@@ -164,8 +163,9 @@ class RepairServiceTest {
         Member changedBy = mock(Member.class);
 
         when(asReception.getStatus()).thenReturn(AsReceptionStatus.RECEIVED);
-        when(asReceptionRepository.findById(10L)).thenReturn(Optional.of(asReception));
-        when(memberRepository.findById(20L)).thenReturn(Optional.of(technician));
+        when(asReceptionRepository.findByIdWithLock(10L)).thenReturn(Optional.of(asReception));
+        when(asReception.getTechnician()).thenReturn(technician);
+        when(technician.getId()).thenReturn(20L);
         when(memberRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.of(changedBy));
 
         repairService.createRepair(dto, TEST_EMAIL);
@@ -184,8 +184,9 @@ class RepairServiceTest {
         Member technician = createTechnician();
 
         when(asReception.getStatus()).thenReturn(AsReceptionStatus.INSPECTION);
-        when(asReceptionRepository.findById(10L)).thenReturn(Optional.of(asReception));
-        when(memberRepository.findById(20L)).thenReturn(Optional.of(technician));
+        when(asReceptionRepository.findByIdWithLock(10L)).thenReturn(Optional.of(asReception));
+        when(asReception.getTechnician()).thenReturn(technician);
+        when(technician.getId()).thenReturn(20L);
 
         repairService.createRepair(dto, TEST_EMAIL);
 
@@ -199,7 +200,7 @@ class RepairServiceTest {
 
         RepairRequest dto = createRequestDto();
 
-        when(asReceptionRepository.findById(10L))
+        when(asReceptionRepository.findByIdWithLock(10L))
                 .thenReturn(Optional.empty());
 
         assertThrows(
@@ -207,32 +208,31 @@ class RepairServiceTest {
                 () -> repairService.createRepair(dto, TEST_EMAIL)
         );
 
-        verify(asReceptionRepository).findById(10L);
+        verify(asReceptionRepository).findByIdWithLock(10L);
         verifyNoInteractions(memberRepository);
         verify(repairRepository, never()).save(any(Repair.class));
     }
 
     @Test
-    @DisplayName("존재하지 않는 담당 기사 ID로 수리 등록 시 예외가 발생한다.")
-    void createRepairTechnicianNotFoundTest() {
+    @DisplayName("접수 담당자와 다른 기사 ID로 수리를 등록할 수 없다.")
+    void createRepairRejectsMismatchedTechnician() {
 
         RepairRequest dto = createRequestDto();
 
         AsReception asReception = createAsReception();
 
-        when(asReceptionRepository.findById(10L))
+        when(asReceptionRepository.findByIdWithLock(10L))
                 .thenReturn(Optional.of(asReception));
-
-        when(memberRepository.findById(20L))
-                .thenReturn(Optional.empty());
+        Member assigned = createTechnician();
+        when(asReception.getTechnician()).thenReturn(assigned);
+        when(assigned.getId()).thenReturn(30L);
 
         assertThrows(
                 IllegalArgumentException.class,
                 () -> repairService.createRepair(dto, TEST_EMAIL)
         );
 
-        verify(asReceptionRepository).findById(10L);
-        verify(memberRepository).findById(20L);
+        verify(asReceptionRepository).findByIdWithLock(10L);
         verify(repairRepository, never()).save(any(Repair.class));
     }
 
@@ -428,21 +428,21 @@ class RepairServiceTest {
         when(repairRepository.findById(1L))
                 .thenReturn(Optional.of(repair));
 
-        when(asReceptionRepository.findById(10L))
+        when(asReceptionRepository.findByIdWithLock(10L))
                 .thenReturn(Optional.of(asReception));
 
-        when(memberRepository.findById(20L))
-                .thenReturn(Optional.of(technician));
+        when(asReception.getTechnician()).thenReturn(technician);
+        when(technician.getId()).thenReturn(20L);
 
         RepairResponse response =
                 repairService.updateRepair(1L, dto, TEST_EMAIL);
 
         assertEquals("CPU 점검", response.diagnosis());
         assertEquals("CPU 교체", response.workNote());
+        assertEquals(technician, repair.getTechnician());
 
         verify(repairRepository).findById(1L);
-        verify(asReceptionRepository).findById(10L);
-        verify(memberRepository).findById(20L);
+        verify(asReceptionRepository).findByIdWithLock(10L);
     }
 
     @Test
@@ -454,7 +454,7 @@ class RepairServiceTest {
         when(repairRepository.findById(1L))
                 .thenReturn(Optional.of(repair));
 
-        when(asReceptionRepository.findById(10L))
+        when(asReceptionRepository.findByIdWithLock(10L))
                 .thenReturn(Optional.empty());
 
         assertThrows(
@@ -467,24 +467,25 @@ class RepairServiceTest {
         );
 
         verify(repairRepository).findById(1L);
-        verify(asReceptionRepository).findById(10L);
+        verify(asReceptionRepository).findByIdWithLock(10L);
         verifyNoInteractions(memberRepository);
     }
 
     @Test
-    @DisplayName("존재하지 않는 담당 기사 ID로 수리 수정 시 예외가 발생한다.")
-    void updateRepairTechnicianNotFoundTest() {
+    @DisplayName("접수 담당자와 다른 기사 ID로 수리를 수정할 수 없다.")
+    void updateRepairRejectsMismatchedTechnician() {
 
         Repair repair = createRepair();
+        AsReception reception = createAsReception();
+        Member assigned = createTechnician();
 
         when(repairRepository.findById(1L))
                 .thenReturn(Optional.of(repair));
 
-        when(asReceptionRepository.findById(10L))
-                .thenReturn(Optional.of(createAsReception()));
-
-        when(memberRepository.findById(20L))
-                .thenReturn(Optional.empty());
+        when(asReceptionRepository.findByIdWithLock(10L))
+                .thenReturn(Optional.of(reception));
+        when(reception.getTechnician()).thenReturn(assigned);
+        when(assigned.getId()).thenReturn(30L);
 
         assertThrows(
                 IllegalArgumentException.class,
@@ -496,8 +497,7 @@ class RepairServiceTest {
         );
 
         verify(repairRepository).findById(1L);
-        verify(asReceptionRepository).findById(10L);
-        verify(memberRepository).findById(20L);
+        verify(asReceptionRepository).findByIdWithLock(10L);
     }
 
     // ==========================================

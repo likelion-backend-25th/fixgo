@@ -68,7 +68,7 @@ class RepairHistoryServiceTest {
         given(reception.getReceptionNumber()).willReturn("AS-1");
         given(reception.getCustomer()).willReturn(customer);
         given(customer.getName()).willReturn("테스트 고객");
-        given(repair.getTechnician()).willReturn(technician);
+        given(reception.getTechnician()).willReturn(technician);
         given(technician.getName()).willReturn("테스트 기사");
         given(repair.getWorkNote()).willReturn("교체 후 동작 확인");
         given(repair.getLaborRate()).willReturn(30000);

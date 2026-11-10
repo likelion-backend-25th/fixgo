@@ -1,11 +1,13 @@
 package net.likelion.bebc25.fixgo.auth.repository;
 
+import jakarta.persistence.LockModeType;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.entity.Role;
 import net.likelion.bebc25.fixgo.auth.entity.Status;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -62,7 +64,8 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
                     ) AS inspectionWaitingCount,
                     (SELECT COUNT(*)
                      FROM repair r
-                     WHERE r.technician_id = m.id AND r.status = 'REPAIRING'
+                     JOIN as_reception ar ON ar.id = r.as_reception_id
+                     WHERE ar.technician_id = m.id AND r.status = 'REPAIRING'
                     ) + (SELECT COUNT(*)
                          FROM as_reception ar
                          WHERE ar.technician_id = m.id AND ar.status = 'REPAIR_IN_PROGRESS'
@@ -78,7 +81,8 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
                         finished.created_at)) / 60.0
                      FROM repair r
                      JOIN as_status_history finished ON finished.as_reception_id = r.as_reception_id
-                     WHERE r.technician_id = m.id
+                     JOIN as_reception ar ON ar.id = r.as_reception_id
+                     WHERE ar.technician_id = m.id
                        AND finished.from_status = 'REPAIRING' AND finished.to_status = 'COMPLETED'
                     ) AS estimatedDurationMinutes
                 FROM member m
@@ -117,6 +121,14 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
         Double getEstimatedDurationMinutes();
     }
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select m from Member m where m.id = :id")
+    Optional<Member> findByIdWithLock(@Param("id") Long id);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select m from Member m where m.email = :email")
+    Optional<Member> findByEmailWithLock(@Param("email") String email);
 
     Optional<Member> findByEmail(String email);
 

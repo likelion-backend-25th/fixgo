@@ -24,12 +24,13 @@ public record RepairStatementResponse(
             LocalDateTime issuedAt
     ) {
         AsReception reception = repair.getAsReception();
+        var technician = reception.getTechnician();
 
         return new RepairStatementResponse(
                 reception.getReceptionNumber(),
                 reception.getCustomer().getName(),
                 issuedAt,
-                repair.getTechnician().getName(),
+                technician == null ? repair.getTechnician().getName() : technician.getName(),
                 repair.getWorkNote(),
                 repairWorks,
                 // laborRate 컬럼에는 확정된 공임비 합계가 저장된다.

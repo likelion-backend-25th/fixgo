@@ -36,7 +36,7 @@ public class RepairStatusService {
             case APPROVED -> AsReceptionStatus.AWAITING_REPAIR;
             case REJECTED -> AsReceptionStatus.AWAITING_PAYMENT;
             case REPAIRING -> AsReceptionStatus.REPAIR_IN_PROGRESS;
-            // 수리 완료 시 청구서를 발행한 건은 changeStatus에서 결제 대기로 전환한다.
+            // 수리 완료 시 결제 필요 여부에 따라 접수 상태를 결정한다.
             case DIAGNOSING, COMPLETED -> null;
         };
     }
@@ -60,8 +60,16 @@ public class RepairStatusService {
                 ));
 
         RepairStatus currentStatus = repair.getStatus();
+        AsReception asReception = repair.getAsReception();
+        boolean completing = newStatus == RepairStatus.COMPLETED;
+        boolean requiresPayment = completing
+                && repair.getWarrantyResult() == WarrantyResult.PAID
+                && repair.getFinalAmount() > 0;
+        // 이전 로직에서 수리만 완료되고 접수가 수리 중에 남은 무청구 건을 복구한다.
+        boolean recoverReturn = completing && currentStatus == RepairStatus.COMPLETED && !requiresPayment
+                && asReception.getStatus() == AsReceptionStatus.REPAIR_IN_PROGRESS;
 
-        if (currentStatus == newStatus) {
+        if (currentStatus == newStatus && !recoverReturn) {
             throw new RepairException(
                     RepairErrorCode.ALREADY_SAME_REPAIR_STATUS,
                     "이미 해당 상태로 처리되어 있습니다."
@@ -79,7 +87,7 @@ public class RepairStatusService {
             case REJECTED, COMPLETED -> false;
         };
 
-        if (!isValidTransition) {
+        if (!isValidTransition && !recoverReturn) {
             throw new RepairException(
                     RepairErrorCode.INVALID_REPAIR_STATUS_TRANSITION,
                     "허용되지 않은 상태 변경입니다. 현재 상태: "
@@ -97,41 +105,30 @@ public class RepairStatusService {
                     ));
         }
 
-        repair.changeStatus(newStatus);
+        if (!recoverReturn) {
+            repair.changeStatus(newStatus);
 
-        AsReception asReception = repair.getAsReception();
-
-        // 수리 상태 이력. 기사 통계(수리 소요 시간)가 REPAIRING → COMPLETED 행을 사용하므로 유지한다.
-        asStatusHistoryService.record(
-                asReception,
-                currentStatus.name(),
-                newStatus.name(),
-                reason,
-                changedBy
-        );
+            // 기사 통계의 수리 시간 계산에 사용하는 수리 상태 이력
+            asStatusHistoryService.record(
+                    asReception,
+                    currentStatus.name(),
+                    newStatus.name(),
+                    reason,
+                    changedBy
+            );
+        }
 
         // 접수 상태 동기화. 접수 상태 전환은 별도 행으로 남기며, 고객 포탈 진행이력은 이 행만 보여 준다.
         AsReceptionStatus receptionStatus = toReceptionStatus(newStatus);
-
-        // 무상 수리 완료 시 결제 없이 수령 방식에 따라 다음 단계로 이동
-        if (newStatus == RepairStatus.COMPLETED
-                && repair.getWarrantyResult() == WarrantyResult.FREE) {
-
-            receptionStatus = switch (asReception.getReturnMethod()) {
-                case DELIVERY -> AsReceptionStatus.AWAITING_SHIPMENT;
-                case PICKUP -> AsReceptionStatus.AWAITING_PICKUP;
-            };
-        }
-        
-        if (newStatus == RepairStatus.COMPLETED
-                && repair.getWarrantyResult() == WarrantyResult.PAID
-                && repair.getFinalAmount() > 0) {
+        if (requiresPayment) {
             paymentBillService.createBill(
                     asReception.getId(),
                     (long) repair.getFinalAmount(),
                     PaymentBillType.REPAIR
             );
             receptionStatus = AsReceptionStatus.AWAITING_PAYMENT;
+        } else if (completing) {
+            receptionStatus = asReception.statusAwaitingReturn();
         }
 
         if (receptionStatus == null) {
