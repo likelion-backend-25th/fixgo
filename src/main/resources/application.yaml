@@ -1,6 +1,14 @@
 spring:
   application:
     name: project-FixGo
+  ai:
+    openai:
+      api-key: ${openAI-API-secretKey}
+    chat:
+      memory:
+        repository:
+          jdbc:
+            initialize-schema: never
 
   # gmail SMTP
   mail:
