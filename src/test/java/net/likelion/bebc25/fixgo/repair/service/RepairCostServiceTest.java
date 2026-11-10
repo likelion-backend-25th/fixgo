@@ -405,11 +405,11 @@ class RepairCostServiceTest {
 
         when(repairRepository.findByIdWithLock(repairId))
                 .thenReturn(Optional.of(repair));
-        when(repair.getTechnician()).thenReturn(technician);
+        when(repair.getAsReception()).thenReturn(asReception);
+        when(asReception.getTechnician()).thenReturn(technician);
         when(technician.getId()).thenReturn(technicianId);
         when(repair.getStatus()).thenReturn(RepairStatus.DIAGNOSING);
         when(repair.getConfirmedAt()).thenReturn(null);
-        when(repair.getAsReception()).thenReturn(asReception);
 
         when(asReception.getId()).thenReturn(receptionId);
         when(asReceptionRepository.findByIdWithLock(receptionId))
@@ -472,7 +472,9 @@ class RepairCostServiceTest {
 
         when(repairRepository.findByIdWithLock(repairId))
                 .thenReturn(Optional.of(repair));
-        when(repair.getTechnician()).thenReturn(assignedTechnician);
+        AsReception reception = mock(AsReception.class);
+        when(repair.getAsReception()).thenReturn(reception);
+        when(reception.getTechnician()).thenReturn(assignedTechnician);
         when(assignedTechnician.getId()).thenReturn(assignedTechnicianId);
 
         assertThatThrownBy(() ->
@@ -504,7 +506,9 @@ class RepairCostServiceTest {
 
         when(repairRepository.findByIdWithLock(repairId))
                 .thenReturn(Optional.of(repair));
-        when(repair.getTechnician()).thenReturn(technician);
+        AsReception reception = mock(AsReception.class);
+        when(repair.getAsReception()).thenReturn(reception);
+        when(reception.getTechnician()).thenReturn(technician);
         when(technician.getId()).thenReturn(technicianId);
         when(repair.getStatus()).thenReturn(RepairStatus.REPAIRING);
 
@@ -537,7 +541,9 @@ class RepairCostServiceTest {
         when(repairRepository.findByIdWithLock(repairId))
                 .thenReturn(Optional.of(repair));
 
-        when(repair.getTechnician()).thenReturn(technician);
+        AsReception reception = mock(AsReception.class);
+        when(repair.getAsReception()).thenReturn(reception);
+        when(reception.getTechnician()).thenReturn(technician);
         when(technician.getId()).thenReturn(technicianId);
         when(repair.getStatus()).thenReturn(RepairStatus.DIAGNOSING);
         when(repair.getConfirmedAt()).thenReturn(LocalDateTime.now());

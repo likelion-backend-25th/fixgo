@@ -54,6 +54,7 @@ public interface AsReceptionRepository extends JpaRepository<AsReception, Long> 
             Pageable pageable
     );
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<AsReception> findByIdAndStatusNotIn(Long id, List<AsReceptionStatus> statuses);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

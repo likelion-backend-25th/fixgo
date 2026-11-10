@@ -16,6 +16,7 @@ import net.likelion.bebc25.fixgo.config.JpaConfig;
 import net.likelion.bebc25.fixgo.portal.repository.CustomerPortalLinkRepository;
 import net.likelion.bebc25.fixgo.portal.service.CustomerPortalLinkService;
 import net.likelion.bebc25.fixgo.product.repository.ProductModelRepository;
+import net.likelion.bebc25.fixgo.repair.repository.RepairRepository;
 import net.likelion.bebc25.fixgo.shipment.entity.ReturnMethod;
 import net.likelion.bebc25.fixgo.support.AsReceptionFixture;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,6 +61,8 @@ class AsReceptionServiceTest {
     private EntityManager entityManager;
     @Autowired
     private ProductModelRepository productModelRepository;
+    @Autowired
+    private RepairRepository repairRepository;
 
     private static final String REASSIGNMENT_REASON = "Schedule change";
 
@@ -505,6 +508,7 @@ class AsReceptionServiceTest {
     @DisplayName("담당 기사를 재배정하면 변경 내용이 DB에 저장된다")
     void updateTechnician_success() {
         Long previousTechnicianId = reception.getTechnician().getId();
+        var repair = asReceptionService.startMyInspection(reception.getId(), previousTechnicianId);
 
         // when
         var response = asReceptionService.updateTechnician(
@@ -516,6 +520,12 @@ class AsReceptionServiceTest {
         assertThat(response.technician().id()).isEqualTo(technician.getId());
         assertThat(asReceptionRepository.findById(reception.getId()).orElseThrow().getTechnician().getId())
                 .isEqualTo(technician.getId());
+
+        assertThat(repairRepository.findById(repair.id()).orElseThrow().getTechnician().getId())
+                .isEqualTo(technician.getId());
+        assertThat(repairRepository.findByAsReception_Technician_Id(previousTechnicianId)).isEmpty();
+        assertThat(repairRepository.findByAsReception_Technician_Id(technician.getId()))
+                .extracting(it -> it.getId()).containsExactly(repair.id());
 
         var history = assignmentHistoryRepository.findAll();
         assertThat(history).singleElement().satisfies(entry -> {

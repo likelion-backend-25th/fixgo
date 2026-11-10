@@ -86,7 +86,7 @@ public class RepairService {
 
     // 로그인한 기사 본인에게 배정된 수리 목록 조회
     public List<RepairResponse> getMyRepairs(Long technicianId) {
-        return repairRepository.findByTechnician_Id(technicianId)
+        return repairRepository.findByAsReception_Technician_Id(technicianId)
                 .stream()
                 .map(RepairResponse::from)
                 .toList();
@@ -95,7 +95,7 @@ public class RepairService {
     // 로그인한 기사 본인에게 배정된 수리 상세 조회
     public RepairResponse getMyRepair(Long id, Long technicianId) {
 
-        Repair repair = repairRepository.findByIdAndTechnician_Id(id, technicianId)
+        Repair repair = repairRepository.findByIdAndAsReception_Technician_Id(id, technicianId)
                 .orElseThrow(() -> new IllegalArgumentException("본인에게 배정된 수리 건이 아닙니다."));
 
         return RepairResponse.from(repair);
@@ -145,7 +145,7 @@ public class RepairService {
     @Transactional
     public void startRepair(Long id, Long technicianId, String updatedBy) {
 
-        Repair repair = repairRepository.findByIdAndTechnician_Id(id, technicianId)
+        Repair repair = repairRepository.findByIdAndAsReception_Technician_Id(id, technicianId)
                 .orElseThrow(() -> new IllegalArgumentException("본인에게 배정된 수리 건이 아닙니다."));
 
         // 기존 상태 전이 로직 재사용 (접수 상태는 수리 중으로 함께 바뀐다)

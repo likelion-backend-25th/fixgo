@@ -17,7 +17,7 @@ public interface RepairRepository extends JpaRepository<Repair, Long> {
     Optional<Repair> findByAsReception_Id(Long asReceptionId);
 
     // 담당 기사 ID로 수리 목록 조회
-    List<Repair> findByTechnician_Id(Long technicianId);
+    List<Repair> findByAsReception_Technician_Id(Long technicianId);
 
     // 수리 상태로 수리 목록 조회
     List<Repair> findByStatus(RepairStatus status);
@@ -40,7 +40,7 @@ public interface RepairRepository extends JpaRepository<Repair, Long> {
     boolean existsByIdAndStatus(Long repairId, RepairStatus status);
 
     // 수리 ID와 담당 기사 ID로 수리 정보 조회
-    Optional<Repair> findByIdAndTechnician_Id(Long id, Long technicianId);
+    Optional<Repair> findByIdAndAsReception_Technician_Id(Long id, Long technicianId);
 
     // 수리 정보 비관적 쓰기 잠금 조회
     @Lock(LockModeType.PESSIMISTIC_WRITE)
