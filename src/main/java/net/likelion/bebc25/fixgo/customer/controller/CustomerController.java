@@ -8,6 +8,7 @@ import net.likelion.bebc25.fixgo.customer.excel.CustomerExcelService;
 import net.likelion.bebc25.fixgo.customer.service.CustomerService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -16,8 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -56,22 +55,12 @@ public class CustomerController {
                 .body(customerService.create(request, createdBy));
     }
 
-    // 고객 검색시 해당되는 결과 반환
+    // 고객 목록/검색 (조건 없으면 전체, id 내림차순 페이징)
     @GetMapping
-    public ResponseEntity<List<CustomerDto.Response>> search(
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) String phone,
-            @RequestParam(required = false) String email
-    ) {
-        return ResponseEntity.ok(
-                customerService.search(new CustomerDto.SearchRequest(name, phone, email))
-        );
-    }
-
-    @GetMapping("/search")
-    public ResponseEntity<Page<CustomerDto.Response>> searchPage(
+    public ResponseEntity<Page<CustomerDto.Response>> search(
             @ModelAttribute CustomerDto.SearchRequest request,
-            @PageableDefault(size = 20, sort = "id") Pageable pageable
+            @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.DESC)
+            Pageable pageable
     ) {
         return ResponseEntity.ok(customerService.searchPage(request, pageable));
     }

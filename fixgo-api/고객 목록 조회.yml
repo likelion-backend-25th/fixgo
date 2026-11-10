@@ -5,20 +5,7 @@ info:
 
 http:
   method: GET
-  url: "{{baseUrl}}/customers?name=김"
-  params:
-    - name: name
-      value: "김"
-      type: query
-      description: 고객명 부분 일치 검색
-    - name: phone
-      value: ""
-      type: query
-      description: 연락처 부분 일치 검색
-    - name: email
-      value: ""
-      type: query
-      description: 이메일 부분 일치 검색
+  url: "{{baseUrl}}/customers"
   auth: inherit
 
 settings:

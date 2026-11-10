@@ -45,43 +45,21 @@ public class CustomerService {
         return CustomerDto.Response.from(customer);
     }
 
-    public List<CustomerDto.Response> search(CustomerDto.SearchRequest request) {
-        // 고객명 검색
-        if (request.name() != null && !request.name().isBlank()) {
-            return customerRepository.findByNameContaining(request.name())
-                    .stream()
-                    .map(CustomerDto.Response::from)
-                    .toList();
-        }
-        // 전화번호 검색
-        else if (request.phone() != null && !request.phone().isBlank()) {
-            return customerRepository.findByPhoneContaining(request.phone())
-                    .stream()
-                    .map(CustomerDto.Response::from)
-                    .toList();
-        }
-        // 이메일 검색
-        else if (request.email() != null && !request.email().isBlank()) {
-            return customerRepository.findByEmailContaining(request.email())
-                    .stream()
-                    .map(CustomerDto.Response::from)
-                    .toList();
-        } else {
-            return List.of();
-        }
-    }
-
+    // 고객 목록/검색 (조건 없으면 전체 페이징)
     public Page<CustomerDto.Response> searchPage(CustomerDto.SearchRequest request, Pageable pageable) {
         if (request.name() != null && !request.name().isBlank()) {
-            return customerRepository.findByNameContaining(request.name(), pageable).map(CustomerDto.Response::from);
+            return customerRepository.findByNameContaining(request.name(), pageable)
+                    .map(CustomerDto.Response::from);
         }
         if (request.phone() != null && !request.phone().isBlank()) {
-            return customerRepository.findByPhoneContaining(request.phone(), pageable).map(CustomerDto.Response::from);
+            return customerRepository.findByPhoneContaining(request.phone(), pageable)
+                    .map(CustomerDto.Response::from);
         }
         if (request.email() != null && !request.email().isBlank()) {
-            return customerRepository.findByEmailContaining(request.email(), pageable).map(CustomerDto.Response::from);
+            return customerRepository.findByEmailContaining(request.email(), pageable)
+                    .map(CustomerDto.Response::from);
         }
-        return Page.empty(pageable);
+        return customerRepository.findAll(pageable).map(CustomerDto.Response::from);
     }
 
 
