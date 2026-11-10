@@ -3,8 +3,8 @@ package net.likelion.bebc25.fixgo.repair.service;
 import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
-import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
 import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
+import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairMessageResponse;
@@ -46,7 +46,7 @@ public class RepairService {
         Repair repair = new Repair(
                 asReception,
                 technician,
-                WarrantyResult.FREE,
+                WarrantyResult.UNDECIDED, // 처음부터 무상으로 처리되던 로직 수정
                 RepairStatus.DIAGNOSING
         );
 

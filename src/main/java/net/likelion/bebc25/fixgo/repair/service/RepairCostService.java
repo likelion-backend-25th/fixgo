@@ -107,6 +107,13 @@ public class RepairCostService {
 
         validateWarrantyDecided(repair);
 
+        // 무상 수리는 부품비, 공임, 점검비를 청구하지 않는다.
+        if (repair.getWarrantyResult() == WarrantyResult.FREE) {
+            repair.updateRepairCost(0, 0, 0);
+
+            return new RepairCostResponse(0, 0, 0);
+        }
+
         Product product = repair.getAsReception().getProduct();
 
         ProductModel productModel = productModelRepository
@@ -299,12 +306,25 @@ public class RepairCostService {
         repair.confirmRepairCost();
 
         // 공통 수리 상태 변경 (접수 상태는 견적 승인 대기로 함께 바뀌고 이력이 남는다)
-        repairStatusService.changeStatus(
-                repair,
-                RepairStatus.REQUESTED,
-                userDetails.getUsername(),
-                "수리비 확정"
-        );
+        // 무상은 금액을 0원으로 확정하고 고객의 견적 승인 단계를 생략한다.
+        if (repair.getWarrantyResult() == WarrantyResult.FREE) {
+            repair.updateRepairCost(0, 0, 0);
+
+            repairStatusService.changeStatus(
+                    repair,
+                    RepairStatus.APPROVED,
+                    userDetails.getUsername(),
+                    "무상 수리 확정"
+            );
+        } else {
+            // 유상은 기존처럼 고객 견적 승인 대기로 전환한다.
+            repairStatusService.changeStatus(
+                    repair,
+                    RepairStatus.REQUESTED,
+                    userDetails.getUsername(),
+                    "수리비 확정"
+            );
+        }
     }
 
     // 견적 거부 시 청구할 점검비 (제품군별 최신 점검비)

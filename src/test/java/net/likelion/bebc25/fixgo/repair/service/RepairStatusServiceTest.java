@@ -12,6 +12,7 @@ import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
 import net.likelion.bebc25.fixgo.repair.entity.repair.WarrantyResult;
 import net.likelion.bebc25.fixgo.repair.exception.RepairException;
 import net.likelion.bebc25.fixgo.repair.repository.RepairRepository;
+import net.likelion.bebc25.fixgo.shipment.entity.ReturnMethod;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -220,11 +221,17 @@ class RepairStatusServiceTest {
     }
 
     @Test
-    @DisplayName("무상 수리 완료 시 청구서를 발행하지 않는다.")
+    @DisplayName("무상 수리 완료 시 청구서를 발행하지 않고 배송 대기 상태로 변경한다.")
     void changeRepairingToCompleted() {
         prepareStatusChange(RepairStatus.REPAIRING);
         prepareValidStatusChange();
-        when(repair.getWarrantyResult()).thenReturn(WarrantyResult.FREE);
+
+        when(asReception.getStatus())
+                .thenReturn(AsReceptionStatus.REPAIR_IN_PROGRESS);
+        when(asReception.getReturnMethod())
+                .thenReturn(ReturnMethod.DELIVERY);
+        when(repair.getWarrantyResult())
+                .thenReturn(WarrantyResult.FREE);
 
         repairStatusService.changeStatus(
                 repair,
@@ -234,6 +241,10 @@ class RepairStatusServiceTest {
 
         verify(repair).changeStatus(RepairStatus.COMPLETED);
 
+        verify(asReception).changeStatus(
+                AsReceptionStatus.AWAITING_SHIPMENT
+        );
+
         verify(asStatusHistoryService).record(
                 asReception,
                 "REPAIRING",
@@ -242,8 +253,15 @@ class RepairStatusServiceTest {
                 changedBy
         );
 
+        verify(asStatusHistoryService).record(
+                asReception,
+                "REPAIR_IN_PROGRESS",
+                "AWAITING_SHIPMENT",
+                null,
+                changedBy
+        );
+
         verifyNoInteractions(paymentBillService);
-        verify(asReception, never()).changeStatus(any());
     }
 
     @Test
