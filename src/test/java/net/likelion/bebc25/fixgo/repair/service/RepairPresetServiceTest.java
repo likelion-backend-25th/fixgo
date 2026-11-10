@@ -60,24 +60,26 @@ class RepairPresetServiceTest {
         preset.setId(1L);
     }
 
-    // 단가 계산 Mock 설정
-    private void setUpBasePrice(Long basePrice) {
+    // 기본 단가 및 예상 작업시간 계산 Mock 설정
+    private void setUpCalculations(Long basePrice, Long estimatedMinutes) {
         lenient().when(entityManager.createNativeQuery(anyString()))
                 .thenReturn(query);
 
         lenient().when(query.setParameter(eq(1), any()))
                 .thenReturn(query);
 
+        // 첫 번째 호출: 기본 단가
+        // 두 번째 호출: 예상 작업시간
         lenient().when(query.getSingleResult())
-                .thenReturn(basePrice);
+                .thenReturn(basePrice, estimatedMinutes);
     }
-    
+
     @Test
     @DisplayName("수리 프리셋을 정상적으로 등록한다.")
     void createPresetSuccess() {
         // given
         setUpPreset();
-        setUpBasePrice(0L);
+        setUpCalculations(0L, 0L);
 
         RepairPresetRequest request = mock(RepairPresetRequest.class);
 
@@ -96,9 +98,10 @@ class RepairPresetServiceTest {
         assertThat(result.name()).isEqualTo("액정 교체");
         assertThat(result.description()).isEqualTo("액정 파손 수리");
         assertThat(result.basePrice()).isEqualTo(0L);
+        assertThat(result.estimatedMinutes()).isEqualTo(0L);
 
         verify(repairPresetRepository).save(any(RepairPreset.class));
-        verify(entityManager).createNativeQuery(anyString());
+        verify(entityManager, times(2)).createNativeQuery(anyString());
         verify(repairPresetPartRepository, never()).saveAll(anyList());
     }
 
@@ -107,7 +110,7 @@ class RepairPresetServiceTest {
     void createPresetWithPartsSuccess() {
         // given
         setUpPreset();
-        setUpBasePrice(50000L);
+        setUpCalculations(50000L, 60L);
 
         RepairPresetRequest request = mock(RepairPresetRequest.class);
 
@@ -138,9 +141,11 @@ class RepairPresetServiceTest {
         // then
         assertThat(result).isNotNull();
         assertThat(result.basePrice()).isEqualTo(50000L);
+        assertThat(result.estimatedMinutes()).isEqualTo(60L);
 
         verify(partRepository).findById(10L);
         verify(repairPresetPartRepository).saveAll(anyList());
+        verify(entityManager, times(2)).createNativeQuery(anyString());
     }
 
     @Test
@@ -148,7 +153,7 @@ class RepairPresetServiceTest {
     void getAllPresetsSuccess() {
         // given
         setUpPreset();
-        setUpBasePrice(50000L);
+        setUpCalculations(50000L, 60L);
 
         when(repairPresetRepository.findAll())
                 .thenReturn(List.of(preset));
@@ -161,9 +166,10 @@ class RepairPresetServiceTest {
         assertThat(result).hasSize(1);
         assertThat(result.get(0).name()).isEqualTo("액정 교체");
         assertThat(result.get(0).basePrice()).isEqualTo(50000L);
+        assertThat(result.get(0).estimatedMinutes()).isEqualTo(60L);
 
         verify(repairPresetRepository).findAll();
-        verify(entityManager).createNativeQuery(anyString());
+        verify(entityManager, times(2)).createNativeQuery(anyString());
     }
 
     @Test
@@ -171,7 +177,7 @@ class RepairPresetServiceTest {
     void getPresetSuccess() {
         // given
         setUpPreset();
-        setUpBasePrice(50000L);
+        setUpCalculations(50000L, 60L);
 
         when(repairPresetRepository.findById(1L))
                 .thenReturn(Optional.of(preset));
@@ -184,9 +190,10 @@ class RepairPresetServiceTest {
         assertThat(result).isNotNull();
         assertThat(result.name()).isEqualTo("액정 교체");
         assertThat(result.basePrice()).isEqualTo(50000L);
+        assertThat(result.estimatedMinutes()).isEqualTo(60L);
 
         verify(repairPresetRepository).findById(1L);
-        verify(entityManager).createNativeQuery(anyString());
+        verify(entityManager, times(2)).createNativeQuery(anyString());
     }
 
     @Test
@@ -194,7 +201,7 @@ class RepairPresetServiceTest {
     void updatePresetSuccess() {
         // given
         setUpPreset();
-        setUpBasePrice(50000L);
+        setUpCalculations(50000L, 60L);
 
         RepairPresetUpdate request = new RepairPresetUpdate(
                 "배터리 교체",
@@ -213,6 +220,7 @@ class RepairPresetServiceTest {
         assertThat(result.name()).isEqualTo("배터리 교체");
         assertThat(result.description()).isEqualTo("배터리 수리");
         assertThat(result.basePrice()).isEqualTo(50000L);
+        assertThat(result.estimatedMinutes()).isEqualTo(60L);
 
         verify(repairPresetRepository).findById(1L);
         verify(repairPresetRepository, never()).save(any(RepairPreset.class));
@@ -227,7 +235,7 @@ class RepairPresetServiceTest {
     void updatePresetPartsSuccess() {
         // given
         setUpPreset();
-        setUpBasePrice(50000L);
+        setUpCalculations(50000L, 60L);
 
         RepairPresetPartRequest partRequest =
                 new RepairPresetPartRequest(10L, 2);
@@ -251,15 +259,6 @@ class RepairPresetServiceTest {
         when(partRepository.findById(10L))
                 .thenReturn(Optional.of(part));
 
-        when(entityManager.createNativeQuery(anyString()))
-                .thenReturn(query);
-
-        when(query.setParameter(eq(1), any()))
-                .thenReturn(query);
-
-        when(query.getSingleResult())
-                .thenReturn(50000L);
-
         // when
         RepairPresetResponse result =
                 repairPresetService.updatePreset(1L, request);
@@ -267,6 +266,7 @@ class RepairPresetServiceTest {
         // then
         assertThat(result).isNotNull();
         assertThat(result.basePrice()).isEqualTo(50000L);
+        assertThat(result.estimatedMinutes()).isEqualTo(60L);
 
         InOrder inOrder = inOrder(
                 repairPresetPartRepository,
@@ -280,6 +280,7 @@ class RepairPresetServiceTest {
         inOrder.verify(partRepository).findById(10L);
 
         verify(repairPresetPartRepository).saveAll(anyList());
+        verify(entityManager, times(2)).createNativeQuery(anyString());
     }
 
     @Test
@@ -325,11 +326,11 @@ class RepairPresetServiceTest {
     }
 
     @Test
-    @DisplayName("연결된 부품의 단가와 기본 수량을 반영하여 기본 단가를 반환한다.")
+    @DisplayName("연결된 부품의 단가와 기본 수량을 반영하여 기본 단가와 예상 작업시간을 반환한다.")
     void calculateBasePriceSuccess() {
         // given
         setUpPreset();
-        setUpBasePrice(75000L);
+        setUpCalculations(75000L, 45L);
 
         when(repairPresetRepository.findById(1L))
                 .thenReturn(Optional.of(preset));
@@ -341,9 +342,10 @@ class RepairPresetServiceTest {
         // then
         assertThat(result).isNotNull();
         assertThat(result.basePrice()).isEqualTo(75000L);
+        assertThat(result.estimatedMinutes()).isEqualTo(45L);
 
-        verify(entityManager).createNativeQuery(anyString());
-        verify(query).setParameter(1, 1L);
+        verify(entityManager, times(2)).createNativeQuery(anyString());
+        verify(query, times(2)).setParameter(1, 1L);
     }
 
     @Test

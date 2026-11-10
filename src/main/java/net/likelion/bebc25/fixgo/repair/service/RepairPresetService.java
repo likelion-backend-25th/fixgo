@@ -2,6 +2,7 @@ package net.likelion.bebc25.fixgo.repair.service;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import net.likelion.bebc25.fixgo.repair.dto.RepairPresetPartResponse;
 import net.likelion.bebc25.fixgo.repair.dto.preset.RepairPresetRequest;
 import net.likelion.bebc25.fixgo.repair.dto.preset.RepairPresetResponse;
 import net.likelion.bebc25.fixgo.repair.dto.preset.RepairPresetUpdate;
@@ -12,6 +13,7 @@ import net.likelion.bebc25.fixgo.repair.entity.part.Part;
 import net.likelion.bebc25.fixgo.repair.repository.PartRepository;
 import net.likelion.bebc25.fixgo.repair.repository.RepairPresetPartRepository;
 import net.likelion.bebc25.fixgo.repair.repository.RepairPresetRepository;
+import net.likelion.bebc25.fixgo.repair.repository.RepairSymptomRelationRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +30,7 @@ public class RepairPresetService {
 
     private final RepairPresetRepository repairPresetRepository;
     private final RepairPresetPartRepository repairPresetPartRepository;
+    private final RepairSymptomRelationRepository repairSymptomRelationRepository;
     private final PartRepository partRepository;
     private final EntityManager entityManager;
 
@@ -58,13 +61,31 @@ public class RepairPresetService {
                 .toList();
     }
 
+
     // 프리셋 단건 조회
     public RepairPresetResponse getPreset(Long id) {
         RepairPreset preset = findPreset(id);
         return toResponseDto(preset);
     }
 
-    // 프리셋 수정
+    // [추가] 프리셋에 포함된 부품 목록 조회 (모달 3열)
+    public List<RepairPresetPartResponse> getPresetParts(Long presetId) {
+        findPreset(presetId); // 프리셋이 없으면 404
+
+        return repairPresetPartRepository.findWithPartByPresetId(presetId)
+                .stream()
+                .map(RepairPresetPartResponse::from)
+                .toList();
+    }
+
+    // 고장 증상에 연결된 수리 프리셋 조회 (모달 2열)
+    public List<RepairPresetResponse> getPresetsBySymptom(Long symptomId) {
+        return repairSymptomRelationRepository.findRepairPresetsBySymptomId(symptomId)
+                .stream()
+                .map(this::toResponseDto)
+                .toList();
+    }
+
     // 프리셋 수정
     @Transactional
     public RepairPresetResponse updatePreset(Long id, RepairPresetUpdate request) {
@@ -176,11 +197,31 @@ public class RepairPresetService {
         return ((Number) result).longValue();
     }
 
-    // Entity -> Response DTO 변환
+    // 프리셋에 연결된 부품의 예상 작업시간 합산
+    private Long calculateEstimatedMinutes(Long presetId) {
+
+        Object result = entityManager.createNativeQuery("""
+                                                                SELECT COALESCE(SUM(p.standard_minutes * rpp.quantity), 0)
+                                                                FROM repair_preset_part rpp
+                                                                JOIN part p ON p.id = rpp.part_id
+                                                                WHERE rpp.repair_preset_id = ?
+                                                                """)
+                .setParameter(1, presetId)
+                .getSingleResult();
+
+        return ((Number) result).longValue();
+    }
+
+    // [수정] Entity -> Response DTO 변환 (원래대로 3개 인자)
     private RepairPresetResponse toResponseDto(RepairPreset preset) {
         Long basePrice = calculateBasePrice(preset.getId());
+        Long estimatedMinutes = calculateEstimatedMinutes(preset.getId());
 
-        return RepairPresetResponse.from(preset, basePrice);
+        return RepairPresetResponse.from(
+                preset,
+                basePrice,
+                estimatedMinutes
+        );
     }
 
     // 프리셋 이름 검색

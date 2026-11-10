@@ -2531,3 +2531,53 @@ WHERE NOT EXISTS (
     WHERE existing.repair_preset_id = rp.id
       AND existing.part_id = v.part_id
 );
+
+-- 고장 증상 프리셋 더미데이터 (SymptomPreset: product_category, name)
+INSERT INTO symptom_preset (product_category, name)
+SELECT v.product_category, v.name
+FROM (SELECT 'LAPTOP' AS product_category, '전원 안 켜짐' AS name
+      UNION ALL SELECT 'LAPTOP', '충전 안 됨'
+      UNION ALL SELECT 'LAPTOP', '화면 깜빡임'
+      UNION ALL SELECT 'LAPTOP', '화면 안 켜짐 / 화면 파손'
+      UNION ALL SELECT 'LAPTOP', '키보드 불량'
+      UNION ALL SELECT 'LAPTOP', '배터리 빨리 닳음'
+      UNION ALL SELECT 'LAPTOP', '발열 문제'
+      UNION ALL SELECT 'LAPTOP', '소음 발생'
+      UNION ALL SELECT 'LAPTOP', '와이파이 불량'
+      UNION ALL SELECT 'LAPTOP', '터치패드 불량'
+      UNION ALL SELECT 'PHONE', '전원 안 켜짐'
+      UNION ALL SELECT 'PHONE', '충전 안 됨'
+      UNION ALL SELECT 'PHONE', '화면 이상'
+      UNION ALL SELECT 'PHONE', '배터리 빨리 닳음'
+      UNION ALL SELECT 'PHONE', '발열 문제') v
+WHERE NOT EXISTS (SELECT 1
+                  FROM symptom_preset sp
+                  WHERE sp.name = v.name
+                    AND sp.product_category = v.product_category);
+
+-- 고장 증상 ↔ 수리 프리셋 연결 (RepairSymptomRelation)
+INSERT INTO repair_symptom_relation (symptom_preset_id, repair_preset_id, created_at)
+SELECT sp.id, rp.id, NOW()
+FROM (SELECT 'LAPTOP' AS category, '전원 안 켜짐' AS symptom, '전원 불량' AS repair
+      UNION ALL SELECT 'LAPTOP', '충전 안 됨', '충전 불량'
+      UNION ALL SELECT 'LAPTOP', '화면 깜빡임', '화면 깜빡임'
+      UNION ALL SELECT 'LAPTOP', '화면 안 켜짐 / 화면 파손', '화면 파손'
+      UNION ALL SELECT 'LAPTOP', '화면 안 켜짐 / 화면 파손', '화면 깜빡임'
+      UNION ALL SELECT 'LAPTOP', '키보드 불량', '키보드 불량'
+      UNION ALL SELECT 'LAPTOP', '배터리 빨리 닳음', '배터리 소모'
+      UNION ALL SELECT 'LAPTOP', '발열 문제', '과열'
+      UNION ALL SELECT 'LAPTOP', '소음 발생', '소음 발생'
+      UNION ALL SELECT 'LAPTOP', '소음 발생', '과열'
+      UNION ALL SELECT 'LAPTOP', '와이파이 불량', '와이파이 불량'
+      UNION ALL SELECT 'LAPTOP', '터치패드 불량', '터치패드 불량'
+      UNION ALL SELECT 'PHONE', '전원 안 켜짐', '전원 불량'
+      UNION ALL SELECT 'PHONE', '충전 안 됨', '충전 불량'
+      UNION ALL SELECT 'PHONE', '화면 이상', '화면 파손'
+      UNION ALL SELECT 'PHONE', '배터리 빨리 닳음', '배터리 소모'
+      UNION ALL SELECT 'PHONE', '발열 문제', '과열') v
+         JOIN symptom_preset sp ON sp.name = v.symptom AND sp.product_category = v.category
+         JOIN repair_preset rp ON rp.name = v.repair
+WHERE NOT EXISTS (SELECT 1
+                  FROM repair_symptom_relation r
+                  WHERE r.symptom_preset_id = sp.id
+                    AND r.repair_preset_id = rp.id);

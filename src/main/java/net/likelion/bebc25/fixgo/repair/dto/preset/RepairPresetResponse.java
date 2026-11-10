@@ -12,9 +12,14 @@ public record RepairPresetResponse(
         LocalDateTime updatedAt,
         Long createdBy,
         Long updatedBy,
-        Long basePrice
+        Long basePrice,
+        Long estimatedMinutes
 ) {
-    public static RepairPresetResponse from(RepairPreset preset, Long basePrice) {
+    public static RepairPresetResponse from(
+            RepairPreset preset,
+            Long basePrice,
+            Long estimatedMinutes
+    ) {
         return new RepairPresetResponse(
                 preset.getId(),
                 preset.getName(),
@@ -23,7 +28,8 @@ public record RepairPresetResponse(
                 preset.getUpdatedAt(),
                 preset.getCreatedBy(),
                 preset.getUpdatedBy(),
-                basePrice
+                basePrice,
+                estimatedMinutes
         );
     }
 }

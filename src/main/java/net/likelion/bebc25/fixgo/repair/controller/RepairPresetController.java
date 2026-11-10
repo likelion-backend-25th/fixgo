@@ -3,6 +3,7 @@ package net.likelion.bebc25.fixgo.repair.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
+import net.likelion.bebc25.fixgo.repair.dto.RepairPresetPartResponse;
 import net.likelion.bebc25.fixgo.repair.dto.preset.RepairPresetRequest;
 import net.likelion.bebc25.fixgo.repair.dto.preset.RepairPresetResponse;
 import net.likelion.bebc25.fixgo.repair.dto.preset.RepairPresetUpdate;
@@ -65,5 +66,10 @@ public class RepairPresetController {
             @RequestParam String name
     ) {
         return ResponseEntity.ok(repairPresetService.searchPresets(name));
+    }
+
+    @GetMapping("/{id}/parts")
+    public ResponseEntity<List<RepairPresetPartResponse>> getPresetParts(@PathVariable Long id) {
+        return ResponseEntity.ok(repairPresetService.getPresetParts(id));
     }
 }

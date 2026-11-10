@@ -21,7 +21,7 @@ public class PartController {
 
     @GetMapping
     public ResponseEntity<Page<PartDto.BriefResponse>> searchParts(
-            @RequestBody PartDto.SearchRequest request,
+            @ModelAttribute PartDto.SearchRequest request,   // @RequestBody → @ModelAttribute
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable
     ) {
