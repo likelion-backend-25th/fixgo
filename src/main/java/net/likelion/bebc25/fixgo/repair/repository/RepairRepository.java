@@ -28,12 +28,6 @@ public interface RepairRepository extends JpaRepository<Repair, Long> {
             RepairStatus status
     );
 
-    // 담당 기사 ID와 특정 상태가 아닌 수리 목록 조회
-    List<Repair> findByTechnician_IdAndStatusNot(
-            Long technicianId,
-            RepairStatus status
-    );
-
     // A/S 접수번호로 수리 정보 조회
     Optional<Repair> findByAsReception_ReceptionNumber(String receptionNumber);
 

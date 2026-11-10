@@ -74,14 +74,14 @@ class MemberRepositoryTest {
         receptionFixture.save().updateTechnician(busy);
         AsReception ongoing = receptionFixture.save();
         ongoing.updateTechnician(busy);
-        em.persist(new Repair(ongoing, busy, WarrantyResult.PAID, RepairStatus.REPAIRING));
+        em.persist(new Repair(ongoing, idle, WarrantyResult.PAID, RepairStatus.REPAIRING));
         AsReception ongoingWithoutRepair = receptionFixture.save();
         ongoingWithoutRepair.updateTechnician(busy);
         ongoingWithoutRepair.changeStatus(AsReceptionStatus.REPAIR_IN_PROGRESS);
 
         AsReception completed = receptionFixture.save();
         completed.updateTechnician(busy);
-        em.persist(new Repair(completed, busy, WarrantyResult.PAID, RepairStatus.COMPLETED));
+        em.persist(new Repair(completed, idle, WarrantyResult.PAID, RepairStatus.COMPLETED));
         AsStatusHistory started = new AsStatusHistory(completed, "APPROVED", "REPAIRING", null, busy);
         AsStatusHistory finished = new AsStatusHistory(completed, "REPAIRING", "COMPLETED", null, busy);
         em.persist(started);

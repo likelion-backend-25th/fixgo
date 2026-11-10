@@ -1,6 +1,7 @@
 package net.likelion.bebc25.fixgo.auth.service;
 
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
+import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
 import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
 import net.likelion.bebc25.fixgo.auth.dto.MemberDto;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
@@ -78,14 +79,14 @@ class MemberServiceTest {
         ));
     }
 
-    private void saveActiveRepair(Member technician) {
+    private AsReception saveReception(Member technician) {
         Customer customer = customerRepository.save(
                 new Customer("테스트 고객", "010-1111-2222", "customer@test.com", "12345", "서울시", "강남구", 1L)
         );
         Product product = productRepository.save(
                 new Product(1L, "TEST-SERIAL-001", LocalDateTime.now(), 1L)
         );
-        AsReception asReception = asReceptionRepository.save(new AsReception(
+        return asReceptionRepository.save(new AsReception(
                 "AS-TEST-001",
                 customer,
                 product,
@@ -97,7 +98,6 @@ class MemberServiceTest {
                 ReturnMethod.DELIVERY,
                 null
         ));
-        repairRepository.save(new Repair(asReception, technician, WarrantyResult.FREE, RepairStatus.REQUESTED));
     }
 
     @Test
@@ -456,11 +456,51 @@ class MemberServiceTest {
     }
 
     @Test
+    @DisplayName("수리 기록이 없는 신규 접수도 기사의 비활성화, 역할 변경, 삭제를 막는다")
+    void assignedReceptionWithoutRepairBlocksAccountChanges() {
+        Member technician = saveMember("tech@test.com", Role.ROLE_TECHNICIAN);
+        RefreshToken token = refreshTokenRepository.save(new RefreshToken(technician, "assigned-reception-token"));
+        saveReception(technician);
+
+        assertThatThrownBy(() -> memberService.changeStatus(
+                new MemberDto.StatusChangeRequest(technician.getEmail(), Status.INACTIVE)))
+                .isInstanceOf(EmployeeHasActiveRepairsException.class);
+        assertThatThrownBy(() -> memberService.changeStatus(
+                new MemberDto.StatusChangeRequest(technician.getEmail(), Status.DELETED)))
+                .isInstanceOf(EmployeeHasActiveRepairsException.class);
+        assertThatThrownBy(() -> memberService.changeRole(
+                new MemberDto.RoleChangeRequest(technician.getEmail(), Role.ROLE_ADMIN)))
+                .isInstanceOf(EmployeeHasActiveRepairsException.class);
+        assertThatThrownBy(() -> memberService.deleteMember(technician.getId()))
+                .isInstanceOf(EmployeeHasActiveRepairsException.class);
+
+        assertThat(technician.getStatus()).isEqualTo(Status.ACTIVE);
+        assertThat(technician.getRole()).isEqualTo(Role.ROLE_TECHNICIAN);
+        assertThat(refreshTokenRepository.findById(token.getId()).orElseThrow().getRevokedAt()).isNull();
+    }
+
+    @Test
+    @DisplayName("완료된 접수는 기사 계정 변경을 막지 않는다")
+    void completedReceptionAllowsAccountChanges() {
+        Member technician = saveMember("tech@test.com", Role.ROLE_TECHNICIAN);
+        saveReception(technician).changeStatus(AsReceptionStatus.COMPLETED);
+
+        memberService.changeStatus(new MemberDto.StatusChangeRequest(technician.getEmail(), Status.INACTIVE));
+        memberService.changeRole(new MemberDto.RoleChangeRequest(technician.getEmail(), Role.ROLE_ADMIN));
+        memberService.deleteMember(technician.getId());
+
+        assertThat(technician.getRole()).isEqualTo(Role.ROLE_ADMIN);
+        assertThat(technician.getStatus()).isEqualTo(Status.DELETED);
+    }
+
+    @Test
     @DisplayName("진행 중인 A/S가 있는 기사는 삭제할 수 없다")
     void deleteMember_technicianHasActiveRepairs() {
         Member technician = saveMember("tech@test.com", Role.ROLE_TECHNICIAN);
         RefreshToken token = refreshTokenRepository.save(new RefreshToken(technician, "active-repair-token"));
-        saveActiveRepair(technician);
+        AsReception reception = saveReception(technician);
+        reception.changeStatus(AsReceptionStatus.AWAITING_QUOTE_APPROVAL);
+        repairRepository.save(new Repair(reception, technician, WarrantyResult.FREE, RepairStatus.REQUESTED));
 
         assertThatThrownBy(() -> memberService.deleteMember(technician.getId()))
                 .isInstanceOf(EmployeeHasActiveRepairsException.class)

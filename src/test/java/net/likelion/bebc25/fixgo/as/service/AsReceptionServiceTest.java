@@ -33,6 +33,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -74,6 +75,7 @@ class AsReceptionServiceTest {
     void setUpReception() {
         reception = asReceptionFixture.save();
         receptionist = new CustomUserDetails(reception.getReceptionist());
+        setProductOwner(reception.getCustomer().getId());
         technician = memberRepository.save(new Member(
                 "technician@test.com", "password", "수리기사", "010-3333-4444",
                 "서울시", Role.ROLE_TECHNICIAN, "profile.png"));
@@ -193,6 +195,41 @@ class AsReceptionServiceTest {
                 .isInstanceOfSatisfying(ResponseStatusException.class,
                         exception -> assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.CONFLICT));
         assertThat(reception.getMemo()).isEqualTo(originalMemo);
+    }
+
+    private void setProductOwner(Long customerId) {
+        var product = reception.getProduct();
+        product.update(product.getProductModelId(), customerId, product.getSerialNumber(),
+                product.getManufacturedAt(), product.getPurchasedAt(), receptionist.getId());
+    }
+
+    @Test
+    @DisplayName("다른 고객 소유 제품은 접수할 수 없다")
+    void create_rejectsAnotherCustomersProduct() {
+        Long anotherCustomerId = asReceptionFixture.save().getCustomer().getId();
+        assertOwnershipConflict(anotherCustomerId, "선택한 고객의 보유 제품만 접수할 수 있습니다.");
+    }
+
+    @Test
+    @DisplayName("소유 고객이 등록되지 않은 제품은 접수할 수 없다")
+    void create_rejectsUnownedProduct() {
+        setProductOwner(null);
+        assertOwnershipConflict(reception.getCustomer().getId(),
+                "소유 고객이 등록되지 않은 제품입니다. 제품에 고객을 먼저 등록해 주세요.");
+    }
+
+    private void assertOwnershipConflict(Long customerId, String reason) {
+        long receptionCount = asReceptionRepository.count();
+        var request = request(customerId, reception.getProduct().getId(), technician.getId());
+
+        assertThatThrownBy(() -> asReceptionService.createReception(receptionist, request))
+                .isInstanceOfSatisfying(ResponseStatusException.class, exception -> {
+                    assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+                    assertThat(exception.getReason()).isEqualTo(reason);
+                });
+        assertThat(asReceptionRepository.count()).isEqualTo(receptionCount);
+        assertThat(customerPortalLinkRepository.count()).isZero();
+        assertThat(asStatusHistoryRepository.count()).isZero();
     }
 
     @Test
@@ -461,11 +498,13 @@ class AsReceptionServiceTest {
     @Test
     @DisplayName("접수 상태를 변경하면 이전 상태와 수행자 및 사유가 이력에 저장된다")
     void changeReceptionStatus_success() {
+        asReceptionService.startMyInspection(reception.getId(), reception.getTechnician().getId());
+
         // when
         asReceptionService.changeReceptionStatus(
                 reception.getId(),
-                AsReceptionStatus.INSPECTION,
-                "점검 시작",
+                AsReceptionStatus.WARRANTY_REVIEW,
+                "보증 판정",
                 receptionist
         );
         entityManager.flush();
@@ -473,13 +512,57 @@ class AsReceptionServiceTest {
 
         // then
         assertThat(asReceptionRepository.findById(reception.getId()).orElseThrow().getStatus())
-                .isEqualTo(AsReceptionStatus.INSPECTION);
+                .isEqualTo(AsReceptionStatus.WARRANTY_REVIEW);
         var history = asStatusHistoryRepository.findHistoryByReceptionId(reception.getId());
-        assertThat(history).hasSize(1);
-        assertThat(history.getFirst().getFromStatus()).isEqualTo("RECEIVED");
-        assertThat(history.getFirst().getToStatus()).isEqualTo("INSPECTION");
-        assertThat(history.getFirst().getReason()).isEqualTo("점검 시작");
+        assertThat(history).hasSize(2);
+        assertThat(history.getFirst().getFromStatus()).isEqualTo("INSPECTION");
+        assertThat(history.getFirst().getToStatus()).isEqualTo("WARRANTY_REVIEW");
+        assertThat(history.getFirst().getReason()).isEqualTo("보증 판정");
         assertThat(history.getFirst().getChangedBy().getId()).isEqualTo(receptionist.getId());
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = AsReceptionStatus.class, mode = EnumSource.Mode.EXCLUDE,
+            names = {"INSPECTION", "WARRANTY_REVIEW"})
+    @DisplayName("점검 중인 접수도 수동 변경으로 다른 업무 단계를 건너뛸 수 없다")
+    void changeReceptionStatus_rejectsWorkflowTransitions(AsReceptionStatus target) {
+        asReceptionService.startMyInspection(reception.getId(), reception.getTechnician().getId());
+
+        assertThatThrownBy(() -> asReceptionService.changeReceptionStatus(
+                reception.getId(), target, "수동 변경", receptionist))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        exception -> assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.CONFLICT));
+        assertThat(reception.getStatus()).isEqualTo(AsReceptionStatus.INSPECTION);
+        assertThat(asStatusHistoryRepository.findHistoryByReceptionId(reception.getId())).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("점검 기록 없이 접수 상태만 점검으로 변경할 수 없다")
+    void changeReceptionStatus_requiresInspectionWorkflow() {
+        assertThatThrownBy(() -> asReceptionService.changeReceptionStatus(
+                reception.getId(), AsReceptionStatus.INSPECTION, "수동 변경", receptionist))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        exception -> assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.CONFLICT));
+        assertThat(reception.getStatus()).isEqualTo(AsReceptionStatus.RECEIVED);
+        assertThat(repairRepository.findByAsReception_Id(reception.getId())).isEmpty();
+        assertThat(asStatusHistoryRepository.findHistoryByReceptionId(reception.getId())).isEmpty();
+    }
+
+    @Test
+    @DisplayName("등록 담당자가 아닌 접수 담당자와 기사는 접수 상태를 수동 변경할 수 없다")
+    void changeReceptionStatus_rejectsUnauthorizedStaff() {
+        asReceptionService.startMyInspection(reception.getId(), reception.getTechnician().getId());
+        Member otherReceptionist = memberRepository.save(new Member(
+                "other-receptionist@test.com", "password", "다른 접수 담당자", "010-1234-5678",
+                "서울시", Role.ROLE_RECEPTIONIST, "profile.png"));
+
+        for (Member staff : List.of(otherReceptionist, technician)) {
+            assertThatThrownBy(() -> asReceptionService.changeReceptionStatus(
+                    reception.getId(), AsReceptionStatus.WARRANTY_REVIEW, "보증 판정", new CustomUserDetails(staff)))
+                    .isInstanceOf(AccessDeniedException.class);
+        }
+        assertThat(reception.getStatus()).isEqualTo(AsReceptionStatus.INSPECTION);
+        assertThat(asStatusHistoryRepository.findHistoryByReceptionId(reception.getId())).hasSize(1);
     }
 
     @Test

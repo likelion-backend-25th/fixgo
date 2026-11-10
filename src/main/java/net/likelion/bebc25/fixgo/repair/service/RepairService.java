@@ -35,12 +35,10 @@ public class RepairService {
     public RepairMessageResponse createRepair(RepairRequest dto, String createdBy) {
 
         // A/S 접수 정보 조회
-        AsReception asReception = asReceptionRepository.findById(dto.asReceptionId())
+        AsReception asReception = asReceptionRepository.findByIdWithLock(dto.asReceptionId())
                 .orElseThrow(() -> new IllegalArgumentException("A/S 접수 정보를 찾을 수 없습니다."));
 
-        // 담당 기사 정보 조회
-        Member technician = memberRepository.findById(dto.technicianId())
-                .orElseThrow(() -> new IllegalArgumentException("담당 기사를 찾을 수 없습니다."));
+        Member technician = requireAssignedTechnician(asReception, dto.technicianId());
 
         // 수리 생성 (초기 상태 DIAGNOSING)
         Repair repair = new Repair(
@@ -117,16 +115,22 @@ public class RepairService {
         Repair repair = findRepair(id);
 
         // A/S 접수 정보 조회
-        AsReception asReception = asReceptionRepository.findById(dto.asReceptionId())
+        AsReception asReception = asReceptionRepository.findByIdWithLock(dto.asReceptionId())
                 .orElseThrow(() -> new IllegalArgumentException("A/S 접수 정보를 찾을 수 없습니다."));
 
-        // 담당 기사 정보 조회
-        Member technician = memberRepository.findById(dto.technicianId())
-                .orElseThrow(() -> new IllegalArgumentException("담당 기사를 찾을 수 없습니다."));
+        Member technician = requireAssignedTechnician(asReception, dto.technicianId());
 
         RepairRequest.toEntity(repair, dto, asReception, technician);
 
         return RepairResponse.from(repair);
+    }
+
+    private Member requireAssignedTechnician(AsReception reception, Long requestedTechnicianId) {
+        Member technician = reception.getTechnician();
+        if (technician == null || !technician.getId().equals(requestedTechnicianId)) {
+            throw new IllegalArgumentException("접수에 배정된 기사와 일치해야 합니다. 담당 기사 변경은 접수에서 처리해 주세요.");
+        }
+        return technician;
     }
 
     // 수리 삭제

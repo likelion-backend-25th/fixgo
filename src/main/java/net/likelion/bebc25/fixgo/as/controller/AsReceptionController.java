@@ -81,8 +81,9 @@ public class AsReceptionController {
         return ResponseEntity.ok(asReceptionService.updateReception(id, userDetails, request));
     }
 
-    // 접수 상태 변경 (내 admin 컨트롤러에서 이동)
-    @PatchMapping("/{receptionId}/status")   // ← 원래 admin 파일의 매핑 줄로 교체
+    // 접수 상태 수동 변경
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONIST')")
+    @PatchMapping("/{receptionId}/status")
     public void changeReceptionStatus(
             @PathVariable Long receptionId,
             @RequestParam AsReceptionStatus newStatus,

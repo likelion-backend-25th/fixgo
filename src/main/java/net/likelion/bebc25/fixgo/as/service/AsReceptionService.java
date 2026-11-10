@@ -68,13 +68,21 @@ public class AsReceptionService {
         Customer customer = customerRepository.findById(request.customerId())
                 .orElseThrow(() -> new NoSuchElementException("존재하지 않는 고객입니다."));
 
-        Product product = productRepository.findById(request.productId())
+        Product product = productRepository.findByIdWithReadLock(request.productId())
                 .orElseThrow(() -> new NoSuchElementException("지원하지 않는 제품입니다."));
+        if (product.getCustomerId() == null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "소유 고객이 등록되지 않은 제품입니다. 제품에 고객을 먼저 등록해 주세요.");
+        }
+        if (!customer.getId().equals(product.getCustomerId())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "선택한 고객의 보유 제품만 접수할 수 있습니다.");
+        }
 
         Member receptionist = memberRepository.findById(userDetails.getId())
                 .orElseThrow(() -> new NoSuchElementException("존재하지 않는 직원입니다."));
 
-        Member technician = memberRepository.findById(request.technicianId())
+        Member technician = memberRepository.findByIdWithLock(request.technicianId())
                 .orElseThrow(() -> new NoSuchElementException("존재하지 않는 직원입니다."));
 
         // 기사 역할 확인
@@ -125,14 +133,26 @@ public class AsReceptionService {
         AsReception asReception = asReceptionRepository.findByIdWithLock(receptionId)
                 .orElseThrow(() -> new NoSuchElementException("존재하지 않는 A/S 접수입니다."));
 
-        AsReceptionStatus currentStatus = asReception.getStatus();
+        Member changedBy = memberRepository.findById(userDetails.getId())
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 직원입니다."));
+        if (changedBy.getRole() != Role.ROLE_ADMIN
+                && !(changedBy.getRole() == Role.ROLE_RECEPTIONIST
+                && asReception.getReceptionist().getId().equals(changedBy.getId()))) {
+            throw new AccessDeniedException("관리자 또는 해당 건을 등록한 접수 담당자만 상태를 변경할 수 있습니다.");
+        }
 
+        AsReceptionStatus currentStatus = asReception.getStatus();
         if (currentStatus == newStatus) {
             throw new IllegalArgumentException("이미 해당 상태로 처리되어 있습니다.");
         }
 
-        Member changedBy = memberRepository.findById(userDetails.getId())
-                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 직원입니다."));
+        // 점검 시작, 견적, 수리, 결제, 인도는 각 업무에서 접수 상태도 함께 변경한다.
+        if (currentStatus != AsReceptionStatus.INSPECTION || newStatus != AsReceptionStatus.WARRANTY_REVIEW
+                || repairRepository.findByAsReception_Id(receptionId)
+                        .filter(repair -> repair.getStatus() == RepairStatus.DIAGNOSING).isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "점검 중인 접수만 보증 판정으로 변경할 수 있습니다. 다른 상태는 해당 업무에서 처리해 주세요.");
+        }
 
         asReception.changeStatus(newStatus);
 
@@ -248,7 +268,7 @@ public class AsReceptionService {
                 .orElseThrow(() -> new NoSuchElementException("존재하지 않는 접수입니다."
                 ));
 
-        Member technician = memberRepository.findById(technicianId).
+        Member technician = memberRepository.findByIdWithLock(technicianId).
                 orElseThrow(() -> new NoSuchElementException(
                         "존재하지 않는 직원입니다."
                 ));

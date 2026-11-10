@@ -17,11 +17,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
@@ -220,47 +223,53 @@ class RepairStatusServiceTest {
         );
     }
 
-    @Test
-    @DisplayName("무상 수리 완료 시 청구서를 발행하지 않고 배송 대기 상태로 변경한다.")
-    void changeRepairingToCompleted() {
+    @ParameterizedTest
+    @CsvSource({
+            "FREE, 0, DELIVERY, AWAITING_SHIPMENT",
+            "FREE, 0, PICKUP, AWAITING_PICKUP",
+            "PAID, 0, DELIVERY, AWAITING_SHIPMENT",
+            "PAID, 0, PICKUP, AWAITING_PICKUP"
+    })
+    @DisplayName("청구할 금액이 없는 수리는 완료 후 수령 방식에 맞게 전환한다")
+    void completeRepairWithoutPayment(
+            WarrantyResult warranty, int amount, ReturnMethod returnMethod, AsReceptionStatus target
+    ) {
         prepareStatusChange(RepairStatus.REPAIRING);
-        prepareValidStatusChange();
+        AsReception reception = new AsReception("AS-1", null, null, null, null,
+                null, null, null, returnMethod, null);
+        reception.changeStatus(AsReceptionStatus.REPAIR_IN_PROGRESS);
+        when(repair.getAsReception()).thenReturn(reception);
+        when(memberRepository.findByEmail(updatedBy)).thenReturn(Optional.of(changedBy));
+        when(repair.getWarrantyResult()).thenReturn(warranty);
+        if (warranty == WarrantyResult.PAID) {
+            when(repair.getFinalAmount()).thenReturn(amount);
+        }
 
-        when(asReception.getStatus())
-                .thenReturn(AsReceptionStatus.REPAIR_IN_PROGRESS);
-        when(asReception.getReturnMethod())
-                .thenReturn(ReturnMethod.DELIVERY);
-        when(repair.getWarrantyResult())
-                .thenReturn(WarrantyResult.FREE);
+        repairStatusService.changeStatus(repair, RepairStatus.COMPLETED, updatedBy);
 
-        repairStatusService.changeStatus(
-                repair,
-                RepairStatus.COMPLETED,
-                updatedBy
-        );
-
+        assertEquals(target, reception.getStatus());
         verify(repair).changeStatus(RepairStatus.COMPLETED);
+        verify(asStatusHistoryService).record(reception, "REPAIRING", "COMPLETED", null, changedBy);
+        verify(asStatusHistoryService).record(reception, "REPAIR_IN_PROGRESS", target.name(), null, changedBy);
+        verifyNoInteractions(paymentBillService);
+    }
 
-        verify(asReception).changeStatus(
-                AsReceptionStatus.AWAITING_SHIPMENT
-        );
+    @Test
+    @DisplayName("기존 무상 완료 건을 다시 완료 처리하면 접수 이력만 추가한다")
+    void recoverCompletedRepairWithoutPayment() {
+        prepareStatusChange(RepairStatus.COMPLETED);
+        prepareValidStatusChange();
+        when(repair.getWarrantyResult()).thenReturn(WarrantyResult.FREE);
+        when(asReception.getStatus()).thenReturn(AsReceptionStatus.REPAIR_IN_PROGRESS);
+        when(asReception.statusAwaitingReturn()).thenReturn(AsReceptionStatus.AWAITING_PICKUP);
 
+        repairStatusService.changeStatus(repair, RepairStatus.COMPLETED, updatedBy);
+
+        verify(repair, never()).changeStatus(any());
+        verify(asReception).changeStatus(AsReceptionStatus.AWAITING_PICKUP);
         verify(asStatusHistoryService).record(
-                asReception,
-                "REPAIRING",
-                "COMPLETED",
-                null,
-                changedBy
-        );
-
-        verify(asStatusHistoryService).record(
-                asReception,
-                "REPAIR_IN_PROGRESS",
-                "AWAITING_SHIPMENT",
-                null,
-                changedBy
-        );
-
+                asReception, "REPAIR_IN_PROGRESS", "AWAITING_PICKUP", null, changedBy);
+        verifyNoMoreInteractions(asStatusHistoryService);
         verifyNoInteractions(paymentBillService);
     }
 
