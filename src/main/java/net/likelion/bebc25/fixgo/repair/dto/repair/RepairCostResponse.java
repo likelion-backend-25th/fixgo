@@ -1,18 +1,23 @@
 package net.likelion.bebc25.fixgo.repair.dto.repair;
 
-import lombok.Getter;
-import lombok.Setter;
+import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
 
-@Getter
-@Setter
-public class RepairCostResponse {
+public record RepairCostResponse(
+        // 시간당 공임
+        int laborRate,
 
-    // 시간당 공임
-    private int laborRate;
+        // 점검 비용
+        int inspectionCost,
 
-    // 점검 비용
-    private int inspectionCost;
+        // 최종 수리 금액
+        int finalAmount
+) {
 
-    // 최종 수리 금액
-    private int finalAmount;
+    public static RepairCostResponse from(Repair repair) {
+        return new RepairCostResponse(
+                repair.getLaborRate(),
+                repair.getInspectionCost(),
+                repair.getFinalAmount()
+        );
+    }
 }

@@ -4,7 +4,6 @@ import net.likelion.bebc25.fixgo.admin.entity.LaborRate;
 import net.likelion.bebc25.fixgo.admin.entity.RateType;
 import net.likelion.bebc25.fixgo.admin.repository.LaborRateRepository;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
-import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
 import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.entity.Role;
@@ -13,6 +12,7 @@ import net.likelion.bebc25.fixgo.product.entity.Category;
 import net.likelion.bebc25.fixgo.product.entity.Product;
 import net.likelion.bebc25.fixgo.product.entity.ProductModel;
 import net.likelion.bebc25.fixgo.product.repository.ProductModelRepository;
+import net.likelion.bebc25.fixgo.repair.dto.repair.RepairCostResponse;
 import net.likelion.bebc25.fixgo.repair.entity.RepairWork;
 import net.likelion.bebc25.fixgo.repair.entity.part.Part;
 import net.likelion.bebc25.fixgo.repair.entity.part.RepairPartUsage;
@@ -74,9 +74,12 @@ class RepairCostServiceTest {
     void getEstimate_returnsConfirmedCosts() {
         Long receptionId = 1L;
         LocalDateTime confirmedAt = LocalDateTime.of(2026, 1, 1, 10, 0);
+
         Repair repair = mock(Repair.class);
         AsReception reception = mock(AsReception.class);
-        when(repairRepository.findByAsReception_Id(receptionId)).thenReturn(Optional.of(repair));
+
+        when(repairRepository.findByAsReception_Id(receptionId))
+                .thenReturn(Optional.of(repair));
         when(repair.getAsReception()).thenReturn(reception);
         when(reception.getId()).thenReturn(receptionId);
         when(reception.getReceptionNumber()).thenReturn("AS-1");
@@ -110,11 +113,13 @@ class RepairCostServiceTest {
         RepairPartUsage usage = mock(RepairPartUsage.class);
         Part part = mock(Part.class);
 
-        when(repairRepository.findByAsReception_Id(1L)).thenReturn(Optional.of(repair));
+        when(repairRepository.findByAsReception_Id(1L))
+                .thenReturn(Optional.of(repair));
         when(repair.getAsReception()).thenReturn(reception);
         when(reception.getId()).thenReturn(1L);
         when(reception.getReceptionNumber()).thenReturn("AS-1");
-        when(repair.getConfirmedAt()).thenReturn(LocalDateTime.of(2026, 1, 1, 10, 0));
+        when(repair.getConfirmedAt())
+                .thenReturn(LocalDateTime.of(2026, 1, 1, 10, 0));
         when(repair.getId()).thenReturn(5L);
         when(repair.getLaborRate()).thenReturn(50000);
         when(repair.getInspectionCost()).thenReturn(0);
@@ -127,14 +132,17 @@ class RepairCostServiceTest {
         when(usage.getPart()).thenReturn(part);
         when(usage.getQuantity()).thenReturn(1);
         when(usage.getUnitPrice()).thenReturn(189000);
-        when(repairWorkRepository.findByRepairId(5L)).thenReturn(List.of(work));
-        when(repairPartUsageRepository.findByRepairWorkIdIn(List.of(10L))).thenReturn(List.of(usage));
+        when(repairWorkRepository.findByRepairId(5L))
+                .thenReturn(List.of(work));
+        when(repairPartUsageRepository.findByRepairWorkIdIn(List.of(10L)))
+                .thenReturn(List.of(usage));
 
         var response = repairCostService.getEstimate(1L);
 
         assertThat(response.items()).extracting(item -> item.category())
                 .containsExactly("작업", "부품", "공임");
-        assertThat(response.items().get(0).name()).isEqualTo("패널 교체 (화면 파손)");
+        assertThat(response.items().get(0).name())
+                .isEqualTo("패널 교체 (화면 파손)");
         assertThat(response.items().get(0).amount()).isNull();
         assertThat(response.items().get(1).quantity()).isEqualTo(1);
         assertThat(response.items().get(1).amount()).isEqualTo(189000);
@@ -144,23 +152,28 @@ class RepairCostServiceTest {
     @Test
     @DisplayName("연결된 수리 건이 없으면 견적서를 조회할 수 없다")
     void getEstimate_repairNotFound() {
-        when(repairRepository.findByAsReception_Id(1L)).thenReturn(Optional.empty());
+        when(repairRepository.findByAsReception_Id(1L))
+                .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> repairCostService.getEstimate(1L))
                 .isInstanceOfSatisfying(RepairException.class, exception ->
-                        assertThat(exception.getErrorCode()).isEqualTo(RepairErrorCode.REPAIR_NOT_FOUND));
+                        assertThat(exception.getErrorCode())
+                                .isEqualTo(RepairErrorCode.REPAIR_NOT_FOUND));
     }
 
     @Test
     @DisplayName("수리비가 확정되기 전에는 견적서를 조회할 수 없다")
     void getEstimate_costNotConfirmed() {
         Repair repair = mock(Repair.class);
-        when(repairRepository.findByAsReception_Id(1L)).thenReturn(Optional.of(repair));
+
+        when(repairRepository.findByAsReception_Id(1L))
+                .thenReturn(Optional.of(repair));
         when(repair.getConfirmedAt()).thenReturn(null);
 
         assertThatThrownBy(() -> repairCostService.getEstimate(1L))
                 .isInstanceOfSatisfying(RepairException.class, exception ->
-                        assertThat(exception.getErrorCode()).isEqualTo(RepairErrorCode.REPAIR_COST_NOT_CONFIRMED));
+                        assertThat(exception.getErrorCode())
+                                .isEqualTo(RepairErrorCode.REPAIR_COST_NOT_CONFIRMED));
     }
 
     @Test
@@ -211,9 +224,12 @@ class RepairCostServiceTest {
         when(repairPartUsageRepository.findByRepairWorkIdIn(List.of(10L)))
                 .thenReturn(List.of(usage));
 
-        Long result = repairCostService.calculateRepairCost(repairId);
+        RepairCostResponse result =
+                repairCostService.calculateRepairCost(repairId);
 
-        assertThat(result).isEqualTo(82000L);
+        assertThat(result.laborRate()).isEqualTo(20000);
+        assertThat(result.inspectionCost()).isEqualTo(0);
+        assertThat(result.finalAmount()).isEqualTo(82000);
 
         verify(repair).updateRepairCost(80000, 0, 82000);
         verify(repairRepository).findByIdWithLock(repairId);
@@ -251,9 +267,12 @@ class RepairCostServiceTest {
 
         when(inspectionRate.getCost()).thenReturn(15000);
 
-        Long result = repairCostService.calculateRepairCost(repairId);
+        RepairCostResponse result =
+                repairCostService.calculateRepairCost(repairId);
 
-        assertThat(result).isEqualTo(15000L);
+        assertThat(result.laborRate()).isEqualTo(0);
+        assertThat(result.inspectionCost()).isEqualTo(15000);
+        assertThat(result.finalAmount()).isEqualTo(15000);
 
         verify(repair).updateRepairCost(0, 15000, 15000);
 
@@ -464,7 +483,7 @@ class RepairCostServiceTest {
 
         verify(repair, never()).confirmRepairCost();
         verify(repairStatusService, never())
-                .changeStatus(any(), any(), any());
+                .changeStatus(any(), any(), any(), any());
         verifyNoInteractions(asReceptionRepository);
     }
 

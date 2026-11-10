@@ -3,6 +3,7 @@ package net.likelion.bebc25.fixgo.repair.controller;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.entity.Role;
 import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
+import net.likelion.bebc25.fixgo.repair.dto.repair.RepairCostResponse;
 import net.likelion.bebc25.fixgo.repair.service.RepairCostService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,8 +18,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(RepairCostController.class)
 class RepairCostControllerTest {
@@ -34,17 +34,24 @@ class RepairCostControllerTest {
     @DisplayName("수리비 계산 성공")
     void calculateRepairCostSuccess() throws Exception {
         Long repairId = 1L;
-        Long finalAmount = 60000L;
+
+        RepairCostResponse response = new RepairCostResponse(
+                30000,
+                0,
+                60000
+        );
 
         when(repairCostService.calculateRepairCost(repairId))
-                .thenReturn(finalAmount);
+                .thenReturn(response);
 
         mockMvc.perform(
                         post("/api/v1/as/repairs/{repairId}/cost", repairId)
                                 .with(csrf())
                 )
                 .andExpect(status().isOk())
-                .andExpect(content().string("60000"));
+                .andExpect(jsonPath("$.laborRate").value(30000))
+                .andExpect(jsonPath("$.inspectionCost").value(0))
+                .andExpect(jsonPath("$.finalAmount").value(60000));
 
         verify(repairCostService).calculateRepairCost(repairId);
     }
