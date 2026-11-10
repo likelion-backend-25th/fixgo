@@ -26,6 +26,21 @@ public class RepairStatusService {
     private final RepairRepository repairRepository;
     private final PaymentBillService paymentBillService;
 
+    /**
+     * 수리 상태 변경에 따라 바뀌어야 하는 접수 상태. 접수 상태가 바뀌지 않으면 null.
+     * 견적 거부 시에는 점검비를 결제해야 하므로 결제 대기로 보낸다.
+     */
+    static AsReceptionStatus toReceptionStatus(RepairStatus repairStatus) {
+        return switch (repairStatus) {
+            case REQUESTED -> AsReceptionStatus.AWAITING_QUOTE_APPROVAL;
+            case APPROVED -> AsReceptionStatus.AWAITING_REPAIR;
+            case REJECTED -> AsReceptionStatus.AWAITING_PAYMENT;
+            case REPAIRING -> AsReceptionStatus.REPAIR_IN_PROGRESS;
+            // 수리 완료 시 청구서를 발행한 건은 changeStatus에서 결제 대기로 전환한다.
+            case DIAGNOSING, COMPLETED -> null;
+        };
+    }
+
     @Transactional
     public void changeStatus(Repair repair, RepairStatus newStatus, String updatedBy) {
         changeStatus(repair, newStatus, updatedBy, null);
@@ -54,7 +69,9 @@ public class RepairStatusService {
         }
 
         boolean isValidTransition = switch (currentStatus) {
-            case DIAGNOSING -> newStatus == RepairStatus.REQUESTED;
+            case DIAGNOSING -> newStatus == RepairStatus.REQUESTED
+                    || (newStatus == RepairStatus.APPROVED
+                    && repair.getWarrantyResult() == WarrantyResult.FREE);
             case REQUESTED -> newStatus == RepairStatus.APPROVED
                     || newStatus == RepairStatus.REJECTED;
             case APPROVED -> newStatus == RepairStatus.REPAIRING;
@@ -95,6 +112,17 @@ public class RepairStatusService {
 
         // 접수 상태 동기화. 접수 상태 전환은 별도 행으로 남기며, 고객 포탈 진행이력은 이 행만 보여 준다.
         AsReceptionStatus receptionStatus = toReceptionStatus(newStatus);
+
+        // 무상 수리 완료 시 결제 없이 수령 방식에 따라 다음 단계로 이동
+        if (newStatus == RepairStatus.COMPLETED
+                && repair.getWarrantyResult() == WarrantyResult.FREE) {
+
+            receptionStatus = switch (asReception.getReturnMethod()) {
+                case DELIVERY -> AsReceptionStatus.AWAITING_SHIPMENT;
+                case PICKUP -> AsReceptionStatus.AWAITING_PICKUP;
+            };
+        }
+        
         if (newStatus == RepairStatus.COMPLETED
                 && repair.getWarrantyResult() == WarrantyResult.PAID
                 && repair.getFinalAmount() > 0) {
@@ -124,20 +152,5 @@ public class RepairStatusService {
                 reason,
                 changedBy
         );
-    }
-
-    /**
-     * 수리 상태 변경에 따라 바뀌어야 하는 접수 상태. 접수 상태가 바뀌지 않으면 null.
-     * 견적 거부 시에는 점검비를 결제해야 하므로 결제 대기로 보낸다.
-     */
-    static AsReceptionStatus toReceptionStatus(RepairStatus repairStatus) {
-        return switch (repairStatus) {
-            case REQUESTED -> AsReceptionStatus.AWAITING_QUOTE_APPROVAL;
-            case APPROVED -> AsReceptionStatus.AWAITING_REPAIR;
-            case REJECTED -> AsReceptionStatus.AWAITING_PAYMENT;
-            case REPAIRING -> AsReceptionStatus.REPAIR_IN_PROGRESS;
-            // 수리 완료 시 청구서를 발행한 건은 changeStatus에서 결제 대기로 전환한다.
-            case DIAGNOSING, COMPLETED -> null;
-        };
     }
 }

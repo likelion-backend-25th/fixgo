@@ -19,6 +19,7 @@ import net.likelion.bebc25.fixgo.repair.entity.part.RepairPartUsage;
 import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairDecision;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
+import net.likelion.bebc25.fixgo.repair.entity.repair.WarrantyResult;
 import net.likelion.bebc25.fixgo.repair.exception.RepairErrorCode;
 import net.likelion.bebc25.fixgo.repair.exception.RepairException;
 import net.likelion.bebc25.fixgo.repair.repository.RepairPartUsageRepository;
@@ -557,5 +558,84 @@ class RepairCostServiceTest {
         verify(repair, never()).confirmRepairCost();
         verify(repair, never()).changeStatus(any());
         verifyNoInteractions(asReceptionRepository);
+    }
+
+    @Test
+    @DisplayName("무상수리인 경우 공임비, 점검비, 최종 금액을 모두 0원으로 처리한다.")
+    void calculateRepairCostFree() {
+        Long repairId = 1L;
+
+        Repair repair = mock(Repair.class);
+
+        when(repairRepository.findByIdWithLock(repairId))
+                .thenReturn(Optional.of(repair));
+        when(repair.getWarrantyResult()).thenReturn(WarrantyResult.FREE);
+
+        RepairCostResponse result =
+                repairCostService.calculateRepairCost(repairId);
+
+        assertThat(result.laborRate()).isZero();
+        assertThat(result.inspectionCost()).isZero();
+        assertThat(result.finalAmount()).isZero();
+
+        verify(repair).updateRepairCost(0, 0, 0);
+
+        verifyNoInteractions(
+                productModelRepository,
+                laborRateRepository,
+                repairWorkRepository,
+                repairPartUsageRepository
+        );
+    }
+
+    @Test
+    @DisplayName("무상수리를 확정하면 고객 견적 승인 없이 수리 승인 상태로 변경한다.")
+    void confirmRepairCostFree() {
+        Long repairId = 1L;
+        Long technicianId = 10L;
+        Long receptionId = 100L;
+        String username = "technician";
+
+        CustomUserDetails userDetails = mock(CustomUserDetails.class);
+        Member technician = mock(Member.class);
+        Repair repair = mock(Repair.class);
+        AsReception asReception = mock(AsReception.class);
+
+        when(userDetails.getMember()).thenReturn(technician);
+        when(technician.getRole()).thenReturn(Role.ROLE_TECHNICIAN);
+        when(userDetails.getId()).thenReturn(technicianId);
+        when(userDetails.getUsername()).thenReturn(username);
+
+        when(repairRepository.findByIdWithLock(repairId))
+                .thenReturn(Optional.of(repair));
+        when(repair.getAsReception()).thenReturn(asReception);
+        when(asReception.getTechnician()).thenReturn(technician);
+        when(technician.getId()).thenReturn(technicianId);
+        when(repair.getStatus()).thenReturn(RepairStatus.DIAGNOSING);
+        when(repair.getConfirmedAt()).thenReturn(null);
+        when(repair.getWarrantyResult()).thenReturn(WarrantyResult.FREE);
+
+        when(asReception.getId()).thenReturn(receptionId);
+        when(asReceptionRepository.findByIdWithLock(receptionId))
+                .thenReturn(Optional.of(asReception));
+
+        repairCostService.confirmRepairCost(repairId, userDetails);
+
+        verify(repair).confirmRepairCost();
+        verify(repair).updateRepairCost(0, 0, 0);
+
+        verify(repairStatusService).changeStatus(
+                repair,
+                RepairStatus.APPROVED,
+                username,
+                "무상 수리 확정"
+        );
+
+        verify(repairStatusService, never()).changeStatus(
+                repair,
+                RepairStatus.REQUESTED,
+                username,
+                "수리비 확정"
+        );
     }
 }
