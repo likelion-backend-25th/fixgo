@@ -1,5 +1,6 @@
 package net.likelion.bebc25.fixgo.customer.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
 import net.likelion.bebc25.fixgo.customer.dto.CustomerDto;
@@ -17,7 +18,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -35,19 +35,19 @@ public class CustomerController {
 
     // 연락처 중복 체크
     @GetMapping("/check-duplicate")
-    public ResponseEntity<Map<String, Boolean>> checkDuplicate(
+    public ResponseEntity<CustomerDto.DuplicateCheckResponse> checkDuplicate(
             @RequestParam String phone
     ) {
         boolean duplicated = customerService.checkDuplicate(
                 new CustomerDto.DuplicateCheckRequest(phone)
         );
-        return ResponseEntity.ok(Map.of("duplicated", duplicated));
+        return ResponseEntity.ok(new CustomerDto.DuplicateCheckResponse(duplicated));
     }
 
     // 고객 등록
     @PostMapping
     public ResponseEntity<CustomerDto.Response> create(
-            @RequestBody CustomerDto.CreateRequest request,
+            @Valid @RequestBody CustomerDto.CreateRequest request,
             @AuthenticationPrincipal CustomUserDetails user
     ) {
         Long createdBy = user.getMember().getId();
@@ -81,7 +81,7 @@ public class CustomerController {
     @PatchMapping("/{id}")
     public ResponseEntity<CustomerDto.Response> update(
             @PathVariable Long id,
-            @RequestBody CustomerDto.UpdateRequest request,
+            @Valid @RequestBody CustomerDto.UpdateRequest request,
             @AuthenticationPrincipal CustomUserDetails user
     ) {
         Long updatedBy = user.getMember().getId();
@@ -111,7 +111,7 @@ public class CustomerController {
     // 고객 정보 일괄 등록
     @PostMapping("/bulk")
     public ResponseEntity<CustomerDto.BulkCreateResponse> bulkCreate(
-            @RequestBody CustomerDto.BulkCreateRequest request,
+            @Valid @RequestBody CustomerDto.BulkCreateRequest request,
             @AuthenticationPrincipal CustomUserDetails user
     ) {
         Long createdBy = user.getMember().getId();

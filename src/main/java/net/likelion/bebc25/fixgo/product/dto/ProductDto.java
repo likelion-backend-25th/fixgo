@@ -1,5 +1,7 @@
 package net.likelion.bebc25.fixgo.product.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import net.likelion.bebc25.fixgo.product.entity.Category;
 import net.likelion.bebc25.fixgo.product.entity.Product;
 import net.likelion.bebc25.fixgo.product.entity.ProductModel;
@@ -10,10 +12,10 @@ public class ProductDto {
 
     // 수리 대상 제품 정보 요청
     public record CreateRequest(
-            Long productModelId,
+            @NotNull Long productModelId,
             Long customerId,
-            String serialNumber,
-            LocalDateTime manufacturedAt,
+            @NotBlank String serialNumber,
+            @NotNull LocalDateTime manufacturedAt,
             LocalDateTime purchasedAt
     ) {
         public Product toEntity(Long createdBy) {
@@ -30,10 +32,10 @@ public class ProductDto {
 
     // 수리 대상 제품 정보 수정
     public record UpdateRequest(
-            Long productModelId,
+            @NotNull Long productModelId,
             Long customerId,
-            String serialNumber,
-            LocalDateTime manufacturedAt,
+            @NotBlank String serialNumber,
+            @NotNull LocalDateTime manufacturedAt,
             LocalDateTime purchasedAt
     ) {
     }
