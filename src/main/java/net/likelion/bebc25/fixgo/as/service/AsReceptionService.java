@@ -251,6 +251,8 @@ public class AsReceptionService {
 
         Member previousTechnician = reception.getTechnician();
         reception.updateTechnician(technician);
+        repairRepository.findByAsReception_Id(receptionId)
+                .ifPresent(repair -> repair.updateTechnician(technician));
 
         assignmentHistoryRepository.save(new AsTechnicianAssignmentHistory(
                 reception,

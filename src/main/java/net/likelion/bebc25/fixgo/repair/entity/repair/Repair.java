@@ -111,6 +111,10 @@ public class Repair extends BaseEntity {
         this.status = status;
     }
 
+    public void updateTechnician(Member technician) {
+        this.technician = technician;
+    }
+
     // 수리비 확정
     public void confirmRepairCost() {
         if (this.confirmedAt != null) {

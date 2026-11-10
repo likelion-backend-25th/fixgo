@@ -338,7 +338,7 @@ class RepairServiceTest {
         when(repair.getAsReception().getId()).thenReturn(10L);
         when(repair.getTechnician().getId()).thenReturn(technicianId);
 
-        when(repairRepository.findByTechnician_Id(technicianId))
+        when(repairRepository.findByAsReception_Technician_Id(technicianId))
                 .thenReturn(List.of(repair));
 
         List<RepairResponse> response =
@@ -349,7 +349,7 @@ class RepairServiceTest {
         assertEquals(10L, response.get(0).asReceptionId());
         assertEquals(technicianId, response.get(0).technicianId());
 
-        verify(repairRepository).findByTechnician_Id(technicianId);
+        verify(repairRepository).findByAsReception_Technician_Id(technicianId);
     }
 
     @Test
@@ -364,7 +364,7 @@ class RepairServiceTest {
         when(repair.getAsReception().getId()).thenReturn(10L);
         when(repair.getTechnician().getId()).thenReturn(technicianId);
 
-        when(repairRepository.findByIdAndTechnician_Id(repairId, technicianId))
+        when(repairRepository.findByIdAndAsReception_Technician_Id(repairId, technicianId))
                 .thenReturn(Optional.of(repair));
 
         RepairResponse response =
@@ -375,7 +375,7 @@ class RepairServiceTest {
         assertEquals(technicianId, response.technicianId());
 
         verify(repairRepository)
-                .findByIdAndTechnician_Id(repairId, technicianId);
+                .findByIdAndAsReception_Technician_Id(repairId, technicianId);
     }
 
     @Test
@@ -385,7 +385,7 @@ class RepairServiceTest {
         Long repairId = 1L;
         Long technicianId = 30L;
 
-        when(repairRepository.findByIdAndTechnician_Id(repairId, technicianId))
+        when(repairRepository.findByIdAndAsReception_Technician_Id(repairId, technicianId))
                 .thenReturn(Optional.empty());
 
         assertThrows(
@@ -394,7 +394,7 @@ class RepairServiceTest {
         );
 
         verify(repairRepository)
-                .findByIdAndTechnician_Id(repairId, technicianId);
+                .findByIdAndAsReception_Technician_Id(repairId, technicianId);
     }
 
     // ==========================================
@@ -581,13 +581,13 @@ class RepairServiceTest {
 
         Repair repair = createRepair();
 
-        when(repairRepository.findByIdAndTechnician_Id(1L, 1L))
+        when(repairRepository.findByIdAndAsReception_Technician_Id(1L, 1L))
                 .thenReturn(Optional.of(repair));
 
         repairService.startRepair(1L, 1L, "technician");
 
         verify(repairRepository)
-                .findByIdAndTechnician_Id(1L, 1L);
+                .findByIdAndAsReception_Technician_Id(1L, 1L);
 
         verify(repairStatusService)
                 .changeStatus(repair, RepairStatus.REPAIRING, "technician", "수리 시작");

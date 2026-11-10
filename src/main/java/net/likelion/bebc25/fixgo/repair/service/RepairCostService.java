@@ -261,7 +261,8 @@ public class RepairCostService {
                 ));
 
         // 담당 기사 확인
-        if (!repair.getTechnician().getId().equals(userDetails.getId())) {
+        var assignedTechnician = repair.getAsReception().getTechnician();
+        if (assignedTechnician == null || !userDetails.getId().equals(assignedTechnician.getId())) {
             throw new RepairException(
                     RepairErrorCode.NOT_ASSIGNED_TECHNICIAN,
                     "담당 기사만 수리비를 확정할 수 있습니다."

@@ -65,10 +65,12 @@ public record RepairResponse(
 
     // Repair Entity -> RepairResponse
     public static RepairResponse from(Repair repair) {
+        var reception = repair.getAsReception();
+        var technician = reception.getTechnician();
         return new RepairResponse(
                 repair.getId(),
-                repair.getAsReception().getId(),
-                repair.getTechnician().getId(),
+                reception.getId(),
+                technician == null ? repair.getTechnician().getId() : technician.getId(),
                 repair.getDiagnosis(),
                 repair.getWorkNote(),
                 repair.getRepairDecision(),
