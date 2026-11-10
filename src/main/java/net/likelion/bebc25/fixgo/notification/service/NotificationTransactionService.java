@@ -20,7 +20,7 @@ public class NotificationTransactionService {
     private final EntityManager entityManager;
 
     // 이메일 발송 이력 생성
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Long createNotification(EmailDto.CreateRequest request, String eventKey) {
 
         AsReception asReception = null;
@@ -86,7 +86,7 @@ public class NotificationTransactionService {
     }
 
     // 이메일 발송 실패 처리
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public EmailDto.Response markFailed(Long id, String errorMessage) {
         NotificationLog log = findLogForUpdate(id);
 

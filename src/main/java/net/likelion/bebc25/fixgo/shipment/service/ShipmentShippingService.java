@@ -22,6 +22,9 @@ public class ShipmentShippingService {
 
         ShipmentService.ShippingEmailData data = shipmentService.getShippingEmailData(shipmentId);
 
+        // 택배사별 배송 조회 링크 생성
+        String trackingUrl = getTrackingUrl(data.courierCode());
+
         ShipmentDto.Response response = shipmentService.markShipping(shipmentId);
 
         String title = "[FixGo] 배송 시작 안내";
@@ -33,8 +36,10 @@ public class ShipmentShippingService {
                 A/S 접수번호: %s
                 택배사: %s
                 운송장번호: %s
+                [배송 조회]
+                %s
                 
-                해당 택배사 홈페이지에서 배송 조회 서비스를 통해
+                위 링크에 접속하여 운송장번호를 입력하시면
                 배송 진행 상황을 확인하실 수 있습니다.
                 
                 감사합니다.
@@ -42,7 +47,8 @@ public class ShipmentShippingService {
                 """.formatted(
                 data.receptionNumber(),
                 data.courier(),
-                data.trackingNumber());
+                data.trackingNumber(),
+                trackingUrl);
 
         // 이메일 발송 요청 DTO 생성
         EmailDto.CreateRequest request = new EmailDto.CreateRequest(
@@ -64,5 +70,19 @@ public class ShipmentShippingService {
         }
 
         return response;
+    }
+
+    // 택배사별 공식 배송 조회 링크
+    private String getTrackingUrl(String courierCode) {
+        return switch (courierCode) {
+            case "01" -> "https://trace.epost.go.kr/xtts/servlet/kpl.tts.common.svl.SttSVL";
+            case "04" -> "https://www.cjlogistics.com/ko/tool/parcel/tracking";
+            case "05" -> "https://www.hanjin.com/kor/CMS/DeliveryMgr/WaybillSch.do?mCode=MN029";
+            case "06" -> "https://ilogen.com/web/personal/tkSearch";
+            case "08" -> "https://www.lotteglogis.com/home/reservation/tracking/index";
+            default -> throw new IllegalArgumentException(
+                    "지원하지 않는 택배사 코드입니다."
+            );
+        };
     }
 }

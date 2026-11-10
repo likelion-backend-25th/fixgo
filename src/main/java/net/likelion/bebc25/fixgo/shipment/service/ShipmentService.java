@@ -10,6 +10,8 @@ import net.likelion.bebc25.fixgo.shipment.dto.SweetTrackerDto;
 import net.likelion.bebc25.fixgo.shipment.entity.*;
 import net.likelion.bebc25.fixgo.shipment.repository.ShipmentEventRepository;
 import net.likelion.bebc25.fixgo.shipment.repository.ShipmentRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -380,6 +382,7 @@ public class ShipmentService {
 
     }
 
+    // 스마트 택배 마지막 배송 상태
     private String getLastTrackingStatus(SweetTrackerDto.TrackingResponse response) {
         List<SweetTrackerDto.TrackingDetail> details = response.trackingDetails();
 
@@ -399,6 +402,7 @@ public class ShipmentService {
         return latest.kind();
     }
 
+    // 배송 시작 이메일에 필요한 정보 조회
     public ShippingEmailData getShippingEmailData(Long shipmentId) {
 
         Shipment shipment = findShipment(shipmentId);
@@ -418,6 +422,7 @@ public class ShipmentService {
                 customer.getEmail(),
                 asReception.getReceptionNumber(),
                 shipment.getCourier(),
+                shipment.getCourierCode(),
                 shipment.getTrackingNumber()
         );
     }
@@ -436,12 +441,53 @@ public class ShipmentService {
         };
     }
 
+    // 배송 및 방문 수령 통합 목록 조회
+    public Page<ShipmentDto.ManagementResponse> getShipmentManagementList(
+            String status,
+            Pageable pageable
+    ) {
+        if (status == null) {
+            status = "ALL";
+        }
+
+        status = status.trim().toUpperCase();
+
+        // 배송 관리 상태 필터 검증
+        switch (status) {
+            case "ALL",
+                 "AWAITING_SHIPMENT",
+                 "READY",
+                 "SHIPPING",
+                 "DELIVERED",
+                 "AWAITING_PICKUP",
+                 "PICKED_UP" -> {
+            }
+            default -> throw new IllegalArgumentException(
+                    "지원하지 않는 배송 관리 상태입니다."
+            );
+        }
+
+        return asReceptionRepository.findShipmentManagementList(
+                status,
+                AsReceptionStatus.AWAITING_SHIPMENT,
+                AsReceptionStatus.AWAITING_PICKUP,
+                ReturnMethod.DELIVERY,
+                ReturnMethod.PICKUP,
+                ShipmentStatus.READY,
+                ShipmentStatus.SHIPPING,
+                ShipmentStatus.DELIVERED,
+                ShipmentStatus.PICKED_UP,
+                pageable
+        );
+    }
+
     // 배송 알림 이메일 record
     public record ShippingEmailData(
             Long asReceptionId,
             String recipientEmail,
             String receptionNumber,
             String courier,
+            String courierCode,
             String trackingNumber
     ) {}
 }
