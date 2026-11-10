@@ -14,6 +14,7 @@ import net.likelion.bebc25.fixgo.product.entity.ProductModel;
 import net.likelion.bebc25.fixgo.product.repository.ProductModelRepository;
 import net.likelion.bebc25.fixgo.repair.dto.repair.EstimateItemResponse;
 import net.likelion.bebc25.fixgo.repair.dto.repair.EstimateResponse;
+import net.likelion.bebc25.fixgo.repair.dto.repair.RepairCostResponse;
 import net.likelion.bebc25.fixgo.repair.entity.RepairWork;
 import net.likelion.bebc25.fixgo.repair.entity.part.RepairPartUsage;
 import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
@@ -96,7 +97,7 @@ public class RepairCostService {
 
     // 수리비 계산 및 저장
     @Transactional
-    public Long calculateRepairCost(Long repairId) {
+    public RepairCostResponse calculateRepairCost(Long repairId) {
 
         Repair repair = repairRepository.findByIdWithLock(repairId)
                 .orElseThrow(() -> new RepairException(
@@ -117,6 +118,7 @@ public class RepairCostService {
 
         Category category = productModel.getCategory();
 
+        int laborRate = 0;
         int laborCost = 0;
         int inspectionCost = 0;
         int finalAmount;
@@ -132,7 +134,7 @@ public class RepairCostService {
 
         } else if (repair.getRepairDecision() == RepairDecision.REPAIRABLE) {
 
-            int laborRate = getLaborRate(
+            laborRate = getLaborRate(
                     category,
                     RateType.LABOR_RATE
             );
@@ -213,7 +215,11 @@ public class RepairCostService {
                 finalAmount
         );
 
-        return (long) finalAmount;
+        return new RepairCostResponse(
+                laborRate,
+                inspectionCost,
+                finalAmount
+        );
     }
 
     // 제품군 및 요금 종류별 최신 적용 요금 조회
