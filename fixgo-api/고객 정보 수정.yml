@@ -1,0 +1,31 @@
+info:
+  name: 고객 정보 수정
+  type: http
+  seq: 35
+
+http:
+  method: PATCH
+  url: "{{baseUrl}}/customers/:id"
+  params:
+    - name: id
+      value: "1"
+      type: path
+  body:
+    type: json
+    data: |-
+      {
+        "name": "홍길동",
+        "phone": "010-1234-5678",
+        "email": "hong@gmail.com",
+        "zipcode": "12345",
+        "basicAddress": "OO시 OO구 OO대로 123",
+        "detailAddress": "OOO동 OOO호"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

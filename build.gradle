@@ -49,6 +49,9 @@ dependencies {
 
     // 테스트 환경용 H2 인메모리 DB
     testRuntimeOnly 'com.h2database:h2'
+
+    // Apache POI
+    implementation 'org.apache.poi:poi-ooxml:5.4.1'
 }
 
 tasks.named('test') {

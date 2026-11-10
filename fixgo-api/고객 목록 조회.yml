@@ -1,0 +1,29 @@
+info:
+  name: 고객 목록 조회
+  type: http
+  seq: 36
+
+http:
+  method: GET
+  url: "{{baseUrl}}/customers?name=김"
+  params:
+    - name: name
+      value: "김"
+      type: query
+      description: 고객명 부분 일치 검색
+    - name: phone
+      value: ""
+      type: query
+      description: 연락처 부분 일치 검색
+    - name: email
+      value: ""
+      type: query
+      description: 이메일 부분 일치 검색
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

@@ -9,8 +9,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -95,5 +95,67 @@ public class CustomerService {
                 updatedBy
         );
         return CustomerDto.Response.from(customer);
+    }
+
+    // excel로 고객 정보 일괄 등록 요청
+    @Transactional
+    public CustomerDto.BulkCreateResponse bulkCreate(CustomerDto.BulkCreateRequest request, Long createdBy) {
+        // null값 처리
+        if (request == null || request.customers() == null || request.customers().isEmpty()) {
+            throw new IllegalArgumentException("등록할 고객 정보가 없습니다.");
+        }
+
+        // 등록 연락처 후보 추출
+        List<CustomerDto.BulkCreateItem> items = request.customers();
+        Set<String> seenPhones = new HashSet<>();
+        Set<String> requestPhones = items.stream()
+                .map(CustomerDto.BulkCreateItem::phone)
+                .filter(p -> p != null && !p.isBlank())
+                .collect(Collectors.toSet());
+
+        // db에서 연락처 중복 체크
+        Set<String> existingPhones = requestPhones.isEmpty()
+                ? Set.of()
+                : customerRepository.findByPhoneIn(requestPhones).stream()
+                .map(Customer::getPhone)
+                .collect(Collectors.toSet());
+
+        List<Customer> toSave = new ArrayList<>();
+        List<CustomerDto.BulkFailure> failures = new ArrayList<>();
+
+        // 고객 정보 등록 loop
+        for (CustomerDto.BulkCreateItem item : items) {
+            String reason = null;
+            // elements null값 처리 및 등록 불가 사유 정의
+            if (item.name() == null || item.name().isBlank()
+                    || item.phone() == null || item.phone().isBlank()
+                    || item.email() == null || item.email().isBlank()) {
+                reason = "이름, 연락처, 이메일은 필수입니다.";
+            } else if (!seenPhones.add(item.phone())) {
+                reason = "요청 내 중복된 연락처입니다.";
+            } else if (existingPhones.contains(item.phone())) {
+                reason = "이미 등록된 연락처입니다.";
+            }
+
+            if (reason != null) {
+                failures.add(new CustomerDto.BulkFailure(item.rowNumber(), reason));
+                continue;
+            }
+
+            toSave.add(new CustomerDto.CreateRequest(
+                    item.name(), item.phone(), item.email(),
+                    item.zipcode(), item.basicAddress(), item.detailAddress()
+            ).toEntity(createdBy));
+        }
+
+        if (!toSave.isEmpty()) {
+            customerRepository.saveAll(toSave);
+        }
+
+        return new CustomerDto.BulkCreateResponse(
+                toSave.size(),
+                failures.size(),
+                failures
+        );
     }
 }
