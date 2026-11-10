@@ -73,17 +73,38 @@ public interface AsReceptionRepository extends JpaRepository<AsReception, Long> 
     // 배송 및 방문 수령 통합 목록 조회
     @Query(value = """
             SELECT new net.likelion.bebc25.fixgo.shipment.dto.ShipmentDto$ManagementResponse(
-                a.id,s.id,a.receptionNumber,c.name,c.phone,a.returnMethod,a.status,s.status,s.courier,s.trackingNumber,s.shippedAt)
+                a.id,
+                s.id,
+                a.receptionNumber,
+                c.name,
+                c.phone,
+                a.returnMethod,
+                a.status,
+                s.status,
+                s.courier,
+                s.trackingNumber,
+                s.shippedAt
+            )
             FROM AsReception a
             JOIN a.customer c
             LEFT JOIN Shipment s ON s.asReception = a
-            WHERE ((a.returnMethod = :delivery
+            WHERE (
+                (a.returnMethod = :delivery
                     AND a.status = :awaitingShipment
                     AND s.id IS NULL)
                 OR (a.returnMethod = :pickup
                     AND a.status = :awaitingPickup
                     AND s.id IS NULL)
-                OR s.id IS NOT NULL)
+                OR s.id IS NOT NULL
+            )
+            AND (:keyword IS NULL
+                OR LOWER(a.receptionNumber) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                OR LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                OR LOWER(s.recipientName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                OR LOWER(s.trackingNumber) LIKE LOWER(CONCAT('%', :keyword, '%')))
+            AND (:returnMethod = 'ALL'
+                OR (:returnMethod = 'DELIVERY' AND a.returnMethod = :delivery)
+                OR (:returnMethod = 'PICKUP' AND a.returnMethod = :pickup))
             AND (:status = 'ALL'
                 OR (:status = 'AWAITING_SHIPMENT'
                     AND a.returnMethod = :delivery
@@ -106,19 +127,30 @@ public interface AsReceptionRepository extends JpaRepository<AsReception, Long> 
                 OR (:status = 'PICKED_UP'
                     AND a.returnMethod = :pickup
                     AND s.status = :pickedUp))
-                ORDER BY a.id DESC
+            ORDER BY a.id DESC
             """,
             countQuery = """
                     SELECT COUNT(a.id)
                     FROM AsReception a
+                    JOIN a.customer c
                     LEFT JOIN Shipment s ON s.asReception = a
-                    WHERE ((a.returnMethod = :delivery
+                    WHERE (
+                        (a.returnMethod = :delivery
                             AND a.status = :awaitingShipment
                             AND s.id IS NULL)
                         OR (a.returnMethod = :pickup
                             AND a.status = :awaitingPickup
                             AND s.id IS NULL)
-                        OR s.id IS NOT NULL)
+                        OR s.id IS NOT NULL
+                    )
+                    AND (:keyword IS NULL
+                        OR LOWER(a.receptionNumber) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                        OR LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                        OR LOWER(s.recipientName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                        OR LOWER(s.trackingNumber) LIKE LOWER(CONCAT('%', :keyword, '%')))
+                    AND (:returnMethod = 'ALL'
+                        OR (:returnMethod = 'DELIVERY' AND a.returnMethod = :delivery)
+                        OR (:returnMethod = 'PICKUP' AND a.returnMethod = :pickup))
                     AND (:status = 'ALL'
                         OR (:status = 'AWAITING_SHIPMENT'
                             AND a.returnMethod = :delivery
@@ -140,10 +172,12 @@ public interface AsReceptionRepository extends JpaRepository<AsReception, Long> 
                             AND (s.id IS NULL OR s.status = :ready))
                         OR (:status = 'PICKED_UP'
                             AND a.returnMethod = :pickup
-                            AND s.status = :pickedUp)
-                    )""")
+                            AND s.status = :pickedUp))
+                    """)
     Page<ShipmentDto.ManagementResponse> findShipmentManagementList(
+            @Param("keyword") String keyword,
             @Param("status") String status,
+            @Param("returnMethod") String returnMethod,
             @Param("awaitingShipment") AsReceptionStatus awaitingShipment,
             @Param("awaitingPickup") AsReceptionStatus awaitingPickup,
             @Param("delivery") ReturnMethod delivery,
@@ -154,5 +188,6 @@ public interface AsReceptionRepository extends JpaRepository<AsReception, Long> 
             @Param("pickedUp") ShipmentStatus pickedUp,
             Pageable pageable
     );
+
 
 }

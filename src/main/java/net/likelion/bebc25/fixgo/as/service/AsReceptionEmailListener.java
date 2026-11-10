@@ -6,6 +6,7 @@ import net.likelion.bebc25.fixgo.notification.dto.EmailDto;
 import net.likelion.bebc25.fixgo.notification.entity.NotificationStatus;
 import net.likelion.bebc25.fixgo.notification.entity.NotificationType;
 import net.likelion.bebc25.fixgo.notification.service.NotificationService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -16,10 +17,14 @@ import org.springframework.transaction.event.TransactionalEventListener;
 public class AsReceptionEmailListener {
     private final NotificationService notificationService;
 
+    @Value("${fixgo.url}")
+    private String fixgoUrl;
+
     // A/S 접수 트랜잭션 커밋 후 이메일 발송
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void sendReceptionEmail(AsReceptionService.ReceptionCreatedEvent event) {
 
+        String portalUrl = fixgoUrl + "/portal/" + event.customerLink();
         // 고객 이메일이 없는 경우 발송하지 않음
         if (event.recipientEmail() == null || event.recipientEmail().isBlank()) {
             log.warn("A/S 접수 완료 이메일 주소 없음. asReceptionId = {}", event.asReceptionId());
@@ -49,7 +54,7 @@ public class AsReceptionEmailListener {
                 FixGo 드림
                 """.formatted(event.customerName(),
                               event.receptionNumber(),
-                              event.customerLink());
+                              portalUrl);
 
         EmailDto.CreateRequest request = new EmailDto.CreateRequest(
                 event.asReceptionId(),

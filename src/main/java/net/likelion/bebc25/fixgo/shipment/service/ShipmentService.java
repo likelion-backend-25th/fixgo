@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -443,9 +444,18 @@ public class ShipmentService {
 
     // 배송 및 방문 수령 통합 목록 조회
     public Page<ShipmentDto.ManagementResponse> getShipmentManagementList(
+            String keyword,
             String status,
+            String returnMethod,
             Pageable pageable
     ) {
+        // 검색어 정리
+        if (keyword == null || keyword.isBlank()) {
+            keyword = null;
+        } else {
+            keyword = keyword.trim();
+        }
+        // 배송 상태 필터
         if (status == null) {
             status = "ALL";
         }
@@ -467,8 +477,24 @@ public class ShipmentService {
             );
         }
 
+        // 수령방법 필터
+        if (returnMethod == null) {
+            returnMethod = "ALL";
+        }
+        returnMethod = returnMethod.trim().toUpperCase(Locale.ROOT);
+
+        switch (returnMethod) {
+            case "ALL", "DELIVERY", "PICKUP" -> {
+            }
+            default -> throw new IllegalArgumentException(
+                    "지원하지 않는 수령 방법입니다."
+            );
+        }
+
         return asReceptionRepository.findShipmentManagementList(
+                keyword,
                 status,
+                returnMethod,
                 AsReceptionStatus.AWAITING_SHIPMENT,
                 AsReceptionStatus.AWAITING_PICKUP,
                 ReturnMethod.DELIVERY,
