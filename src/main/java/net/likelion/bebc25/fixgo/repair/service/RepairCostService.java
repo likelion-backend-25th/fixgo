@@ -69,7 +69,7 @@ public class RepairCostService {
 
     // 견적 항목은 작업, 그 작업의 부품, 공임, 점검 순서로 만든다.
     private List<EstimateItemResponse> estimateItems(Repair repair) {
-        List<RepairWork> repairWorks = repairWorkRepository.findByRepairId(repair.getId());
+        List<RepairWork> repairWorks = repairWorkRepository.findByRepair_Id(repair.getId());
         List<Long> repairWorkIds = repairWorks.stream()
                 .map(RepairWork::getId)
                 .toList();
@@ -147,7 +147,7 @@ public class RepairCostService {
             );
 
             List<RepairWork> repairWorks =
-                    repairWorkRepository.findByRepairId(repairId);
+                    repairWorkRepository.findByRepair_Id(repairId);
 
             List<Long> repairWorkIds = repairWorks.stream()
                     .map(RepairWork::getId)

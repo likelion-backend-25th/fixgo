@@ -73,7 +73,7 @@ class RepairHistoryServiceTest {
         given(repair.getWorkNote()).willReturn("교체 후 동작 확인");
         given(repair.getLaborRate()).willReturn(30000);
         given(repair.getFinalAmount()).willReturn(90000);
-        given(repairWorkRepository.findByRepairId(repairId)).willReturn(List.of(work));
+        given(repairWorkRepository.findByRepair_Id(repairId)).willReturn(List.of(work));
         given(repairPartUsageRepository.findByRepairWorkIdIn(List.of(workId))).willReturn(List.of(usage));
         given(usage.getRepairWork()).willReturn(work);
         given(usage.getPart()).willReturn(part);
@@ -165,7 +165,7 @@ class RepairHistoryServiceTest {
         given(repairHistoryRepository.findByAsReceptionId(asReceptionId))
                 .willReturn(Optional.of(repair));
 
-        given(repairWorkRepository.findByRepairId(repairId))
+        given(repairWorkRepository.findByRepair_Id(repairId))
                 .willReturn(List.of(repairWork));
 
         given(repairPartUsageRepository.findByRepairWorkIdIn(List.of(repairWorkId)))
@@ -200,7 +200,7 @@ class RepairHistoryServiceTest {
         assertThat(partResponse.totalPrice()).isEqualTo(60000);
 
         verify(repairHistoryRepository).findByAsReceptionId(asReceptionId);
-        verify(repairWorkRepository).findByRepairId(repairId);
+        verify(repairWorkRepository).findByRepair_Id(repairId);
         verify(repairPartUsageRepository)
                 .findByRepairWorkIdIn(List.of(repairWorkId));
     }
@@ -223,7 +223,7 @@ class RepairHistoryServiceTest {
         given(repairHistoryRepository.findByAsReceptionId(asReceptionId))
                 .willReturn(Optional.of(repair));
 
-        given(repairWorkRepository.findByRepairId(repairId))
+        given(repairWorkRepository.findByRepair_Id(repairId))
                 .willReturn(List.of());
 
         // when
