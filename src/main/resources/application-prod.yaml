@@ -4,7 +4,7 @@ spring:
       mode: always
   jpa:
     hibernate:
-      ddl-auto: validate   # 첫 배포 후 validate로 변경
+      ddl-auto: update   # 첫 배포 후 validate로 변경
     properties:
       hibernate:
         show_sql: false
