@@ -41,6 +41,10 @@ public class OpenAIController {
 
     @ResponseBody
     @PostMapping("/chat/stream")
+    @Operation(summary = "AI 스트리밍 채팅", description = "사용자 입력을 받아 AI 응답을 스트리밍으로 반환한다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "AI 스트리밍 응답 성공"),
+    })
     public Flux<String> streamChat(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody OpenAIDto.TestRequest request
@@ -50,6 +54,10 @@ public class OpenAIController {
 
     @ResponseBody
     @GetMapping
+    @Operation(summary = "채팅 이력 조회", description = "로그인한 관리자의 AI 채팅 이력을 조회한다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "채팅 이력 조회 성공"),
+    })
     public List<Chat> getChatHistory(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
