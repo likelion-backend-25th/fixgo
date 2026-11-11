@@ -29,7 +29,7 @@ public class AsTechnicianAssignmentHistory {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(nullable = false)
+    @JoinColumn(name = "changed_by", nullable = false)
     private Member changedBy;
 
     protected AsTechnicianAssignmentHistory() {
