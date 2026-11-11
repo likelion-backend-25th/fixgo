@@ -2581,3 +2581,57 @@ WHERE NOT EXISTS (SELECT 1
                   FROM repair_symptom_relation r
                   WHERE r.symptom_preset_id = sp.id
                     AND r.repair_preset_id = rp.id);
+
+INSERT INTO labor_rate (
+    product_category,
+    rate_type,
+    cost,
+    effective_date,
+    created_at,
+    updated_at,
+    created_by,
+    updated_by
+)
+SELECT
+    'PHONE',
+    'LABOR_RATE',
+    6000,
+    CURRENT_DATE,
+    NOW(),
+    NOW(),
+    0,
+    0
+    WHERE NOT EXISTS (
+    SELECT 1
+    FROM labor_rate
+    WHERE product_category = 'PHONE'
+      AND rate_type = 'LABOR_RATE'
+      AND effective_date = CURRENT_DATE
+);
+
+INSERT INTO labor_rate (
+    product_category,
+    rate_type,
+    cost,
+    effective_date,
+    created_at,
+    updated_at,
+    created_by,
+    updated_by
+)
+SELECT
+    'LAPTOP',
+    'LABOR_RATE',
+    10000,
+    CURRENT_DATE,
+    NOW(),
+    NOW(),
+    0,
+    0
+    WHERE NOT EXISTS (
+    SELECT 1
+    FROM labor_rate
+    WHERE product_category = 'LAPTOP'
+      AND rate_type = 'LABOR_RATE'
+      AND effective_date = CURRENT_DATE
+);
