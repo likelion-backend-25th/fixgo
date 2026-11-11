@@ -96,7 +96,7 @@ public class RepairQuoteService {
     }
 
     private List<CustomerQuoteView.Item> findItems(Repair repair) {
-        List<Long> repairWorkIds = repairWorkRepository.findByRepairId(repair.getId())
+        List<Long> repairWorkIds = repairWorkRepository.findByRepair_Id(repair.getId())
                 .stream()
                 .map(RepairWork::getId)
                 .toList();

@@ -116,7 +116,7 @@ public class PartService {
             throw new NoSuchElementException("존재하지 않거나 아직 완료되지 않은 수리 건입니다.");
         }
 
-        List<RepairWork> repairWorks = repairWorkRepository.findByRepairId(repairId);
+        List<RepairWork> repairWorks = repairWorkRepository.findByRepair_Id(repairId);
         List<Long> repairWorkIds = repairWorks.stream().map(RepairWork::getId).toList();
         List<RepairPartUsage> repairPartUsages = repairPartUsageRepository.findByRepairWorkIdIn(repairWorkIds);
 
