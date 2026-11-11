@@ -88,6 +88,6 @@ sweettracker:
   base-url: https://info.sweettracker.co.kr
   api-key: ${SWEETTRACKER_API_KEY}
 
-# 임시 
+# 임시
 fixgo:
-  url: ${URL:http://localhost:5173}
+  url: ${URL:https://fixgo.likelion.shop}
