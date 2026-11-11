@@ -13,10 +13,13 @@ import java.time.LocalDateTime;
  * <p>
  * 실제 읽고 쓰기는 JDBC Repository가 담당하고, 이 엔티티는 Hibernate ddl-auto로
  * 스키마를 생성하기 위한 용도이다. (기존 schema.sql 대체)
+ * <p>
+ * 백틱으로 감싸야 한다. 기본 이름 전략은 인용되지 않은 이름을 소문자로 바꾸고,
+ * RDS는 대소문자를 구분해서 {@code SPRING_AI_CHAT_MEMORY}를 찾지 못한다.
  */
 @Entity
 @Table(
-        name = "SPRING_AI_CHAT_MEMORY",
+        name = "`SPRING_AI_CHAT_MEMORY`",
         indexes = {
                 @Index(
                         name = "SPRING_AI_CHAT_MEMORY_CONVERSATION_ID_TIMESTAMP_IDX",
