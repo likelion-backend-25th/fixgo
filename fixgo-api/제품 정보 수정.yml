@@ -5,7 +5,7 @@ info:
 
 http:
   method: PATCH
-  url: "{{baseUrl}}/admin/products/{id}"
+  url: "{{baseUrl}}/product-models/{id}"
   auth: inherit
 
 settings:
