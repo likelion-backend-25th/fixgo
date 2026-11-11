@@ -176,8 +176,8 @@ public class PaymentAttemptService {
         // 3. 토스 상태에 따라 반영한다.
         switch (response.status()) {
             case "DONE" -> {
-                attempt.markOnlineDone(response.paymentKey(), PaymentMethod.fromToss(response.method()), response.approvedAt().toLocalDateTime());
-                bill.markPaid(response.approvedAt().toLocalDateTime());
+                attempt.markOnlineDone(response.paymentKey(), PaymentMethod.fromToss(response.method()), TossDto.toKst(response.approvedAt()));
+                bill.markPaid(TossDto.toKst(response.approvedAt()));
             }
             case "ABORTED", "EXPIRED" -> {
                 TossDto.ConfirmResponse.Failure failure = response.failure();
@@ -191,7 +191,7 @@ public class PaymentAttemptService {
                 attempt.markWaitingForDeposit(response.paymentKey());
                 virtualAccountRepository.save(VirtualAccount.create(
                         attempt, account.bankCode(), account.accountNumber(),
-                        response.secret(), account.dueDate().toLocalDateTime()));
+                        response.secret(), TossDto.toKst(account.dueDate())));
             }
             case "IN_PROGRESS", "READY" -> {
                 log.info("토스 결제가 아직 확정 전이라 보류함. orderId={}, tossStatus={}", response.orderId(), response.status());

@@ -289,8 +289,9 @@ public class PaymentDto {
             @Schema(description = "청구서 상태", example = "PAID")
             PaymentBillStatus status,
             @Schema(description = "결제 수단", example = "CARD")
-            PaymentMethod paymentMethod
-
+            PaymentMethod paymentMethod,
+            @Schema(description = "승인 시각", example = "2024-01-01T12:00:00")
+            LocalDateTime approvedAt
     ) {}
 
 
