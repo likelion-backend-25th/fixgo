@@ -2,12 +2,16 @@ package net.likelion.bebc25.fixgo.as.service;
 
 import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.as.dto.AsReceptionDto;
+import net.likelion.bebc25.fixgo.as.dto.AsHistoryListDto;
 import net.likelion.bebc25.fixgo.as.dto.AsStatusHistoryDto;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
 import net.likelion.bebc25.fixgo.as.entity.AsStatusHistory;
 import net.likelion.bebc25.fixgo.as.repository.AsStatusHistoryRepository;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +39,11 @@ public class AsStatusHistoryService {
         record(asReception, null, AsReceptionStatus.RECEIVED.name(), "A/S 최초 접수", changedBy);
     }
 
+    public Page<AsHistoryListDto.StatusItem> search(String keyword, String toStatus, Pageable pageable) {
+        Pageable page = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+        return asStatusHistoryRepository.search(blankToNull(keyword), blankToNull(toStatus), page);
+    }
+
     public List<AsStatusHistoryDto> getHistory(Long receptionId) {
         return asStatusHistoryRepository.findHistoryByReceptionId(receptionId)
                 .stream()
@@ -49,5 +58,9 @@ public class AsStatusHistoryService {
                 .map(AsReceptionDto.CustomerReceptionView.StatusHistoryItem::from)
                 .flatMap(Optional::stream)
                 .toList();
+    }
+
+    private String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 }

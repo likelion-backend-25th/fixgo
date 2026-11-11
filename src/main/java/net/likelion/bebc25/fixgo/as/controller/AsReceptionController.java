@@ -2,6 +2,7 @@ package net.likelion.bebc25.fixgo.as.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import net.likelion.bebc25.fixgo.as.dto.AsHistoryListDto;
 import net.likelion.bebc25.fixgo.as.dto.AsReceptionDto;
 import net.likelion.bebc25.fixgo.as.dto.AsStatusHistoryDto;
 import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
@@ -43,6 +44,27 @@ public class AsReceptionController {
             @Valid @RequestBody AsReceptionDto.CreateReceptionRequest request
     ) {
         return ResponseEntity.status(HttpStatus.CREATED).body(asReceptionService.createReception(userDetails, request));
+    }
+
+    // 전체 상태 변경 이력. 접수별 조회와 달리 관리자 화면의 목록에 쓴다.
+    @GetMapping("/status-histories")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<AsHistoryListDto.StatusItem>> getStatusHistories(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String toStatus,
+            @PageableDefault(size = 20) Pageable pageable
+    ) {
+        return ResponseEntity.ok(asStatusHistoryService.search(keyword, toStatus, pageable));
+    }
+
+    // 전체 기사 배정 이력
+    @GetMapping("/technician-histories")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<AsHistoryListDto.TechnicianItem>> getTechnicianHistories(
+            @RequestParam(required = false) String keyword,
+            @PageableDefault(size = 20) Pageable pageable
+    ) {
+        return ResponseEntity.ok(asReceptionService.searchTechnicianHistory(keyword, pageable));
     }
 
     // 접수 목록 조회
