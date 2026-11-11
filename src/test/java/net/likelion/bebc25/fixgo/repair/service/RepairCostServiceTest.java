@@ -614,6 +614,13 @@ class RepairCostServiceTest {
         when(repair.getStatus()).thenReturn(RepairStatus.DIAGNOSING);
         when(repair.getConfirmedAt()).thenReturn(null);
         when(repair.getWarrantyResult()).thenReturn(WarrantyResult.FREE);
+        Product product = mock(Product.class);
+        ProductModel productModel = mock(ProductModel.class);
+        when(asReception.getProduct()).thenReturn(product);
+        when(product.getPurchasedAt()).thenReturn(LocalDateTime.now().minusMonths(1));
+        when(product.getProductModelId()).thenReturn(1L);
+        when(productModelRepository.findById(1L)).thenReturn(Optional.of(productModel));
+        when(productModel.getWarrantyMonths()).thenReturn(24);
 
         when(asReception.getId()).thenReturn(receptionId);
         when(asReceptionRepository.findByIdWithLock(receptionId))

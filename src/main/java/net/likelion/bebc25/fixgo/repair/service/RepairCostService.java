@@ -31,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -293,6 +294,8 @@ public class RepairCostService {
         }
 
         validateWarrantyDecided(repair);
+        // 무상은 구매일과 모델 보증기간으로 계산된 1차 판정이 무상일 때만 확정한다.
+        validateFreeWarranty(repair);
 
         // A/S 접수 정보 잠금 조회
         AsReception asReception = asReceptionRepository
@@ -337,6 +340,36 @@ public class RepairCostService {
                 ));
 
         return getLaborRate(productModel.getCategory(), RateType.INSPECTION_COST);
+    }
+
+    // 만료일 당일부터는 보증이 끝난 것으로 본다. 유상은 기간 만료이거나 고객 과실 판정이다.
+    private void validateFreeWarranty(Repair repair) {
+        if (repair.getWarrantyResult() != WarrantyResult.FREE) {
+            return;
+        }
+
+        Product product = repair.getAsReception().getProduct();
+        Integer warrantyMonths = null;
+        if (product != null && product.getPurchasedAt() != null) {
+            warrantyMonths = productModelRepository.findById(product.getProductModelId())
+                    .map(ProductModel::getWarrantyMonths)
+                    .orElse(null);
+        }
+
+        if (product == null || product.getPurchasedAt() == null || warrantyMonths == null) {
+            throw new RepairException(
+                    RepairErrorCode.WARRANTY_FREE_NOT_ALLOWED,
+                    "구매일 또는 보증기간이 없어 무상으로 확정할 수 없습니다."
+            );
+        }
+
+        LocalDate expiry = product.getPurchasedAt().toLocalDate().plusMonths(warrantyMonths);
+        if (!LocalDate.now(ZoneId.of("Asia/Seoul")).isBefore(expiry)) {
+            throw new RepairException(
+                    RepairErrorCode.WARRANTY_FREE_NOT_ALLOWED,
+                    "보증 기간이 지나 무상으로 확정할 수 없습니다."
+            );
+        }
     }
 
     // 무상 또는 유상 판정을 저장한 뒤에만 수리비를 처리할 수 있다.

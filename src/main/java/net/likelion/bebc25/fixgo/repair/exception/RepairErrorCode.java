@@ -15,6 +15,7 @@ public enum RepairErrorCode implements ErrorCode {
     PRODUCT_MODEL_NOT_FOUND(HttpStatus.NOT_FOUND),
     INVALID_REPAIR_DECISION(HttpStatus.BAD_REQUEST),
     WARRANTY_RESULT_UNDECIDED(HttpStatus.CONFLICT),
+    WARRANTY_FREE_NOT_ALLOWED(HttpStatus.CONFLICT),
     LABOR_RATE_NOT_FOUND(HttpStatus.NOT_FOUND),
 
     // 수리비 확정 예외
