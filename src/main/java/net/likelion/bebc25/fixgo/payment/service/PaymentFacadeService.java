@@ -116,7 +116,7 @@ public class PaymentFacadeService {
 
         // 환불 완료 처리한다.
         TossDto.Cancel cancel = response.cancels().getFirst();
-        paymentRefundService.completeRefund(prepared.refundId(), cancel.transactionKey(), cancel.canceledAt().toLocalDateTime());
+        paymentRefundService.completeRefund(prepared.refundId(), cancel.transactionKey(), TossDto.toKst(cancel.canceledAt()));
     }
 
     /**

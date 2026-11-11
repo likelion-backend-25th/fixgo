@@ -114,7 +114,7 @@ public class PaymentRefundService {
         switch (response.status()) {
             case "CANCELED" -> {
                 TossDto.Cancel cancel = response.cancels().getFirst();
-                completeRefund(refundId, cancel.transactionKey(), cancel.canceledAt().toLocalDateTime());
+                completeRefund(refundId, cancel.transactionKey(), TossDto.toKst(cancel.canceledAt()));
             }
             case "DONE" -> failRefund(refundId, "TOSS_NOT_CANCELED", "토스에 환불이 반영되지 않음.");
             default -> log.warn("환불 정리 불가 상태. refundId={}, tossStatus={}", refundId, response.status());
