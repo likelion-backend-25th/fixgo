@@ -104,6 +104,7 @@ public class AsReceptionService {
                                  receptionist,
                                  technician)
         );
+        asReception.issueReceptionNumber();
 
         // 고객 포털 링크 발급
         String customerLink = customerPortalLinkService.createLink(asReception.getId());

@@ -258,6 +258,10 @@ class AsReceptionServiceTest {
         assertThat(saved.getCreatedAt()).isNotNull();
         assertThat(saved.getStatusChangedAt()).isNotNull();
         assertThat(response.receptionNumber()).isEqualTo(saved.getReceptionNumber());
+        assertThat(saved.getReceptionNumber()).isEqualTo("AS-%s-%05d".formatted(
+                saved.getCreatedAt().format(java.time.format.DateTimeFormatter.ofPattern("yyMMdd")),
+                saved.getId()));
+        assertThatThrownBy(saved::issueReceptionNumber).isInstanceOf(IllegalStateException.class);
         assertThat(response.technicianId()).isEqualTo(technician.getId());
     }
 
