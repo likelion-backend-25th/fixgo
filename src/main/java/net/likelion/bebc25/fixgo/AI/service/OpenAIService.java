@@ -96,6 +96,7 @@ public class OpenAIService {
     }
 
     private String conversationId(CustomUserDetails userDetails) {
+        
         return userDetails.getId() + "";
     }
 
