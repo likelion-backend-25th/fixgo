@@ -145,7 +145,7 @@ class RepairWorkRepositoryTest {
     void findByRepairId() {
 
         List<RepairWork> result =
-                repairWorkRepository.findByRepairId(repair.getId());
+                repairWorkRepository.findByRepair_Id(repair.getId());
 
         assertThat(result).hasSize(3);
 
@@ -163,7 +163,7 @@ class RepairWorkRepositoryTest {
     void findByWorkName() {
 
         List<RepairWork> result =
-                repairWorkRepository.findByWorkName("메인보드");
+                repairWorkRepository.findByWorkNameContaining("메인보드");
 
         assertThat(result).hasSize(2);
 
@@ -180,7 +180,7 @@ class RepairWorkRepositoryTest {
     void findByWorkNameNotFound() {
 
         List<RepairWork> result =
-                repairWorkRepository.findByWorkName("그래픽카드");
+                repairWorkRepository.findByWorkNameContaining("그래픽카드");
 
         assertThat(result).isEmpty();
     }

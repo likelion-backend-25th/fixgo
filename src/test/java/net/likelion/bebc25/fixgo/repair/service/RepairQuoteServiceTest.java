@@ -106,7 +106,7 @@ class RepairQuoteServiceTest {
         when(repair.getLaborRate()).thenReturn(5_000);
         when(repair.getFinalAmount()).thenReturn(85_000);
         when(work.getId()).thenReturn(7L);
-        when(repairWorkRepository.findByRepairId(REPAIR_ID)).thenReturn(List.of(work));
+        when(repairWorkRepository.findByRepair_Id(REPAIR_ID)).thenReturn(List.of(work));
         when(repairPartUsageRepository.findByRepairWorkIdIn(List.of(7L))).thenReturn(List.of(usage));
         when(usage.getPart()).thenReturn(part);
         when(part.getName()).thenReturn("키보드");
@@ -129,7 +129,7 @@ class RepairQuoteServiceTest {
         when(repairRepository.findByAsReception_Id(RECEPTION_ID)).thenReturn(Optional.of(repair));
         when(repair.getConfirmedAt()).thenReturn(LocalDateTime.now());
         when(repair.getStatus()).thenReturn(RepairStatus.REPAIRING);
-        when(repairWorkRepository.findByRepairId(any())).thenReturn(List.of());
+        when(repairWorkRepository.findByRepair_Id(any())).thenReturn(List.of());
 
         CustomerQuoteView view = repairQuoteService.findCustomerView(RECEPTION_ID).orElseThrow();
 
