@@ -84,7 +84,7 @@ jobs:
             MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
             MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
             SWEETTRACKER_API_KEY=${{ secrets.SWEETTRACKER_API_KEY }}
-            TOSS_SECRET_KEY=${{ secrets.TOSS_SECREY_KEY }}
+            TOSS_SECRET_KEY=${{ secrets.TOSS_SECRET_KEY }}
             DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
             MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
             MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
