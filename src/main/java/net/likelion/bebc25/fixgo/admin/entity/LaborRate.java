@@ -18,6 +18,7 @@ public class LaborRate extends BaseEntity {
     private Long id;
 
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private Category productCategory;
 
     @Column(nullable = false)

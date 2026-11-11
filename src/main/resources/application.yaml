@@ -8,6 +8,7 @@ spring:
       memory:
         repository:
           jdbc:
+            # schema.sql / Spring AI 자동생성 대신 JPA 엔티티(SpringAiChatMemory)로 테이블 생성
             initialize-schema: never
 
   # gmail SMTP
