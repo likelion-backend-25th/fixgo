@@ -1,6 +1,7 @@
 package net.likelion.bebc25.fixgo.as.service;
 
 import lombok.RequiredArgsConstructor;
+import net.likelion.bebc25.fixgo.as.dto.AsHistoryListDto;
 import net.likelion.bebc25.fixgo.as.dto.AsReceptionDto;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
@@ -26,6 +27,7 @@ import net.likelion.bebc25.fixgo.repair.entity.repair.WarrantyResult;
 import net.likelion.bebc25.fixgo.repair.repository.RepairRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
@@ -298,6 +300,12 @@ public class AsReceptionService {
     }
 
     @Transactional(readOnly = true)
+    public Page<AsHistoryListDto.TechnicianItem> searchTechnicianHistory(String keyword, Pageable pageable) {
+        String word = keyword == null || keyword.isBlank() ? null : keyword.trim();
+        Pageable page = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+        return assignmentHistoryRepository.search(word, page);
+    }
+
     public List<AsReceptionDto.TechnicianAssignmentHistoryResponse>
     getTechnicianAssignmentHistory(Long receptionId) {
         return assignmentHistoryRepository

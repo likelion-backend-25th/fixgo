@@ -13,6 +13,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import java.util.List;
 
@@ -36,6 +39,48 @@ class AsStatusHistoryServiceTest {
 
     @InjectMocks
     private AsStatusHistoryService asStatusHistoryService;
+
+    @Test
+    @DisplayName("고객 이력은 접수 상태만 반환하고 수리 완료 이력은 제외한다.")
+    void getCustomerHistory_filtersRepairHistory() {
+        var initial = new AsStatusHistory(asReception, null, "RECEIVED", "최초 접수", changedBy);
+        var repair = new AsStatusHistory(asReception, "REPAIRING", "COMPLETED", "수리 완료", changedBy);
+        when(asStatusHistoryRepository.findHistoryByReceptionId(1L))
+                .thenReturn(List.of(repair, initial));
+
+        var result = asStatusHistoryService.getCustomerHistory(1L);
+
+        assertEquals(1, result.size());
+        assertEquals(AsReceptionStatus.RECEIVED, result.getFirst().status());
+        verify(asStatusHistoryRepository).findHistoryByReceptionId(1L);
+    }
+
+    @Test
+    @DisplayName("이력 검색은 입력을 정리하고 고정된 최신순 정렬을 사용한다.")
+    void search_normalizesFiltersAndPreservesPagination() {
+        var pageable = PageRequest.of(2, 10, Sort.by("reason"));
+        var expectedPage = PageRequest.of(2, 10);
+        when(asStatusHistoryRepository.search("AS-123", "RECEIVED", expectedPage))
+                .thenReturn(Page.empty(expectedPage));
+
+        var result = asStatusHistoryService.search("  AS-123  ", " RECEIVED ", pageable);
+
+        assertEquals(2, result.getNumber());
+        assertEquals(10, result.getSize());
+        verify(asStatusHistoryRepository).search("AS-123", "RECEIVED", expectedPage);
+    }
+
+    @Test
+    @DisplayName("빈 검색 조건은 필터를 적용하지 않는다.")
+    void search_blankFilters() {
+        var pageable = PageRequest.of(0, 20);
+
+        asStatusHistoryService.search("  ", null, pageable);
+        asStatusHistoryService.search(null, "\t", pageable);
+
+        verify(asStatusHistoryRepository, org.mockito.Mockito.times(2))
+                .search(null, null, pageable);
+    }
 
     @Test
     @DisplayName("상태 변경 이력을 저장한다.")
