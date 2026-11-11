@@ -78,6 +78,13 @@ jobs:
 
             echo ">>> 2. GitHub Secrets 기반 운영 환경 변수(.env) 자동 동기화"
             cat << 'EOF' > .env
+            DB_HOST=${{ secrets.DB_HOST }}
+            SPRING_DATASOURCE_USERNAME=${{ secrets.SPRING_DATASOURCE_USERNAME }}
+            SPRING_DATASOURCE_PASSWORD=${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+            MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
+            MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
+            SWEETTRACKER_API_KEY=${{ secrets.SWEETTRACKER_API_KEY }}
+            TOSS_SECRET_KEY=${{ secrets.TOSS_SECREY_KEY }}
             DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
             MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
             MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
