@@ -9,11 +9,7 @@ import net.likelion.bebc25.fixgo.repair.entity.part.PartStatus;
 import net.likelion.bebc25.fixgo.repair.entity.part.PartStockHistory;
 import net.likelion.bebc25.fixgo.repair.entity.part.RepairPartUsage;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
-import net.likelion.bebc25.fixgo.repair.repository.PartRepository;
-import net.likelion.bebc25.fixgo.repair.repository.PartStockHistoryRepository;
-import net.likelion.bebc25.fixgo.repair.repository.RepairPartUsageRepository;
-import net.likelion.bebc25.fixgo.repair.repository.RepairRepository;
-import net.likelion.bebc25.fixgo.repair.repository.RepairWorkRepository;
+import net.likelion.bebc25.fixgo.repair.repository.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,11 +29,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class PartServiceTest {
@@ -221,7 +213,7 @@ class PartServiceTest {
         when(partRepository.findByIdAndStatusNot(1L, PartStatus.DISCONTINUED)).thenReturn(Optional.of(part));
 
         assertThatThrownBy(() -> partService.updateSingleStockQuantity(user(7L),
-                new PartDto.SingleStockUpdateRequest(1L, MovementType.OUT, 2, "손실")))
+                                                                       new PartDto.SingleStockUpdateRequest(1L, MovementType.OUT, 2, "손실")))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("재고가 부족합니다.");
         assertThat(part.getStockQuantity()).isEqualTo(1);
@@ -234,7 +226,7 @@ class PartServiceTest {
         when(partRepository.findByIdAndStatusNot(1L, PartStatus.DISCONTINUED)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> partService.updateSingleStockQuantity(user(7L),
-                new PartDto.SingleStockUpdateRequest(1L, MovementType.IN, 1, "입고")))
+                                                                       new PartDto.SingleStockUpdateRequest(1L, MovementType.IN, 1, "입고")))
                 .isInstanceOf(NoSuchElementException.class)
                 .hasMessage("존재하지 않거나 사용 불가능한 부품입니다.");
     }
@@ -247,7 +239,7 @@ class PartServiceTest {
         assertThatThrownBy(() -> partService.updateMultiStockQuantity(user(7L), 10L))
                 .isInstanceOf(NoSuchElementException.class)
                 .hasMessage("존재하지 않거나 아직 완료되지 않은 수리 건입니다.");
-        verify(repairWorkRepository, never()).findByRepairId(10L);
+        verify(repairWorkRepository, never()).findByRepair_Id(10L);
     }
 
     @Test
@@ -256,7 +248,7 @@ class PartServiceTest {
         when(repairRepository.existsByIdAndStatus(10L, RepairStatus.COMPLETED)).thenReturn(true);
         RepairWork work = mock(RepairWork.class);
         when(work.getId()).thenReturn(20L);
-        when(repairWorkRepository.findByRepairId(10L)).thenReturn(List.of(work));
+        when(repairWorkRepository.findByRepair_Id(10L)).thenReturn(List.of(work));
 
         Part motor = part(1L, "모터", 1000, 10, 5, PartStatus.ACTIVE);
         Part bolt = part(2L, "볼트", 500, 5, 4, PartStatus.ACTIVE);
@@ -291,7 +283,7 @@ class PartServiceTest {
         when(repairRepository.existsByIdAndStatus(10L, RepairStatus.COMPLETED)).thenReturn(true);
         RepairWork work = mock(RepairWork.class);
         when(work.getId()).thenReturn(20L);
-        when(repairWorkRepository.findByRepairId(10L)).thenReturn(List.of(work));
+        when(repairWorkRepository.findByRepair_Id(10L)).thenReturn(List.of(work));
 
         Part motor = part(1L, "모터", 1000, 10, 5, PartStatus.LOW_QUANTITY);
         RepairPartUsage motorUsage = usage(motor, 1);
@@ -311,7 +303,7 @@ class PartServiceTest {
         when(repairRepository.existsByIdAndStatus(10L, RepairStatus.COMPLETED)).thenReturn(true);
         RepairWork work = mock(RepairWork.class);
         when(work.getId()).thenReturn(20L);
-        when(repairWorkRepository.findByRepairId(10L)).thenReturn(List.of(work));
+        when(repairWorkRepository.findByRepair_Id(10L)).thenReturn(List.of(work));
 
         Part motor = part(1L, "모터", 1000, 10, 1, PartStatus.ACTIVE);
         RepairPartUsage motorUsage = usage(motor, 2);

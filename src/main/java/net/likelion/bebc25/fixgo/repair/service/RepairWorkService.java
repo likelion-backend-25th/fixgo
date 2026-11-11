@@ -67,7 +67,7 @@ public class RepairWorkService {
 
     // 특정 수리의 작업 내역 조회
     public List<RepairWorkResponse> getRepairWorksByRepairId(Long repairId) {
-        return repairWorkRepository.findByRepairId(repairId)
+        return repairWorkRepository.findByRepair_Id(repairId)
                 .stream()
                 .map(RepairWorkResponse::from)
                 .toList();
@@ -75,7 +75,7 @@ public class RepairWorkService {
 
     // 작업명으로 검색
     public List<RepairWorkResponse> searchRepairWorks(String workName) {
-        return repairWorkRepository.findByWorkName(workName)
+        return repairWorkRepository.findByWorkNameContaining(workName)
                 .stream()
                 .map(RepairWorkResponse::from)
                 .toList();

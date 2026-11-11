@@ -89,7 +89,7 @@ class RepairCostServiceTest {
         when(repair.getLaborRate()).thenReturn(50000);
         when(repair.getInspectionCost()).thenReturn(10000);
         when(repair.getFinalAmount()).thenReturn(70000);
-        when(repairWorkRepository.findByRepairId(5L)).thenReturn(List.of());
+        when(repairWorkRepository.findByRepair_Id(5L)).thenReturn(List.of());
 
         var response = repairCostService.getEstimate(receptionId);
 
@@ -133,7 +133,7 @@ class RepairCostServiceTest {
         when(usage.getPart()).thenReturn(part);
         when(usage.getQuantity()).thenReturn(1);
         when(usage.getUnitPrice()).thenReturn(189000);
-        when(repairWorkRepository.findByRepairId(5L))
+        when(repairWorkRepository.findByRepair_Id(5L))
                 .thenReturn(List.of(work));
         when(repairPartUsageRepository.findByRepairWorkIdIn(List.of(10L)))
                 .thenReturn(List.of(usage));
@@ -211,7 +211,7 @@ class RepairCostServiceTest {
 
         RepairWork repairWork = mock(RepairWork.class);
         when(repairWork.getId()).thenReturn(10L);
-        when(repairWorkRepository.findByRepairId(repairId))
+        when(repairWorkRepository.findByRepair_Id(repairId))
                 .thenReturn(List.of(repairWork));
 
         Part part = mock(Part.class);
@@ -277,7 +277,7 @@ class RepairCostServiceTest {
 
         verify(repair).updateRepairCost(0, 15000, 15000);
 
-        verify(repairWorkRepository, never()).findByRepairId(any());
+        verify(repairWorkRepository, never()).findByRepair_Id(any());
         verify(repairPartUsageRepository, never()).findByRepairWorkIdIn(any());
     }
 
@@ -350,7 +350,7 @@ class RepairCostServiceTest {
         assertThatThrownBy(() -> repairCostService.calculateRepairCost(repairId))
                 .isInstanceOf(RepairException.class);
 
-        verify(repairWorkRepository, never()).findByRepairId(any());
+        verify(repairWorkRepository, never()).findByRepair_Id(any());
     }
 
     @Test
