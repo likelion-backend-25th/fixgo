@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairPartUsageRequest;
@@ -35,7 +36,7 @@ public class RepairPartUsageController {
     })
     public ResponseEntity<RepairPartUsageResponse> createUsage(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestBody RepairPartUsageRequest request
+            @Valid @RequestBody RepairPartUsageRequest request
     ) {
 
         RepairPartUsageResponse response =

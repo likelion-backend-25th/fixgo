@@ -152,7 +152,7 @@ class RepairWorkServiceTest {
         // given
         prepareRepairWorkResponse();
 
-        when(repairWorkRepository.findByRepairId(1L))
+        when(repairWorkRepository.findByRepair_Id(1L))
                 .thenReturn(List.of(repairWork));
 
         // when
@@ -163,7 +163,7 @@ class RepairWorkServiceTest {
         assertThat(result).hasSize(1);
         assertThat(result.get(0).repairId()).isEqualTo(1L);
 
-        verify(repairWorkRepository).findByRepairId(1L);
+        verify(repairWorkRepository).findByRepair_Id(1L);
     }
 
     @Test
@@ -173,7 +173,7 @@ class RepairWorkServiceTest {
         // given
         prepareRepairWorkResponse();
 
-        when(repairWorkRepository.findByWorkName("점검"))
+        when(repairWorkRepository.findByWorkNameContaining("점검"))
                 .thenReturn(List.of(repairWork));
 
         // when
@@ -184,7 +184,7 @@ class RepairWorkServiceTest {
         assertThat(result).hasSize(1);
         assertThat(result.get(0).workName()).isEqualTo("메인보드 점검");
 
-        verify(repairWorkRepository).findByWorkName("점검");
+        verify(repairWorkRepository).findByWorkNameContaining("점검");
     }
 
     @Test

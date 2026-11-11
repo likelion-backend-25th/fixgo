@@ -63,7 +63,7 @@ public class RepairHistoryService {
     }
 
     private List<RepairWorkHistoryResponse> getRepairWorks(Long repairId) {
-        List<RepairWork> repairWorks = repairWorkRepository.findByRepairId(repairId);
+        List<RepairWork> repairWorks = repairWorkRepository.findByRepair_Id(repairId);
 
         List<Long> repairWorkIds = repairWorks.stream()
                 .map(RepairWork::getId)
