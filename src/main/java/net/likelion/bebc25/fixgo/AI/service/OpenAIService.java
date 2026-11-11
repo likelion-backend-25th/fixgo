@@ -62,7 +62,7 @@ public class OpenAIService {
         ChatMemory chatMemory = prepareConversation(memberId, text);
 
         String answer = chatClient()
-                .prompt(buildPrompt(chatMemory, userId))
+                .prompt(buildPrompt(chatMemory, memberId))
                 .system(systemPrompt())
                 .tools(statisticsTools.all())
                 .call()
@@ -79,7 +79,7 @@ public class OpenAIService {
         StringBuilder responseBuffer = new StringBuilder();
 
         return chatClient()
-                .prompt(buildPrompt(chatMemory, userId))
+                .prompt(buildPrompt(chatMemory, memberId))
                 .system(systemPrompt())
                 .tools(statisticsTools.all())
                 .stream()
