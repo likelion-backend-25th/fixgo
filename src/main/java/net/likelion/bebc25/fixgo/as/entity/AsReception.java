@@ -12,6 +12,8 @@ import net.likelion.bebc25.fixgo.product.entity.Product;
 import net.likelion.bebc25.fixgo.shipment.entity.ReturnMethod;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 @Entity
 @Table(indexes = {
@@ -32,6 +34,18 @@ public class AsReception extends BaseEntity {
 
     @Column(unique = true, nullable = false)
     private String receptionNumber;
+
+    /** DB 자동 증가 ID를 사용하므로 동시 접수에도 순번이 중복되지 않는다. */
+    public void issueReceptionNumber() {
+        if (id == null || getCreatedAt() == null) {
+            throw new IllegalStateException("접수를 저장한 후 접수번호를 발급해야 합니다.");
+        }
+        if (!receptionNumber.startsWith("PENDING-")) {
+            throw new IllegalStateException("이미 발급된 접수번호는 변경할 수 없습니다.");
+        }
+        receptionNumber = String.format(Locale.ROOT, "AS-%s-%05d",
+                getCreatedAt().format(DateTimeFormatter.ofPattern("yyMMdd")), id);
+    }
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(nullable = false)

@@ -58,8 +58,8 @@ public class OpenAIService {
      */
     @Transactional
     public String generate(CustomUserDetails userDetails, String text) {
-        String userId = conversationId(userDetails);
-        ChatMemory chatMemory = prepareConversation(userId, text);
+        String memberId = conversationId(userDetails);
+        ChatMemory chatMemory = prepareConversation(memberId, text);
 
         String answer = chatClient()
                 .prompt(buildPrompt(chatMemory, userId))
@@ -68,14 +68,14 @@ public class OpenAIService {
                 .call()
                 .content();
 
-        persistAssistantReply(userId, chatMemory, answer);
+        persistAssistantReply(memberId, chatMemory, answer);
         return answer;
     }
 
     @Transactional
     public Flux<String> generateStream(CustomUserDetails userDetails, String text) {
-        String userId = conversationId(userDetails);
-        ChatMemory chatMemory = prepareConversation(userId, text);
+        String memberId = conversationId(userDetails);
+        ChatMemory chatMemory = prepareConversation(memberId, text);
         StringBuilder responseBuffer = new StringBuilder();
 
         return chatClient()
@@ -88,7 +88,7 @@ public class OpenAIService {
                     responseBuffer.append(token);
                     return token;
                 })
-                .doOnComplete(() -> persistAssistantReply(userId, chatMemory, responseBuffer.toString()));
+                .doOnComplete(() -> persistAssistantReply(memberId, chatMemory, responseBuffer.toString()));
     }
 
     private ChatClient chatClient() {
@@ -96,31 +96,31 @@ public class OpenAIService {
     }
 
     private String conversationId(CustomUserDetails userDetails) {
-        return userDetails.getId() + "_" + "1";
+        return userDetails.getId() + "";
     }
 
-    private ChatMemory prepareConversation(String userId, String text) {
-        chatRepository.save(new Chat(userId, text, MessageType.USER));
+    private ChatMemory prepareConversation(String memberId, String text) {
+        chatRepository.save(new Chat(memberId, text, MessageType.USER));
 
         ChatMemory chatMemory = MessageWindowChatMemory.builder()
                 .maxMessages(10)
                 .chatMemoryRepository(chatMemoryRepository)
                 .build();
-        chatMemory.add(userId, new UserMessage(text));
+        chatMemory.add(memberId, new UserMessage(text));
         return chatMemory;
     }
 
-    private Prompt buildPrompt(ChatMemory chatMemory, String userId) {
+    private Prompt buildPrompt(ChatMemory chatMemory, String memberId) {
         OpenAiChatOptions options = OpenAiChatOptions.builder()
                 .model("gpt-4.1-mini")
                 .temperature(0.7)
                 .build();
-        return new Prompt(chatMemory.get(userId), options);
+        return new Prompt(chatMemory.get(memberId), options);
     }
 
-    private void persistAssistantReply(String userId, ChatMemory chatMemory, String answer) {
-        chatMemory.add(userId, new AssistantMessage(answer));
-        chatMemoryRepository.saveAll(userId, chatMemory.get(userId));
-        chatRepository.save(new Chat(userId, answer, MessageType.ASSISTANT));
+    private void persistAssistantReply(String memberId, ChatMemory chatMemory, String answer) {
+        chatMemory.add(memberId, new AssistantMessage(answer));
+        chatMemoryRepository.saveAll(memberId, chatMemory.get(memberId));
+        chatRepository.save(new Chat(memberId, answer, MessageType.ASSISTANT));
     }
 }
