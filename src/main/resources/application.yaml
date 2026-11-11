@@ -3,11 +3,12 @@ spring:
     name: project-FixGo
   ai:
     openai:
-      api-key: ${openAI_API_secretKey}
+      api-key: ${OPENAI_API_SECRETKEY}
     chat:
       memory:
         repository:
           jdbc:
+            # schema.sql / Spring AI 자동생성 대신 JPA 엔티티(SpringAiChatMemory)로 테이블 생성
             initialize-schema: never
 
   # gmail SMTP
