@@ -3,7 +3,7 @@ spring:
     name: project-FixGo
   ai:
     openai:
-      api-key: ${openAI-API-secretKey}
+      api-key: ${openAI_API_secretKey}
     chat:
       memory:
         repository:
