@@ -2,10 +2,12 @@ package net.likelion.bebc25.fixgo.shipment.repository;
 
 import jakarta.persistence.LockModeType;
 import net.likelion.bebc25.fixgo.shipment.entity.Shipment;
+import net.likelion.bebc25.fixgo.shipment.entity.ShipmentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface ShipmentRepository extends JpaRepository<Shipment, Long> {
@@ -19,5 +21,8 @@ public interface ShipmentRepository extends JpaRepository<Shipment, Long> {
     // 락 적용 - 동일한 배송을 여러 직원이 동시에 수정을 막기 위함
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Shipment> findWithLockById(@Param("id") Long id);
+
+    // 배송 상태 조회 - 스케줄러 이용
+    List<Shipment> findByStatus(ShipmentStatus status);
 
 }
