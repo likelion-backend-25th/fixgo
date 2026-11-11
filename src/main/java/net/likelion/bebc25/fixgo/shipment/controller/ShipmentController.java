@@ -141,7 +141,7 @@ public class ShipmentController {
     }
 
     // 배송 및 방문 수령 통합 목록 조회
-    @GetMapping("/management")
+    @GetMapping("/list")
     @Operation(summary = "배송 관리 목록 조회", description = "배송 및 방문 수령 통합 목록을 조회한다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "배송 관리 목록 조회 성공"),
