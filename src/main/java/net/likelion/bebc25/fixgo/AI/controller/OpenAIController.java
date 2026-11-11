@@ -39,10 +39,10 @@ public class OpenAIController {
         return openAIService.generateStream(userDetails, request.text());
     }
 
+    @GetMapping
     public List<Chat> getChatHistory(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable String userId
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return chatService.readAllChats(userDetails, userId);
+        return chatService.readAllChats(userDetails);
     }
 }
