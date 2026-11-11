@@ -16,7 +16,7 @@ public class ChatService {
     private final ChatRepository chatRepository;
 
     public List<Chat> readAllChats(CustomUserDetails userDetails) {
-        return chatRepository.findByUserIdOrderByCreatedAtAsc(userDetails.getId() + "");
+        return chatRepository.findByMemberIdOrderByCreatedAtAsc(userDetails.getId() + "");
     }
 
 
