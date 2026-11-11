@@ -16,9 +16,7 @@ import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
 import net.likelion.bebc25.fixgo.shipment.entity.ReturnMethod;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -81,10 +79,8 @@ public class AsReceptionDto {
                 Member receptionist,
                 Member technician
         ) {
-            String receptionNumber = "AS-%s-%s".formatted(
-                    LocalDate.now().format(DateTimeFormatter.ofPattern("yyMMdd")),
-                    UUID.randomUUID()
-            );
+            // DB ID가 발급되기 전까지 사용하는 임시 고유값. 저장 직후 정식 번호로 교체한다.
+            String receptionNumber = "PENDING-" + UUID.randomUUID();
 
             return new AsReception(
                     receptionNumber,
