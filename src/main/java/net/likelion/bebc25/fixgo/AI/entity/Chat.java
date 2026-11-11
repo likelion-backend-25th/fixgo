@@ -17,7 +17,7 @@ public class Chat {
     private Long id;
 
     @Column(nullable = false)
-    private String userId;
+    private String memberId;
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
@@ -30,8 +30,8 @@ public class Chat {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
-    public Chat(String userId, String content, MessageType type) {
-        this.userId = userId;
+    public Chat(String memberId, String content, MessageType type) {
+        this.memberId = memberId;
         this.content = content;
         this.type = type;
     }
