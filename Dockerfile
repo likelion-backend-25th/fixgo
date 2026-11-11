@@ -27,7 +27,7 @@ USER appuser:appgroup
 COPY --from=builder /workspace/build/libs/*.jar app.jar
 
 # 운영 프로파일 활성화 (application-prod.yaml)
-ENV SPRING_PROFILES_ACTIVE=prod
+#ENV SPRING_PROFILES_ACTIVE=prod
 
 # 애플리케이션 포트 노출 선언
 EXPOSE 8080
