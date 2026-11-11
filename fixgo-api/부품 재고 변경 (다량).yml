@@ -1,0 +1,23 @@
+info:
+  name: 부품 재고 변경 (다량)
+  type: http
+  seq: 30
+
+http:
+  method: PATCH
+  url: "{{baseUrl}}/part/stocks?repairId=1"
+  params:
+    - name: repairId
+      value: "1"
+      type: query
+  body:
+    type: json
+    data: "\n \ \n"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

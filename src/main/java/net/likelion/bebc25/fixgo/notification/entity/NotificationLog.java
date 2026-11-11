@@ -4,14 +4,16 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
+import net.likelion.bebc25.fixgo.as.entity.AsReception;
+import net.likelion.bebc25.fixgo.auth.entity.Member;
+import net.likelion.bebc25.fixgo.common.entity.BaseTimeEntity;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class NotificationLog {
+public class NotificationLog extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -47,9 +49,61 @@ public class NotificationLog {
 
     private LocalDateTime sentAt;
 
-    @CreationTimestamp
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by")
+    private Member createdBy;
 
-    private String createdBy;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "as_reception_id")
+    private AsReception asReception;
+
+    // 이메일 발송 이력
+    public static NotificationLog create(
+            AsReception asReception,
+            Member createdBy,
+            String eventKey,
+            NotificationType notificationType,
+            String recipientEmail,
+            String messageTitle,
+            String message
+    ) {
+        NotificationLog notificationLog = new NotificationLog();
+
+        notificationLog.asReception = asReception;
+        notificationLog.createdBy = createdBy;
+        notificationLog.eventKey = eventKey;
+        notificationLog.notificationType = notificationType;
+        notificationLog.recipientEmail = recipientEmail;
+        notificationLog.messageTitle = messageTitle;
+        notificationLog.message = message;
+
+        return notificationLog;
+
+    }
+
+    // 이메일 발송 처리 중
+    public void markSending() {
+        this.status = NotificationStatus.SENDING;
+        this.errorMessage = null;
+    }
+
+    // 이메일 발송 성공
+    public void markSent() {
+        this.status = NotificationStatus.SENT;
+        this.errorMessage = null;
+        this.sentAt = LocalDateTime.now();
+    }
+
+    // 이메일 발송 실패
+    public void markFailed(String errorMessage) {
+        this.status = NotificationStatus.FAILED;
+        this.errorMessage = errorMessage;
+        this.sentAt = null;
+    }
+
+    // 재발송 횟수 추가
+    public void increaseRetryCount() {
+        this.retryCount++;
+    }
+
 }

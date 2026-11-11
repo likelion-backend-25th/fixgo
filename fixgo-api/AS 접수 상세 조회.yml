@@ -1,0 +1,16 @@
+info:
+  name: AS 접수 상세 조회
+  type: http
+  seq: 5
+
+http:
+  method: GET
+  url: "{{baseUrl}}/as-receptions/10"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

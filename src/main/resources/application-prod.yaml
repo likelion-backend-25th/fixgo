@@ -12,9 +12,9 @@ spring:
         use_sql_comments: false
 springdoc:
   swagger-ui:
-    enabled: false
+    enabled: true
   api-docs:
-    enabled: false
+    enabled: true
 logging:
   level:
     org.springframework.security: INFO

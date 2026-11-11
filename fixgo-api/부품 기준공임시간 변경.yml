@@ -1,0 +1,23 @@
+info:
+  name: 부품 기준공임시간 변경
+  type: http
+  seq: 28
+
+http:
+  method: PATCH
+  url: "{{baseUrl}}/part/standard_minutes"
+  body:
+    type: json
+    data: |-
+      {
+        "id":"2",
+        "standardMinutes":"40"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

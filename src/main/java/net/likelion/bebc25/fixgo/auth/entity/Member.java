@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import net.likelion.bebc25.fixgo.auth.dto.MemberDto;
 import net.likelion.bebc25.fixgo.common.entity.BaseEntity;
 
 import java.time.LocalDateTime;
@@ -17,9 +18,6 @@ public class Member extends BaseEntity {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String code;
-
-    @Column(nullable = false, unique = true)
     private String email;
 
     @Column(nullable = false)
@@ -28,8 +26,11 @@ public class Member extends BaseEntity {
     @Column(nullable = false)
     private String name;
 
-    @Column
+    @Column(nullable = false)
     private String phone;
+
+    @Column(nullable = false)
+    private String address;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -43,20 +44,40 @@ public class Member extends BaseEntity {
     private Status status = Status.ACTIVE;
 
     @Column
-    private LocalDateTime deleted_at;
+    private LocalDateTime deletedAt = null;
 
 
-    public Member(String code, String email, String passwordHash, String name, Role role, String profileImgUrl) {
-        this.code = code;
+    public Member(String email, String passwordHash, String name, String phone, String address, Role role, String profileImgUrl) {
         this.email = email;
         this.passwordHash = passwordHash;
         this.name = name;
+        this.phone = phone;
+        this.address = address;
         this.profileImgUrl = profileImgUrl;
         this.role = role;
     }
 
-    public Member(String code, String email, String passwordHash, String name, String phone, Role role, String profileImgUrl) {
-        this(code, email, passwordHash, name, role, profileImgUrl);
-        this.phone = phone;
+    public void changeStatus(Status newStatus) {
+        if (newStatus.equals(Status.DELETED)) {
+            this.deletedAt = LocalDateTime.now();
+        } else if (this.status.equals(Status.DELETED)) {
+            this.deletedAt = null;
+        }
+        this.status = newStatus;
+    }
+
+    public void changeRole(Role newRole) {
+        this.role = newRole;
+    }
+
+    public void changePassword(String newPasswordHash) {
+        this.passwordHash = newPasswordHash;
+    }
+
+    public void updateProfile(MemberDto.ProfileUpdateRequest request) {
+        this.name = request.name();
+        this.phone = request.phone();
+        this.address = request.address();
+        this.profileImgUrl = request.profileImgUrl();
     }
 }

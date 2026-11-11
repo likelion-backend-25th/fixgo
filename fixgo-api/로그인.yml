@@ -1,0 +1,51 @@
+info:
+  name: 로그인
+  type: http
+  seq: 8
+
+http:
+  method: POST
+  url: "{{baseUrl}}/auth/login"
+  body:
+    type: json
+    data: |-
+      {
+        "email": "admin001@fixgo.com",
+        "password": "admin1234"
+      }
+
+      // {
+      //   "email": "reception.demo@fixgo.example",
+      //   "password": "admin1234"
+      // }
+
+      // {
+      //   "email": "technician.demo@fixgo.example",
+      //   "password": "1234"
+      // }
+
+runtime:
+  actions:
+    - type: set-variable
+      phase: after-response
+      selector:
+        expression: res.body.accessToken
+        method: jsonq
+      variable:
+        name: accessToken
+        scope: runtime
+    - type: set-variable
+      phase: after-response
+      selector:
+        expression: res.body.refreshToken
+        method: jsonq
+      variable:
+        name: refreshToken
+        scope: runtime
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

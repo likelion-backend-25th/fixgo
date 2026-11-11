@@ -36,17 +36,36 @@ public class Product {
     private LocalDateTime updatedAt;
 
     @Column(nullable = false)
-    private String createdBy;
+    private Long createdBy;
 
     @Column(nullable = false)
-    private String updatedBy;
+    private Long updatedBy;
 
-    public Product(String serialNumber, LocalDateTime manufacturedAt, String createdBy) {
+    public Product(Long productModelId, String serialNumber, LocalDateTime manufacturedAt, Long createdBy) {
+        this(productModelId, null, serialNumber, manufacturedAt, null, createdBy);
+    }
+
+    public Product(Long productModelId, Long customerId, String serialNumber,
+                   LocalDateTime manufacturedAt, LocalDateTime purchasedAt, Long createdBy) {
+        this.productModelId = productModelId;
+        this.customerId = customerId;
         this.serialNumber = serialNumber;
         this.manufacturedAt = manufacturedAt;
+        this.purchasedAt = purchasedAt;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = this.createdAt;
         this.createdBy = createdBy;
         this.updatedBy = createdBy;
+    }
+
+    public void update(Long productModelId, Long customerId, String serialNumber,
+                       LocalDateTime manufacturedAt, LocalDateTime purchasedAt, Long updatedBy) {
+        this.productModelId = productModelId;
+        this.customerId = customerId;
+        this.serialNumber = serialNumber;
+        this.manufacturedAt = manufacturedAt;
+        this.purchasedAt = purchasedAt;
+        this.updatedAt = LocalDateTime.now();
+        this.updatedBy = updatedBy;
     }
 }

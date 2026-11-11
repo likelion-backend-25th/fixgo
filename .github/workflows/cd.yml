@@ -62,7 +62,21 @@ jobs:
           script: |
             set -e
             cd /home/ec2-user
-            echo ">>> 1. GitHub Secrets 기반 운영 환경 변수(.env) 자동 동기화"
+
+            echo ">>> 1. Origin CA SSL 인증서 및 권한 자동 프로비저닝"
+            mkdir -p /home/ec2-user/certs
+            chmod 700 /home/ec2-user/certs
+
+            cat << 'EOF' > /home/ec2-user/certs/origin.pem
+            ${{ secrets.CF_ORIGIN_CERT }}
+            EOF
+
+            cat << 'EOF' > /home/ec2-user/certs/origin.key
+            ${{ secrets.CF_ORIGIN_KEY }}
+            EOF
+            chmod 600 /home/ec2-user/certs/origin.key
+
+            echo ">>> 2. GitHub Secrets 기반 운영 환경 변수(.env) 자동 동기화"
             cat << 'EOF' > .env
             DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
             MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
@@ -75,13 +89,13 @@ jobs:
             AWS_S3_BUCKET_NAME=${{ secrets.AWS_S3_BUCKET_NAME }}
             EOF
 
-            echo ">>> 2. 최신 Docker 이미지 다운로드"
+            echo ">>> 3. 최신 Docker 이미지 다운로드"
             docker compose pull
 
-            echo ">>> 3. 컨테이너 갱신 및 백그라운드 구동"
+            echo ">>> 4. 컨테이너 갱신 및 백그라운드 구동"
             docker compose up -d
 
-            echo ">>> 4. 사용되지 않는 구버전 이미지 정리"
+            echo ">>> 5. 사용되지 않는 구버전 이미지 정리"
             docker image prune -f
 
             echo ">>> Docker Compose 기반 배포 프로세스가 정상 완료되었습니다."

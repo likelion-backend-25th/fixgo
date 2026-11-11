@@ -1,0 +1,20 @@
+info:
+  name: 직원프로필 정보
+  type: http
+  seq: 20
+
+http:
+  method: GET
+  url: "{{baseUrl}}/member/:id"
+  params:
+    - name: id
+      value: "2"
+      type: path
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

@@ -18,7 +18,12 @@ repositories {
     mavenCentral()
 }
 
+ext {
+    set('springAiVersion', "2.0.2")
+}
+
 dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-restclient'
     implementation 'org.springframework.boot:spring-boot-starter-mail'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-security'
@@ -46,11 +51,28 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.13.0'
 
+    // AI
+    implementation 'org.springframework.ai:spring-ai-starter-model-openai'
+    implementation 'org.springframework.ai:spring-ai-starter-model-chat-memory-repository-jdbc'
+
+
     // 테스트 환경용 H2 인메모리 DB
     testRuntimeOnly 'com.h2database:h2'
+
+    // Apache POI
+    implementation 'org.apache.poi:poi-ooxml:5.4.1'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
+    }
 }
 
 tasks.named('test') {
     useJUnitPlatform()
     jvmArgs('-XX:+EnableDynamicAgentLoading', '-Xshare:off')
+
+    // 계정명 한글인게 문제라 그거 해결하는 코드임
+    systemProperty 'java.io.tmpdir', layout.buildDirectory.dir('tmp').get().asFile.absolutePath
 }

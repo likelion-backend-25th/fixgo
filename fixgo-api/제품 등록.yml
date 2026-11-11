@@ -1,0 +1,25 @@
+info:
+  name: 제품 등록
+  type: http
+  seq: 15
+
+http:
+  method: POST
+  url: "{{baseUrl}}/product-models"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "더미 노트북",
+        "modelName": "SZ-P24",
+        "category": "PHONE",
+        "warrantyMonths": 24
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

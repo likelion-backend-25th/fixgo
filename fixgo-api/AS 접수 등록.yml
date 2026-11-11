@@ -1,0 +1,29 @@
+info:
+  name: AS 접수 등록
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{baseUrl}}/as-receptions"
+  body:
+    type: json
+    data: |-
+      {
+        "customerId": "1",
+        "productId": "2",
+        "technicianId":"3",
+        "symptom":"배터리 불량",
+        "symptomDetail":"배터리 충전이 되지 않습니다.",
+        "memo":"일주일 내로 수리 부탁드립니다.",
+        "returnMethod":"DELIVERY",
+        "fileUrl":"asdfasdf"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

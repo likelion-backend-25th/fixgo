@@ -4,27 +4,53 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import net.likelion.bebc25.fixgo.repair.entity.part.Part;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(indexes = {@Index(name = "IDX_RPP_PART", columnList = "product_model_id")})
+@Table(indexes = {
+        @Index(
+                name = "IDX_REPAIR_PRESET_PART",
+                columnList = "repair_preset_id, part_id"
+        )
+})
 public class RepairPresetPart {
-//    @EmbeddedId
-//    RepairPresetPartId id;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+    @EmbeddedId
+    private RepairPresetPartId id;
+
+    @MapsId("repairPresetId")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "repair_preset_id", nullable = false)
+    private RepairPreset repairPreset;
+
+    @MapsId("partId")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "part_id", nullable = false)
+    private Part part;
 
     @Column(nullable = false)
-    Long repairPresetId;
+    private int quantity;
 
-    @Column(nullable = false)
-    int productModelId;
+    public RepairPresetPart(
+            RepairPreset repairPreset,
+            Part part,
+            int quantity
+    ) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("기본 부품 수량은 1개 이상이어야 합니다.");
+        }
 
-    public RepairPresetPart(Long repairPresetId, int productModelId) {
-        this.repairPresetId = repairPresetId;
-        this.productModelId = productModelId;
+        this.repairPreset = repairPreset;
+        this.part = part;
+        this.quantity = quantity;
+    }
+
+    public void updateQuantity(int quantity) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("기본 부품 수량은 1개 이상이어야 합니다.");
+        }
+        this.quantity = quantity;
     }
 }

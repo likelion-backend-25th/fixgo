@@ -1,6 +1,14 @@
 spring:
   application:
     name: project-FixGo
+  ai:
+    openai:
+      api-key: ${openAI-API-secretKey}
+    chat:
+      memory:
+        repository:
+          jdbc:
+            initialize-schema: never
 
   # gmail SMTP
   mail:
@@ -60,3 +68,25 @@ springdoc:
 logging:
   level:
     org.springframework.security: DEBUG
+
+jwt:
+  # 변경: 기본값에 '_'가 있어 Base64 디코딩 실패 -> 유효한 Base64 문자열로 교체
+  secret: ${JWT_SECRET:ZGVmYXVsdC1qd3Qtc2VjcmV0LWtleS1mb3ItbG9jYWwtdGVzdC1lbnZpcm9ubWVudA==}
+  access-token-expiration: 3600000      # 1시간 (밀리초 단위)
+  refresh-token-expiration: 604800000   # 7일 (밀리초 단위)
+
+toss:
+  secret-key: ${TOSS_SECRET_KEY}
+
+portal:
+  link:
+    valid-days: 30
+
+# 스마트택배
+sweettracker:
+  base-url: https://info.sweettracker.co.kr
+  api-key: ${SWEETTRACKER_API_KEY}
+
+# 임시 
+fixgo:
+  url: ${URL:http://localhost:5173}

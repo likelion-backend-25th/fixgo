@@ -24,7 +24,7 @@ public class Customer {
 
     @Column(nullable = false)
     private String email;
-    
+
     private String zipcode;
 
     private String basicAddress;
@@ -38,22 +38,39 @@ public class Customer {
     private LocalDateTime updatedAt;
 
     @Column(nullable = false)
-    private String createdBy;
+    private Long createdBy;
 
     @Column(nullable = false)
-    private String updatedBy;
+    private Long updatedBy;
 
-    public Customer(String name, String phone, String email, String zipcode,
-                    String detailAddress, String basicAddress, String createdBy) {
+    public Customer(
+            String name, String phone, String email, String zipcode,
+            String basicAddress, String detailAddress, Long createdBy
+    ) {
         this.name = name;
         this.phone = phone;
         this.email = email;
         this.zipcode = zipcode;
-        this.detailAddress = detailAddress;
         this.basicAddress = basicAddress;
+        this.detailAddress = detailAddress;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = this.createdAt;
         this.createdBy = createdBy;
         this.updatedBy = createdBy;
+    }
+
+    public void update(
+            String name, String phone, String email,
+            String zipcode, String basicAddress, String detailAddress,
+            Long updatedBy
+    ) {
+        this.name = name;
+        this.phone = phone;
+        this.email = email;
+        this.zipcode = zipcode;
+        this.basicAddress = basicAddress;
+        this.detailAddress = detailAddress;
+        this.updatedAt = LocalDateTime.now();
+        this.updatedBy = updatedBy;
     }
 }

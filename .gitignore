@@ -45,3 +45,7 @@ out/
 
 ### VS Code ###
 .vscode/
+
+src/main/resources/static/payment.html
+src/main/resources/static/success.html
+src/main/resources/static/fail.html

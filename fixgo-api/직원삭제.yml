@@ -1,0 +1,20 @@
+info:
+  name: 직원삭제
+  type: http
+  seq: 23
+
+http:
+  method: DELETE
+  url: "{{baseUrl}}/admin/member?memberId=2"
+  params:
+    - name: memberId
+      value: "2"
+      type: query
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

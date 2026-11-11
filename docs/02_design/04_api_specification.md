@@ -68,14 +68,21 @@
 
 ## 1.2 인증 및 회원 관리 API
 
-### 1.2.1 자체 회원가입
+### 1.2.1 직원 생성
 
-- 엔드포인트:
-- 접근 권한:
+- 엔드포인트:`Post /api/v1/admin/member/new`
+- 접근 권한: 관리자
 - Request Body:
 
 ```json
 {
+  "email": "admin001@fixgo.com",
+  "password": "password1234",
+  "name": "관리자",
+  "phone": "010-XXXX-XXXX",
+  "address": "서울특별시 OO구 OO동 ~",
+  "role": "ROLE_ADMIN",
+  "profileImgUrl": "https://amazonaws.com..."
 }
 ```
 
@@ -83,17 +90,26 @@
 
 ```json
 {
+  "id": 1,
+  "password": "password1234",
+  "name": "관리자",
+  "phone": "010-XXXX-XXXX",
+  "address": "서울특별시 OO구 OO동 ~",
+  "role": "ROLE_ADMIN",
+  "profileImgUrl": "https://amazonaws.com..."
 }
 ```
 
 ### 1.2.2 JWT 로그인
 
-- 엔드포인트:
-- 접근 권한
+- 엔드포인트: `POST /api/v1/auth/login`
+- 접근 권한: 전체 (직원)
 - Request Body:
 
 ```json
 {
+  "email": "admin001@fixgo.com",
+  "password": "password1234"
 }
 ```
 
@@ -101,18 +117,22 @@
 
 ```json
 {
+  "accessToken": "eyJhbGciOiJIUzM4NCJ9...",
+  "refreshToken": "eyJhbGciOiJIUzM4NCJ9...",
+  "tokenType": "Bearer",
+  "expiresIn": 3600
 }
 ```
 
 ### 1.2.3 토큰 갱신 (RTR)
 
 - 엔드포인트: `POST /api/v1/auth/refresh`
-- 접근 권한: 전체 (회원)
+- 접근 권한: 전체 (직원)
 - Request Body:
 
 ```json
 {
-  "refreshToken": "eyJhbGciOiJIUzI1NiIsIn..."
+  "refreshToken": "eyJhbGciOiJIUzM4NCJ9..."
 }
 ```
 
@@ -120,19 +140,31 @@
 
 ```json
 {
-  "accessToken": "eyJhbGciOiJIUzI1NiIsIn...newAccessToken",
-  "refreshToken": "eyJhbGciOiJIUzI1NiIsIn...newRefreshToken"
+  "accessToken": "eyJhbGciOiJIUzM4NCJ9...",
+  "refreshToken": "eyJhbGciOiJIUzM4NCJ9...",
+  "tokenType": "Bearer",
+  "expiresIn": 3600
 }
 ```
 
 ### 1.2.4 내 계정 프로필 조회 및 수정
 
-- 조회 엔드포인트:
-- 수정 엔드포인트:
+- 조회 엔드포인트: `GET /api/v1/member/me`
+- 수정 엔드포인트: `PATCH /api/v1/member/me/password`
+- Request Body: `@AuthenticationPrincipal`이용, 로그인 한 직원 정보 추출
+- Response Body (HTTP 200 OK): `void`
+
+### 1.2.5 직원 목록 조회
+
+- 엔드포인트
+- 접근 권한: 전체 (직원)
 - Request Body:
 
 ```json
 {
+  "keyword": "",
+  "role": "",
+  "status": ""
 }
 ```
 
@@ -140,8 +172,32 @@
 
 ```json
 {
+  "content": [
+    {
+      "id": 1,
+      "email": "admin001@fixgo.com",
+      "name": "관리자",
+      "role": "ROLE_ADMIN",
+      "status": "ACTIVE"
+    },
+    {
+      "id": 2,
+      "email": "receptionist001@fixgo.com",
+      "name": "최미소",
+      "role": "ROLE_RECEPTIONIST",
+      "status": "ACTIVE"
+    }
+  ],
+  "page": 0,
+  "size": 20,
+  "totalElements": 2,
+  "totalPages": 1,
+  "first": true,
+  "last": true
 }
 ```
+
+### 1.2.6 직원 프로필 수정
 
 ---
 
@@ -149,7 +205,7 @@
 
 ## A/S 목록
 
-- 엔드포인트: `POST /api/v1/as-requests`
+- 엔드포인트: `POST /api/v1/as-receptions`
 - 접근 권한: 관리자, 접수 담당자
 - 등록된 A/S 요청 목록을 조회하고 검색 조건, 처리 상태, 담당 기사에 따라 필터링한다.
 
@@ -160,7 +216,7 @@ Response Body (HTTP 200 OK)
   "content": [
     {
       "id": 1,
-      "requestNumber": "AS-2026-1101",
+      "receptionNumber": "AS-2026-1101",
       "customerId": 1,
       "customerName": "김하늘",
       "customerPhone": "010-1234-5678",
@@ -173,7 +229,7 @@ Response Body (HTTP 200 OK)
     },
     {
       "id": 2,
-      "requestNumber": "AS-2026-1102",
+      "receptionNumber": "AS-2026-1102",
       "customerId": 2,
       "customerName": "홍길동",
       "customerPhone": "010-2222-3333",
@@ -198,7 +254,7 @@ Response Body (HTTP 200 OK)
 
 엔드포인트:
 
-- 엔드포인트: `POST /api/v1/as-requests`
+- 엔드포인트: `POST /api/v1/as-receptions`
 - 접근 권한: 관리자, 접수 담당자
 - 고객, 제품, 고장 증상, 담당 기사 및 수령 방식 정보를 입력하여 A/S 접수를 등록한다.
 
@@ -211,7 +267,7 @@ Request Body
   "technicianId": 5,
   "symptom": "전원 불량",
   "symptomDetail": "전원 버튼을 눌러도 화면이 켜지지 않음",
-  "requestMemo": "수리 완료 후 고객에게 연락 요청",
+  "Memo": "수리 완료 후 고객에게 연락 요청",
   "returnMethod": "DELIVERY"
 }
 ```
@@ -221,14 +277,14 @@ Response Body (HTTP 201 Created)
 ```json
 {
   "id": 1,
-  "requestNumber": "AS-2026-0001",
+  "receptionNumber": "AS-2026-0001",
   "customerId": 1,
   "productId": 3,
   "receptionistId": 2,
   "technicianId": 5,
   "symptom": "전원 불량",
   "symptomDetail": "전원 버튼을 눌러도 화면이 켜지지 않음",
-  "requestMemo": "수리 완료 후 고객에게 연락 요청",
+  "Memo": "수리 완료 후 고객에게 연락 요청",
   "returnMethod": "DELIVERY",
   "status": "RECEIVED",
   "createdAt": "2026-10-29T09:30:00",
@@ -238,7 +294,7 @@ Response Body (HTTP 201 Created)
 
 ## A/S 접수 상세
 
-- 엔드포인트: `GET /api/v1/as-requests/{requestId}`
+- 엔드포인트: `GET /api/v1/as-receptions/{receptionId}`
 - 접근 권한: 관리자, 접수 담당자
 - 선택한 A/S 접수 건의 고객 정보, 제품 정보, 고장 내용, 담당 기사 및 처리 상태를 조회한다.
 
@@ -247,7 +303,7 @@ Response Body (HTTP 200 OK)
 ```json
 {
   "id": 1,
-  "requestNumber": "AS-2026-1112",
+  "receptionNumber": "AS-2026-1112",
   "customer": {
     "id": 1,
     "name": "한소희",
@@ -271,7 +327,7 @@ Response Body (HTTP 200 OK)
   },
   "symptom": "스피커 불량",
   "symptomDetail": "스피커가 지지직거리고 소리가 잘 안 들립니다.",
-  "requestMemo": "-",
+  "Memo": "-",
   "returnMethod": "PICKUP",
   "status": "RECEIVED",
   "statusChangedAt": "2026-11-10T09:30:00",
@@ -283,35 +339,29 @@ Response Body (HTTP 200 OK)
 ## 고객 관리 - 고객 조회
 
 - 엔드포인트: `GET /api/v1/customers`
+- 접근 권한: 인증된 사용자
+- `name`, `phone`, `email` 중 비어 있지 않은 첫 번째 조건으로 부분 일치 검색한다. 결과는 JSON 배열이다.
+
+## A/S 접수 모달 - 고객 및 시리얼번호 검색
+
+- 고객 검색: `GET /api/v1/customers/search?name=김민수&page=0&size=20`
+- 시리얼번호 검색: `GET /api/v1/products/search?serialNumber=SN-123&page=0&size=20`
+- 접근 권한: 인증된 사용자
+- 고객 검색은 기존 고객 조회와 같은 조건과 우선순위를 사용한다. 시리얼번호는 앞뒤 공백을 제거한 후 부분 일치 검색한다. 검색어가 없거나 공백이면 빈 페이지를 반환한다.
+- 페이지 번호는 0부터 시작한다. 기본값은 `page=0`, `size=20`, ID 오름차순이다.
+- HTTP 200 응답은 `content`(조회 결과), `number`(현재 페이지 번호), `size`(페이지 크기), `totalElements`(전체 결과 수), `totalPages`(전체 페이지 수)를 포함한다. `content`의 항목은 기존 배열 조회 API와 같은 형식이다.
+
+## A/S 접수 모달 - 배정 가능한 기사 조회
+
+- 엔드포인트: `GET /api/v1/member/technicians?keyword=김&sortBy=INSPECTION_WAITING_COUNT&direction=ASC&page=0&size=20`
 - 접근 권한: 관리자, 접수 담당자
-- 등록된 고객 목록을 조회하고 고객명 또는 연락처를 기준으로 검색한다.
-
-Response Body (HTTP 200 OK)
-
-```json
-{
-  "content": [
-    {
-      "id": 1,
-      "name": "김민수",
-      "phone": "010-2222-1818",
-      "email": "minsu@example.com",
-      "createdAt": "2026-10-28T09:30:00"
-    },
-    {
-      "id": 2,
-      "name": "한소희",
-      "phone": "010-5555-1212",
-      "email": "sohee@example.com",
-      "createdAt": "2026-10-28T10:00:00"
-    }
-  ],
-  "page": 0,
-  "size": 20,
-  "totalElements": 2,
-  "totalPages": 1
-}
-```
+- 활성 기사만 조회한다. `keyword`는 기사명 부분 일치 검색이며 생략하면 전체 활성 기사를 조회한다.
+- 기본값은 `page=0`, `size=20`, `sortBy=NAME`, `direction=ASC`다. `sortBy`는 `NAME`, `INSPECTION_WAITING_COUNT`, `REPAIR_IN_PROGRESS_COUNT`, `ESTIMATED_DURATION_MINUTES`를 지원한다. 예상 시간 데이터가 없는 기사는 해당 열로 정렬할 때 마지막에 표시한다.
+- 응답은 `content`, `number`, `size`, `totalElements`, `totalPages`를 포함한다. `content`에는 아래 항목이 들어간다.
+  - `technicianId`, `name`, `email`, `status`. 선택한 `technicianId`를 접수 등록 또는 기사 재배정 요청에 사용한다.
+  - `inspectionWaitingCount`. 기사에게 배정된 접수 중 `RECEIVED` 상태이고 수리 기록이 생성되기 전인 건수다.
+  - `repairInProgressCount`. 해당 기사의 수리 기록 중 `REPAIRING` 상태인 건수다. 수리 기록이 없는 접수 건은 접수 담당 기사와 `REPAIR_IN_PROGRESS` 상태를 기준으로 포함한다.
+  - `estimatedDurationMinutes`. 완료 이력의 수리 시작부터 수리 완료까지 걸린 시간의 건당 평균(분)이다. 시작과 완료 이력이 모두 있는 건이 없으면 `null`을 반환한다.
 
 ## 고객 관리 - 고객 상세
 
@@ -425,7 +475,7 @@ Request Body
 
 ```json
 {
-  "asRequestId": 1062,
+  "asReceptionId": 1062,
   "courier": "CJ대한통운",
   "courierCode": "SMARTTRACKER_COURIER_CODE",
   "trackingNumber": "5100-2219"
@@ -437,7 +487,7 @@ Response Body
 ```json
 {
   "id": 1,
-  "requestNumber": "AS-2026-1062",
+  "receptionNumber": "AS-2026-1062",
   "recipientName": "정하늘",
   "courier": "CJ대한통운",
   "trackingNumber": "123456789012",
@@ -529,7 +579,7 @@ Response Body (HTTP 200 OK)
   "content": [
     {
       "billId": 10,
-      "asRequestNumber": "AS-2026-1076",
+      "asReceptionNumber": "AS-2026-1076",
       "customerName": "최유진",
       "amount": 45000,
       "status": "UNPAID",
@@ -537,7 +587,7 @@ Response Body (HTTP 200 OK)
     },
     {
       "billId": 11,
-      "asRequestNumber": "AS-2026-1062",
+      "asReceptionNumber": "AS-2026-1062",
       "customerName": "정하늘",
       "amount": 120000,
       "status": "UNPAID",
@@ -560,7 +610,7 @@ Response Body (HTTP 200 OK)
 ```json
 {
   "billId": 10,
-  "asRequestNumber": "AS-2026-1076",
+  "asReceptionNumber": "AS-2026-1076",
   "customerName": "최유진",
   "productName": "시저북 SZ-N14",
   "symptom": "키보드 불량",
@@ -748,7 +798,7 @@ Response Body (HTTP 200 OK)
 
 ```json
 {
-  "asRequestNumber": "AS-2026-1076",
+  "asReceptionNumber": "AS-2026-1076",
   "status": "PAYMENT_PENDING",
   "customerName": "한소희",
   "phone": "010-5555-1212",
@@ -941,7 +991,7 @@ Request Body (HTTP 200 OK)
 
 ```json
 {
-  "asRequestId": 1112,
+  "asReceptionId": 1112,
   "recipientPhone": "01055551212",
   "notificationType": "INSPECTION",
   "requestKey": "AS-1112-INSPECTION-001"
@@ -1026,7 +1076,7 @@ Response Body (HTTP 200 OK)
     "customerName": "김미영",
     "recipientPhone": "010-1234-1234",
     "email": "mi32@naver.com",
-    "requestNumber": "AS-2026-1112"
+    "receptionNumber": "AS-2026-1112"
   },
   "message": "[FixGo] 고객님의 수리가 완료되었습니다.",
   "providerMessageId": "SOLAPI_MESSAGE_ID",
@@ -2104,8 +2154,8 @@ Response Body (HTTP 200 OK)
 {
   "content": [
     {
-      "asRequestId": 1001,
-      "requestNumber": "AS-202610-001",
+      "asReceptionId": 1001,
+      "receptionNumber": "AS-202610-001",
       "customerName": "홍길동",
       "modelName": "Galaxy S24",
       "amount": 150000,
@@ -2114,8 +2164,8 @@ Response Body (HTTP 200 OK)
       "depositStatus": "UNPAID"
     },
     {
-      "asRequestId": 988,
-      "requestNumber": "AS-202609-088",
+      "asReceptionId": 988,
+      "receptionNumber": "AS-202609-088",
       "customerName": "이철수",
       "modelName": "노트북",
       "amount": 90000,
@@ -2288,8 +2338,8 @@ Response Body (HTTP 200 OK)
   "totalCount": 4,
   "content": [
     {
-      "asRequestId": 901,
-      "requestNumber": "AS-202609-054",
+      "asReceptionId": 901,
+      "receptionNumber": "AS-202609-054",
       "customerName": "오세훈",
       "modelName": "MacBook Air",
       "status": "RECEIVED",
@@ -2300,8 +2350,8 @@ Response Body (HTTP 200 OK)
       "lastActivityAt": "2026-09-21T09:12:00"
     },
     {
-      "asRequestId": 988,
-      "requestNumber": "AS-202609-088",
+      "asReceptionId": 988,
+      "receptionNumber": "AS-202609-088",
       "customerName": "이철수",
       "modelName": "Galaxy Book4",
       "status": "WAITING_PAYMENT",

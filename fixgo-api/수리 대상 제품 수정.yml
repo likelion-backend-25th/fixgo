@@ -1,0 +1,30 @@
+info:
+  name: 수리 대상 제품 수정
+  type: http
+  seq: 32
+
+http:
+  method: PATCH
+  url: "{{baseUrl}}/products/:id"
+  params:
+    - name: id
+      value: "{{productId}}"
+      type: path
+  body:
+    type: json
+    data: |-
+      {
+        "productModelId": 1,
+        "customerId": 1,
+        "serialNumber": "FIXGO-BRUNO-SN-001-UPDATED",
+        "manufacturedAt": "2026-01-01T00:00:00",
+        "purchasedAt": "2026-04-01T00:00:00"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
