@@ -4,9 +4,20 @@ import net.likelion.bebc25.fixgo.payment.service.dto.RefundDto;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 public class TossDto {
+
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+
+    /**
+     * 토스 시각을 한국시간 LocalDateTime으로 바꾼다.
+     * Jackson이 OffsetDateTime을 UTC로 맞춰 읽기 때문에 toLocalDateTime()만 쓰면 9시간 느려진다.
+     */
+    public static LocalDateTime toKst(OffsetDateTime time) {
+        return time == null ? null : time.atZoneSameInstant(KST).toLocalDateTime();
+    }
 
     public record ConfirmRequest(String paymentKey,
                                  String orderId,

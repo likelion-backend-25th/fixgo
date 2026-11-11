@@ -29,7 +29,7 @@ public interface PaymentBillRepository extends JpaRepository<PaymentBill, Long> 
     @Query(
             value = """
                     select new net.likelion.bebc25.fixgo.payment.dto.PaymentDto$PaymentListResponse(
-                        b.id, r.receptionNumber, c.name, b.amount, b.status, a.method
+                        b.id, r.receptionNumber, c.name, b.amount, b.status, a.method, a.approvedAt
                     )
                     from PaymentBill b
                     join b.asReception r
