@@ -1,6 +1,7 @@
 package net.likelion.bebc25.fixgo.payment.service;
 
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
+import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
 import net.likelion.bebc25.fixgo.config.JpaConfig;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentAttemptStatus;
@@ -39,7 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * 그래서 데이터가 롤백되지 않으며, 테스트마다 직접 지운다.
  */
 @DataJpaTest
-@Import({JpaConfig.class, AsReceptionFixture.class, PaymentAttemptService.class})
+@Import({JpaConfig.class, AsReceptionFixture.class, AsStatusHistoryService.class, PaymentAttemptService.class})
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 class PaymentAttemptServiceConcurrencyTest {
     private static final int THREAD_COUNT = 8;

@@ -1,6 +1,8 @@
 package net.likelion.bebc25.fixgo.payment.service;
 
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
+import net.likelion.bebc25.fixgo.as.repository.AsStatusHistoryRepository;
+import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
 import net.likelion.bebc25.fixgo.config.JpaConfig;
 import net.likelion.bebc25.fixgo.payment.client.TossDto;
 import net.likelion.bebc25.fixgo.payment.client.TossPaymentsClient;
@@ -37,7 +39,7 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
 
 @DataJpaTest
-@Import({JpaConfig.class, AsReceptionFixture.class, PaymentFacadeService.class, PaymentAttemptService.class, PaymentRefundService.class})
+@Import({JpaConfig.class, AsReceptionFixture.class, AsStatusHistoryService.class, PaymentFacadeService.class, PaymentAttemptService.class, PaymentRefundService.class})
 @Transactional(propagation = Propagation.NOT_SUPPORTED) // 테스트 전체를 감싸는 트랜잭션을 끈다 
 class PaymentFacadeServiceTest {
     private static final String PAYMENT_KEY = "test_payment_key";
@@ -55,6 +57,8 @@ class PaymentFacadeServiceTest {
     PaymentBillRepository paymentBillRepository;
     @Autowired
     VirtualAccountRepository virtualAccountRepository;
+    @Autowired
+    AsStatusHistoryRepository asStatusHistoryRepository;
     @MockitoBean
     TossPaymentsClient tossPaymentsClient; // 진짜 토스 대신 가짜
     private AsReception reception;
@@ -72,6 +76,7 @@ class PaymentFacadeServiceTest {
         virtualAccountRepository.deleteAll();
         paymentAttemptRepository.deleteAll();
         paymentBillRepository.deleteAll();
+        asStatusHistoryRepository.deleteAll();
         asReceptionFixture.deleteAll();
     }
 

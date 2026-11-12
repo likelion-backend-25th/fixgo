@@ -1,6 +1,7 @@
 package net.likelion.bebc25.fixgo.payment.service;
 
 import jakarta.persistence.EntityManager;
+import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
 import net.likelion.bebc25.fixgo.config.JpaConfig;
 import net.likelion.bebc25.fixgo.support.AsReceptionFixture;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
@@ -24,7 +25,7 @@ import java.time.ZoneOffset;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
-@Import({JpaConfig.class, AsReceptionFixture.class, PaymentRefundService.class, PaymentAttemptService.class})
+@Import({JpaConfig.class, AsReceptionFixture.class, AsStatusHistoryService.class, PaymentRefundService.class, PaymentAttemptService.class})
 class PaymentRefundServiceTest {
     @Autowired
     AsReceptionFixture asReceptionFixture;
