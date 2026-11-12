@@ -199,8 +199,7 @@ class AsReceptionServiceTest {
 
     private void setProductOwner(Long customerId) {
         var product = reception.getProduct();
-        product.update(product.getProductModelId(), customerId, product.getSerialNumber(),
-                product.getManufacturedAt(), product.getPurchasedAt(), receptionist.getId());
+        product.updateCustomerId(customerId);
     }
 
     @Test

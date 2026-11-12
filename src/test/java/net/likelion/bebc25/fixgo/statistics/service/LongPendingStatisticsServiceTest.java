@@ -87,7 +87,7 @@ class LongPendingStatisticsServiceTest {
             entityManager.persist(model);
             entityManager.flush();
 
-            Product product = new Product(model.getId(), PREFIX + "SERIAL", now.minusYears(1), 1L);
+            Product product = new Product(model.getId(), PREFIX + "SERIAL", now.minusYears(1));
 
             entityManager.persist(product);
             entityManager.flush();

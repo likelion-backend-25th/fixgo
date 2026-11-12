@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
 import net.likelion.bebc25.fixgo.product.dto.ProductDto;
 import net.likelion.bebc25.fixgo.product.service.ProductService;
 import org.springframework.data.domain.Page;
@@ -14,7 +13,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -44,13 +42,11 @@ public class ProductController {
             @ApiResponse(responseCode = "201", description = "제품 정보 등록 성공"),
     })
     public ResponseEntity<ProductDto.Response> create(
-            @Valid @RequestBody ProductDto.CreateRequest request,
-            @AuthenticationPrincipal CustomUserDetails user
+            @Valid @RequestBody ProductDto.CreateRequest request
     ) {
-        Long createdBy = user.getMember().getId();
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(productService.create(request, createdBy));
+                .body(productService.create(request));
     }
 
     // 시리얼번호 검색
@@ -81,17 +77,15 @@ public class ProductController {
 
 
     // 수리 대상 제품 정보 수정
-    @PatchMapping("/{id}")
+    @PatchMapping("/{id}/purchased_at")
     @Operation(summary = "수리 대상 제품 정보 수정", description = "수리 대상 제품 정보를 수정한다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "제품 정보 수정 성공"),
     })
-    public ResponseEntity<ProductDto.Response> update(
+    public ResponseEntity<ProductDto.Response> registerPurchasedAt(
             @PathVariable Long id,
-            @Valid @RequestBody ProductDto.UpdateRequest request,
-            @AuthenticationPrincipal CustomUserDetails user
+            @Valid @RequestBody ProductDto.PurchaseDateRegisterRequest request
     ) {
-        Long updatedBy = user.getMember().getId();
-        return ResponseEntity.ok(productService.update(id, request, updatedBy));
+        return ResponseEntity.ok(productService.registerPurchasedAt(id, request));
     }
 }

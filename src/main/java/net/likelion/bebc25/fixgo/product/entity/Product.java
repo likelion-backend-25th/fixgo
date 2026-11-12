@@ -4,13 +4,14 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import net.likelion.bebc25.fixgo.common.entity.BaseEntity;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Product {
+public class Product extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,43 +30,26 @@ public class Product {
 
     private LocalDateTime purchasedAt;
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
-
-    @Column(nullable = false)
-    private LocalDateTime updatedAt;
-
-    @Column(nullable = false)
-    private Long createdBy;
-
-    @Column(nullable = false)
-    private Long updatedBy;
-
-    public Product(Long productModelId, String serialNumber, LocalDateTime manufacturedAt, Long createdBy) {
-        this(productModelId, null, serialNumber, manufacturedAt, null, createdBy);
+    public Product(Long productModelId, String serialNumber, LocalDateTime manufacturedAt) {
+        this(productModelId, null, serialNumber, manufacturedAt, null);
     }
 
-    public Product(Long productModelId, Long customerId, String serialNumber,
-                   LocalDateTime manufacturedAt, LocalDateTime purchasedAt, Long createdBy) {
+    public Product(
+            Long productModelId, Long customerId, String serialNumber,
+            LocalDateTime manufacturedAt, LocalDateTime purchasedAt
+    ) {
         this.productModelId = productModelId;
         this.customerId = customerId;
         this.serialNumber = serialNumber;
         this.manufacturedAt = manufacturedAt;
         this.purchasedAt = purchasedAt;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = this.createdAt;
-        this.createdBy = createdBy;
-        this.updatedBy = createdBy;
     }
 
-    public void update(Long productModelId, Long customerId, String serialNumber,
-                       LocalDateTime manufacturedAt, LocalDateTime purchasedAt, Long updatedBy) {
-        this.productModelId = productModelId;
-        this.customerId = customerId;
-        this.serialNumber = serialNumber;
-        this.manufacturedAt = manufacturedAt;
+    public void registerPurchasedAt(LocalDateTime purchasedAt) {
         this.purchasedAt = purchasedAt;
-        this.updatedAt = LocalDateTime.now();
-        this.updatedBy = updatedBy;
+    }
+
+    public void updateCustomerId(Long customerId) {
+        this.customerId = customerId;
     }
 }

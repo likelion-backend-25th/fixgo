@@ -44,12 +44,12 @@ public class ProductService {
 
     // 수리 대상 제품 등록
     @Transactional
-    public ProductDto.Response create(ProductDto.CreateRequest request, Long createdBy) {
+    public ProductDto.Response create(ProductDto.CreateRequest request) {
         findProductModel(request.productModelId());
         if (productRepository.existsBySerialNumber(request.serialNumber())) {
             throw new IllegalArgumentException("이미 등록된 시리얼번호입니다.");
         }
-        Product product = productRepository.save(request.toEntity(createdBy));
+        Product product = productRepository.save(request.toEntity());
         return toResponse(product);
     }
 
@@ -76,20 +76,25 @@ public class ProductService {
 
     // 수리 대상 제품 등록 정보 수정
     @Transactional
-    public ProductDto.Response update(Long id, ProductDto.UpdateRequest request, Long updatedBy) {
+    public ProductDto.Response updateCustomerId(Long id, ProductDto.OwnerUpdateRequest request) {
         findProductModel(request.productModelId());
-        if (productRepository.existsBySerialNumberAndIdNot(request.serialNumber(), id)) {
-            throw new IllegalArgumentException("이미 등록된 시리얼번호입니다.");
-        }
+
         Product product = findProduct(id);
-        product.update(
-                request.productModelId(),
-                request.customerId(),
-                request.serialNumber(),
-                request.manufacturedAt(),
-                request.purchasedAt(),
-                updatedBy
-        );
+        product.updateCustomerId(request.customerId());
+
+        return toResponse(product);
+    }
+
+    @Transactional
+    public ProductDto.Response registerPurchasedAt(Long id, ProductDto.PurchaseDateRegisterRequest request) {
+        findProductModel(request.productModelId());
+
+        Product product = findProduct(id);
+        if (product.getPurchasedAt() != null) {
+            throw new IllegalArgumentException("구매일은 변경할 수 없습니다.");
+        }
+        product.registerPurchasedAt(request.purchasedAt());
+
         return toResponse(product);
     }
 }

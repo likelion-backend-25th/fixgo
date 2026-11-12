@@ -124,8 +124,8 @@ class AsReceptionRepositoryTest {
         Customer kimcheolsu = customerRepository.save(
                 new Customer("김철수", "010-3333-4444", "kimcheolsu@test.com", "54321", "대구", "중구", createdBy)
         );
-        Product gram = productRepository.save(new Product(model.getId(), "SN-ALPHA", LocalDateTime.now(), createdBy));
-        Product phone = productRepository.save(new Product(model.getId(), "SN-BETA", LocalDateTime.now(), createdBy));
+        Product gram = productRepository.save(new Product(model.getId(), "SN-ALPHA", LocalDateTime.now()));
+        Product phone = productRepository.save(new Product(model.getId(), "SN-BETA", LocalDateTime.now()));
 
         alpha = saveReception("AS-ALPHA-001", hansohee, gram, receptionist, kim, "LCD불량");
         beta = saveReception("AS-BETA-002", kimcheolsu, phone, receptionist, park, "충전불가");
