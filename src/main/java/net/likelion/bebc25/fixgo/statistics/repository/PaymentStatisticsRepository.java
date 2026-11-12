@@ -64,4 +64,60 @@ public interface PaymentStatisticsRepository extends Repository<PaymentAttempt, 
             order by b.id desc
             """)
     List<PaymentStatisticsDto.UnpaidBillResponse> findUnpaidBills();
+
+    // 기간 안 승인된 입금. 일자는 승인 시각이다.
+    @Query("""
+            select new net.likelion.bebc25.fixgo.statistics.dto.PaymentStatisticsDto$PaymentHistoryResponse(
+                b.id, r.receptionNumber, c.name, b.amount, b.status, a.approvedAt
+            )
+            from PaymentAttempt a
+            join a.paymentBill b
+            join b.asReception r
+            join r.customer c
+            where b.status = net.likelion.bebc25.fixgo.payment.entity.PaymentBillStatus.PAID
+              and a.status = net.likelion.bebc25.fixgo.payment.entity.PaymentAttemptStatus.DONE
+              and a.approvedAt >= :startDateTime
+              and a.approvedAt < :endDateTime
+            order by a.approvedAt desc
+            """)
+    List<PaymentStatisticsDto.PaymentHistoryResponse> findPaidHistory(
+            @Param("startDateTime") LocalDateTime startDateTime, @Param("endDateTime") LocalDateTime endDateTime
+    );
+
+    // 기간 안 만들어진 미입금. 일자는 청구 시각이다.
+    @Query("""
+            select new net.likelion.bebc25.fixgo.statistics.dto.PaymentStatisticsDto$PaymentHistoryResponse(
+                b.id, r.receptionNumber, c.name, b.amount, b.status, b.createdAt
+            )
+            from PaymentBill b
+            join b.asReception r
+            join r.customer c
+            where b.status = net.likelion.bebc25.fixgo.payment.entity.PaymentBillStatus.UNPAID
+              and b.createdAt >= :startDateTime
+              and b.createdAt < :endDateTime
+            order by b.createdAt desc
+            """)
+    List<PaymentStatisticsDto.PaymentHistoryResponse> findUnpaidHistory(
+            @Param("startDateTime") LocalDateTime startDateTime, @Param("endDateTime") LocalDateTime endDateTime
+    );
+
+    // 기간 안 완료된 환불. 일자는 환불 시각이다.
+    @Query("""
+            select new net.likelion.bebc25.fixgo.statistics.dto.PaymentStatisticsDto$PaymentHistoryResponse(
+                b.id, r.receptionNumber, c.name, coalesce(pr.cancelAmount, 0), b.status, pr.canceledAt
+            )
+            from PaymentRefund pr
+            join pr.paymentAttempt a
+            join a.paymentBill b
+            join b.asReception r
+            join r.customer c
+            where b.status = net.likelion.bebc25.fixgo.payment.entity.PaymentBillStatus.REFUNDED
+              and pr.status = net.likelion.bebc25.fixgo.payment.entity.PaymentRefundStatus.DONE
+              and pr.canceledAt >= :startDateTime
+              and pr.canceledAt < :endDateTime
+            order by pr.canceledAt desc
+            """)
+    List<PaymentStatisticsDto.PaymentHistoryResponse> findRefundHistory(
+            @Param("startDateTime") LocalDateTime startDateTime, @Param("endDateTime") LocalDateTime endDateTime
+    );
 }

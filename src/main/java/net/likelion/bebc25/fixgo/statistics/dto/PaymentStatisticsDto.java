@@ -11,4 +11,7 @@ public class PaymentStatisticsDto {
 
     public record UnpaidBillResponse(Long billId, String receptionNumber, String customerName, String modelName,
                                      Long amount, LocalDateTime billedAt, PaymentBillStatus status) {}
+
+    public record PaymentHistoryResponse(Long billId, String receptionNumber, String customerName, Long amount,
+                                         PaymentBillStatus status, LocalDateTime occurredAt) {}
 }
