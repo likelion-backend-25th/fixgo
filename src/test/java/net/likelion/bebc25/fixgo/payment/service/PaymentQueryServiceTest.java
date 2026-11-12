@@ -1,6 +1,7 @@
 package net.likelion.bebc25.fixgo.payment.service;
 
 import jakarta.persistence.EntityManager;
+import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
 import net.likelion.bebc25.fixgo.config.JpaConfig;
 import net.likelion.bebc25.fixgo.support.AsReceptionFixture;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
@@ -27,7 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
-@Import({JpaConfig.class, AsReceptionFixture.class, PaymentQueryService.class, PaymentAttemptService.class})
+@Import({JpaConfig.class, AsReceptionFixture.class, AsStatusHistoryService.class, PaymentQueryService.class, PaymentAttemptService.class})
 class PaymentQueryServiceTest {
     @Autowired
     AsReceptionFixture asReceptionFixture;

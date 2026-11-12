@@ -7,6 +7,7 @@ import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
+import net.likelion.bebc25.fixgo.customer.entity.Customer;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairMessageResponse;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairRequest;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairResponse;
@@ -15,12 +16,13 @@ import net.likelion.bebc25.fixgo.repair.entity.repair.RepairDecision;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
 import net.likelion.bebc25.fixgo.repair.entity.repair.WarrantyResult;
 import net.likelion.bebc25.fixgo.repair.repository.RepairRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
@@ -54,19 +56,11 @@ class RepairServiceTest {
     @Mock
     private PartService partService;
 
-    private RepairService repairService;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
-    @BeforeEach
-    void setUp() {
-        repairService = new RepairService(
-                repairRepository,
-                asReceptionRepository,
-                memberRepository,
-                repairStatusService,
-                asStatusHistoryService,
-                partService
-        );
-    }
+    @InjectMocks
+    private RepairService repairService;
 
     // 테스트용 A/S 접수 정보 생성
     private AsReception createAsReception() {
@@ -607,6 +601,10 @@ class RepairServiceTest {
     void completeRepairSuccessTest() {
 
         Repair repair = createRepair();
+        Customer customer = new Customer("고객", "010-1234-5678", "customer@example.com",
+                "12345", "서울", "101호", 1L);
+        when(repair.getAsReception().getCustomer()).thenReturn(customer);
+        when(repair.getAsReception().getId()).thenReturn(100L);
         ReflectionTestUtils.setField(repair, "status", RepairStatus.REPAIRING);
 
         CustomUserDetails userDetails = mock(CustomUserDetails.class);
@@ -621,6 +619,8 @@ class RepairServiceTest {
         verify(repairStatusService)
                 .changeStatus(repair, RepairStatus.COMPLETED, "technician", "수리 완료");
         verify(partService).updateMultiStockQuantity(userDetails, 1L);
+        verify(eventPublisher).publishEvent(new RepairService.RepairCompletedEvent(
+                100L, null, customer.getName(), customer.getEmail(), false));
     }
 
     @Test
