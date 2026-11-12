@@ -37,4 +37,9 @@ public class LaborRate extends BaseEntity {
         this.rateType = rateType;
         this.effectiveDate = effectiveDate;
     }
+
+    public void update(int cost) {
+        this.cost = cost;
+        this.effectiveDate = LocalDate.now();
+    }
 }
