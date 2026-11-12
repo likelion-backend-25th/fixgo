@@ -15,12 +15,13 @@ import net.likelion.bebc25.fixgo.repair.entity.repair.RepairDecision;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
 import net.likelion.bebc25.fixgo.repair.entity.repair.WarrantyResult;
 import net.likelion.bebc25.fixgo.repair.repository.RepairRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
@@ -54,19 +55,11 @@ class RepairServiceTest {
     @Mock
     private PartService partService;
 
-    private RepairService repairService;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
-    @BeforeEach
-    void setUp() {
-        repairService = new RepairService(
-                repairRepository,
-                asReceptionRepository,
-                memberRepository,
-                repairStatusService,
-                asStatusHistoryService,
-                partService
-        );
-    }
+    @InjectMocks
+    private RepairService repairService;
 
     // 테스트용 A/S 접수 정보 생성
     private AsReception createAsReception() {
