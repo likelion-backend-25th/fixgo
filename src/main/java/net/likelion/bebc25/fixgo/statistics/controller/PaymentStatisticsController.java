@@ -47,4 +47,16 @@ public class PaymentStatisticsController {
     public List<PaymentStatisticsDto.UnpaidBillResponse> getUnpaidBills() {
         return paymentStatisticsService.getUnpaidBills();
     }
+
+    @GetMapping("/payments/history")
+    @Operation(summary = "기간 결제 내역 조회", description = "조회 기간의 입금, 미입금, 환불 내역을 조회한다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "기간 결제 내역 조회 성공"),
+    })
+    public List<PaymentStatisticsDto.PaymentHistoryResponse> getPaymentHistory(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+    ) {
+        return paymentStatisticsService.getPaymentHistory(startDate, endDate);
+    }
 }

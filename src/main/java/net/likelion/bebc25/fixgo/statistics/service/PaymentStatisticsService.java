@@ -11,6 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -56,5 +58,26 @@ public class PaymentStatisticsService {
 
     public List<PaymentStatisticsDto.UnpaidBillResponse> getUnpaidBills() {
         return paymentStatisticsRepository.findUnpaidBills();
+    }
+
+    // 입금은 승인일, 미입금은 청구일, 환불은 환불일이 조회 기간 안인 청구서다.
+    public List<PaymentStatisticsDto.PaymentHistoryResponse> getPaymentHistory(LocalDate startDate, LocalDate endDate) {
+        if (startDate == null || endDate == null) {
+            throw new IllegalArgumentException("조회 시작일과 종료일은 필수입니다.");
+        }
+        if (startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("시작일은 종료일보다 늦을 수 없습니다.");
+        }
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay();
+        List<PaymentStatisticsDto.PaymentHistoryResponse> rows = new ArrayList<>();
+        rows.addAll(paymentStatisticsRepository.findPaidHistory(startDateTime, endDateTime));
+        rows.addAll(paymentStatisticsRepository.findUnpaidHistory(startDateTime, endDateTime));
+        rows.addAll(paymentStatisticsRepository.findRefundHistory(startDateTime, endDateTime));
+        rows.sort(Comparator.comparing(
+                PaymentStatisticsDto.PaymentHistoryResponse::occurredAt,
+                Comparator.nullsLast(Comparator.reverseOrder())
+        ));
+        return rows;
     }
 }
