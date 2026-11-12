@@ -58,6 +58,7 @@ public class ShipmentController {
     }
 
     // 배송 단건 조회
+    @PreAuthorize("hasAnyRole('ADMIN','RECEPTIONIST','TECHNICIAN')")
     @GetMapping("/{shipmentId}")
     @Operation(summary = "배송 단건 조회", description = "배송 ID로 배송 정보를 조회한다.")
     @ApiResponses(value = {
@@ -68,6 +69,7 @@ public class ShipmentController {
     }
 
     // A/S 접수별 배송 조회
+    @PreAuthorize("hasAnyRole('ADMIN','RECEPTIONIST','TECHNICIAN')")
     @GetMapping("/receptions/{asReceptionId}")
     @Operation(summary = "접수별 배송 조회", description = "A/S 접수별 배송 정보를 조회한다.")
     @ApiResponses(value = {
@@ -78,6 +80,7 @@ public class ShipmentController {
     }
 
     // 배송 상세 및 이벤트 조회
+    @PreAuthorize("hasAnyRole('ADMIN','RECEPTIONIST','TECHNICIAN')")
     @GetMapping("/{shipmentId}/details")
     @Operation(summary = "배송 상세 조회", description = "배송 상세 및 이벤트 이력을 조회한다.")
     @ApiResponses(value = {
@@ -141,6 +144,7 @@ public class ShipmentController {
     }
 
     // 배송 및 방문 수령 통합 목록 조회
+    @PreAuthorize("hasAnyRole('ADMIN','RECEPTIONIST','TECHNICIAN')")
     @GetMapping("/list")
     @Operation(summary = "배송 관리 목록 조회", description = "배송 및 방문 수령 통합 목록을 조회한다.")
     @ApiResponses(value = {
