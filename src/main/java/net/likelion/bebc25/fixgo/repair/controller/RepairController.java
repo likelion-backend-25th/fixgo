@@ -171,4 +171,22 @@ public class RepairController {
                 new RepairMessageResponse("수리 정보가 삭제되었습니다.")
         );
     }
+
+    // 수리 완료
+    @PatchMapping("/{id}/complete")
+    @PreAuthorize("hasRole('TECHNICIAN')")
+    @Operation(summary = "수리 완료", description = "담당 기사가 본인에게 배정된 수리를 완료한다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "수리 완료 성공"),
+    })
+    public ResponseEntity<RepairMessageResponse> completeMyRepair(
+            @PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        repairService.completeRepair(id, userDetails);
+
+        return ResponseEntity.ok(
+                new RepairMessageResponse("수리가 완료되었습니다.")
+        );
+    }
 }
