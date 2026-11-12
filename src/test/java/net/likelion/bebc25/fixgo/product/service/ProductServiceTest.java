@@ -11,6 +11,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -166,6 +169,22 @@ public class ProductServiceTest {
 
         assertThat(productService.search(new ProductDto.SearchRequest(null))).isEmpty();
         assertThat(productService.search(new ProductDto.SearchRequest("  "))).isEmpty();
+    }
+
+    @Test
+    @DisplayName("시리얼번호가 비어 있으면 전체 제품을 페이징한다")
+    void searchPage_blank_returnsAll() {
+        ProductModel model = saveProductModel("스마트폰", "SZ-P24", Category.PHONE);
+        saveProduct(model.getId(), "SZP24-22018-51542");
+        saveProduct(model.getId(), "SZP24-22018-99999");
+
+        Page<ProductDto.Response> page = productService.searchPage(
+                new ProductDto.SearchRequest("  "),
+                PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "id"))
+        );
+
+        assertThat(page.getContent()).extracting(ProductDto.Response::serialNumber)
+                .containsExactly("SZP24-22018-99999", "SZP24-22018-51542");
     }
 
     @Test

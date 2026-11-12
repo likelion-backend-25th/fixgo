@@ -68,7 +68,7 @@ public class ProductController {
     }
 
     @GetMapping("/search")
-    @Operation(summary = "제품 페이징 검색", description = "시리얼번호 조건으로 제품을 페이징 검색한다.")
+    @Operation(summary = "제품 페이징 검색", description = "시리얼번호 조건으로 제품을 페이징 검색한다. 시리얼번호가 없으면 전체를 페이징한다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "제품 페이징 검색 성공"),
     })

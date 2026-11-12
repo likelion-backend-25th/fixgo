@@ -65,8 +65,9 @@ public class ProductService {
     }
 
     public Page<ProductDto.Response> searchPage(ProductDto.SearchRequest request, Pageable pageable) {
+        // 시리얼 조건이 없으면 조회 창을 열자마자 전체 제품이 보이게 한다.
         if (request.serialNumber() == null || request.serialNumber().isBlank()) {
-            return Page.empty(pageable);
+            return productRepository.findAll(pageable).map(this::toResponse);
         }
         return productRepository.findBySerialNumberContaining(request.serialNumber().trim(), pageable)
                 .map(this::toResponse);
