@@ -29,6 +29,9 @@ public class LaborRateService {
 
     @Transactional
     public LaborRateDto.Response updateLaborRate(LaborRateDto.UpdateRequest request) {
+        if (request.cost() < 0) {
+            throw new IllegalArgumentException("비용은 0 이상이어야 합니다.");
+        }
         LaborRate laborRate = getLaborRateEntity(request.id());
         laborRate.update(request.cost());
         return LaborRateDto.Response.from(laborRate);
