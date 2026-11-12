@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
 import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
+import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
 import net.likelion.bebc25.fixgo.customer.entity.Customer;
 import net.likelion.bebc25.fixgo.shipment.dto.ShipmentDto;
 import net.likelion.bebc25.fixgo.shipment.dto.SweetTrackerDto;
@@ -31,6 +32,7 @@ public class ShipmentService {
     private final ShipmentRepository shipmentRepository;
     private final ShipmentEventRepository shipmentEventRepository;
     private final AsReceptionRepository asReceptionRepository;
+    private final AsStatusHistoryService asStatusHistoryService;
 
     // 택배 배송 등록
     @Transactional
@@ -126,14 +128,11 @@ public class ShipmentService {
         Shipment shipment = getShipmentForUpdate(shipmentId);
         AsReception asReception = shipment.getAsReception();
 
-        validateReception(
-                asReception,
-                ReturnMethod.DELIVERY,
-                AsReceptionStatus.AWAITING_SHIPMENT);
+        validateReception(asReception, ReturnMethod.DELIVERY, AsReceptionStatus.AWAITING_SHIPMENT);
 
         shipment.markDelivered();
         // 배송 완료시 접수 -> 완료
-        asReception.changeStatus(AsReceptionStatus.COMPLETED);
+        completeReception(asReception, "택배 배송 완료");
 
         return ShipmentDto.Response.from(shipment);
     }
@@ -144,12 +143,9 @@ public class ShipmentService {
         Shipment shipment = getShipmentForUpdate(shipmentId);
         AsReception asReception = shipment.getAsReception();
 
-        validateReception(
-                asReception,
-                ReturnMethod.PICKUP,
-                AsReceptionStatus.AWAITING_PICKUP);
+        validateReception(asReception, ReturnMethod.PICKUP, AsReceptionStatus.AWAITING_PICKUP);
         shipment.markPickedUp();
-        asReception.changeStatus(AsReceptionStatus.COMPLETED);
+        completeReception(asReception, "방문 수령 완료");
 
         return ShipmentDto.Response.from(shipment);
     }
@@ -346,10 +342,7 @@ public class ShipmentService {
     }
 
     // SweetTracker 배송 완료시 A/S 접수까지 자동완료
-    private void completeDeliveryIfNeeded(
-            Shipment shipment,
-            SweetTrackerDto.TrackingResponse response
-    ) {
+    private void completeDeliveryIfNeeded(Shipment shipment, SweetTrackerDto.TrackingResponse response) {
         boolean delivered = Boolean.TRUE.equals(response.complete())
                 && Integer.valueOf(6).equals(response.level());
 
@@ -359,31 +352,33 @@ public class ShipmentService {
 
         AsReception asReception = shipment.getAsReception();
 
-        // 이미 배송 완료된 경우 중복 처리 방지
         if (shipment.getStatus() == ShipmentStatus.DELIVERED) {
             return;
         }
 
-        // 배송 처리가 된 경우
         if (shipment.getStatus() != ShipmentStatus.SHIPPING) {
             return;
         }
 
-        // A/S 접수 상태
-        validateReception(
-                asReception,
-                ReturnMethod.DELIVERY,
-                AsReceptionStatus.AWAITING_SHIPMENT);
+        validateReception(asReception,
+                          ReturnMethod.DELIVERY,
+                          AsReceptionStatus.AWAITING_SHIPMENT);
 
-        // 배송상태 완료
         shipment.markDelivered();
 
-        // A/S 접수상태를 완료로 변경
-        asReception.changeStatus(AsReceptionStatus.COMPLETED);
+        completeReception(asReception, "택배 배송 완료");
 
     }
 
     // 스마트 택배 마지막 배송 상태
+    private void completeReception(AsReception asReception, String reason) {
+        AsReceptionStatus previousStatus = asReception.getStatus();
+        asReception.changeStatus(AsReceptionStatus.COMPLETED);
+        // 완료 API와 자동 조회 경로는 처리자 정보를 전달받지 않는다.
+        asStatusHistoryService.record(
+                asReception, previousStatus.name(), AsReceptionStatus.COMPLETED.name(), reason, null);
+    }
+
     private String getLastTrackingStatus(SweetTrackerDto.TrackingResponse response) {
         List<SweetTrackerDto.TrackingDetail> details = response.trackingDetails();
 

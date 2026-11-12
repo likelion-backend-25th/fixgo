@@ -3,6 +3,8 @@ package net.likelion.bebc25.fixgo.shipment.service;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
 import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
+import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
+import net.likelion.bebc25.fixgo.shipment.entity.Shipment;
 import net.likelion.bebc25.fixgo.shipment.dto.ShipmentDto;
 import net.likelion.bebc25.fixgo.shipment.entity.ReturnMethod;
 import net.likelion.bebc25.fixgo.shipment.entity.ShipmentStatus;
@@ -39,6 +41,74 @@ class ShipmentServiceTest {
 
     @InjectMocks
     private ShipmentService shipmentService;
+
+    @Mock
+    private AsStatusHistoryService asStatusHistoryService;
+
+    @Test
+    @DisplayName("배송 완료 시 접수 완료 이력을 저장한다")
+    void markDelivered_recordsReceptionHistory() {
+        AsReception reception = mock(AsReception.class);
+        Shipment shipment = prepareCompletion(reception, ReturnMethod.DELIVERY,
+                AsReceptionStatus.AWAITING_SHIPMENT);
+
+        shipmentService.markDelivered(1L);
+
+        verify(shipment).markDelivered();
+        verify(reception).changeStatus(AsReceptionStatus.COMPLETED);
+        verify(asStatusHistoryService).record(reception, "AWAITING_SHIPMENT", "COMPLETED", "택배 배송 완료", null);
+    }
+
+    @Test
+    @DisplayName("방문 수령 완료 시 접수 완료 이력을 저장한다")
+    void markPickedUp_recordsReceptionHistory() {
+        AsReception reception = mock(AsReception.class);
+        Shipment shipment = prepareCompletion(reception, ReturnMethod.PICKUP,
+                AsReceptionStatus.AWAITING_PICKUP);
+
+        shipmentService.markPickedUp(1L);
+
+        verify(shipment).markPickedUp();
+        verify(reception).changeStatus(AsReceptionStatus.COMPLETED);
+        verify(asStatusHistoryService).record(reception, "AWAITING_PICKUP", "COMPLETED", "방문 수령 완료", null);
+    }
+
+    private Shipment prepareCompletion(AsReception reception, ReturnMethod method, AsReceptionStatus status) {
+        Shipment shipment = mock(Shipment.class);
+        when(shipmentRepository.findById(1L)).thenReturn(Optional.of(shipment));
+        when(shipmentRepository.findWithLockById(1L)).thenReturn(Optional.of(shipment));
+        when(shipment.getAsReception()).thenReturn(reception);
+        when(reception.getId()).thenReturn(2L);
+        when(asReceptionRepository.findByIdWithLock(2L)).thenReturn(Optional.of(reception));
+        when(reception.getReturnMethod()).thenReturn(method);
+        when(reception.getStatus()).thenReturn(status);
+        return shipment;
+    }
+
+    @Test
+    @DisplayName("택배 자동 완료 확인 시 접수 완료 이력을 한 번만 저장한다")
+    void saveTrackingEvents_recordsCompletionOnlyOnce() {
+        AsReception reception = mock(AsReception.class);
+        Shipment shipment = prepareCompletion(reception, ReturnMethod.DELIVERY,
+                AsReceptionStatus.AWAITING_SHIPMENT);
+        when(shipment.getReturnMethod()).thenReturn(ReturnMethod.DELIVERY);
+        when(shipment.getCourierCode()).thenReturn("04");
+        when(shipment.getTrackingNumber()).thenReturn("1234");
+        when(shipment.getStatus()).thenReturn(ShipmentStatus.SHIPPING);
+        doAnswer(invocation -> {
+            when(shipment.getStatus()).thenReturn(ShipmentStatus.DELIVERED);
+            return null;
+        }).when(shipment).markDelivered();
+        var response = new net.likelion.bebc25.fixgo.shipment.dto.SweetTrackerDto.TrackingResponse(
+                "1234", null, null, 6, true, null, null, java.util.List.of(), true, null);
+
+        shipmentService.saveTrackingEvents(1L, "04", "1234", response);
+        shipmentService.saveTrackingEvents(1L, "04", "1234", response);
+
+        verify(shipment).markDelivered();
+        verify(asStatusHistoryService).record(reception, "AWAITING_SHIPMENT", "COMPLETED",
+                "택배 배송 완료 (자동 확인)", null);
+    }
 
 
     // 배송 관리 목록 조회

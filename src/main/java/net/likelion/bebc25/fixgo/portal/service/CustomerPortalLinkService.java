@@ -10,6 +10,7 @@ import net.likelion.bebc25.fixgo.portal.exception.PortalException;
 import net.likelion.bebc25.fixgo.portal.repository.CustomerPortalLinkRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
@@ -96,5 +97,21 @@ public class CustomerPortalLinkService {
         byte[] bytes = new byte[TOKEN_BYTES];
         RANDOM.nextBytes(bytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    }
+
+    // 기존 고객 포털 토큰 조회
+    @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
+    public String getActiveToken(Long asReceptionId) {
+        CustomerPortalLink link = customerPortalLinkRepository.findByAsReceptionId(asReceptionId)
+                .orElseThrow(() -> new PortalException(
+                        PortalErrorCode.LINK_NOT_FOUND,
+                        "발급된 고객 안내 링크가 없습니다."));
+        if (link.isExpiredAt(LocalDateTime.now())) {
+            throw new PortalException(
+                    PortalErrorCode.LINK_EXPIRED,
+                    "만료된 링크입니다.");
+        }
+
+        return link.getToken();
     }
 }
