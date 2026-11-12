@@ -57,11 +57,11 @@ class PartServiceTest {
     void searchParts() {
         Part part = part(1L, "메인보드", 15000, 40, 8, PartStatus.ACTIVE);
         Pageable pageable = PageRequest.of(0, 10);
-        when(partRepository.searchParts("메인", PartStatus.ACTIVE, pageable))
+        when(partRepository.searchParts("메인", PartStatus.ACTIVE, null, null, pageable))
                 .thenReturn(new PageImpl<>(List.of(part), pageable, 1));
 
         Page<PartDto.BriefResponse> result = partService.searchParts(
-                new PartDto.SearchRequest("메인", PartStatus.ACTIVE), pageable);
+                new PartDto.SearchRequest("메인", PartStatus.ACTIVE, null, null), pageable);
 
         assertThat(result.getTotalElements()).isEqualTo(1);
         assertThat(result.getContent()).containsExactly(

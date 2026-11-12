@@ -40,7 +40,17 @@ public class PartService {
 
     // 부품 목록 조회
     public Page<PartDto.BriefResponse> searchParts(PartDto.SearchRequest request, Pageable pageable) {
-        return partRepository.searchParts(request.partName(), request.status(), pageable).map(PartDto.BriefResponse::from);
+        String partName = request.partName();
+        if (partName != null && partName.isBlank()) {
+            partName = null;
+        }
+        return partRepository.searchParts(
+                partName,
+                request.status(),
+                request.category(),
+                request.productModelId(),
+                pageable
+        ).map(PartDto.BriefResponse::from);
     }
 
     // 부품 상세 정보 조회
