@@ -8,6 +8,7 @@ import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
+import net.likelion.bebc25.fixgo.customer.entity.Customer;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairMessageResponse;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairRequest;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairResponse;
@@ -15,6 +16,7 @@ import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
 import net.likelion.bebc25.fixgo.repair.entity.repair.WarrantyResult;
 import net.likelion.bebc25.fixgo.repair.repository.RepairRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +33,7 @@ public class RepairService {
     private final RepairStatusService repairStatusService;
     private final AsStatusHistoryService asStatusHistoryService;
     private final PartService partService;
+    private final ApplicationEventPublisher eventPublisher;
 
     // 수리 등록
     @Transactional
@@ -182,5 +185,29 @@ public class RepairService {
 
         // 같은 트랜잭션에서 사용 부품 재고를 차감한다.
         partService.updateMultiStockQuantity(userDetails, id);
+
+        // A/S 접수 및 고객 정보 조회
+        AsReception asReception = repair.getAsReception();
+        Customer customer = asReception.getCustomer();
+
+        // 수리 완료 이메일 이벤트
+        eventPublisher.publishEvent(
+                new RepairCompletedEvent(
+                        asReception.getId(),
+                        asReception.getReceptionNumber(),
+                        customer.getName(),
+                        customer.getEmail(),
+                        repair.getWarrantyResult() != WarrantyResult.FREE
+                )
+        );
     }
+
+    // 수리 완료 이메일 발송 이벤트
+    public record RepairCompletedEvent(
+            Long asReceptionId,
+            String receptionNumber,
+            String customerName,
+            String recipientEmail,
+            boolean paymentRequired
+    ) {}
 }

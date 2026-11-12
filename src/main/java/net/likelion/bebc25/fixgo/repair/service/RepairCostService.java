@@ -8,6 +8,7 @@ import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
 import net.likelion.bebc25.fixgo.auth.entity.Role;
 import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
+import net.likelion.bebc25.fixgo.customer.entity.Customer;
 import net.likelion.bebc25.fixgo.product.entity.Category;
 import net.likelion.bebc25.fixgo.product.entity.Product;
 import net.likelion.bebc25.fixgo.product.entity.ProductModel;
@@ -26,6 +27,7 @@ import net.likelion.bebc25.fixgo.repair.exception.RepairException;
 import net.likelion.bebc25.fixgo.repair.repository.RepairPartUsageRepository;
 import net.likelion.bebc25.fixgo.repair.repository.RepairRepository;
 import net.likelion.bebc25.fixgo.repair.repository.RepairWorkRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,6 +51,7 @@ public class RepairCostService {
     private final ProductModelRepository productModelRepository;
     private final RepairStatusService repairStatusService;
     private final AsReceptionRepository asReceptionRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     // 접수 ID로 수리비가 확정된 견적서를 조회
     public EstimateResponse getEstimate(Long receptionId) {
@@ -327,6 +330,17 @@ public class RepairCostService {
                     userDetails.getUsername(),
                     "수리비 확정"
             );
+            // 견적 승인 요청 이메일 이벤트
+            Customer customer = asReception.getCustomer();
+
+            eventPublisher.publishEvent(
+                    new EstimateRequestedEvent(
+                            asReception.getId(),
+                            asReception.getReceptionNumber(),
+                            customer.getName(),
+                            customer.getEmail()
+                    )
+            );
         }
     }
 
@@ -381,4 +395,12 @@ public class RepairCostService {
             );
         }
     }
+
+    // 견적 승인 요청 이메일 발송 이벤트
+    public record EstimateRequestedEvent(
+            Long asReceptionId,
+            String receptionNumber,
+            String customerName,
+            String recipientEmail
+    ) {}
 }

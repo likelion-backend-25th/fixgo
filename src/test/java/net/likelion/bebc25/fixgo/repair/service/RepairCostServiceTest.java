@@ -8,6 +8,7 @@ import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
 import net.likelion.bebc25.fixgo.auth.entity.Role;
 import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
+import net.likelion.bebc25.fixgo.customer.entity.Customer;
 import net.likelion.bebc25.fixgo.product.entity.Category;
 import net.likelion.bebc25.fixgo.product.entity.Product;
 import net.likelion.bebc25.fixgo.product.entity.ProductModel;
@@ -32,6 +33,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Pageable;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -66,6 +68,9 @@ class RepairCostServiceTest {
 
     @Mock
     private AsReceptionRepository asReceptionRepository;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private RepairCostService repairCostService;
@@ -403,6 +408,9 @@ class RepairCostServiceTest {
 
         Repair repair = mock(Repair.class);
         AsReception asReception = mock(AsReception.class);
+        Customer customer = new Customer("고객", "010-1234-5678", "customer@example.com",
+                "12345", "서울", "101호", 1L);
+        when(asReception.getCustomer()).thenReturn(customer);
 
         when(repairRepository.findByIdWithLock(repairId))
                 .thenReturn(Optional.of(repair));
@@ -419,6 +427,8 @@ class RepairCostServiceTest {
         repairCostService.confirmRepairCost(repairId, userDetails);
 
         verify(repair).confirmRepairCost();
+        verify(eventPublisher).publishEvent(new RepairCostService.EstimateRequestedEvent(
+                receptionId, null, customer.getName(), customer.getEmail()));
 
         // 접수 상태(견적 승인 대기) 변경과 이력은 RepairStatusService가 함께 처리한다.
         verify(repairStatusService).changeStatus(
