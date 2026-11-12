@@ -2,9 +2,10 @@ package net.likelion.bebc25.fixgo.repair.service;
 
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
-import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
 import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
+import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
+import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairMessageResponse;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairRequest;
@@ -50,6 +51,9 @@ class RepairServiceTest {
     @Mock
     private AsStatusHistoryService asStatusHistoryService;
 
+    @Mock
+    private PartService partService;
+
     private RepairService repairService;
 
     @BeforeEach
@@ -59,7 +63,8 @@ class RepairServiceTest {
                 asReceptionRepository,
                 memberRepository,
                 repairStatusService,
-                asStatusHistoryService
+                asStatusHistoryService,
+                partService
         );
     }
 
@@ -591,5 +596,70 @@ class RepairServiceTest {
 
         verify(repairStatusService)
                 .changeStatus(repair, RepairStatus.REPAIRING, "technician", "수리 시작");
+    }
+
+    // ==========================================
+    // 수리 완료 테스트
+    // ==========================================
+
+    @Test
+    @DisplayName("담당 기사가 수리 중인 건을 완료하면 상태 변경과 재고 차감이 호출된다.")
+    void completeRepairSuccessTest() {
+
+        Repair repair = createRepair();
+        ReflectionTestUtils.setField(repair, "status", RepairStatus.REPAIRING);
+
+        CustomUserDetails userDetails = mock(CustomUserDetails.class);
+        when(userDetails.getId()).thenReturn(1L);
+        when(userDetails.getUsername()).thenReturn("technician");
+
+        when(repairRepository.findByIdAndAsReception_Technician_Id(1L, 1L))
+                .thenReturn(Optional.of(repair));
+
+        repairService.completeRepair(1L, userDetails);
+
+        verify(repairStatusService)
+                .changeStatus(repair, RepairStatus.COMPLETED, "technician", "수리 완료");
+        verify(partService).updateMultiStockQuantity(userDetails, 1L);
+    }
+
+    @Test
+    @DisplayName("수리 중이 아닌 건은 완료할 수 없고 재고도 차감하지 않는다.")
+    void completeRepairNotRepairingTest() {
+
+        Repair repair = createRepair(); // DIAGNOSING 상태
+
+        CustomUserDetails userDetails = mock(CustomUserDetails.class);
+        when(userDetails.getId()).thenReturn(1L);
+
+        when(repairRepository.findByIdAndAsReception_Technician_Id(1L, 1L))
+                .thenReturn(Optional.of(repair));
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> repairService.completeRepair(1L, userDetails)
+        );
+
+        verifyNoInteractions(repairStatusService);
+        verifyNoInteractions(partService);
+    }
+
+    @Test
+    @DisplayName("본인에게 배정되지 않은 수리 건은 완료할 수 없다.")
+    void completeRepairNotAssignedTest() {
+
+        CustomUserDetails userDetails = mock(CustomUserDetails.class);
+        when(userDetails.getId()).thenReturn(30L);
+
+        when(repairRepository.findByIdAndAsReception_Technician_Id(1L, 30L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> repairService.completeRepair(1L, userDetails)
+        );
+
+        verifyNoInteractions(repairStatusService);
+        verifyNoInteractions(partService);
     }
 }
