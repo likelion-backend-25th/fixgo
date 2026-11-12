@@ -2,8 +2,6 @@ package net.likelion.bebc25.fixgo.payment.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.likelion.bebc25.fixgo.as.entity.AsReception;
-import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
 import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
 import net.likelion.bebc25.fixgo.payment.client.TossDto;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
@@ -101,8 +99,6 @@ public class PaymentRefundService {
 
         refund.markDone(transactionKey, canceledAt);
         bill.markRefunded();
-        AsReception reception = bill.getAsReception();
-        asStatusHistoryService.record(reception, AsReceptionStatus.AWAITING_PAYMENT.name(), reception.getStatus().name(), "가상계좌 입금", null);
     }
 
     @Transactional
