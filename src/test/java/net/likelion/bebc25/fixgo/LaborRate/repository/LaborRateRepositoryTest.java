@@ -64,4 +64,25 @@ class LaborRateRepositoryTest {
         // then
         assertThat(result).isEmpty();
     }
+
+    @Test
+    @DisplayName("공임비·점검비 전체 목록을 제품군·요금 종류 순으로 조회한다.")
+    void findAllByOrderByProductCategoryAscRateTypeAsc() {
+        LaborRate phoneLabor = new LaborRate(Category.PHONE, 35000, RateType.LABOR_RATE, LocalDate.of(2025, 1, 1));
+        LaborRate laptopInspection = new LaborRate(Category.LAPTOP, 20000, RateType.INSPECTION_COST, LocalDate.of(2025, 1, 1));
+        LaborRate laptopLabor = new LaborRate(Category.LAPTOP, 50000, RateType.LABOR_RATE, LocalDate.of(2025, 1, 1));
+
+        laborRateRepository.save(phoneLabor);
+        laborRateRepository.save(laptopInspection);
+        laborRateRepository.save(laptopLabor);
+
+        var result = laborRateRepository.findAllByOrderByProductCategoryAscRateTypeAsc();
+
+        assertThat(result).hasSize(3);
+        assertThat(result.get(0).getProductCategory()).isEqualTo(Category.LAPTOP);
+        assertThat(result.get(0).getRateType()).isEqualTo(RateType.INSPECTION_COST);
+        assertThat(result.get(1).getProductCategory()).isEqualTo(Category.LAPTOP);
+        assertThat(result.get(1).getRateType()).isEqualTo(RateType.LABOR_RATE);
+        assertThat(result.get(2).getProductCategory()).isEqualTo(Category.PHONE);
+    }
 }
