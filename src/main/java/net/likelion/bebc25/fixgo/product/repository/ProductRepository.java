@@ -29,6 +29,4 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     Page<Product> findBySerialNumberContaining(String serialNumber, Pageable pageable);
 
-    // 고객 보유 제품 조회
-    List<Product> findByCustomerId(Long customerId);
 }

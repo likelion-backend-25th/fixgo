@@ -397,4 +397,38 @@ class RepairControllerTest {
 
         verify(repairService, times(1)).deleteRepair(1L);
     }
+
+    // 수리 완료 테스트
+    @Test
+    @DisplayName("담당 기사는 수리 완료 API를 호출할 수 있다.")
+    void completeRepairTest() throws Exception {
+
+        CustomUserDetails userDetails = createUserDetails();
+
+        mockMvc.perform(patch("/api/v1/as/repairs/1/complete")
+                                .with(csrf())
+                                .with(user(userDetails)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message")
+                                   .value("수리가 완료되었습니다."));
+
+        verify(repairService, times(1))
+                .completeRepair(eq(1L), any(CustomUserDetails.class));
+    }
+
+    // 관리자 수리 완료 접근 차단 테스트
+    @Test
+    @DisplayName("관리자는 기사 전용 수리 완료 API를 호출할 수 없다.")
+    void completeRepairForbiddenTest() throws Exception {
+
+        CustomUserDetails adminDetails = createAdminUserDetails();
+
+        mockMvc.perform(patch("/api/v1/as/repairs/1/complete")
+                                .with(csrf())
+                                .with(user(adminDetails)))
+                .andExpect(status().isForbidden());
+
+        verify(repairService, never())
+                .completeRepair(anyLong(), any(CustomUserDetails.class));
+    }
 }

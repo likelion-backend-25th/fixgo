@@ -6,6 +6,7 @@ import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
 import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
 import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
+import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairMessageResponse;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairRequest;
@@ -29,6 +30,7 @@ public class RepairService {
     private final MemberRepository memberRepository;
     private final RepairStatusService repairStatusService;
     private final AsStatusHistoryService asStatusHistoryService;
+    private final PartService partService;
 
     // 수리 등록
     @Transactional
@@ -163,5 +165,22 @@ public class RepairService {
         Repair repair = findRepair(id);
 
         repairStatusService.changeStatus(repair, status, updatedBy);
+    }
+
+    // 로그인한 기사가 담당하는 수리 건인지 확인한 후 수리 완료
+    @Transactional
+    public void completeRepair(Long id, CustomUserDetails userDetails) {
+
+        Repair repair = repairRepository.findByIdAndAsReception_Technician_Id(id, userDetails.getId())
+                .orElseThrow(() -> new IllegalArgumentException("본인에게 배정된 수리 건이 아닙니다."));
+
+        if (repair.getStatus() != RepairStatus.REPAIRING) {
+            throw new IllegalArgumentException("수리 중인 건만 완료할 수 있습니다.");
+        }
+
+        repairStatusService.changeStatus(repair, RepairStatus.COMPLETED, userDetails.getUsername(), "수리 완료");
+
+        // 같은 트랜잭션에서 사용 부품 재고를 차감한다.
+        partService.updateMultiStockQuantity(userDetails, id);
     }
 }
