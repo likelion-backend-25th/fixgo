@@ -2,6 +2,9 @@ package net.likelion.bebc25.fixgo.payment.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.likelion.bebc25.fixgo.as.entity.AsReception;
+import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
+import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
 import net.likelion.bebc25.fixgo.payment.client.TossDto;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
 import net.likelion.bebc25.fixgo.payment.entity.*;
@@ -24,6 +27,7 @@ public class PaymentAttemptService {
     private final PaymentBillRepository paymentBillRepository;
     private final PaymentAttemptRepository paymentAttemptRepository;
     private final VirtualAccountRepository virtualAccountRepository;
+    private final AsStatusHistoryService asStatusHistoryService;
 
     /**
      * 결제를 시작한다. READY인 결제 시도가 이미 있으면 재사용한다.
@@ -87,6 +91,8 @@ public class PaymentAttemptService {
 
         attempt.markCashDone(staffId);
         bill.markPaid(attempt.getApprovedAt());
+        AsReception reception = bill.getAsReception();
+        asStatusHistoryService.record(reception, AsReceptionStatus.AWAITING_PAYMENT.name(), reception.getStatus().name(), "현금결제", null);
     }
 
     /**
@@ -178,6 +184,8 @@ public class PaymentAttemptService {
             case "DONE" -> {
                 attempt.markOnlineDone(response.paymentKey(), PaymentMethod.fromToss(response.method()), TossDto.toKst(response.approvedAt()));
                 bill.markPaid(TossDto.toKst(response.approvedAt()));
+                AsReception reception = bill.getAsReception();
+                asStatusHistoryService.record(reception, AsReceptionStatus.AWAITING_PAYMENT.name(), reception.getStatus().name(), "카드/간편 결제", null);
             }
             case "ABORTED", "EXPIRED" -> {
                 TossDto.ConfirmResponse.Failure failure = response.failure();
