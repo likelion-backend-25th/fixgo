@@ -3,7 +3,6 @@ package net.likelion.bebc25.fixgo.as.entity;
 public enum AsReceptionStatus {
     RECEIVED,                 // 접수
     INSPECTION,               // 점검
-    WARRANTY_REVIEW,          // 보증 판정
     AWAITING_QUOTE_APPROVAL,  // 견적 승인 대기 (고객 동의)
     AWAITING_REPAIR,          // 수리 대기
     REPAIR_IN_PROGRESS,       // 수리 중
