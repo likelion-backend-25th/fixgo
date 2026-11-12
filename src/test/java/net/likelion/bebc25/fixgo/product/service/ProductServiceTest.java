@@ -169,34 +169,6 @@ public class ProductServiceTest {
     }
 
     @Test
-    @DisplayName("고객 ID로 보유 제품 목록을 조회한다")
-    void listByCustomerId_success() {
-        ProductModel model = saveProductModel("스마트폰", "SZ-P24", Category.PHONE);
-        LocalDateTime manufacturedAt = LocalDateTime.of(2025, 5, 14, 0, 0);
-        productRepository.save(new Product(model.getId(), 10L, "SN-CUST-1", manufacturedAt, null, 1L));
-        productRepository.save(new Product(model.getId(), 10L, "SN-CUST-2", manufacturedAt, null, 1L));
-        productRepository.save(new Product(model.getId(), 20L, "SN-OTHER", manufacturedAt, null, 1L));
-        productRepository.save(new Product(model.getId(), "SN-NONE", manufacturedAt, 1L));
-
-        List<ProductDto.Response> responses = productService.listByCustomerId(10L);
-
-        assertThat(responses).hasSize(2);
-        assertThat(responses).extracting(ProductDto.Response::serialNumber)
-                .containsExactlyInAnyOrder("SN-CUST-1", "SN-CUST-2");
-        assertThat(responses).allMatch(response -> response.customerId().equals(10L));
-        assertThat(responses.getFirst().modelName()).isEqualTo("SZ-P24");
-    }
-
-    @Test
-    @DisplayName("고객 보유 제품이 없으면 빈 목록을 반환한다")
-    void listByCustomerId_empty() {
-        ProductModel model = saveProductModel("스마트폰", "SZ-P24", Category.PHONE);
-        saveProduct(model.getId(), "SN-NONE");
-
-        assertThat(productService.listByCustomerId(10L)).isEmpty();
-    }
-
-    @Test
     @DisplayName("제품 정보를 수정한다")
     void update_success() {
         ProductModel phone = saveProductModel("스마트폰", "SZ-P24", Category.PHONE);

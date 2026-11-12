@@ -72,15 +72,6 @@ public class AsReceptionService {
 
         Product product = productRepository.findByIdWithReadLock(request.productId())
                 .orElseThrow(() -> new NoSuchElementException("지원하지 않는 제품입니다."));
-        if (product.getCustomerId() == null) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "소유 고객이 등록되지 않은 제품입니다. 제품에 고객을 먼저 등록해 주세요.");
-        }
-        if (!customer.getId().equals(product.getCustomerId())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "선택한 고객의 보유 제품만 접수할 수 있습니다.");
-        }
-
         Member receptionist = memberRepository.findById(userDetails.getId())
                 .orElseThrow(() -> new NoSuchElementException("존재하지 않는 직원입니다."));
 

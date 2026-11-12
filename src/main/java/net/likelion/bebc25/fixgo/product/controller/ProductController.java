@@ -27,16 +27,6 @@ public class ProductController {
 
     private final ProductService productService;
 
-    // 고객 보유 제품 목록 조회
-    @GetMapping("/by-customer/{customerId}")
-    @Operation(summary = "고객 보유 제품 목록 조회", description = "고객 ID로 보유 제품 목록을 조회한다.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "고객 보유 제품 목록 조회 성공"),
-    })
-    public ResponseEntity<List<ProductDto.Response>> listByCustomerId(@PathVariable Long customerId) {
-        return ResponseEntity.ok(productService.listByCustomerId(customerId));
-    }
-
     // 수리 대상 제품 정보 조회
     @GetMapping("/{id}")
     @Operation(summary = "수리 대상 제품 정보 조회", description = "제품 ID로 수리 대상 제품 정보를 조회한다.")
