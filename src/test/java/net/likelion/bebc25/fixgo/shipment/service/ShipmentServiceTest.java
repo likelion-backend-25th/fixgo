@@ -3,6 +3,7 @@ package net.likelion.bebc25.fixgo.shipment.service;
 import net.likelion.bebc25.fixgo.as.entity.AsReception;
 import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
 import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
+import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
 import net.likelion.bebc25.fixgo.shipment.dto.ShipmentDto;
 import net.likelion.bebc25.fixgo.shipment.entity.ReturnMethod;
 import net.likelion.bebc25.fixgo.shipment.entity.ShipmentStatus;
@@ -36,6 +37,9 @@ class ShipmentServiceTest {
 
     @Mock
     private AsReceptionRepository asReceptionRepository;
+
+    @Mock
+    private AsStatusHistoryService asStatusHistoryService;
 
     @InjectMocks
     private ShipmentService shipmentService;
