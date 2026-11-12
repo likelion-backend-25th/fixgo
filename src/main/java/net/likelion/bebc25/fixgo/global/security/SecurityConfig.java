@@ -6,6 +6,7 @@ import net.likelion.bebc25.fixgo.auth.handler.CustomAuthenticationEntryPoint;
 import net.likelion.bebc25.fixgo.auth.jwt.JwtAuthenticationFilter;
 import net.likelion.bebc25.fixgo.auth.jwt.JwtProvider;
 import net.likelion.bebc25.fixgo.auth.service.CustomUserDetailsService;
+import jakarta.servlet.DispatcherType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -49,6 +50,10 @@ public class SecurityConfig {
 
         http
                 .authorizeHttpRequests(auth -> auth
+                        // 스트리밍은 최초 요청에서 인증한 뒤 비동기로 이어진다.
+                        // 재진입 시점에는 SecurityContext가 없고 응답은 이미 커밋되어 있다.
+                        .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
+
                         // 예외 포워딩 허용
                         .requestMatchers("/error").permitAll()
 

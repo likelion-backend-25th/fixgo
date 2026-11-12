@@ -21,5 +21,12 @@ public interface LaborRateRepository extends JpaRepository<LaborRate, Long> {
               AND l.effectiveDate <= :date
             ORDER BY l.effectiveDate DESC, l.id DESC
             """)
-    List<LaborRate> findLatestRate(@Param("category") Category category, @Param("rateType") RateType rateType, @Param("date") LocalDate date, Pageable pageable);
+    List<LaborRate> findLatestRate(
+            @Param("category") Category category,
+            @Param("rateType") RateType rateType,
+            @Param("date") LocalDate date,
+            Pageable pageable
+    );
+
+    List<LaborRate> findAllByOrderByProductCategoryAscRateTypeAsc();
 }
