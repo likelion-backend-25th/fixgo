@@ -204,34 +204,30 @@ class AsReceptionServiceTest {
     }
 
     @Test
-    @DisplayName("다른 고객 소유 제품은 접수할 수 없다")
-    void create_rejectsAnotherCustomersProduct() {
+    @DisplayName("다른 고객 소유 제품도 접수할 수 있다")
+    void create_acceptsAnotherCustomersProduct() {
         Long anotherCustomerId = asReceptionFixture.save().getCustomer().getId();
-        assertOwnershipConflict(anotherCustomerId, "선택한 고객의 보유 제품만 접수할 수 있습니다.");
+        assertReceptionCreated(anotherCustomerId);
     }
 
     @Test
-    @DisplayName("소유 고객이 등록되지 않은 제품은 접수할 수 없다")
-    void create_rejectsUnownedProduct() {
+    @DisplayName("소유 고객이 등록되지 않은 제품도 접수할 수 있다")
+    void create_acceptsUnownedProduct() {
         setProductOwner(null);
-        assertOwnershipConflict(reception.getCustomer().getId(),
-                "소유 고객이 등록되지 않은 제품입니다. 제품에 고객을 먼저 등록해 주세요.");
+        assertReceptionCreated(reception.getCustomer().getId());
     }
 
-    private void assertOwnershipConflict(Long customerId, String reason) {
-        long receptionCount = asReceptionRepository.count();
+    private void assertReceptionCreated(Long customerId) {
         var request = request(customerId, reception.getProduct().getId(), technician.getId());
 
-        assertThatThrownBy(() -> asReceptionService.createReception(receptionist, request))
-                .isInstanceOfSatisfying(ResponseStatusException.class, exception -> {
-                    assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-                    assertThat(exception.getReason()).isEqualTo(reason);
-                });
-        assertThat(asReceptionRepository.count()).isEqualTo(receptionCount);
-        assertThat(customerPortalLinkRepository.count()).isZero();
-        assertThat(asStatusHistoryRepository.count()).isZero();
-    }
+        var response = asReceptionService.createReception(receptionist, request);
+        entityManager.flush();
+        entityManager.clear();
 
+        AsReception saved = asReceptionRepository.findById(response.id()).orElseThrow();
+        assertThat(saved.getCustomer().getId()).isEqualTo(customerId);
+        assertThat(saved.getProduct().getId()).isEqualTo(request.productId());
+    }
     @Test
     @DisplayName("접수를 등록하면 RECEIVED 상태와 연관 정보가 저장되고 접수 ID를 돌려준다")
     void create_success() {

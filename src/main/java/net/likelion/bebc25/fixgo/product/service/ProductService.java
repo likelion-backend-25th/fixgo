@@ -73,14 +73,6 @@ public class ProductService {
     }
 
 
-    // 고객 보유 제품 목록 조회
-    public List<ProductDto.Response> listByCustomerId(Long customerId) {
-        return productRepository.findByCustomerId(customerId)
-                .stream()
-                .map(this::toResponse)
-                .toList();
-    }
-
     // 수리 대상 제품 등록 정보 수정
     @Transactional
     public ProductDto.Response update(Long id, ProductDto.UpdateRequest request, Long updatedBy) {
