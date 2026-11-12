@@ -5,9 +5,11 @@ import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
 import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
 import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
+import net.likelion.bebc25.fixgo.auth.entity.Role;
 import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
 import net.likelion.bebc25.fixgo.customer.entity.Customer;
+import net.likelion.bebc25.fixgo.repair.dto.repair.RepairAbortRequest;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairMessageResponse;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairRequest;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairResponse;
@@ -661,5 +663,40 @@ class RepairServiceTest {
 
         verifyNoInteractions(repairStatusService);
         verifyNoInteractions(partService);
+    }
+
+    @Test
+    @DisplayName("점검 중 수리를 중단하면 배송 또는 수령 대기로 넘긴다")
+    void abortInspectionMovesToReturnWaiting() {
+        Repair repair = createRepair();
+        AsReception reception = repair.getAsReception();
+        Member technician = repair.getTechnician();
+        CustomUserDetails userDetails = mock(CustomUserDetails.class);
+
+        when(repairRepository.findByIdWithLock(1L)).thenReturn(Optional.of(repair));
+        when(reception.getId()).thenReturn(10L);
+        when(reception.getStatus()).thenReturn(AsReceptionStatus.INSPECTION);
+        when(reception.getTechnician()).thenReturn(technician);
+        when(reception.statusAwaitingReturn()).thenReturn(AsReceptionStatus.AWAITING_SHIPMENT);
+        when(asReceptionRepository.findByIdWithLock(10L)).thenReturn(Optional.of(reception));
+        when(technician.getId()).thenReturn(1L);
+        when(technician.getRole()).thenReturn(Role.ROLE_TECHNICIAN);
+        when(userDetails.getId()).thenReturn(1L);
+        when(userDetails.getMember()).thenReturn(technician);
+        when(userDetails.getUsername()).thenReturn(TEST_EMAIL);
+        when(memberRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.of(technician));
+
+        repairService.abortInspection(
+                1L,
+                new RepairAbortRequest("REPAIR_IMPOSSIBLE", "부품 단종"),
+                userDetails
+        );
+
+        assertEquals(RepairStatus.REJECTED, repair.getStatus());
+        assertEquals(RepairDecision.UNREPAIRABLE, repair.getRepairDecision());
+        assertEquals("수리 불가: 부품 단종", repair.getReasonForRejection());
+        assertEquals(0, repair.getFinalAmount());
+        verify(reception).changeStatus(AsReceptionStatus.AWAITING_SHIPMENT);
+        verify(asStatusHistoryService, times(2)).record(any(), any(), any(), any(), any());
     }
 }

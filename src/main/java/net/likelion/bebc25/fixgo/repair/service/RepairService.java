@@ -6,9 +6,11 @@ import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
 import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
 import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
+import net.likelion.bebc25.fixgo.auth.entity.Role;
 import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
 import net.likelion.bebc25.fixgo.customer.entity.Customer;
+import net.likelion.bebc25.fixgo.repair.dto.repair.RepairAbortRequest;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairMessageResponse;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairRequest;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairResponse;
@@ -168,6 +170,68 @@ public class RepairService {
         Repair repair = findRepair(id);
 
         repairStatusService.changeStatus(repair, status, updatedBy);
+    }
+
+    // 점검 중 수리가 불가능하면 청구하지 않고 수령 방식에 맞는 반환 대기로 넘긴다.
+    @Transactional
+    public void abortInspection(Long repairId, RepairAbortRequest request, CustomUserDetails userDetails) {
+        if (userDetails.getMember().getRole() != Role.ROLE_TECHNICIAN) {
+            throw new IllegalArgumentException("기사 권한이 필요합니다.");
+        }
+
+        Repair repair = repairRepository.findByIdWithLock(repairId)
+                .orElseThrow(() -> new IllegalArgumentException("수리 정보를 찾을 수 없습니다."));
+
+        if (repair.getStatus() != RepairStatus.DIAGNOSING) {
+            throw new IllegalArgumentException("점검 중인 건만 중단할 수 있습니다.");
+        }
+
+        AsReception asReception = asReceptionRepository.findByIdWithLock(repair.getAsReception().getId())
+                .orElseThrow(() -> new IllegalArgumentException("A/S 접수 정보를 찾을 수 없습니다."));
+
+        Member technician = asReception.getTechnician();
+        if (technician == null || !userDetails.getId().equals(technician.getId())) {
+            throw new IllegalArgumentException("담당 기사만 A/S를 중단할 수 있습니다.");
+        }
+
+        if (asReception.getStatus() != AsReceptionStatus.INSPECTION) {
+            throw new IllegalArgumentException("점검 중인 접수만 중단할 수 있습니다.");
+        }
+
+        String categoryLabel = switch (request.category()) {
+            case "REPAIR_IMPOSSIBLE" -> "수리 불가";
+            case "CUSTOMER_CANCEL" -> "고객 취소";
+            default -> throw new IllegalArgumentException("중단 카테고리를 선택해 주세요.");
+        };
+        String detail = request.reason() == null ? "" : request.reason().trim();
+        if (detail.isEmpty()) {
+            throw new IllegalArgumentException("중단 사유를 입력해 주세요.");
+        }
+        String stored = categoryLabel + ": " + detail;
+
+        Member changedBy = memberRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new IllegalArgumentException("변경한 직원을 찾을 수 없습니다."));
+
+        repair.stopAs(stored);
+
+        AsReceptionStatus fromStatus = asReception.getStatus();
+        AsReceptionStatus nextStatus = asReception.statusAwaitingReturn();
+        asReception.changeStatus(nextStatus);
+
+        asStatusHistoryService.record(
+                asReception,
+                RepairStatus.DIAGNOSING.name(),
+                RepairStatus.REJECTED.name(),
+                stored,
+                changedBy
+        );
+        asStatusHistoryService.record(
+                asReception,
+                fromStatus.name(),
+                nextStatus.name(),
+                stored,
+                changedBy
+        );
     }
 
     // 로그인한 기사가 담당하는 수리 건인지 확인한 후 수리 완료
