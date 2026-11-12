@@ -70114,3 +70114,34 @@ SELECT N'견적 거부 안내', N'[FixGo] 견적 거부 및 점검비 안내',
        N'견적 거부가 확인되었습니다. 점검비 결제가 필요하며, 결제 후 제품 반환이 진행됩니다.',
        '2025-06-01 10:45:00', '2025-06-01 10:45:00'
 WHERE NOT EXISTS (SELECT 1 FROM email_preset WHERE name = N'견적 거부 안내');
+
+-- 기사 평균 수리 기간은 수리 상태 이력(REPAIRING → COMPLETED)만 집계한다.
+-- 접수 상태 이력과 별도로, 완료된 수리의 생성 시각과 확정 시각을 시작·완료로 넣는다.
+INSERT INTO as_status_history (as_reception_id, from_status, to_status, reason, changed_by, created_at)
+SELECT r.as_reception_id, 'APPROVED', 'REPAIRING', N'수리 시작', r.technician_id, r.created_at
+FROM repair r
+JOIN as_reception a ON a.id = r.as_reception_id
+WHERE r.status = 'COMPLETED'
+  AND a.technician_id IS NOT NULL
+  AND r.confirmed_at IS NOT NULL
+  AND r.confirmed_at > r.created_at
+  AND NOT EXISTS (
+    SELECT 1 FROM as_status_history h
+    WHERE h.as_reception_id = r.as_reception_id
+      AND h.to_status = 'REPAIRING'
+  );
+
+INSERT INTO as_status_history (as_reception_id, from_status, to_status, reason, changed_by, created_at)
+SELECT r.as_reception_id, 'REPAIRING', 'COMPLETED', N'수리 완료', r.technician_id, r.confirmed_at
+FROM repair r
+JOIN as_reception a ON a.id = r.as_reception_id
+WHERE r.status = 'COMPLETED'
+  AND a.technician_id IS NOT NULL
+  AND r.confirmed_at IS NOT NULL
+  AND r.confirmed_at > r.created_at
+  AND NOT EXISTS (
+    SELECT 1 FROM as_status_history h
+    WHERE h.as_reception_id = r.as_reception_id
+      AND h.from_status = 'REPAIRING'
+      AND h.to_status = 'COMPLETED'
+  );
