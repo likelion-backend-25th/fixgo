@@ -134,4 +134,14 @@ public class Repair extends BaseEntity {
         this.inspectionCost = inspectionCost;
         this.finalAmount = finalAmount;
     }
+
+    // 점검 중 수리를 중단한다. 청구하지 않고 수리 상태는 거부로 남긴다.
+    public void stopAs(String reasonForRejection) {
+        this.repairDecision = RepairDecision.UNREPAIRABLE;
+        this.reasonForRejection = reasonForRejection;
+        this.laborRate = 0;
+        this.inspectionCost = 0;
+        this.finalAmount = 0;
+        this.status = RepairStatus.REJECTED;
+    }
 }

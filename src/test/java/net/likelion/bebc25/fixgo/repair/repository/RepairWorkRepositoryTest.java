@@ -86,8 +86,7 @@ class RepairWorkRepositoryTest {
         Product product = new Product(
                 1L,
                 "TEST-SERIAL-001",
-                now,
-                1L
+                now
         );
 
         product = productRepository.save(product);

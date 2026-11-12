@@ -46,7 +46,7 @@ class AsStatusHistoryTest {
         Customer customer = customerRepository.save(
                 new Customer("한소희", "010-1111-2222", "hansohee@test.com", "12345", "서울", "강남구", 1L)
         );
-        Product product = productRepository.save(new Product(1L, "SN-1004", LocalDateTime.now(), 1L));
+        Product product = productRepository.save(new Product(1L, "SN-1004", LocalDateTime.now()));
         Member receptionist = memberRepository.save(
                 new Member(
                         "receptionist@test.com",

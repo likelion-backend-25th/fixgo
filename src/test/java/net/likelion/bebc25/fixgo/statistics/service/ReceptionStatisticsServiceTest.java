@@ -70,7 +70,7 @@ class ReceptionStatisticsServiceTest {
                                        Role.ROLE_ADMIN, "");
             Customer customer = new Customer("테스트 고객", "010-1234-5678", PREFIX + "customer@test.com", "12345", "서울시",
                                              "테스트 주소", 1L);
-            Product product = new Product(1L, PREFIX + "SERIAL", LocalDateTime.now(), 1L);
+            Product product = new Product(1L, PREFIX + "SERIAL", LocalDateTime.now());
             entityManager.persist(member);
             entityManager.persist(customer);
             entityManager.persist(product);

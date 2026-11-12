@@ -1,5 +1,6 @@
 package net.likelion.bebc25.fixgo.product.service;
 
+import net.likelion.bebc25.fixgo.config.JpaConfig;
 import net.likelion.bebc25.fixgo.product.dto.ProductDto;
 import net.likelion.bebc25.fixgo.product.entity.Category;
 import net.likelion.bebc25.fixgo.product.entity.Product;
@@ -11,6 +12,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,7 +24,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 @DataJpaTest
-@Import(ProductService.class)
+@Import({ProductService.class, JpaConfig.class})
 public class ProductServiceTest {
 
     @Autowired
@@ -40,7 +44,7 @@ public class ProductServiceTest {
 
     private Product saveProduct(Long productModelId, String serialNumber) {
         return productRepository.save(
-                new Product(productModelId, serialNumber, LocalDateTime.of(2025, 5, 14, 0, 0), 1L)
+                new Product(productModelId, serialNumber, LocalDateTime.of(2025, 5, 14, 0, 0))
         );
     }
 
@@ -83,7 +87,7 @@ public class ProductServiceTest {
                 model.getId(), 10L, "SZP24-22018-51542", manufacturedAt, purchasedAt
         );
 
-        ProductDto.Response response = productService.create(request, 1L);
+        ProductDto.Response response = productService.create(request);
 
         assertThat(response.id()).isNotNull();
         assertThat(response.serialNumber()).isEqualTo("SZP24-22018-51542");
@@ -108,7 +112,7 @@ public class ProductServiceTest {
                 LocalDateTime.of(2025, 5, 14, 0, 0), null
         );
 
-        assertThatThrownBy(() -> productService.create(request, 1L))
+        assertThatThrownBy(() -> productService.create(request))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("이미 등록된 시리얼번호입니다.");
     }
@@ -121,7 +125,7 @@ public class ProductServiceTest {
                 LocalDateTime.of(2025, 5, 14, 0, 0), null
         );
 
-        assertThatThrownBy(() -> productService.create(request, 1L))
+        assertThatThrownBy(() -> productService.create(request))
                 .isInstanceOf(NoSuchElementException.class)
                 .hasMessage("존재하지 않는 모델입니다.");
     }
@@ -169,44 +173,85 @@ public class ProductServiceTest {
     }
 
     @Test
-    @DisplayName("제품 정보를 수정한다")
-    void update_success() {
-        ProductModel phone = saveProductModel("스마트폰", "SZ-P24", Category.PHONE);
-        ProductModel laptop = saveProductModel("노트북", "SZ-N16", Category.LAPTOP);
-        Product saved = saveProduct(phone.getId(), "SZP24-22018-51542");
-        LocalDateTime manufacturedAt = LocalDateTime.of(2024, 1, 1, 0, 0);
-        LocalDateTime purchasedAt = LocalDateTime.of(2024, 2, 1, 0, 0);
+    @DisplayName("시리얼번호가 비어 있으면 전체 제품을 페이징한다")
+    void searchPage_blank_returnsAll() {
+        ProductModel model = saveProductModel("스마트폰", "SZ-P24", Category.PHONE);
+        saveProduct(model.getId(), "SZP24-22018-51542");
+        saveProduct(model.getId(), "SZP24-22018-99999");
 
-        ProductDto.UpdateRequest request = new ProductDto.UpdateRequest(
-                laptop.getId(), 20L, "SZN16-UPDATED-001", manufacturedAt, purchasedAt
+        Page<ProductDto.Response> page = productService.searchPage(
+                new ProductDto.SearchRequest("  "),
+                PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "id"))
         );
 
-        ProductDto.Response response = productService.update(saved.getId(), request, 2L);
-
-        assertThat(response.productModelId()).isEqualTo(laptop.getId());
-        assertThat(response.customerId()).isEqualTo(20L);
-        assertThat(response.serialNumber()).isEqualTo("SZN16-UPDATED-001");
-        assertThat(response.manufacturedAt()).isEqualTo(manufacturedAt);
-        assertThat(response.purchasedAt()).isEqualTo(purchasedAt);
-        assertThat(response.modelName()).isEqualTo("SZ-N16");
-        assertThat(response.updatedBy()).isEqualTo(2L);
-
-        Product updated = productRepository.findById(saved.getId()).orElseThrow();
-        assertThat(updated.getCustomerId()).isEqualTo(20L);
-        assertThat(updated.getSerialNumber()).isEqualTo("SZN16-UPDATED-001");
-        assertThat(updated.getUpdatedBy()).isEqualTo(2L);
+        assertThat(page.getContent()).extracting(ProductDto.Response::serialNumber)
+                .containsExactly("SZP24-22018-99999", "SZP24-22018-51542");
     }
 
     @Test
-    @DisplayName("존재하지 않는 제품을 수정하면 예외가 발생한다")
-    void update_notFound() {
+    @DisplayName("제품 소유 고객을 변경한다")
+    void updateCustomerId_success() {
         ProductModel model = saveProductModel("스마트폰", "SZ-P24", Category.PHONE);
-        ProductDto.UpdateRequest request = new ProductDto.UpdateRequest(
-                model.getId(), null, "SN-1",
-                LocalDateTime.of(2025, 5, 14, 0, 0), null
+        Product saved = saveProduct(model.getId(), "SZP24-22018-51542");
+
+        ProductDto.OwnerUpdateRequest request = new ProductDto.OwnerUpdateRequest(
+                model.getId(), 20L, null
         );
 
-        assertThatThrownBy(() -> productService.update(999L, request, 2L))
+        ProductDto.Response response = productService.updateCustomerId(saved.getId(), request);
+
+        assertThat(response.customerId()).isEqualTo(20L);
+        assertThat(response.serialNumber()).isEqualTo("SZP24-22018-51542");
+        assertThat(response.productModelId()).isEqualTo(model.getId());
+
+        Product updated = productRepository.findById(saved.getId()).orElseThrow();
+        assertThat(updated.getCustomerId()).isEqualTo(20L);
+    }
+
+    @Test
+    @DisplayName("구매일을 최초 등록한다")
+    void registerPurchasedAt_success() {
+        ProductModel model = saveProductModel("스마트폰", "SZ-P24", Category.PHONE);
+        Product saved = saveProduct(model.getId(), "SZP24-22018-51542");
+        LocalDateTime purchasedAt = LocalDateTime.of(2024, 2, 1, 0, 0);
+
+        ProductDto.PurchaseDateRegisterRequest request = new ProductDto.PurchaseDateRegisterRequest(
+                model.getId(), purchasedAt
+        );
+
+        ProductDto.Response response = productService.registerPurchasedAt(saved.getId(), request);
+
+        assertThat(response.purchasedAt()).isEqualTo(purchasedAt);
+    }
+
+    @Test
+    @DisplayName("이미 등록된 구매일은 변경할 수 없다")
+    void registerPurchasedAt_alreadyExists() {
+        ProductModel model = saveProductModel("스마트폰", "SZ-P24", Category.PHONE);
+        Product saved = productRepository.save(new Product(
+                model.getId(), null, "SZP24-22018-51542",
+                LocalDateTime.of(2025, 5, 14, 0, 0),
+                LocalDateTime.of(2024, 2, 1, 0, 0)
+        ));
+
+        ProductDto.PurchaseDateRegisterRequest request = new ProductDto.PurchaseDateRegisterRequest(
+                model.getId(), LocalDateTime.of(2025, 1, 1, 0, 0)
+        );
+
+        assertThatThrownBy(() -> productService.registerPurchasedAt(saved.getId(), request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("구매일은 변경할 수 없습니다.");
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 제품의 구매일을 등록하면 예외가 발생한다")
+    void registerPurchasedAt_notFound() {
+        ProductModel model = saveProductModel("스마트폰", "SZ-P24", Category.PHONE);
+        ProductDto.PurchaseDateRegisterRequest request = new ProductDto.PurchaseDateRegisterRequest(
+                model.getId(), LocalDateTime.of(2025, 5, 14, 0, 0)
+        );
+
+        assertThatThrownBy(() -> productService.registerPurchasedAt(999L, request))
                 .isInstanceOf(NoSuchElementException.class)
                 .hasMessage("존재하지 않는 제품입니다.");
     }

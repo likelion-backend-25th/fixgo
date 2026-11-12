@@ -74,7 +74,7 @@ class RepairRepositoryTest {
         customer = customerRepository.save(customer);
 
         // 제품 생성
-        Product product = new Product(1L, "TEST-SERIAL-001", now, 1L);
+        Product product = new Product(1L, "TEST-SERIAL-001", now);
 
         product = productRepository.save(product);
 

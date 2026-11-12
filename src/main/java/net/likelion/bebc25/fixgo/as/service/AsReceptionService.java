@@ -135,22 +135,13 @@ public class AsReceptionService {
             throw new AccessDeniedException("관리자 또는 해당 건을 등록한 접수 담당자만 상태를 변경할 수 있습니다.");
         }
 
-        AsReceptionStatus currentStatus = asReception.getStatus();
-        if (currentStatus == newStatus) {
+        if (asReception.getStatus() == newStatus) {
             throw new IllegalArgumentException("이미 해당 상태로 처리되어 있습니다.");
         }
 
-        // 점검 시작, 견적, 수리, 결제, 인도는 각 업무에서 접수 상태도 함께 변경한다.
-        if (currentStatus != AsReceptionStatus.INSPECTION || newStatus != AsReceptionStatus.WARRANTY_REVIEW
-                || repairRepository.findByAsReception_Id(receptionId)
-                        .filter(repair -> repair.getStatus() == RepairStatus.DIAGNOSING).isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "점검 중인 접수만 보증 판정으로 변경할 수 있습니다. 다른 상태는 해당 업무에서 처리해 주세요.");
-        }
-
-        asReception.changeStatus(newStatus);
-
-        asStatusHistoryService.record(asReception, currentStatus.name(), newStatus.name(), reason, changedBy);
+        // 접수 상태는 점검, 견적, 수리, 결제, 인도 업무에서만 바뀐다.
+        throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "접수 상태는 각 업무에서 바뀝니다. 수동으로 변경할 수 없습니다.");
     }
 
     // 접수번호, 고객명, 증상 검색과 상태/담당 기사 필터
@@ -230,7 +221,7 @@ public class AsReceptionService {
         }
 
         switch (reception.getStatus()) {
-            case RECEIVED, INSPECTION, WARRANTY_REVIEW,
+            case RECEIVED, INSPECTION,
                  AWAITING_QUOTE_APPROVAL, AWAITING_REPAIR -> reception.updateDetails(
                     request.symptom(),
                     request.symptomDetail(),

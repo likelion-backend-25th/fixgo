@@ -1,6 +1,7 @@
 package net.likelion.bebc25.fixgo.repair.dto.part;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import net.likelion.bebc25.fixgo.product.entity.Category;
 import net.likelion.bebc25.fixgo.repair.entity.MovementType;
 import net.likelion.bebc25.fixgo.repair.entity.part.Part;
 import net.likelion.bebc25.fixgo.repair.entity.part.PartStatus;
@@ -50,7 +51,11 @@ public class PartDto {
             @Schema(description = "부품명 검색어", example = "메인보드")
             String partName,
             @Schema(description = "부품 상태", example = "ACTIVE")
-            PartStatus status
+            PartStatus status,
+            @Schema(description = "호환 제품군", example = "LAPTOP")
+            Category category,
+            @Schema(description = "호환 제품 모델 ID", example = "1")
+            Long productModelId
     ) {}
 
     public record BriefResponse(

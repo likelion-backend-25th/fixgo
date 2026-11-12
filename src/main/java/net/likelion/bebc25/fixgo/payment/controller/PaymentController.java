@@ -97,7 +97,7 @@ public class PaymentController {
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasAnyRole('RECEPTIONIST', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('RECEPTIONIST', 'ADMIN', 'TECHNICIAN')")
     @GetMapping("/{billId}")
     @Operation(summary = "결제 상세 조회", description = "청구서 ID로 결제 상세 정보를 조회한다.")
     @ApiResponses(value = {
@@ -107,7 +107,7 @@ public class PaymentController {
         return paymentQueryService.getDetail(billId);
     }
 
-    @PreAuthorize("hasAnyRole('RECEPTIONIST', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('RECEPTIONIST', 'ADMIN', 'TECHNICIAN')")
     @GetMapping
     @Operation(summary = "결제 목록 조회", description = "키워드·상태 조건으로 결제 목록을 페이징 조회한다.")
     @ApiResponses(value = {

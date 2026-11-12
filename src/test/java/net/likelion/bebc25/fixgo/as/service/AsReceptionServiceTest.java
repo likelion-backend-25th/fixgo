@@ -199,8 +199,7 @@ class AsReceptionServiceTest {
 
     private void setProductOwner(Long customerId) {
         var product = reception.getProduct();
-        product.update(product.getProductModelId(), customerId, product.getSerialNumber(),
-                product.getManufacturedAt(), product.getPurchasedAt(), receptionist.getId());
+        product.updateCustomerId(customerId);
     }
 
     @Test
@@ -496,34 +495,25 @@ class AsReceptionServiceTest {
     }
 
     @Test
-    @DisplayName("접수 상태를 변경하면 이전 상태와 수행자 및 사유가 이력에 저장된다")
-    void changeReceptionStatus_success() {
+    @DisplayName("접수 상태는 수동으로 바꿀 수 없고 점검 상태와 기존 이력은 유지된다")
+    void changeReceptionStatus_rejectsManualChange() {
         asReceptionService.startMyInspection(reception.getId(), reception.getTechnician().getId());
 
-        // when
-        asReceptionService.changeReceptionStatus(
+        assertThatThrownBy(() -> asReceptionService.changeReceptionStatus(
                 reception.getId(),
-                AsReceptionStatus.WARRANTY_REVIEW,
-                "보증 판정",
+                AsReceptionStatus.AWAITING_QUOTE_APPROVAL,
+                "수동 변경",
                 receptionist
-        );
-        entityManager.flush();
-        entityManager.clear();
-
-        // then
+        )).isInstanceOfSatisfying(ResponseStatusException.class,
+                exception -> assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.CONFLICT));
         assertThat(asReceptionRepository.findById(reception.getId()).orElseThrow().getStatus())
-                .isEqualTo(AsReceptionStatus.WARRANTY_REVIEW);
-        var history = asStatusHistoryRepository.findHistoryByReceptionId(reception.getId());
-        assertThat(history).hasSize(2);
-        assertThat(history.getFirst().getFromStatus()).isEqualTo("INSPECTION");
-        assertThat(history.getFirst().getToStatus()).isEqualTo("WARRANTY_REVIEW");
-        assertThat(history.getFirst().getReason()).isEqualTo("보증 판정");
-        assertThat(history.getFirst().getChangedBy().getId()).isEqualTo(receptionist.getId());
+                .isEqualTo(AsReceptionStatus.INSPECTION);
+        assertThat(asStatusHistoryRepository.findHistoryByReceptionId(reception.getId())).hasSize(1);
     }
 
     @ParameterizedTest
     @EnumSource(value = AsReceptionStatus.class, mode = EnumSource.Mode.EXCLUDE,
-            names = {"INSPECTION", "WARRANTY_REVIEW"})
+            names = {"INSPECTION"})
     @DisplayName("점검 중인 접수도 수동 변경으로 다른 업무 단계를 건너뛸 수 없다")
     void changeReceptionStatus_rejectsWorkflowTransitions(AsReceptionStatus target) {
         asReceptionService.startMyInspection(reception.getId(), reception.getTechnician().getId());
@@ -558,7 +548,7 @@ class AsReceptionServiceTest {
 
         for (Member staff : List.of(otherReceptionist, technician)) {
             assertThatThrownBy(() -> asReceptionService.changeReceptionStatus(
-                    reception.getId(), AsReceptionStatus.WARRANTY_REVIEW, "보증 판정", new CustomUserDetails(staff)))
+                    reception.getId(), AsReceptionStatus.AWAITING_REPAIR, "수동 변경", new CustomUserDetails(staff)))
                     .isInstanceOf(AccessDeniedException.class);
         }
         assertThat(reception.getStatus()).isEqualTo(AsReceptionStatus.INSPECTION);

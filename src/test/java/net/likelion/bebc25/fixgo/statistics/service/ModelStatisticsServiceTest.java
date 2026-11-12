@@ -158,7 +158,7 @@ class ModelStatisticsServiceTest {
             entityManager.flush();
 
             // 제품 생성
-            Product product = new Product(model.getId(), PREFIX + "SERIAL-1", LocalDateTime.now(), 1L);
+            Product product = new Product(model.getId(), PREFIX + "SERIAL-1", LocalDateTime.now());
 
             entityManager.persist(product);
 

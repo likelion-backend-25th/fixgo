@@ -436,6 +436,10 @@ public class AsReceptionDto {
             }
 
             private static Optional<AsReceptionStatus> findReceptionStatus(String name) {
+                // 없어진 보증 판정 이력은 점검으로 본다.
+                if ("WARRANTY_REVIEW".equals(name)) {
+                    return Optional.of(AsReceptionStatus.INSPECTION);
+                }
                 return Arrays.stream(AsReceptionStatus.values())
                         .filter(status -> status.name().equals(name))
                         .findFirst();
