@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.notification.dto.EmailDto;
+import net.likelion.bebc25.fixgo.notification.entity.NotificationStatus;
 import net.likelion.bebc25.fixgo.notification.service.NotificationService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -45,9 +46,10 @@ public class NotificationController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) NotificationStatus status,
             @PageableDefault(size = 20) Pageable pageable
     ) {
-        return notificationService.getEmailList(keyword, startDate, endDate, pageable);
+        return notificationService.getEmailList(keyword, startDate, endDate, status, pageable);
     }
 
     // 이메일 발송 상세 조회
