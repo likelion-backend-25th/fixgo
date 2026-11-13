@@ -451,7 +451,7 @@ class AsReceptionServiceTest {
         reception.updateTechnician(technician);
         entityManager.flush();
         var search = new AsReceptionDto.ReceptionSearchRequest(
-                "  " + reception.getReceptionNumber() + "  ", AsReceptionStatus.RECEIVED, technician.getId());
+                "  " + reception.getReceptionNumber() + "  ", AsReceptionStatus.RECEIVED, technician.getId(), null);
 
         // when
         var result = asReceptionService.getReceptions(search, PageRequest.of(0, 20));
@@ -466,7 +466,7 @@ class AsReceptionServiceTest {
     void getReceptions_blankKeyword() {
         // when
         var result = asReceptionService.getReceptions(
-                new AsReceptionDto.ReceptionSearchRequest("  ", null, null), PageRequest.of(0, 20));
+                new AsReceptionDto.ReceptionSearchRequest("  ", null, null, null), PageRequest.of(0, 20));
 
         // then
         assertThat(result.getContent()).extracting(AsReceptionDto.ListResponse::id).containsExactly(reception.getId());

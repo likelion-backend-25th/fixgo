@@ -63,6 +63,7 @@ class AsReceptionRepositoryTest {
     private Member park;
     private AsReception alpha;
     private AsReception beta;
+    private Long alphaCustomerId;
 
     private static List<String> numbersOf(Page<AsReceptionDto.ListResponse> page) {
         return page.getContent().stream().map(AsReceptionDto.ListResponse::receptionNumber).toList();
@@ -127,6 +128,7 @@ class AsReceptionRepositoryTest {
         Product gram = productRepository.save(new Product(model.getId(), "SN-ALPHA", LocalDateTime.now()));
         Product phone = productRepository.save(new Product(model.getId(), "SN-BETA", LocalDateTime.now()));
 
+        alphaCustomerId = hansohee.getId();
         alpha = saveReception("AS-ALPHA-001", hansohee, gram, receptionist, kim, "LCD불량");
         beta = saveReception("AS-BETA-002", kimcheolsu, phone, receptionist, park, "충전불가");
         repairRepository.save(new Repair(alpha, kim, WarrantyResult.FREE, RepairStatus.DIAGNOSING));
@@ -248,6 +250,14 @@ class AsReceptionRepositoryTest {
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getTotalElements()).isEqualTo(2);
         assertThat(result.getTotalPages()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("고객 ID로 그 고객의 접수만 조회한다")
+    void search_customerId() {
+        assertThat(numbersOf(asReceptionRepository.search(
+                null, null, null, alphaCustomerId, PageRequest.of(0, 10))))
+                .containsExactly("AS-ALPHA-001");
     }
 
     private AsReception saveReception(

@@ -152,7 +152,13 @@ public class AsReceptionService {
         String searchKeyword = request.keyword() == null || request.keyword().isBlank()
                 ? null
                 : request.keyword().trim();
-        return asReceptionRepository.search(searchKeyword, request.status(), request.technicianId(), pageable);
+        return asReceptionRepository.search(
+                searchKeyword,
+                request.status(),
+                request.technicianId(),
+                request.customerId(),
+                pageable
+        );
     }
 
     // 고객에게 발급한 안내 링크 조회
