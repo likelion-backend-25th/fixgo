@@ -2,6 +2,7 @@ package net.likelion.bebc25.fixgo.payment.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
 import net.likelion.bebc25.fixgo.payment.client.TossDto;
 import net.likelion.bebc25.fixgo.payment.dto.PaymentDto;
 import net.likelion.bebc25.fixgo.payment.entity.*;
@@ -25,6 +26,7 @@ public class PaymentRefundService {
     private final PaymentBillRepository paymentBillRepository;
     private final PaymentRefundRepository paymentRefundRepository;
     private final PaymentAttemptRepository paymentAttemptRepository;
+    private final AsStatusHistoryService asStatusHistoryService;
 
     @Transactional
     public RefundDto.PreparedRefund prepareRefund(Long billId, Long memberId, PaymentDto.RefundPaymentRequest request) {

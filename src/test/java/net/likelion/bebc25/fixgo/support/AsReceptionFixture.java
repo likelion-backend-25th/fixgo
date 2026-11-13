@@ -59,7 +59,7 @@ public class AsReceptionFixture {
 
         Member staff = memberRepository.save(new Member(
                 "fixture-staff-" + n + "@test.com", "password", "테스트직원", "010-0000-0000",
-                "서울시", Role.ROLE_RECEPTIONIST, "default.png"));
+                "서울시", Role.ROLE_RECEPTIONIST));
         Long createdBy = staff.getId();
 
         ProductModel model = productModelRepository.save(
@@ -68,7 +68,7 @@ public class AsReceptionFixture {
                 "테스트고객", "010-1111-2222", "fixture-customer-" + n + "@test.com",
                 "12345", "서울", "강남구", createdBy));
         Product product = productRepository.save(
-                new Product(model.getId(), "SN-FIXTURE-" + n, LocalDateTime.now(), createdBy));
+                new Product(model.getId(), "SN-FIXTURE-" + n, LocalDateTime.now()));
 
         return asReceptionRepository.save(new AsReception(
                 "R-FIXTURE-" + n, customer, product, staff, staff,

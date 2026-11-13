@@ -78,7 +78,7 @@ class AsReceptionServiceTest {
         setProductOwner(reception.getCustomer().getId());
         technician = memberRepository.save(new Member(
                 "technician@test.com", "password", "수리기사", "010-3333-4444",
-                "서울시", Role.ROLE_TECHNICIAN, "profile.png"));
+                "서울시", Role.ROLE_TECHNICIAN));
     }
 
     @Test
@@ -153,7 +153,7 @@ class AsReceptionServiceTest {
     void updateReception_adminCanClearMemo() {
         var admin = new CustomUserDetails(memberRepository.save(new Member(
                 "edit-admin@test.com", "password", "관리자", "010-5555-6666",
-                "서울시", Role.ROLE_ADMIN, "profile.png")));
+                "서울시", Role.ROLE_ADMIN)));
         Long id = reception.getId();
         asReceptionService.updateReception(id, receptionist,
                 new AsReceptionDto.UpdateReceptionRequest(null, null, "기존 메모", null));
@@ -172,7 +172,7 @@ class AsReceptionServiceTest {
     void updateReception_deniesUnauthorizedEmployee(Role role) {
         var employee = new CustomUserDetails(memberRepository.save(new Member(
                 "edit-employee@test.com", "password", "직원", "010-5555-7777",
-                "서울시", role, "profile.png")));
+                "서울시", role)));
         String originalMemo = reception.getMemo();
         var request = new AsReceptionDto.UpdateReceptionRequest(null, null, "수정 메모", null);
 
@@ -186,7 +186,7 @@ class AsReceptionServiceTest {
     void updateReception_rejectsWhenRepairHasStarted() {
         var admin = new CustomUserDetails(memberRepository.save(new Member(
                 "edit-admin@test.com", "password", "관리자", "010-5555-6666",
-                "서울시", Role.ROLE_ADMIN, "profile.png")));
+                "서울시", Role.ROLE_ADMIN)));
         reception.changeStatus(AsReceptionStatus.REPAIR_IN_PROGRESS);
         String originalMemo = reception.getMemo();
         var request = new AsReceptionDto.UpdateReceptionRequest(null, null, "수정 메모", null);
@@ -199,8 +199,7 @@ class AsReceptionServiceTest {
 
     private void setProductOwner(Long customerId) {
         var product = reception.getProduct();
-        product.update(product.getProductModelId(), customerId, product.getSerialNumber(),
-                product.getManufacturedAt(), product.getPurchasedAt(), receptionist.getId());
+        product.updateCustomerId(customerId);
     }
 
     @Test
@@ -289,7 +288,7 @@ class AsReceptionServiceTest {
     void create_admin() {
         // given
         Member admin = memberRepository.save(new Member("admin@test.com", "password", "관리자",
-                                                        "010-5555-6666", "서울시", Role.ROLE_ADMIN, "profile.png"));
+                                                        "010-5555-6666", "서울시", Role.ROLE_ADMIN));
 
         // when
         var response = asReceptionService.createReception(
@@ -452,7 +451,7 @@ class AsReceptionServiceTest {
         reception.updateTechnician(technician);
         entityManager.flush();
         var search = new AsReceptionDto.ReceptionSearchRequest(
-                "  " + reception.getReceptionNumber() + "  ", AsReceptionStatus.RECEIVED, technician.getId());
+                "  " + reception.getReceptionNumber() + "  ", AsReceptionStatus.RECEIVED, technician.getId(), null);
 
         // when
         var result = asReceptionService.getReceptions(search, PageRequest.of(0, 20));
@@ -467,7 +466,7 @@ class AsReceptionServiceTest {
     void getReceptions_blankKeyword() {
         // when
         var result = asReceptionService.getReceptions(
-                new AsReceptionDto.ReceptionSearchRequest("  ", null, null), PageRequest.of(0, 20));
+                new AsReceptionDto.ReceptionSearchRequest("  ", null, null, null), PageRequest.of(0, 20));
 
         // then
         assertThat(result.getContent()).extracting(AsReceptionDto.ListResponse::id).containsExactly(reception.getId());
@@ -496,34 +495,25 @@ class AsReceptionServiceTest {
     }
 
     @Test
-    @DisplayName("접수 상태를 변경하면 이전 상태와 수행자 및 사유가 이력에 저장된다")
-    void changeReceptionStatus_success() {
+    @DisplayName("접수 상태는 수동으로 바꿀 수 없고 점검 상태와 기존 이력은 유지된다")
+    void changeReceptionStatus_rejectsManualChange() {
         asReceptionService.startMyInspection(reception.getId(), reception.getTechnician().getId());
 
-        // when
-        asReceptionService.changeReceptionStatus(
+        assertThatThrownBy(() -> asReceptionService.changeReceptionStatus(
                 reception.getId(),
-                AsReceptionStatus.WARRANTY_REVIEW,
-                "보증 판정",
+                AsReceptionStatus.AWAITING_QUOTE_APPROVAL,
+                "수동 변경",
                 receptionist
-        );
-        entityManager.flush();
-        entityManager.clear();
-
-        // then
+        )).isInstanceOfSatisfying(ResponseStatusException.class,
+                exception -> assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.CONFLICT));
         assertThat(asReceptionRepository.findById(reception.getId()).orElseThrow().getStatus())
-                .isEqualTo(AsReceptionStatus.WARRANTY_REVIEW);
-        var history = asStatusHistoryRepository.findHistoryByReceptionId(reception.getId());
-        assertThat(history).hasSize(2);
-        assertThat(history.getFirst().getFromStatus()).isEqualTo("INSPECTION");
-        assertThat(history.getFirst().getToStatus()).isEqualTo("WARRANTY_REVIEW");
-        assertThat(history.getFirst().getReason()).isEqualTo("보증 판정");
-        assertThat(history.getFirst().getChangedBy().getId()).isEqualTo(receptionist.getId());
+                .isEqualTo(AsReceptionStatus.INSPECTION);
+        assertThat(asStatusHistoryRepository.findHistoryByReceptionId(reception.getId())).hasSize(1);
     }
 
     @ParameterizedTest
     @EnumSource(value = AsReceptionStatus.class, mode = EnumSource.Mode.EXCLUDE,
-            names = {"INSPECTION", "WARRANTY_REVIEW"})
+            names = {"INSPECTION"})
     @DisplayName("점검 중인 접수도 수동 변경으로 다른 업무 단계를 건너뛸 수 없다")
     void changeReceptionStatus_rejectsWorkflowTransitions(AsReceptionStatus target) {
         asReceptionService.startMyInspection(reception.getId(), reception.getTechnician().getId());
@@ -554,11 +544,11 @@ class AsReceptionServiceTest {
         asReceptionService.startMyInspection(reception.getId(), reception.getTechnician().getId());
         Member otherReceptionist = memberRepository.save(new Member(
                 "other-receptionist@test.com", "password", "다른 접수 담당자", "010-1234-5678",
-                "서울시", Role.ROLE_RECEPTIONIST, "profile.png"));
+                "서울시", Role.ROLE_RECEPTIONIST));
 
         for (Member staff : List.of(otherReceptionist, technician)) {
             assertThatThrownBy(() -> asReceptionService.changeReceptionStatus(
-                    reception.getId(), AsReceptionStatus.WARRANTY_REVIEW, "보증 판정", new CustomUserDetails(staff)))
+                    reception.getId(), AsReceptionStatus.AWAITING_REPAIR, "수동 변경", new CustomUserDetails(staff)))
                     .isInstanceOf(AccessDeniedException.class);
         }
         assertThat(reception.getStatus()).isEqualTo(AsReceptionStatus.INSPECTION);
@@ -701,7 +691,7 @@ class AsReceptionServiceTest {
 
     private CustomUserDetails missingUser() {
         Member member = new Member("missing@test.com", "password", "없는직원", "010-0000-0000",
-                                   "서울시", Role.ROLE_RECEPTIONIST, "profile.png");
+                                   "서울시", Role.ROLE_RECEPTIONIST);
         ReflectionTestUtils.setField(member, "id", -1L);
         return new CustomUserDetails(member);
     }

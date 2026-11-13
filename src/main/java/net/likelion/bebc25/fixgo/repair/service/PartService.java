@@ -40,7 +40,17 @@ public class PartService {
 
     // 부품 목록 조회
     public Page<PartDto.BriefResponse> searchParts(PartDto.SearchRequest request, Pageable pageable) {
-        return partRepository.searchParts(request.partName(), request.status(), pageable).map(PartDto.BriefResponse::from);
+        String partName = request.partName();
+        if (partName != null && partName.isBlank()) {
+            partName = null;
+        }
+        return partRepository.searchParts(
+                partName,
+                request.status(),
+                request.category(),
+                request.productModelId(),
+                pageable
+        ).map(PartDto.BriefResponse::from);
     }
 
     // 부품 상세 정보 조회
@@ -75,6 +85,39 @@ public class PartService {
         }
 
         part.updateStandardMinutes(request.standardMinutes());
+    }
+
+    // 사용·재고 부족은 단종으로, 단종은 재고 기준의 이전 상태로만 되돌린다.
+    @Transactional
+    public void updateStatus(PartDto.StatusUpdateRequest request) {
+        if (request.id() == null || request.status() == null) {
+            throw new IllegalArgumentException("부품과 상태를 확인해 주세요.");
+        }
+        Part part = partRepository.findById(request.id()).orElseThrow(
+                () -> new NoSuchElementException("존재하지 않는 부품입니다.")
+        );
+
+        if (request.status() == PartStatus.DISCONTINUED) {
+            if (part.getStatus() == PartStatus.DISCONTINUED) {
+                throw new IllegalArgumentException("이미 단종된 부품입니다.");
+            }
+            part.updateStatus(PartStatus.DISCONTINUED);
+            return;
+        }
+
+        if (part.getStatus() != PartStatus.DISCONTINUED) {
+            throw new IllegalArgumentException("사용과 재고 부족은 재고 수량으로만 바뀝니다.");
+        }
+        PartStatus previous = previousStatus(part);
+        if (request.status() != previous) {
+            throw new IllegalArgumentException("단종 이전 상태로만 되돌릴 수 있습니다.");
+        }
+        part.updateStatus(previous);
+    }
+
+    // 단종 전에는 재고가 있으면 사용, 없으면 재고 부족이었다.
+    private PartStatus previousStatus(Part part) {
+        return part.getStockQuantity() > 0 ? PartStatus.ACTIVE : PartStatus.LOW_QUANTITY;
     }
 
     // 재고 개별 수정 (입고 or 노후화 등으로 인한 손실)

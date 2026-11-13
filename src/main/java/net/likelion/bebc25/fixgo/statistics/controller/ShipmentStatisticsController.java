@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Tag(name = "Shipment Statistics API", description = "배송 현황 통계 API")
 @RestController
@@ -36,5 +37,17 @@ public class ShipmentStatisticsController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
     ) {
         return shipmentStatisticsService.getShipmentStatistics(startDate, endDate);
+    }
+
+    @GetMapping("/shipments/history")
+    @Operation(summary = "기간 배송 내역 조회", description = "조회 기간에 등록된 배송 내역을 조회한다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "기간 배송 내역 조회 성공"),
+    })
+    public List<ShipmentStatisticsDto.ShipmentHistoryResponse> getShipmentHistory(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+    ) {
+        return shipmentStatisticsService.getShipmentHistory(startDate, endDate);
     }
 }

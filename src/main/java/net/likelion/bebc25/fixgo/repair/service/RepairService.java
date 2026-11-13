@@ -6,8 +6,11 @@ import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
 import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
 import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
+import net.likelion.bebc25.fixgo.auth.entity.Role;
 import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
+import net.likelion.bebc25.fixgo.customer.entity.Customer;
+import net.likelion.bebc25.fixgo.repair.dto.repair.RepairAbortRequest;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairMessageResponse;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairRequest;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairResponse;
@@ -15,6 +18,7 @@ import net.likelion.bebc25.fixgo.repair.entity.repair.Repair;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
 import net.likelion.bebc25.fixgo.repair.entity.repair.WarrantyResult;
 import net.likelion.bebc25.fixgo.repair.repository.RepairRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +35,7 @@ public class RepairService {
     private final RepairStatusService repairStatusService;
     private final AsStatusHistoryService asStatusHistoryService;
     private final PartService partService;
+    private final ApplicationEventPublisher eventPublisher;
 
     // 수리 등록
     @Transactional
@@ -167,6 +172,80 @@ public class RepairService {
         repairStatusService.changeStatus(repair, status, updatedBy);
     }
 
+    // 점검 중 수리가 불가능하면 청구하지 않고 수령 방식에 맞는 반환 대기로 넘긴다.
+    @Transactional
+    public void abortInspection(Long repairId, RepairAbortRequest request, CustomUserDetails userDetails) {
+        if (userDetails.getMember().getRole() != Role.ROLE_TECHNICIAN) {
+            throw new IllegalArgumentException("기사 권한이 필요합니다.");
+        }
+
+        Repair repair = repairRepository.findByIdWithLock(repairId)
+                .orElseThrow(() -> new IllegalArgumentException("수리 정보를 찾을 수 없습니다."));
+
+        if (repair.getStatus() != RepairStatus.DIAGNOSING) {
+            throw new IllegalArgumentException("점검 중인 건만 중단할 수 있습니다.");
+        }
+
+        AsReception asReception = asReceptionRepository.findByIdWithLock(repair.getAsReception().getId())
+                .orElseThrow(() -> new IllegalArgumentException("A/S 접수 정보를 찾을 수 없습니다."));
+
+        Member technician = asReception.getTechnician();
+        if (technician == null || !userDetails.getId().equals(technician.getId())) {
+            throw new IllegalArgumentException("담당 기사만 A/S를 중단할 수 있습니다.");
+        }
+
+        if (asReception.getStatus() != AsReceptionStatus.INSPECTION) {
+            throw new IllegalArgumentException("점검 중인 접수만 중단할 수 있습니다.");
+        }
+
+        String categoryLabel = switch (request.category()) {
+            case "REPAIR_IMPOSSIBLE" -> "수리 불가";
+            case "CUSTOMER_CANCEL" -> "고객 취소";
+            default -> throw new IllegalArgumentException("중단 카테고리를 선택해 주세요.");
+        };
+        String detail = request.reason() == null ? "" : request.reason().trim();
+        if (detail.isEmpty()) {
+            throw new IllegalArgumentException("중단 사유를 입력해 주세요.");
+        }
+        String stored = categoryLabel + ": " + detail;
+
+        Member changedBy = memberRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new IllegalArgumentException("변경한 직원을 찾을 수 없습니다."));
+
+        repair.stopAs(stored);
+
+        AsReceptionStatus fromStatus = asReception.getStatus();
+        AsReceptionStatus nextStatus = asReception.statusAwaitingReturn();
+        asReception.changeStatus(nextStatus);
+
+        asStatusHistoryService.record(
+                asReception,
+                RepairStatus.DIAGNOSING.name(),
+                RepairStatus.REJECTED.name(),
+                stored,
+                changedBy
+        );
+        asStatusHistoryService.record(
+                asReception,
+                fromStatus.name(),
+                nextStatus.name(),
+                stored,
+                changedBy
+        );
+
+        // 중단 안내 메일은 접수 저장이 커밋된 뒤에 보낸다.
+        Customer customer = asReception.getCustomer();
+        eventPublisher.publishEvent(new InspectionAbortedEvent(
+                asReception.getId(),
+                asReception.getReceptionNumber(),
+                customer.getName(),
+                customer.getEmail(),
+                request.category(),
+                nextStatus,
+                detail
+        ));
+    }
+
     // 로그인한 기사가 담당하는 수리 건인지 확인한 후 수리 완료
     @Transactional
     public void completeRepair(Long id, CustomUserDetails userDetails) {
@@ -182,5 +261,40 @@ public class RepairService {
 
         // 같은 트랜잭션에서 사용 부품 재고를 차감한다.
         partService.updateMultiStockQuantity(userDetails, id);
+
+        // A/S 접수 및 고객 정보 조회
+        AsReception asReception = repair.getAsReception();
+        Customer customer = asReception.getCustomer();
+
+        // 수리 완료 이메일 이벤트
+        eventPublisher.publishEvent(
+                new RepairCompletedEvent(
+                        asReception.getId(),
+                        asReception.getReceptionNumber(),
+                        customer.getName(),
+                        customer.getEmail(),
+                        repair.getWarrantyResult() != WarrantyResult.FREE
+                )
+        );
     }
+
+    // 점검 중 A/S 중단 안내 이메일 발송 이벤트
+    public record InspectionAbortedEvent(
+            Long asReceptionId,
+            String receptionNumber,
+            String customerName,
+            String recipientEmail,
+            String category,
+            AsReceptionStatus returnStatus,
+            String reason
+    ) {}
+
+    // 수리 완료 이메일 발송 이벤트
+    public record RepairCompletedEvent(
+            Long asReceptionId,
+            String receptionNumber,
+            String customerName,
+            String recipientEmail,
+            boolean paymentRequired
+    ) {}
 }

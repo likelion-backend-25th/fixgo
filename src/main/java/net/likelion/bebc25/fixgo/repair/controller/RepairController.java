@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
+import net.likelion.bebc25.fixgo.repair.dto.repair.RepairAbortRequest;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairMessageResponse;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairRequest;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairResponse;
@@ -169,6 +170,25 @@ public class RepairController {
 
         return ResponseEntity.ok(
                 new RepairMessageResponse("수리 정보가 삭제되었습니다.")
+        );
+    }
+
+    // 점검 중 A/S 중단. 배송 또는 수령 대기로 넘긴다.
+    @PostMapping("/{id}/abort")
+    @PreAuthorize("hasRole('TECHNICIAN')")
+    @Operation(summary = "A/S 중단", description = "담당 기사가 점검 중인 A/S를 중단하고 반환 대기로 넘긴다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "A/S 중단 성공"),
+    })
+    public ResponseEntity<RepairMessageResponse> abortInspection(
+            @PathVariable Long id,
+            @Valid @RequestBody RepairAbortRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        repairService.abortInspection(id, request, userDetails);
+
+        return ResponseEntity.ok(
+                new RepairMessageResponse("A/S를 중단하고 반환 대기로 넘겼습니다.")
         );
     }
 

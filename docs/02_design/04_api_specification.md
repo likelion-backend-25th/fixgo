@@ -81,8 +81,7 @@
   "name": "관리자",
   "phone": "010-XXXX-XXXX",
   "address": "서울특별시 OO구 OO동 ~",
-  "role": "ROLE_ADMIN",
-  "profileImgUrl": "https://amazonaws.com..."
+  "role": "ROLE_ADMIN"
 }
 ```
 
@@ -95,8 +94,7 @@
   "name": "관리자",
   "phone": "010-XXXX-XXXX",
   "address": "서울특별시 OO구 OO동 ~",
-  "role": "ROLE_ADMIN",
-  "profileImgUrl": "https://amazonaws.com..."
+  "role": "ROLE_ADMIN"
 }
 ```
 

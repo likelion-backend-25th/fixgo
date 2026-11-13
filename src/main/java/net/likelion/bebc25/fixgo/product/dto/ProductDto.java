@@ -24,32 +24,33 @@ public class ProductDto {
             @Schema(description = "구매 일시", example = "2025-06-01T00:00:00")
             LocalDateTime purchasedAt
     ) {
-        public Product toEntity(Long createdBy) {
+        public Product toEntity() {
             return new Product(
                     productModelId,
                     customerId,
                     serialNumber,
                     manufacturedAt,
-                    purchasedAt,
-                    createdBy
+                    purchasedAt
             );
         }
     }
 
     // 수리 대상 제품 정보 수정
-    public record UpdateRequest(
+    public record OwnerUpdateRequest(
             @Schema(description = "제품 모델 ID", example = "1")
             @NotNull Long productModelId,
             @Schema(description = "고객 ID", example = "1")
             Long customerId,
-            @Schema(description = "시리얼 번호", example = "SN-ABC-12345")
-            @NotBlank String serialNumber,
-            @Schema(description = "제조 일시", example = "2025-01-01T00:00:00")
-            @NotNull LocalDateTime manufacturedAt,
             @Schema(description = "구매 일시", example = "2025-06-01T00:00:00")
             LocalDateTime purchasedAt
-    ) {
-    }
+    ) {}
+
+    public record PurchaseDateRegisterRequest(
+            @Schema(description = "제품 모델 ID", example = "1")
+            @NotNull Long productModelId,
+            @Schema(description = "구매 일시", example = "2025-06-01T00:00:00")
+            LocalDateTime purchasedAt
+    ) {}
 
     // 수리 대상 제품 검색
     public record SearchRequest(

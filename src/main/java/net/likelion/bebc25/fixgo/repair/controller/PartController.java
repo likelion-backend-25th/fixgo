@@ -74,6 +74,19 @@ public class PartController {
         return ResponseEntity.ok().build();
     }
 
+    @PatchMapping("/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "부품 상태 수정", description = "사용·재고 부족 부품을 단종하거나, 단종 부품을 이전 상태로 되돌린다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "부품 상태 수정 성공"),
+    })
+    public ResponseEntity<Void> updateStatus(
+            @RequestBody PartDto.StatusUpdateRequest request
+    ) {
+        partService.updateStatus(request);
+        return ResponseEntity.ok().build();
+    }
+
     @PatchMapping("/stock")
     @Operation(summary = "재고 수량 단건 수정", description = "단일 부품의 재고 수량을 입출고 처리한다.")
     @ApiResponses(value = {

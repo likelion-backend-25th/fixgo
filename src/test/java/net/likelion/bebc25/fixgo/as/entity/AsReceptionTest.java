@@ -36,25 +36,21 @@ public class AsReceptionTest {
     void setUp() {
         // 1. 접수 등록 사전 작업
         this.customer = new Customer("한소희", "010-5555-1212", "user@gamil.com", "12345", "00아파트 12동", "서울 강남구 양재동", 1L);
-        this.product = new Product(1L, "SN-1004", LocalDateTime.now(), 1L);
+        this.product = new Product(1L, "SN-1004", LocalDateTime.now());
         this.member = new Member(
                 "user01@abc.com",
                 "@#$@%",
                 "최미소",
                 "010-4008-4008",
                 "서울시 강남구",
-                Role.ROLE_RECEPTIONIST,
-                "asdfas"
-        );
+                Role.ROLE_RECEPTIONIST);
         this.technician = new Member(
                 "tech01@abc.com",
                 "@#$@%",
                 "김기사",
                 "010-4009-4009",
                 "서울시 서초구",
-                Role.ROLE_TECHNICIAN,
-                "technician01"
-        );
+                Role.ROLE_TECHNICIAN);
 
         em.persist(this.customer);
         em.persist(this.product);
@@ -157,9 +153,7 @@ public class AsReceptionTest {
                 "박기사",
                 "010-0000-0001",
                 "서울시 강남구",
-                Role.ROLE_TECHNICIAN,
-                "technician02"
-        );
+                Role.ROLE_TECHNICIAN);
         em.persist(newTechnician);
 
         AsReception asReception = new AsReception(

@@ -68,10 +68,10 @@ class ShipmentStatisticsRepositoryTest {
     void countByStatus() {
         transactionTemplate.executeWithoutResult(status -> {
             Member member = new Member(PREFIX + "admin@test.com", "password", "접수 담당자", "010-1111-1111", "서울시 강남구",
-                                       Role.ROLE_ADMIN, "");
+                                       Role.ROLE_ADMIN);
             Customer customer = new Customer("테스트 고객", "010-1234-5678", PREFIX + "customer@test.com", "12345", "서울시",
                                              "테스트 주소", 1L);
-            Product product = new Product(1L, PREFIX + "SERIAL", LocalDateTime.now(), 1L);
+            Product product = new Product(1L, PREFIX + "SERIAL", LocalDateTime.now());
             entityManager.persist(member);
             entityManager.persist(customer);
             entityManager.persist(product);

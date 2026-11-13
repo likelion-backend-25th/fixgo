@@ -139,7 +139,7 @@ class ModelStatisticsRepositoryTest {
             entityManager.flush();
 
             // 제품 생성
-            Product product = new Product(model.getId(), PREFIX + "SERIAL-1", LocalDateTime.now(), 1L);
+            Product product = new Product(model.getId(), PREFIX + "SERIAL-1", LocalDateTime.now());
 
             entityManager.persist(product);
 
@@ -156,9 +156,7 @@ class ModelStatisticsRepositoryTest {
                     "접수 담당자",
                     "010-1111-1111",
                     "서울시 강남구",
-                    Role.ROLE_ADMIN,
-                    ""
-            );
+                    Role.ROLE_ADMIN);
 
             Member technician = new Member(
                     PREFIX + "tech@test.com",
@@ -166,9 +164,7 @@ class ModelStatisticsRepositoryTest {
                     "테스트 기사",
                     "010-2222-2222",
                     "서울시 서초구",
-                    Role.ROLE_TECHNICIAN,
-                    ""
-            );
+                    Role.ROLE_TECHNICIAN);
 
             entityManager.persist(receptionist);
             entityManager.persist(technician);

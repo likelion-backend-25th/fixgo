@@ -2,6 +2,9 @@ package net.likelion.bebc25.fixgo.payment.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.likelion.bebc25.fixgo.as.entity.AsReception;
+import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
+import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
 import net.likelion.bebc25.fixgo.payment.client.TossDto;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentAttempt;
 import net.likelion.bebc25.fixgo.payment.entity.PaymentAttemptStatus;
@@ -25,6 +28,7 @@ public class PaymentWebhookService {
     private final PaymentAttemptRepository paymentAttemptRepository;
     private final VirtualAccountRepository virtualAccountRepository;
     private final PaymentBillRepository paymentBillRepository;
+    private final AsStatusHistoryService asStatusHistoryService;
 
     /**
      * 토스 가상계좌 웹훅(DEPOSIT_CALLBACK)을 처리한다.
@@ -82,6 +86,8 @@ public class PaymentWebhookService {
             default -> {
                 attempt.markVirtualAccountDone(depositedAt);
                 bill.markPaid(depositedAt);
+                AsReception reception = bill.getAsReception();
+                asStatusHistoryService.record(reception, AsReceptionStatus.AWAITING_PAYMENT.name(), reception.getStatus().name(), "가상계좌 입금", null);
             }
         }
     }

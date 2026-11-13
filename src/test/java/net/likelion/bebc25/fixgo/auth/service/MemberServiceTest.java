@@ -74,8 +74,7 @@ class MemberServiceTest {
                 "테스트",
                 "010-1234-5678",
                 "서울시 강남구",
-                role,
-                "http://img.test/profile.png"
+                role
         ));
     }
 
@@ -84,7 +83,7 @@ class MemberServiceTest {
                 new Customer("테스트 고객", "010-1111-2222", "customer@test.com", "12345", "서울시", "강남구", 1L)
         );
         Product product = productRepository.save(
-                new Product(1L, "TEST-SERIAL-001", LocalDateTime.now(), 1L)
+                new Product(1L, "TEST-SERIAL-001", LocalDateTime.now())
         );
         return asReceptionRepository.save(new AsReception(
                 "AS-TEST-001",
@@ -109,9 +108,7 @@ class MemberServiceTest {
                 "신규직원",
                 "010-0000-0000",
                 "서울시 송파구",
-                Role.ROLE_TECHNICIAN,
-                "http://img.test/new.png"
-        );
+                Role.ROLE_TECHNICIAN);
 
         MemberDto.DetailResponse response = memberService.signup(request);
 
@@ -121,7 +118,6 @@ class MemberServiceTest {
         assertThat(response.phone()).isEqualTo("010-0000-0000");
         assertThat(response.address()).isEqualTo("서울시 송파구");
         assertThat(response.role()).isEqualTo(Role.ROLE_TECHNICIAN);
-        assertThat(response.profileImgUrl()).isEqualTo("http://img.test/new.png");
         assertThat(response.status()).isEqualTo(Status.ACTIVE);
         assertThat(memberRepository.existsByEmail("new@test.com")).isTrue();
     }
@@ -137,9 +133,7 @@ class MemberServiceTest {
                 "중복직원",
                 "010-0000-0000",
                 "서울시 강남구",
-                Role.ROLE_ADMIN,
-                ""
-        );
+                Role.ROLE_ADMIN);
 
         assertThatThrownBy(() -> memberService.signup(request))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -229,7 +223,6 @@ class MemberServiceTest {
         assertThat(response.phone()).isEqualTo("010-1234-5678");
         assertThat(response.address()).isEqualTo("서울시 강남구");
         assertThat(response.role()).isEqualTo(Role.ROLE_TECHNICIAN);
-        assertThat(response.profileImgUrl()).isEqualTo("http://img.test/profile.png");
         assertThat(response.status()).isEqualTo(Status.ACTIVE);
     }
 
@@ -380,15 +373,13 @@ class MemberServiceTest {
                         "tech@test.com",
                         "변경된이름",
                         "010-9999-8888",
-                        "서울시 마포구",
-                        "http://img.test/updated.png"
+                        "서울시 마포구"
                 )
         );
 
         assertThat(response.name()).isEqualTo("변경된이름");
         assertThat(response.phone()).isEqualTo("010-9999-8888");
         assertThat(response.address()).isEqualTo("서울시 마포구");
-        assertThat(response.profileImgUrl()).isEqualTo("http://img.test/updated.png");
 
         Member updated = memberRepository.findByEmail("tech@test.com").orElseThrow();
         assertThat(updated.getName()).isEqualTo("변경된이름");
@@ -404,8 +395,7 @@ class MemberServiceTest {
                         "gone@test.com",
                         "이름",
                         "010-0000-0000",
-                        "서울시 강남구",
-                        ""
+                        "서울시 강남구"
                 )
         ))
                 .isInstanceOf(NoSuchElementException.class)

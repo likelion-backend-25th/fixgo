@@ -57,11 +57,11 @@ class PartServiceTest {
     void searchParts() {
         Part part = part(1L, "메인보드", 15000, 40, 8, PartStatus.ACTIVE);
         Pageable pageable = PageRequest.of(0, 10);
-        when(partRepository.searchParts("메인", PartStatus.ACTIVE, pageable))
+        when(partRepository.searchParts("메인", PartStatus.ACTIVE, null, null, pageable))
                 .thenReturn(new PageImpl<>(List.of(part), pageable, 1));
 
         Page<PartDto.BriefResponse> result = partService.searchParts(
-                new PartDto.SearchRequest("메인", PartStatus.ACTIVE), pageable);
+                new PartDto.SearchRequest("메인", PartStatus.ACTIVE, null, null), pageable);
 
         assertThat(result.getTotalElements()).isEqualTo(1);
         assertThat(result.getContent()).containsExactly(
@@ -157,6 +157,74 @@ class PartServiceTest {
                 new PartDto.StandardMinutesUpdateRequest(99L, 10)))
                 .isInstanceOf(NoSuchElementException.class)
                 .hasMessage("존재하지 않는 부품입니다.");
+    }
+
+    @Test
+    @DisplayName("사용 중인 부품을 단종할 수 있다")
+    void updateStatus_discontinueActive() {
+        Part part = part(1L, "메인보드", 15000, 40, 8, PartStatus.ACTIVE);
+        when(partRepository.findById(1L)).thenReturn(Optional.of(part));
+
+        partService.updateStatus(new PartDto.StatusUpdateRequest(1L, PartStatus.DISCONTINUED));
+
+        assertThat(part.getStatus()).isEqualTo(PartStatus.DISCONTINUED);
+    }
+
+    @Test
+    @DisplayName("재고 부족 부품을 단종할 수 있다")
+    void updateStatus_discontinueLowQuantity() {
+        Part part = part(1L, "메인보드", 15000, 40, 0, PartStatus.LOW_QUANTITY);
+        when(partRepository.findById(1L)).thenReturn(Optional.of(part));
+
+        partService.updateStatus(new PartDto.StatusUpdateRequest(1L, PartStatus.DISCONTINUED));
+
+        assertThat(part.getStatus()).isEqualTo(PartStatus.DISCONTINUED);
+    }
+
+    @Test
+    @DisplayName("재고가 있는 단종 부품은 사용 상태로 되돌린다")
+    void updateStatus_restoreActive() {
+        Part part = part(1L, "메인보드", 15000, 40, 8, PartStatus.DISCONTINUED);
+        when(partRepository.findById(1L)).thenReturn(Optional.of(part));
+
+        partService.updateStatus(new PartDto.StatusUpdateRequest(1L, PartStatus.ACTIVE));
+
+        assertThat(part.getStatus()).isEqualTo(PartStatus.ACTIVE);
+    }
+
+    @Test
+    @DisplayName("재고가 없는 단종 부품은 재고 부족으로 되돌린다")
+    void updateStatus_restoreLowQuantity() {
+        Part part = part(1L, "메인보드", 15000, 40, 0, PartStatus.DISCONTINUED);
+        when(partRepository.findById(1L)).thenReturn(Optional.of(part));
+
+        partService.updateStatus(new PartDto.StatusUpdateRequest(1L, PartStatus.LOW_QUANTITY));
+
+        assertThat(part.getStatus()).isEqualTo(PartStatus.LOW_QUANTITY);
+    }
+
+    @Test
+    @DisplayName("단종 이전 상태가 아닌 값으로는 되돌릴 수 없다")
+    void updateStatus_restoreWrongStatus() {
+        Part part = part(1L, "메인보드", 15000, 40, 8, PartStatus.DISCONTINUED);
+        when(partRepository.findById(1L)).thenReturn(Optional.of(part));
+
+        assertThatThrownBy(() -> partService.updateStatus(new PartDto.StatusUpdateRequest(1L, PartStatus.LOW_QUANTITY)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("단종 이전 상태로만 되돌릴 수 있습니다.");
+        assertThat(part.getStatus()).isEqualTo(PartStatus.DISCONTINUED);
+    }
+
+    @Test
+    @DisplayName("사용과 재고 부족은 서로 직접 바꾸지 않는다")
+    void updateStatus_betweenStockStatuses() {
+        Part part = part(1L, "메인보드", 15000, 40, 8, PartStatus.ACTIVE);
+        when(partRepository.findById(1L)).thenReturn(Optional.of(part));
+
+        assertThatThrownBy(() -> partService.updateStatus(new PartDto.StatusUpdateRequest(1L, PartStatus.LOW_QUANTITY)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("사용과 재고 부족은 재고 수량으로만 바뀝니다.");
+        assertThat(part.getStatus()).isEqualTo(PartStatus.ACTIVE);
     }
 
     @Test

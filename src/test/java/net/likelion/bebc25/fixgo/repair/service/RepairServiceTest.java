@@ -5,8 +5,11 @@ import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
 import net.likelion.bebc25.fixgo.as.repository.AsReceptionRepository;
 import net.likelion.bebc25.fixgo.as.service.AsStatusHistoryService;
 import net.likelion.bebc25.fixgo.auth.entity.Member;
+import net.likelion.bebc25.fixgo.auth.entity.Role;
 import net.likelion.bebc25.fixgo.auth.principal.CustomUserDetails;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
+import net.likelion.bebc25.fixgo.customer.entity.Customer;
+import net.likelion.bebc25.fixgo.repair.dto.repair.RepairAbortRequest;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairMessageResponse;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairRequest;
 import net.likelion.bebc25.fixgo.repair.dto.repair.RepairResponse;
@@ -15,12 +18,13 @@ import net.likelion.bebc25.fixgo.repair.entity.repair.RepairDecision;
 import net.likelion.bebc25.fixgo.repair.entity.repair.RepairStatus;
 import net.likelion.bebc25.fixgo.repair.entity.repair.WarrantyResult;
 import net.likelion.bebc25.fixgo.repair.repository.RepairRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
@@ -54,19 +58,11 @@ class RepairServiceTest {
     @Mock
     private PartService partService;
 
-    private RepairService repairService;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
-    @BeforeEach
-    void setUp() {
-        repairService = new RepairService(
-                repairRepository,
-                asReceptionRepository,
-                memberRepository,
-                repairStatusService,
-                asStatusHistoryService,
-                partService
-        );
-    }
+    @InjectMocks
+    private RepairService repairService;
 
     // 테스트용 A/S 접수 정보 생성
     private AsReception createAsReception() {
@@ -607,6 +603,10 @@ class RepairServiceTest {
     void completeRepairSuccessTest() {
 
         Repair repair = createRepair();
+        Customer customer = new Customer("고객", "010-1234-5678", "customer@example.com",
+                "12345", "서울", "101호", 1L);
+        when(repair.getAsReception().getCustomer()).thenReturn(customer);
+        when(repair.getAsReception().getId()).thenReturn(100L);
         ReflectionTestUtils.setField(repair, "status", RepairStatus.REPAIRING);
 
         CustomUserDetails userDetails = mock(CustomUserDetails.class);
@@ -621,6 +621,8 @@ class RepairServiceTest {
         verify(repairStatusService)
                 .changeStatus(repair, RepairStatus.COMPLETED, "technician", "수리 완료");
         verify(partService).updateMultiStockQuantity(userDetails, 1L);
+        verify(eventPublisher).publishEvent(new RepairService.RepairCompletedEvent(
+                100L, null, customer.getName(), customer.getEmail(), false));
     }
 
     @Test
@@ -661,5 +663,54 @@ class RepairServiceTest {
 
         verifyNoInteractions(repairStatusService);
         verifyNoInteractions(partService);
+    }
+
+    @Test
+    @DisplayName("점검 중 수리를 중단하면 배송 또는 수령 대기로 넘긴다")
+    void abortInspectionMovesToReturnWaiting() {
+        Repair repair = createRepair();
+        AsReception reception = repair.getAsReception();
+        Member technician = repair.getTechnician();
+        CustomUserDetails userDetails = mock(CustomUserDetails.class);
+
+        when(repairRepository.findByIdWithLock(1L)).thenReturn(Optional.of(repair));
+        when(reception.getId()).thenReturn(10L);
+        when(reception.getStatus()).thenReturn(AsReceptionStatus.INSPECTION);
+        when(reception.getTechnician()).thenReturn(technician);
+        when(reception.statusAwaitingReturn()).thenReturn(AsReceptionStatus.AWAITING_SHIPMENT);
+        when(asReceptionRepository.findByIdWithLock(10L)).thenReturn(Optional.of(reception));
+        when(technician.getId()).thenReturn(1L);
+        when(technician.getRole()).thenReturn(Role.ROLE_TECHNICIAN);
+        when(userDetails.getId()).thenReturn(1L);
+        when(userDetails.getMember()).thenReturn(technician);
+        when(userDetails.getUsername()).thenReturn(TEST_EMAIL);
+        when(memberRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.of(technician));
+        Customer customer = new Customer(
+                "고객", "010-1234-5678", "customer@example.com",
+                "12345", "서울", "101호", 1L);
+        when(reception.getCustomer()).thenReturn(customer);
+        when(reception.getReceptionNumber()).thenReturn("AS-00001");
+
+        repairService.abortInspection(
+                1L,
+                new RepairAbortRequest("REPAIR_IMPOSSIBLE", "부품 단종"),
+                userDetails
+        );
+
+        assertEquals(RepairStatus.REJECTED, repair.getStatus());
+        assertEquals(RepairDecision.UNREPAIRABLE, repair.getRepairDecision());
+        assertEquals("수리 불가: 부품 단종", repair.getReasonForRejection());
+        assertEquals(0, repair.getFinalAmount());
+        verify(reception).changeStatus(AsReceptionStatus.AWAITING_SHIPMENT);
+        verify(asStatusHistoryService, times(2)).record(any(), any(), any(), any(), any());
+        verify(eventPublisher).publishEvent(new RepairService.InspectionAbortedEvent(
+                10L,
+                "AS-00001",
+                "고객",
+                "customer@example.com",
+                "REPAIR_IMPOSSIBLE",
+                AsReceptionStatus.AWAITING_SHIPMENT,
+                "부품 단종"
+        ));
     }
 }

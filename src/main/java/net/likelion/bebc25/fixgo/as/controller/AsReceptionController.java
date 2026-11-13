@@ -86,13 +86,15 @@ public class AsReceptionController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) AsReceptionStatus status,
             @RequestParam(required = false) Long technicianId,
+            @RequestParam(required = false) Long customerId,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         AsReceptionDto.ReceptionSearchRequest request =
                 new AsReceptionDto.ReceptionSearchRequest(
                         keyword,
                         status,
-                        technicianId
+                        technicianId,
+                        customerId
                 );
 
         return ResponseEntity.ok(asReceptionService.getReceptions(request, pageable));
@@ -250,7 +252,7 @@ public class AsReceptionController {
                     direction = Sort.Direction.DESC) Pageable pageable
     ) {
         var request = new AsReceptionDto.ReceptionSearchRequest(
-                keyword, status, userDetails.getId()
+                keyword, status, userDetails.getId(), null
         );
         return ResponseEntity.ok(asReceptionService.getReceptions(request, pageable));
     }

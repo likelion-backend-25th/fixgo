@@ -8,6 +8,7 @@ import net.likelion.bebc25.fixgo.auth.jwt.JwtProvider;
 import net.likelion.bebc25.fixgo.auth.service.CustomUserDetailsService;
 import jakarta.servlet.DispatcherType;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
@@ -69,7 +70,11 @@ public class SecurityConfig {
                         // 고객 페이지
                         .requestMatchers("/api/v1/portal/**").permitAll()
 
-                        // 이메일 알림, 배송
+                        // 배송 조회는 기사도 볼 수 있다. 등록과 상태 변경은 아래 규칙으로 남긴다.
+                        .requestMatchers(HttpMethod.GET, "/api/v1/shipments", "/api/v1/shipments/**")
+                        .hasAnyRole("ADMIN", "RECEPTIONIST", "TECHNICIAN")
+
+                        // 이메일 알림, 배송 변경
                         .requestMatchers(
                                 "/api/v1/notifications",
                                 "/api/v1/notifications/**",
