@@ -13,8 +13,7 @@ http:
         "email":"test2@fixgo.com",
         "name":"최미소",
         "phone":"010-1234-5678",
-        "address":"주소변경",
-        "profileImgUrl":""
+        "address":"주소변경"
       }
   auth: inherit
 

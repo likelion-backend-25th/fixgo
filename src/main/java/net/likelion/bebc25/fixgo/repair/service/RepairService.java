@@ -232,6 +232,18 @@ public class RepairService {
                 stored,
                 changedBy
         );
+
+        // 중단 안내 메일은 접수 저장이 커밋된 뒤에 보낸다.
+        Customer customer = asReception.getCustomer();
+        eventPublisher.publishEvent(new InspectionAbortedEvent(
+                asReception.getId(),
+                asReception.getReceptionNumber(),
+                customer.getName(),
+                customer.getEmail(),
+                request.category(),
+                nextStatus,
+                detail
+        ));
     }
 
     // 로그인한 기사가 담당하는 수리 건인지 확인한 후 수리 완료
@@ -265,6 +277,17 @@ public class RepairService {
                 )
         );
     }
+
+    // 점검 중 A/S 중단 안내 이메일 발송 이벤트
+    public record InspectionAbortedEvent(
+            Long asReceptionId,
+            String receptionNumber,
+            String customerName,
+            String recipientEmail,
+            String category,
+            AsReceptionStatus returnStatus,
+            String reason
+    ) {}
 
     // 수리 완료 이메일 발송 이벤트
     public record RepairCompletedEvent(

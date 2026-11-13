@@ -34,9 +34,7 @@ public class RefreshTokenTest {
                 "test1",
                 "010-1234-5678",
                 "서울시 강남구",
-                Role.ROLE_ADMIN,
-                ""
-        );
+                Role.ROLE_ADMIN);
         em.persist(member); // insert 쿼리문 생성 (실행은 안함)
 
         memberId = member.getId();

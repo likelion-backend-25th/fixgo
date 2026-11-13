@@ -6,7 +6,6 @@ INSERT INTO member (email,
                     phone,
                     role,
                     address,
-                    profile_img_url,
                     status,
                     deleted_at,
                     created_at,
@@ -19,7 +18,6 @@ SELECT 'admin001@fixgo.com',
        '010-1234-5678',
        'ROLE_ADMIN',
        '서울특별시 강남구 테헤란로 123',
-       'https://via.placeholder.com/150',
        'ACTIVE',
        NULL,
        NOW(),
@@ -32,76 +30,76 @@ WHERE NOT EXISTS (SELECT 1 FROM member WHERE email = 'admin001@fixgo.com');
 -- 일반 직원 계정 초기 데이터
 -- password: password123 (BCrypt, 전 계정 동일)
 -- 접수 담당자 (ROLE_RECEPTIONIST)
-INSERT INTO member (email, password_hash, name, phone, role, address, profile_img_url,
+INSERT INTO member (email, password_hash, name, phone, role, address,
                     status, deleted_at, created_at, updated_at, created_by, updated_by)
 SELECT 'receptionist001@fixgo.com',
        '$2a$10$pycf5lZBMfgSIONoitiApektS2HjK7DNzzGvQFG6QahMkbtMzMcom',
        '최미소', '010-2345-6789', 'ROLE_RECEPTIONIST',
-       '서울특별시 서초구 서초대로 77', 'https://via.placeholder.com/150',
+       '서울특별시 서초구 서초대로 77',
        'ACTIVE', NULL, NOW(), NOW(), 0, 0
 WHERE NOT EXISTS (SELECT 1 FROM member WHERE email = 'receptionist001@fixgo.com');
 
-INSERT INTO member (email, password_hash, name, phone, role, address, profile_img_url,
+INSERT INTO member (email, password_hash, name, phone, role, address,
                     status, deleted_at, created_at, updated_at, created_by, updated_by)
 SELECT 'receptionist002@fixgo.com',
        '$2a$10$pycf5lZBMfgSIONoitiApektS2HjK7DNzzGvQFG6QahMkbtMzMcom',
        '한지우', '010-3456-7890', 'ROLE_RECEPTIONIST',
-       '서울특별시 마포구 월드컵북로 400', 'https://via.placeholder.com/150',
+       '서울특별시 마포구 월드컵북로 400',
        'ACTIVE', NULL, NOW(), NOW(), 0, 0
 WHERE NOT EXISTS (SELECT 1 FROM member WHERE email = 'receptionist002@fixgo.com');
 
-INSERT INTO member (email, password_hash, name, phone, role, address, profile_img_url,
+INSERT INTO member (email, password_hash, name, phone, role, address,
                     status, deleted_at, created_at, updated_at, created_by, updated_by)
 SELECT 'receptionist003@fixgo.com',
        '$2a$10$pycf5lZBMfgSIONoitiApektS2HjK7DNzzGvQFG6QahMkbtMzMcom',
        '오세린', '010-4567-8901', 'ROLE_RECEPTIONIST',
-       '경기도 성남시 분당구 판교역로 235', 'https://via.placeholder.com/150',
+       '경기도 성남시 분당구 판교역로 235',
        'ACTIVE', NULL, NOW(), NOW(), 0, 0
 WHERE NOT EXISTS (SELECT 1 FROM member WHERE email = 'receptionist003@fixgo.com');
 
 -- 수리기사 (ROLE_TECHNICIAN)
-INSERT INTO member (email, password_hash, name, phone, role, address, profile_img_url,
+INSERT INTO member (email, password_hash, name, phone, role, address,
                     status, deleted_at, created_at, updated_at, created_by, updated_by)
 SELECT 'technician001@fixgo.com',
        '$2a$10$pycf5lZBMfgSIONoitiApektS2HjK7DNzzGvQFG6QahMkbtMzMcom',
        '김민수', '010-5678-9012', 'ROLE_TECHNICIAN',
-       '서울특별시 영등포구 여의대로 108', 'https://via.placeholder.com/150',
+       '서울특별시 영등포구 여의대로 108',
        'ACTIVE', NULL, NOW(), NOW(), 0, 0
 WHERE NOT EXISTS (SELECT 1 FROM member WHERE email = 'technician001@fixgo.com');
 
-INSERT INTO member (email, password_hash, name, phone, role, address, profile_img_url,
+INSERT INTO member (email, password_hash, name, phone, role, address,
                     status, deleted_at, created_at, updated_at, created_by, updated_by)
 SELECT 'technician002@fixgo.com',
        '$2a$10$pycf5lZBMfgSIONoitiApektS2HjK7DNzzGvQFG6QahMkbtMzMcom',
        '이서연', '010-6789-0123', 'ROLE_TECHNICIAN',
-       '서울특별시 송파구 올림픽로 300', 'https://via.placeholder.com/150',
+       '서울특별시 송파구 올림픽로 300',
        'ACTIVE', NULL, NOW(), NOW(), 0, 0
 WHERE NOT EXISTS (SELECT 1 FROM member WHERE email = 'technician002@fixgo.com');
 
-INSERT INTO member (email, password_hash, name, phone, role, address, profile_img_url,
+INSERT INTO member (email, password_hash, name, phone, role, address,
                     status, deleted_at, created_at, updated_at, created_by, updated_by)
 SELECT 'technician003@fixgo.com',
        '$2a$10$pycf5lZBMfgSIONoitiApektS2HjK7DNzzGvQFG6QahMkbtMzMcom',
        '박준호', '010-7890-1234', 'ROLE_TECHNICIAN',
-       '인천광역시 연수구 컨벤시아대로 165', 'https://via.placeholder.com/150',
+       '인천광역시 연수구 컨벤시아대로 165',
        'ACTIVE', NULL, NOW(), NOW(), 0, 0
 WHERE NOT EXISTS (SELECT 1 FROM member WHERE email = 'technician003@fixgo.com');
 
-INSERT INTO member (email, password_hash, name, phone, role, address, profile_img_url,
+INSERT INTO member (email, password_hash, name, phone, role, address,
                     status, deleted_at, created_at, updated_at, created_by, updated_by)
 SELECT 'technician004@fixgo.com',
        '$2a$10$pycf5lZBMfgSIONoitiApektS2HjK7DNzzGvQFG6QahMkbtMzMcom',
        '정하늘', '010-8901-2345', 'ROLE_TECHNICIAN',
-       '경기도 수원시 영통구 광교중앙로 145', 'https://via.placeholder.com/150',
+       '경기도 수원시 영통구 광교중앙로 145',
        'ACTIVE', NULL, NOW(), NOW(), 0, 0
 WHERE NOT EXISTS (SELECT 1 FROM member WHERE email = 'technician004@fixgo.com');
 
-INSERT INTO member (email, password_hash, name, phone, role, address, profile_img_url,
+INSERT INTO member (email, password_hash, name, phone, role, address,
                     status, deleted_at, created_at, updated_at, created_by, updated_by)
 SELECT 'technician005@fixgo.com',
        '$2a$10$pycf5lZBMfgSIONoitiApektS2HjK7DNzzGvQFG6QahMkbtMzMcom',
        '윤도현', '010-9012-3456', 'ROLE_TECHNICIAN',
-       '서울특별시 관악구 남부순환로 1636', 'https://via.placeholder.com/150',
+       '서울특별시 관악구 남부순환로 1636',
        'ACTIVE', NULL, NOW(), NOW(), 0, 0
 WHERE NOT EXISTS (SELECT 1 FROM member WHERE email = 'technician005@fixgo.com');
 
@@ -3490,11 +3488,11 @@ SELECT (SELECT id FROM product_model WHERE model_name = 'SZB-MIN-17-20'),
        (SELECT id FROM member WHERE email = 'receptionist002@fixgo.com')
 WHERE NOT EXISTS (SELECT 1 FROM product WHERE serial_number = 'SN-FG-000200');
 -- 공임비/점검비 더미 데이터
--- 공임비(LABOR_RATE): 노트북 50,000원 / 스마트폰 35,000원
+-- 공임비(LABOR_RATE): 노트북 5,000원 / 스마트폰 3,500원 (기존 대비 1/10)
 -- 점검비(INSPECTION_COST): 노트북 20,000원 / 스마트폰 15,000원
 INSERT INTO labor_rate (product_category, cost, rate_type, effective_date,
                         created_at, updated_at, created_by, updated_by)
-SELECT 'LAPTOP', 50000, 'LABOR_RATE', '2025-01-01',
+SELECT 'LAPTOP', 5000, 'LABOR_RATE', '2025-01-01',
        '2025-01-01 09:00:00', '2025-01-01 09:00:00',
        (SELECT id FROM member WHERE email = 'admin001@fixgo.com'),
        (SELECT id FROM member WHERE email = 'admin001@fixgo.com')
@@ -3505,7 +3503,7 @@ WHERE NOT EXISTS (
 
 INSERT INTO labor_rate (product_category, cost, rate_type, effective_date,
                         created_at, updated_at, created_by, updated_by)
-SELECT 'PHONE', 35000, 'LABOR_RATE', '2025-01-01',
+SELECT 'PHONE', 3500, 'LABOR_RATE', '2025-01-01',
        '2025-01-01 09:00:00', '2025-01-01 09:00:00',
        (SELECT id FROM member WHERE email = 'admin001@fixgo.com'),
        (SELECT id FROM member WHERE email = 'admin001@fixgo.com')
@@ -3513,6 +3511,14 @@ WHERE NOT EXISTS (
     SELECT 1 FROM labor_rate
     WHERE product_category = 'PHONE' AND rate_type = 'LABOR_RATE' AND effective_date = '2025-01-01'
 );
+
+UPDATE labor_rate
+SET cost = 5000, updated_at = '2025-01-01 09:00:00'
+WHERE product_category = 'LAPTOP' AND rate_type = 'LABOR_RATE' AND effective_date = '2025-01-01';
+
+UPDATE labor_rate
+SET cost = 3500, updated_at = '2025-01-01 09:00:00'
+WHERE product_category = 'PHONE' AND rate_type = 'LABOR_RATE' AND effective_date = '2025-01-01';
 
 INSERT INTO labor_rate (product_category, cost, rate_type, effective_date,
                         created_at, updated_at, created_by, updated_by)
@@ -18220,6 +18226,1712 @@ WHERE p.name = N'사자폰 공용 진동모터 [SZP-ALL-VIB]' AND m.model_name =
     WHERE pc.part_id = p.id AND pc.product_model_id = m.id
   );
 
+-- 프리셋 보완용 공용 부품
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version,
+                 created_at, updated_at, created_by, updated_by)
+SELECT N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]', 22000, 25, 40, 'ACTIVE', 0,
+       '2025-06-01 10:00:00', '2025-06-01 10:00:00',
+       (SELECT id FROM member WHERE email = 'admin001@fixgo.com'),
+       (SELECT id FROM member WHERE email = 'admin001@fixgo.com')
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]');
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]' AND m.model_name = 'SZB-AIR-13-01'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]' AND m.model_name = 'SZB-LIT-14-02'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]' AND m.model_name = 'SZB-SLM-15-03'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]' AND m.model_name = 'SZB-PRO-16-04'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]' AND m.model_name = 'SZB-PMX-17-05'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]' AND m.model_name = 'SZB-ULT-13-06'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]' AND m.model_name = 'SZB-EDG-14-07'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]' AND m.model_name = 'SZB-FLX-15-08'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]' AND m.model_name = 'SZB-NOT-16-09'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]' AND m.model_name = 'SZB-BOK-17-10'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]' AND m.model_name = 'SZB-STD-13-11'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]' AND m.model_name = 'SZB-CRT-14-12'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]' AND m.model_name = 'SZB-GMR-15-13'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]' AND m.model_name = 'SZB-WRK-16-14'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]' AND m.model_name = 'SZB-OFC-17-15'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]' AND m.model_name = 'SZB-BIZ-13-16'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]' AND m.model_name = 'SZB-CMP-14-17'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]' AND m.model_name = 'SZB-STD2-15-18'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]' AND m.model_name = 'SZB-TRV-16-19'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]' AND m.model_name = 'SZB-MIN-17-20'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]' AND m.model_name = 'SZB-MAX-13-21'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]' AND m.model_name = 'SZB-PRM-14-22'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]' AND m.model_name = 'SZB-SGN-15-23'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]' AND m.model_name = 'SZB-CLS-16-24'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]' AND m.model_name = 'SZB-NEO-17-25'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]' AND m.model_name = 'SZB-FTR-13-26'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]' AND m.model_name = 'SZB-QNT-14-27'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]' AND m.model_name = 'SZB-SOL-15-28'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]' AND m.model_name = 'SZB-AST-16-29'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]' AND m.model_name = 'SZB-FOR-17-30'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version,
+                 created_at, updated_at, created_by, updated_by)
+SELECT N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]', 30000, 30, 35, 'ACTIVE', 0,
+       '2025-06-01 10:00:00', '2025-06-01 10:00:00',
+       (SELECT id FROM member WHERE email = 'admin001@fixgo.com'),
+       (SELECT id FROM member WHERE email = 'admin001@fixgo.com')
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]');
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]' AND m.model_name = 'SZB-AIR-13-01'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]' AND m.model_name = 'SZB-LIT-14-02'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]' AND m.model_name = 'SZB-SLM-15-03'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]' AND m.model_name = 'SZB-PRO-16-04'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]' AND m.model_name = 'SZB-PMX-17-05'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]' AND m.model_name = 'SZB-ULT-13-06'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]' AND m.model_name = 'SZB-EDG-14-07'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]' AND m.model_name = 'SZB-FLX-15-08'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]' AND m.model_name = 'SZB-NOT-16-09'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]' AND m.model_name = 'SZB-BOK-17-10'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]' AND m.model_name = 'SZB-STD-13-11'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]' AND m.model_name = 'SZB-CRT-14-12'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]' AND m.model_name = 'SZB-GMR-15-13'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]' AND m.model_name = 'SZB-WRK-16-14'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]' AND m.model_name = 'SZB-OFC-17-15'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]' AND m.model_name = 'SZB-BIZ-13-16'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]' AND m.model_name = 'SZB-CMP-14-17'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]' AND m.model_name = 'SZB-STD2-15-18'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]' AND m.model_name = 'SZB-TRV-16-19'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]' AND m.model_name = 'SZB-MIN-17-20'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]' AND m.model_name = 'SZB-MAX-13-21'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]' AND m.model_name = 'SZB-PRM-14-22'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]' AND m.model_name = 'SZB-SGN-15-23'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]' AND m.model_name = 'SZB-CLS-16-24'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]' AND m.model_name = 'SZB-NEO-17-25'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]' AND m.model_name = 'SZB-FTR-13-26'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]' AND m.model_name = 'SZB-QNT-14-27'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]' AND m.model_name = 'SZB-SOL-15-28'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]' AND m.model_name = 'SZB-AST-16-29'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]' AND m.model_name = 'SZB-FOR-17-30'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version,
+                 created_at, updated_at, created_by, updated_by)
+SELECT N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]', 32000, 35, 28, 'ACTIVE', 0,
+       '2025-06-01 10:00:00', '2025-06-01 10:00:00',
+       (SELECT id FROM member WHERE email = 'admin001@fixgo.com'),
+       (SELECT id FROM member WHERE email = 'admin001@fixgo.com')
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]');
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]' AND m.model_name = 'SZB-AIR-13-01'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]' AND m.model_name = 'SZB-LIT-14-02'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]' AND m.model_name = 'SZB-SLM-15-03'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]' AND m.model_name = 'SZB-PRO-16-04'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]' AND m.model_name = 'SZB-PMX-17-05'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]' AND m.model_name = 'SZB-ULT-13-06'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]' AND m.model_name = 'SZB-EDG-14-07'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]' AND m.model_name = 'SZB-FLX-15-08'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]' AND m.model_name = 'SZB-NOT-16-09'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]' AND m.model_name = 'SZB-BOK-17-10'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]' AND m.model_name = 'SZB-STD-13-11'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]' AND m.model_name = 'SZB-CRT-14-12'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]' AND m.model_name = 'SZB-GMR-15-13'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]' AND m.model_name = 'SZB-WRK-16-14'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]' AND m.model_name = 'SZB-OFC-17-15'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]' AND m.model_name = 'SZB-BIZ-13-16'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]' AND m.model_name = 'SZB-CMP-14-17'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]' AND m.model_name = 'SZB-STD2-15-18'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]' AND m.model_name = 'SZB-TRV-16-19'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]' AND m.model_name = 'SZB-MIN-17-20'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]' AND m.model_name = 'SZB-MAX-13-21'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]' AND m.model_name = 'SZB-PRM-14-22'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]' AND m.model_name = 'SZB-SGN-15-23'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]' AND m.model_name = 'SZB-CLS-16-24'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]' AND m.model_name = 'SZB-NEO-17-25'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]' AND m.model_name = 'SZB-FTR-13-26'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]' AND m.model_name = 'SZB-QNT-14-27'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]' AND m.model_name = 'SZB-SOL-15-28'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]' AND m.model_name = 'SZB-AST-16-29'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]' AND m.model_name = 'SZB-FOR-17-30'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version,
+                 created_at, updated_at, created_by, updated_by)
+SELECT N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]', 12000, 20, 40, 'ACTIVE', 0,
+       '2025-06-01 10:00:00', '2025-06-01 10:00:00',
+       (SELECT id FROM member WHERE email = 'admin001@fixgo.com'),
+       (SELECT id FROM member WHERE email = 'admin001@fixgo.com')
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]');
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]' AND m.model_name = 'SZP-MIN-64-01'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]' AND m.model_name = 'SZP-LIT-128-02'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]' AND m.model_name = 'SZP-PLS-256-03'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]' AND m.model_name = 'SZP-PRO-512-04'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]' AND m.model_name = 'SZP-PMX-64-05'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]' AND m.model_name = 'SZP-ULT-128-06'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]' AND m.model_name = 'SZP-FLD-256-07'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]' AND m.model_name = 'SZP-FLP-512-08'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]' AND m.model_name = 'SZP-NOT-64-09'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]' AND m.model_name = 'SZP-MAX-128-10'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]' AND m.model_name = 'SZP-AIR-256-11'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]' AND m.model_name = 'SZP-EDG-512-12'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]' AND m.model_name = 'SZP-NEO-64-13'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]' AND m.model_name = 'SZP-PRM-128-14'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]' AND m.model_name = 'SZP-SGN-256-15'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]' AND m.model_name = 'SZP-CLS-512-16'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]' AND m.model_name = 'SZP-FTR-64-17'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]' AND m.model_name = 'SZP-QNT-128-18'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]' AND m.model_name = 'SZP-SOL-256-19'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]' AND m.model_name = 'SZP-AST-512-20'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]' AND m.model_name = 'SZP-FOR-64-21'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]' AND m.model_name = 'SZP-WAV-128-22'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]' AND m.model_name = 'SZP-SPK-256-23'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]' AND m.model_name = 'SZP-BLS-512-24'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]' AND m.model_name = 'SZP-PLS2-64-25'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]' AND m.model_name = 'SZP-COR-128-26'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]' AND m.model_name = 'SZP-ONE-256-27'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]' AND m.model_name = 'SZP-ZRO-512-28'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]' AND m.model_name = 'SZP-ALP-64-29'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]' AND m.model_name = 'SZP-BET-128-30'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version,
+                 created_at, updated_at, created_by, updated_by)
+SELECT N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]', 14000, 25, 38, 'ACTIVE', 0,
+       '2025-06-01 10:00:00', '2025-06-01 10:00:00',
+       (SELECT id FROM member WHERE email = 'admin001@fixgo.com'),
+       (SELECT id FROM member WHERE email = 'admin001@fixgo.com')
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]');
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]' AND m.model_name = 'SZP-MIN-64-01'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]' AND m.model_name = 'SZP-LIT-128-02'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]' AND m.model_name = 'SZP-PLS-256-03'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]' AND m.model_name = 'SZP-PRO-512-04'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]' AND m.model_name = 'SZP-PMX-64-05'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]' AND m.model_name = 'SZP-ULT-128-06'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]' AND m.model_name = 'SZP-FLD-256-07'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]' AND m.model_name = 'SZP-FLP-512-08'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]' AND m.model_name = 'SZP-NOT-64-09'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]' AND m.model_name = 'SZP-MAX-128-10'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]' AND m.model_name = 'SZP-AIR-256-11'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]' AND m.model_name = 'SZP-EDG-512-12'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]' AND m.model_name = 'SZP-NEO-64-13'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]' AND m.model_name = 'SZP-PRM-128-14'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]' AND m.model_name = 'SZP-SGN-256-15'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]' AND m.model_name = 'SZP-CLS-512-16'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]' AND m.model_name = 'SZP-FTR-64-17'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]' AND m.model_name = 'SZP-QNT-128-18'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]' AND m.model_name = 'SZP-SOL-256-19'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]' AND m.model_name = 'SZP-AST-512-20'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]' AND m.model_name = 'SZP-FOR-64-21'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]' AND m.model_name = 'SZP-WAV-128-22'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]' AND m.model_name = 'SZP-SPK-256-23'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]' AND m.model_name = 'SZP-BLS-512-24'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]' AND m.model_name = 'SZP-PLS2-64-25'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]' AND m.model_name = 'SZP-COR-128-26'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]' AND m.model_name = 'SZP-ONE-256-27'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]' AND m.model_name = 'SZP-ZRO-512-28'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]' AND m.model_name = 'SZP-ALP-64-29'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]' AND m.model_name = 'SZP-BET-128-30'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version,
+                 created_at, updated_at, created_by, updated_by)
+SELECT N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]', 28000, 30, 32, 'ACTIVE', 0,
+       '2025-06-01 10:00:00', '2025-06-01 10:00:00',
+       (SELECT id FROM member WHERE email = 'admin001@fixgo.com'),
+       (SELECT id FROM member WHERE email = 'admin001@fixgo.com')
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]');
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]' AND m.model_name = 'SZP-MIN-64-01'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]' AND m.model_name = 'SZP-LIT-128-02'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]' AND m.model_name = 'SZP-PLS-256-03'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]' AND m.model_name = 'SZP-PRO-512-04'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]' AND m.model_name = 'SZP-PMX-64-05'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]' AND m.model_name = 'SZP-ULT-128-06'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]' AND m.model_name = 'SZP-FLD-256-07'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]' AND m.model_name = 'SZP-FLP-512-08'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]' AND m.model_name = 'SZP-NOT-64-09'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]' AND m.model_name = 'SZP-MAX-128-10'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]' AND m.model_name = 'SZP-AIR-256-11'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]' AND m.model_name = 'SZP-EDG-512-12'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]' AND m.model_name = 'SZP-NEO-64-13'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]' AND m.model_name = 'SZP-PRM-128-14'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]' AND m.model_name = 'SZP-SGN-256-15'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]' AND m.model_name = 'SZP-CLS-512-16'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]' AND m.model_name = 'SZP-FTR-64-17'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]' AND m.model_name = 'SZP-QNT-128-18'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]' AND m.model_name = 'SZP-SOL-256-19'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]' AND m.model_name = 'SZP-AST-512-20'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]' AND m.model_name = 'SZP-FOR-64-21'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]' AND m.model_name = 'SZP-WAV-128-22'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]' AND m.model_name = 'SZP-SPK-256-23'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]' AND m.model_name = 'SZP-BLS-512-24'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]' AND m.model_name = 'SZP-PLS2-64-25'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]' AND m.model_name = 'SZP-COR-128-26'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]' AND m.model_name = 'SZP-ONE-256-27'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]' AND m.model_name = 'SZP-ZRO-512-28'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]' AND m.model_name = 'SZP-ALP-64-29'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]' AND m.model_name = 'SZP-BET-128-30'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+-- 공임-only 부품 (단가 0원, 표준작업시간으로만 공임 산정)
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version,
+                 created_at, updated_at, created_by, updated_by)
+SELECT N'사자북 공용 열관리 재작업 공임 [SZB-ALL-THERM]', 0, 40, 999, 'ACTIVE', 0,
+       '2025-06-01 10:00:00', '2025-06-01 10:00:00',
+       (SELECT id FROM member WHERE email = 'admin001@fixgo.com'),
+       (SELECT id FROM member WHERE email = 'admin001@fixgo.com')
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = N'사자북 공용 열관리 재작업 공임 [SZB-ALL-THERM]');
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자북 공용 열관리 재작업 공임 [SZB-ALL-THERM]'
+  AND m.model_name LIKE 'SZB-%'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
+INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version,
+                 created_at, updated_at, created_by, updated_by)
+SELECT N'사자폰 공용 소프트웨어 점검 공임 [SZP-ALL-SW]', 0, 30, 999, 'ACTIVE', 0,
+       '2025-06-01 10:00:00', '2025-06-01 10:00:00',
+       (SELECT id FROM member WHERE email = 'admin001@fixgo.com'),
+       (SELECT id FROM member WHERE email = 'admin001@fixgo.com')
+WHERE NOT EXISTS (SELECT 1 FROM part WHERE name = N'사자폰 공용 소프트웨어 점검 공임 [SZP-ALL-SW]');
+
+INSERT INTO part_compatibility (part_id, product_model_id)
+SELECT p.id, m.id
+FROM part p, product_model m
+WHERE p.name = N'사자폰 공용 소프트웨어 점검 공임 [SZP-ALL-SW]'
+  AND m.model_name LIKE 'SZP-%'
+  AND NOT EXISTS (
+    SELECT 1 FROM part_compatibility pc
+    WHERE pc.part_id = p.id AND pc.product_model_id = m.id
+  );
+
 INSERT INTO part (name, unit_price, standard_minutes, stock_quantity, status, version,
                  created_at, updated_at, created_by, updated_by)
 SELECT N'사자북 그룹1 공용 배터리 팩 [사자북-G1-BAT]', 55000, 35, 20, 'ACTIVE', 0,
@@ -21037,6 +22749,185 @@ INSERT INTO repair_preset_part (repair_preset_id, part_id, quantity)
 SELECT rp.id, p.id, 1
 FROM repair_preset rp, part p
 WHERE rp.name = N'스마트폰 플렉스 케이블 교체' AND p.name = N'사자폰 그룹1 공용 플렉스 케이블 [사자폰-G1-FLX]'
+  AND NOT EXISTS (
+    SELECT 1 FROM repair_preset_part rpp
+    WHERE rpp.repair_preset_id = rp.id AND rpp.part_id = p.id
+  );
+
+INSERT INTO repair_preset_part (repair_preset_id, part_id, quantity)
+SELECT rp.id, p.id, 1
+FROM repair_preset rp, part p
+WHERE rp.name = N'노트북 메인보드 교체' AND p.name LIKE N'사자북 % 전용 메인보드 [%'
+  AND NOT EXISTS (
+    SELECT 1 FROM repair_preset_part rpp
+    WHERE rpp.repair_preset_id = rp.id AND rpp.part_id = p.id
+  );
+INSERT INTO repair_preset_part (repair_preset_id, part_id, quantity)
+SELECT rp.id, p.id, 1
+FROM repair_preset rp, part p
+WHERE rp.name = N'노트북 디스플레이 패널 교체' AND p.name LIKE N'사자북 % 전용 디스플레이 패널 [%'
+  AND NOT EXISTS (
+    SELECT 1 FROM repair_preset_part rpp
+    WHERE rpp.repair_preset_id = rp.id AND rpp.part_id = p.id
+  );
+INSERT INTO repair_preset_part (repair_preset_id, part_id, quantity)
+SELECT rp.id, p.id, 1
+FROM repair_preset rp, part p
+WHERE rp.name = N'노트북 키보드 교체' AND p.name LIKE N'사자북 % 전용 키보드 어셈블리 [%'
+  AND NOT EXISTS (
+    SELECT 1 FROM repair_preset_part rpp
+    WHERE rpp.repair_preset_id = rp.id AND rpp.part_id = p.id
+  );
+INSERT INTO repair_preset_part (repair_preset_id, part_id, quantity)
+SELECT rp.id, p.id, 1
+FROM repair_preset rp, part p
+WHERE rp.name = N'노트북 힌지 교체' AND p.name LIKE N'사자북 % 전용 힌지 세트 [%'
+  AND NOT EXISTS (
+    SELECT 1 FROM repair_preset_part rpp
+    WHERE rpp.repair_preset_id = rp.id AND rpp.part_id = p.id
+  );
+INSERT INTO repair_preset_part (repair_preset_id, part_id, quantity)
+SELECT rp.id, p.id, 1
+FROM repair_preset rp, part p
+WHERE rp.name = N'노트북 전원부 점검/수리' AND p.name LIKE N'사자북 교차호환 전원보드 [%'
+  AND NOT EXISTS (
+    SELECT 1 FROM repair_preset_part rpp
+    WHERE rpp.repair_preset_id = rp.id AND rpp.part_id = p.id
+  );
+INSERT INTO repair_preset_part (repair_preset_id, part_id, quantity)
+SELECT rp.id, p.id, 1
+FROM repair_preset rp, part p
+WHERE rp.name = N'스마트폰 메인보드 교체' AND p.name LIKE N'사자폰 % 전용 메인보드 [%'
+  AND NOT EXISTS (
+    SELECT 1 FROM repair_preset_part rpp
+    WHERE rpp.repair_preset_id = rp.id AND rpp.part_id = p.id
+  );
+INSERT INTO repair_preset_part (repair_preset_id, part_id, quantity)
+SELECT rp.id, p.id, 1
+FROM repair_preset rp, part p
+WHERE rp.name = N'스마트폰 디스플레이 모듈 교체' AND p.name LIKE N'사자폰 % 전용 디스플레이 모듈 [%'
+  AND NOT EXISTS (
+    SELECT 1 FROM repair_preset_part rpp
+    WHERE rpp.repair_preset_id = rp.id AND rpp.part_id = p.id
+  );
+INSERT INTO repair_preset_part (repair_preset_id, part_id, quantity)
+SELECT rp.id, p.id, 1
+FROM repair_preset rp, part p
+WHERE rp.name = N'스마트폰 배터리 교체' AND p.name LIKE N'사자폰 % 전용 배터리 [%'
+  AND NOT EXISTS (
+    SELECT 1 FROM repair_preset_part rpp
+    WHERE rpp.repair_preset_id = rp.id AND rpp.part_id = p.id
+  );
+INSERT INTO repair_preset_part (repair_preset_id, part_id, quantity)
+SELECT rp.id, p.id, 1
+FROM repair_preset rp, part p
+WHERE rp.name = N'스마트폰 후면 카메라 교체' AND p.name LIKE N'사자폰 % 전용 후면 카메라 모듈 [%'
+  AND NOT EXISTS (
+    SELECT 1 FROM repair_preset_part rpp
+    WHERE rpp.repair_preset_id = rp.id AND rpp.part_id = p.id
+  );
+INSERT INTO repair_preset_part (repair_preset_id, part_id, quantity)
+SELECT rp.id, p.id, 1
+FROM repair_preset rp, part p
+WHERE rp.name = N'스마트폰 안테나 교체' AND p.name LIKE N'사자폰 교차호환 안테나 [%'
+  AND NOT EXISTS (
+    SELECT 1 FROM repair_preset_part rpp
+    WHERE rpp.repair_preset_id = rp.id AND rpp.part_id = p.id
+  );
+INSERT INTO repair_preset_part (repair_preset_id, part_id, quantity)
+SELECT rp.id, p.id, 1
+FROM repair_preset rp, part p
+WHERE rp.name = N'노트북 배터리 교체' AND p.name LIKE N'사자북 그룹% 공용 배터리 팩 [%'
+  AND NOT EXISTS (
+    SELECT 1 FROM repair_preset_part rpp
+    WHERE rpp.repair_preset_id = rp.id AND rpp.part_id = p.id
+  );
+INSERT INTO repair_preset_part (repair_preset_id, part_id, quantity)
+SELECT rp.id, p.id, 1
+FROM repair_preset rp, part p
+WHERE rp.name = N'노트북 터치패드 교체' AND p.name LIKE N'사자북 그룹% 공용 터치패드 [%'
+  AND NOT EXISTS (
+    SELECT 1 FROM repair_preset_part rpp
+    WHERE rpp.repair_preset_id = rp.id AND rpp.part_id = p.id
+  );
+INSERT INTO repair_preset_part (repair_preset_id, part_id, quantity)
+SELECT rp.id, p.id, 1
+FROM repair_preset rp, part p
+WHERE rp.name = N'스마트폰 전면 카메라 교체' AND p.name LIKE N'사자폰 그룹% 공용 전면 카메라 [%'
+  AND NOT EXISTS (
+    SELECT 1 FROM repair_preset_part rpp
+    WHERE rpp.repair_preset_id = rp.id AND rpp.part_id = p.id
+  );
+INSERT INTO repair_preset_part (repair_preset_id, part_id, quantity)
+SELECT rp.id, p.id, 1
+FROM repair_preset rp, part p
+WHERE rp.name = N'스마트폰 플렉스 케이블 교체' AND p.name LIKE N'사자폰 그룹% 공용 플렉스 케이블 [%'
+  AND NOT EXISTS (
+    SELECT 1 FROM repair_preset_part rpp
+    WHERE rpp.repair_preset_id = rp.id AND rpp.part_id = p.id
+  );
+INSERT INTO repair_preset_part (repair_preset_id, part_id, quantity)
+SELECT rp.id, p.id, 1
+FROM repair_preset rp, part p
+WHERE rp.name = N'노트북 스피커 교체' AND p.name = N'사자북 공용 스피커 모듈 [SZB-ALL-SPK]'
+  AND NOT EXISTS (
+    SELECT 1 FROM repair_preset_part rpp
+    WHERE rpp.repair_preset_id = rp.id AND rpp.part_id = p.id
+  );
+INSERT INTO repair_preset_part (repair_preset_id, part_id, quantity)
+SELECT rp.id, p.id, 1
+FROM repair_preset rp, part p
+WHERE rp.name = N'노트북 웹캠 모듈 교체' AND p.name = N'사자북 공용 웹캠 모듈 [SZB-ALL-CAM]'
+  AND NOT EXISTS (
+    SELECT 1 FROM repair_preset_part rpp
+    WHERE rpp.repair_preset_id = rp.id AND rpp.part_id = p.id
+  );
+INSERT INTO repair_preset_part (repair_preset_id, part_id, quantity)
+SELECT rp.id, p.id, 1
+FROM repair_preset rp, part p
+WHERE rp.name = N'노트북 USB 포트 보드 교체' AND p.name = N'사자북 공용 USB 포트 보드 [SZB-ALL-USB]'
+  AND NOT EXISTS (
+    SELECT 1 FROM repair_preset_part rpp
+    WHERE rpp.repair_preset_id = rp.id AND rpp.part_id = p.id
+  );
+INSERT INTO repair_preset_part (repair_preset_id, part_id, quantity)
+SELECT rp.id, p.id, 1
+FROM repair_preset rp, part p
+WHERE rp.name = N'스마트폰 마이크 교체' AND p.name = N'사자폰 공용 마이크 모듈 [SZP-ALL-MIC]'
+  AND NOT EXISTS (
+    SELECT 1 FROM repair_preset_part rpp
+    WHERE rpp.repair_preset_id = rp.id AND rpp.part_id = p.id
+  );
+INSERT INTO repair_preset_part (repair_preset_id, part_id, quantity)
+SELECT rp.id, p.id, 1
+FROM repair_preset rp, part p
+WHERE rp.name = N'스마트폰 측면 버튼 교체' AND p.name = N'사자폰 공용 측면 버튼 [SZP-ALL-BTN]'
+  AND NOT EXISTS (
+    SELECT 1 FROM repair_preset_part rpp
+    WHERE rpp.repair_preset_id = rp.id AND rpp.part_id = p.id
+  );
+INSERT INTO repair_preset_part (repair_preset_id, part_id, quantity)
+SELECT rp.id, p.id, 1
+FROM repair_preset rp, part p
+WHERE rp.name = N'스마트폰 지문인식 모듈 교체' AND p.name = N'사자폰 공용 지문인식 모듈 [SZP-ALL-FP]'
+  AND NOT EXISTS (
+    SELECT 1 FROM repair_preset_part rpp
+    WHERE rpp.repair_preset_id = rp.id AND rpp.part_id = p.id
+  );
+
+INSERT INTO repair_preset_part (repair_preset_id, part_id, quantity)
+SELECT rp.id, p.id, 1
+FROM repair_preset rp, part p
+WHERE rp.name = N'노트북 열관리 재작업' AND p.name = N'사자북 공용 열관리 재작업 공임 [SZB-ALL-THERM]'
+  AND NOT EXISTS (
+    SELECT 1 FROM repair_preset_part rpp
+    WHERE rpp.repair_preset_id = rp.id AND rpp.part_id = p.id
+  );
+
+INSERT INTO repair_preset_part (repair_preset_id, part_id, quantity)
+SELECT rp.id, p.id, 1
+FROM repair_preset rp, part p
+WHERE rp.name = N'스마트폰 소프트웨어 점검' AND p.name = N'사자폰 공용 소프트웨어 점검 공임 [SZP-ALL-SW]'
   AND NOT EXISTS (
     SELECT 1 FROM repair_preset_part rpp
     WHERE rpp.repair_preset_id = rp.id AND rpp.part_id = p.id

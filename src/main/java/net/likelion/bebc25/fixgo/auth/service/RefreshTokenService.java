@@ -6,7 +6,9 @@ import net.likelion.bebc25.fixgo.auth.entity.RefreshToken;
 import net.likelion.bebc25.fixgo.auth.repository.MemberRepository;
 import net.likelion.bebc25.fixgo.auth.repository.RefreshTokenRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -42,5 +44,10 @@ public class RefreshTokenService {
         for (RefreshToken refreshToken : refreshTokens) {
             refreshToken.revokeToken();
         }
+    }
+
+    @Transactional
+    public int purgeInactiveRefreshTokens() {
+        return refreshTokenRepository.deleteExpiredOrRevoked(LocalDateTime.now());
     }
 }

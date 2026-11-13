@@ -37,9 +37,6 @@ public class Member extends BaseEntity {
     private Role role;
 
     @Column(nullable = false)
-    private String profileImgUrl;
-
-    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private Status status = Status.ACTIVE;
 
@@ -47,13 +44,12 @@ public class Member extends BaseEntity {
     private LocalDateTime deletedAt = null;
 
 
-    public Member(String email, String passwordHash, String name, String phone, String address, Role role, String profileImgUrl) {
+    public Member(String email, String passwordHash, String name, String phone, String address, Role role) {
         this.email = email;
         this.passwordHash = passwordHash;
         this.name = name;
         this.phone = phone;
         this.address = address;
-        this.profileImgUrl = profileImgUrl;
         this.role = role;
     }
 
@@ -78,6 +74,5 @@ public class Member extends BaseEntity {
         this.name = request.name();
         this.phone = request.phone();
         this.address = request.address();
-        this.profileImgUrl = request.profileImgUrl();
     }
 }

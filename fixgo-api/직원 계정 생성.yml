@@ -15,8 +15,7 @@ http:
         "name": "최미소",
         "phone": "010-1234-5678",
         "address": "123-4567",
-        "role": "ROLE_RECEPTIONIST",
-        "profileImgUrl": "asdf"
+        "role": "ROLE_RECEPTIONIST"
       }
   auth: inherit
 

@@ -63,9 +63,7 @@ class RepairPhotoRepositoryTest {
                 "테스트 기사",
                 "010-1234-5678",
                 "서울시 강남구",
-                Role.ROLE_TECHNICIAN,
-                "default.png"
-        );
+                Role.ROLE_TECHNICIAN);
 
         technician = memberRepository.save(technician);
 

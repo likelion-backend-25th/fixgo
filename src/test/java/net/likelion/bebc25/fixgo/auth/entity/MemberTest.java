@@ -29,9 +29,7 @@ public class MemberTest {
                 "test1",
                 "010-1111-1111",
                 "서울시 강남구",
-                Role.ROLE_ADMIN,
-                ""
-        );
+                Role.ROLE_ADMIN);
         em.persist(member); // insert 쿼리문 생성 (실행은 안함)
 
         newMemberId = member.getId();
@@ -43,9 +41,7 @@ public class MemberTest {
                 "test2",
                 "010-1234-5678",
                 "서울시 서초구",
-                Role.ROLE_TECHNICIAN,
-                "http://img.test/profile.png"
-        );
+                Role.ROLE_TECHNICIAN);
         em.persist(memberWithPhone);
 
         memberWithPhoneId = memberWithPhone.getId();
@@ -67,7 +63,6 @@ public class MemberTest {
         assertThat(member.getPhone()).isEqualTo("010-1111-1111");
         assertThat(member.getAddress()).isEqualTo("서울시 강남구");
         assertThat(member.getRole()).isEqualTo(Role.ROLE_ADMIN);
-        assertThat(member.getProfileImgUrl()).isEqualTo("");
         assertThat(member.getStatus()).isEqualTo(Status.ACTIVE);
         assertThat(member.getDeletedAt()).isNull();
     }
@@ -85,7 +80,6 @@ public class MemberTest {
         assertThat(member.getPhone()).isEqualTo("010-1234-5678");
         assertThat(member.getAddress()).isEqualTo("서울시 서초구");
         assertThat(member.getRole()).isEqualTo(Role.ROLE_TECHNICIAN);
-        assertThat(member.getProfileImgUrl()).isEqualTo("http://img.test/profile.png");
         assertThat(member.getStatus()).isEqualTo(Status.ACTIVE);
         assertThat(member.getDeletedAt()).isNull();
     }

@@ -42,9 +42,7 @@ class RepairWorkControllerTest {
                 "테스트 직원",
                 "010-1234-5678",
                 "서울시 강남구",
-                Role.ROLE_ADMIN,
-                "profile.png"
-        );
+                Role.ROLE_ADMIN);
 
         return new CustomUserDetails(member);
     }

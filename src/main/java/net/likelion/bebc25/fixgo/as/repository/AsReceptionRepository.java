@@ -39,6 +39,7 @@ public interface AsReceptionRepository extends JpaRepository<AsReception, Long> 
                 or lower(r.symptom) like lower(concat('%', :keyword, '%')))
               and (:status is null or r.status = :status)
               and (:technicianId is null or t.id = :technicianId)
+              and (:customerId is null or r.customer.id = :customerId)
             """, countQuery = """
             select count(r)
             from AsReception r
@@ -49,13 +50,24 @@ public interface AsReceptionRepository extends JpaRepository<AsReception, Long> 
                 or lower(r.symptom) like lower(concat('%', :keyword, '%')))
               and (:status is null or r.status = :status)
               and (:technicianId is null or t.id = :technicianId)
+              and (:customerId is null or r.customer.id = :customerId)
             """)
     Page<AsReceptionDto.ListResponse> search(
             @Param("keyword") String keyword,
             @Param("status") AsReceptionStatus status,
             @Param("technicianId") Long technicianId,
+            @Param("customerId") Long customerId,
             Pageable pageable
     );
+
+    default Page<AsReceptionDto.ListResponse> search(
+            String keyword,
+            AsReceptionStatus status,
+            Long technicianId,
+            Pageable pageable
+    ) {
+        return search(keyword, status, technicianId, null, pageable);
+    }
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<AsReception> findByIdAndStatusNotIn(Long id, List<AsReceptionStatus> statuses);

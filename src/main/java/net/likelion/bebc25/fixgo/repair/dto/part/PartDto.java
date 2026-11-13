@@ -36,6 +36,13 @@ public class PartDto {
             int standardMinutes
     ) {}
 
+    public record StatusUpdateRequest(
+            @Schema(description = "부품 ID", example = "1")
+            Long id,
+            @Schema(description = "변경할 상태. 단종 해제는 재고에 맞는 이전 상태만 허용한다.", example = "DISCONTINUED")
+            PartStatus status
+    ) {}
+
     public record SingleStockUpdateRequest(
             @Schema(description = "부품 ID", example = "1")
             Long id,

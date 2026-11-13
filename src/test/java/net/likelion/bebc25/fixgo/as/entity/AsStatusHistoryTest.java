@@ -54,9 +54,7 @@ class AsStatusHistoryTest {
                         "최접수",
                         "010-0000-0001",
                         "서울시 강남구",
-                        Role.ROLE_RECEPTIONIST,
-                        "profile.png"
-                )
+                        Role.ROLE_RECEPTIONIST)
         );
         Member technician = memberRepository.save(
                 new Member(
@@ -65,9 +63,7 @@ class AsStatusHistoryTest {
                         "김기사",
                         "010-0000-0001",
                         "서울시 강남구",
-                        Role.ROLE_TECHNICIAN,
-                        "profile.png"
-                )
+                        Role.ROLE_TECHNICIAN)
         );
         AsReception reception = asReceptionRepository.save(new AsReception(
                 "AS-HISTORY-001",

@@ -59,7 +59,7 @@ public class AsReceptionFixture {
 
         Member staff = memberRepository.save(new Member(
                 "fixture-staff-" + n + "@test.com", "password", "테스트직원", "010-0000-0000",
-                "서울시", Role.ROLE_RECEPTIONIST, "default.png"));
+                "서울시", Role.ROLE_RECEPTIONIST));
         Long createdBy = staff.getId();
 
         ProductModel model = productModelRepository.save(

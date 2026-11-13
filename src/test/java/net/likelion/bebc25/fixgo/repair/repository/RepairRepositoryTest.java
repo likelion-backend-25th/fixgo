@@ -62,9 +62,7 @@ class RepairRepositoryTest {
                 "테스트 기사",
                 "010-1234-5678",
                 "서울시 강남구",
-                Role.ROLE_TECHNICIAN,
-                "default.png"
-        );
+                Role.ROLE_TECHNICIAN);
 
         technician = memberRepository.save(technician);
 
@@ -114,7 +112,7 @@ class RepairRepositoryTest {
     void findsRepairByCurrentReceptionTechnician() {
         Member newTechnician = memberRepository.save(new Member(
                 "new-technician@test.com", "testPassword", "새 기사", "010-5555-7777",
-                "서울시", Role.ROLE_TECHNICIAN, "default.png"));
+                "서울시", Role.ROLE_TECHNICIAN));
         repair.getAsReception().updateTechnician(newTechnician);
 
         assertThat(RepairResponse.from(repair).technicianId()).isEqualTo(newTechnician.getId());
