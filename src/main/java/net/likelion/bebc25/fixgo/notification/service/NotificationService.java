@@ -69,7 +69,7 @@ public class NotificationService {
 
     // 이메일 발송 내역 검색 및 페이지네이션
     @Transactional(readOnly = true)
-    public Page<EmailDto.Response> getEmailList(String keyword, LocalDate startDate, LocalDate endDate, Pageable pageable) {
+    public Page<EmailDto.Response> getEmailList(String keyword, LocalDate startDate, LocalDate endDate, NotificationStatus status, Pageable pageable) {
 
         // 날짜 범위
         if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
@@ -93,7 +93,7 @@ public class NotificationService {
         LocalDateTime end = endDate != null ? endDate.plusDays(1).atStartOfDay() : null;
 
         // 이메일 발송 내역 검색 및 페이지네이션
-        Page<NotificationLog> logs = notificationLogRepository.searchEmails(keyword, start, end, pageable);
+        Page<NotificationLog> logs = notificationLogRepository.searchEmails(keyword, start, end, status, pageable);
 
         return logs.map(EmailDto.Response::from);
 
