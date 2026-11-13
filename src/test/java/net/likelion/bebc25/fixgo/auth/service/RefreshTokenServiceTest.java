@@ -14,12 +14,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
@@ -106,6 +108,15 @@ class RefreshTokenServiceTest {
         assertThat(first.getRevokedAt()).isNotNull();
         assertThat(second.getRevokedAt()).isNotNull();
         then(refreshTokenRepository).should(never()).save(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    @DisplayName("파기·만료된 Refresh Token을 삭제한다")
+    void purgeInactiveRefreshTokens() {
+        given(refreshTokenRepository.deleteExpiredOrRevoked(any(LocalDateTime.class))).willReturn(3);
+
+        assertThat(refreshTokenService.purgeInactiveRefreshTokens()).isEqualTo(3);
+        then(refreshTokenRepository).should().deleteExpiredOrRevoked(any(LocalDateTime.class));
     }
 
     private Member createMember(Long id) {

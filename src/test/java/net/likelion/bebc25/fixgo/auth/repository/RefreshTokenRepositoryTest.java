@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 
+import org.springframework.test.util.ReflectionTestUtils;
+
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -102,5 +104,33 @@ public class RefreshTokenRepositoryTest {
         assertThat(findToken.getExpiresAt()).isEqualTo(findToken.getIssuedAt().plusDays(7));
         assertThat(findToken.getRevokedAt()).isNull();
         assertThat(refreshTokenRepository.findByMemberIdAndRevokedAtIsNull(999L)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("파기되거나 만료된 리프레시 토큰만 삭제한다")
+    void deleteExpiredOrRevoked() {
+        Member member = em.find(Member.class, memberId);
+
+        RefreshToken revoked = new RefreshToken(member, "revoked-token");
+        revoked.revokeToken();
+        refreshTokenRepository.save(revoked);
+
+        RefreshToken expired = new RefreshToken(member, "expired-token");
+        ReflectionTestUtils.setField(expired, "expiresAt", LocalDateTime.now().minusMinutes(1));
+        refreshTokenRepository.save(expired);
+
+        RefreshToken active = new RefreshToken(member, "active-token");
+        refreshTokenRepository.save(active);
+        em.flush();
+        em.clear();
+
+        int deleted = refreshTokenRepository.deleteExpiredOrRevoked(LocalDateTime.now());
+        em.flush();
+        em.clear();
+
+        assertThat(deleted).isEqualTo(2);
+        assertThat(refreshTokenRepository.findAll())
+                .extracting(RefreshToken::getTokenHash)
+                .containsExactlyInAnyOrder("refresh-token-hash", "active-token");
     }
 }
