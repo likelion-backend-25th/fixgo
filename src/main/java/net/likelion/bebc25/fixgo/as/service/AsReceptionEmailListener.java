@@ -3,6 +3,7 @@ package net.likelion.bebc25.fixgo.as.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.likelion.bebc25.fixgo.notification.dto.EmailDto;
+import net.likelion.bebc25.fixgo.as.entity.AsReceptionStatus;
 import net.likelion.bebc25.fixgo.notification.entity.NotificationStatus;
 import net.likelion.bebc25.fixgo.notification.entity.NotificationType;
 import net.likelion.bebc25.fixgo.notification.service.NotificationService;
@@ -236,6 +237,66 @@ public class AsReceptionEmailListener {
         } catch (RuntimeException e) {
 
             log.error("수리 완료 이메일 발송 오류. asReceptionId={}", event.asReceptionId(), e);
+        }
+    }
+
+    // 점검 중 A/S 중단 트랜잭션 커밋 후 이메일 발송
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void sendInspectionAbortedEmail(RepairService.InspectionAbortedEvent event) {
+        if (event.recipientEmail() == null || event.recipientEmail().isBlank()) {
+            log.warn("A/S 중단 이메일 주소 없음. asReceptionId={}", event.asReceptionId());
+            return;
+        }
+
+        try {
+            String portalUrl = getPortalUrl(event.asReceptionId());
+            String cause = "CUSTOMER_CANCEL".equals(event.category())
+                    ? "고객님의 요청으로 A/S 진행을 중단했습니다."
+                    : "점검 결과 수리가 어려워 A/S 진행을 중단했습니다.";
+            String progress = event.returnStatus() == AsReceptionStatus.AWAITING_PICKUP
+                    ? "수령 대기"
+                    : "배송 대기";
+            String title = "[FixGo] A/S 중단 안내";
+            String message = """
+                    안녕하세요. FixGo입니다.
+                    
+                    %s 고객님, %s
+                    
+                    A/S 접수번호: %s
+                    진행 상태: %s
+                    중단 사유: %s
+                    
+                    아래 링크에서 진행 상황을 확인하실 수 있습니다.
+                    선택하신 수령 방법에 따라 제품을 돌려드릴 예정입니다.
+                    
+                    [고객 포털]
+                    %s
+                    
+                    감사합니다.
+                    FixGo 드림
+                    """.formatted(
+                    event.customerName(),
+                    cause,
+                    event.receptionNumber(),
+                    progress,
+                    event.reason(),
+                    portalUrl
+            );
+
+            EmailDto.CreateRequest request = new EmailDto.CreateRequest(
+                    event.asReceptionId(),
+                    event.recipientEmail(),
+                    title,
+                    message,
+                    NotificationType.CANCEL
+            );
+            EmailDto.Response response = notificationService.sendEmail(request);
+            if (response.status() == NotificationStatus.FAILED) {
+                log.warn("A/S 중단 이메일 발송 실패. asReceptionId={}, notificationId={}",
+                        event.asReceptionId(), response.id());
+            }
+        } catch (RuntimeException e) {
+            log.error("A/S 중단 이메일 발송 오류. asReceptionId={}", event.asReceptionId(), e);
         }
     }
 

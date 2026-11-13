@@ -685,6 +685,11 @@ class RepairServiceTest {
         when(userDetails.getMember()).thenReturn(technician);
         when(userDetails.getUsername()).thenReturn(TEST_EMAIL);
         when(memberRepository.findByEmail(TEST_EMAIL)).thenReturn(Optional.of(technician));
+        Customer customer = new Customer(
+                "고객", "010-1234-5678", "customer@example.com",
+                "12345", "서울", "101호", 1L);
+        when(reception.getCustomer()).thenReturn(customer);
+        when(reception.getReceptionNumber()).thenReturn("AS-00001");
 
         repairService.abortInspection(
                 1L,
@@ -698,5 +703,14 @@ class RepairServiceTest {
         assertEquals(0, repair.getFinalAmount());
         verify(reception).changeStatus(AsReceptionStatus.AWAITING_SHIPMENT);
         verify(asStatusHistoryService, times(2)).record(any(), any(), any(), any(), any());
+        verify(eventPublisher).publishEvent(new RepairService.InspectionAbortedEvent(
+                10L,
+                "AS-00001",
+                "고객",
+                "customer@example.com",
+                "REPAIR_IMPOSSIBLE",
+                AsReceptionStatus.AWAITING_SHIPMENT,
+                "부품 단종"
+        ));
     }
 }
