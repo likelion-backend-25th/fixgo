@@ -62,7 +62,6 @@ erDiagram
 | phone           | VARCHAR(255) | NOT NULL                  | -                 | -   | 연락처                       |
 | address         | VARCHAR(255) | NOT NULL                  | -                 | -   | 주소                        |
 | role            | VARCHAR(255) | NOT NULL                  | -                 | -   | 역할                        |
-| profile_img_url | VARCHAR(255) | NULL                      | -                 | -   | 프로필 이미지 URL               |
 | status          | VARCHAR(255) | NOT NULL                  | ACTIVE            | -   | ACTIVE, INACTIVE, DELETED |
 | deleted_at      | DATETIME     | NULL                      | -                 |     | 퇴사(삭제) 시각                 |
 | created_at      | DATETIME     | NOT NULL                  | CURRENT_TIMESTAMP | -   | 생성 시각                     |

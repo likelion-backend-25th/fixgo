@@ -43,18 +43,14 @@ public class AsReceptionTest {
                 "최미소",
                 "010-4008-4008",
                 "서울시 강남구",
-                Role.ROLE_RECEPTIONIST,
-                "asdfas"
-        );
+                Role.ROLE_RECEPTIONIST);
         this.technician = new Member(
                 "tech01@abc.com",
                 "@#$@%",
                 "김기사",
                 "010-4009-4009",
                 "서울시 서초구",
-                Role.ROLE_TECHNICIAN,
-                "technician01"
-        );
+                Role.ROLE_TECHNICIAN);
 
         em.persist(this.customer);
         em.persist(this.product);
@@ -157,9 +153,7 @@ public class AsReceptionTest {
                 "박기사",
                 "010-0000-0001",
                 "서울시 강남구",
-                Role.ROLE_TECHNICIAN,
-                "technician02"
-        );
+                Role.ROLE_TECHNICIAN);
         em.persist(newTechnician);
 
         AsReception asReception = new AsReception(

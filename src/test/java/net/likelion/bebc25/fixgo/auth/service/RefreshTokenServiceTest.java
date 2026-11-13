@@ -115,9 +115,7 @@ class RefreshTokenServiceTest {
                 "관리자",
                 "010-1234-5678",
                 "서울시 강남구",
-                Role.ROLE_ADMIN,
-                ""
-        );
+                Role.ROLE_ADMIN);
         ReflectionTestUtils.setField(member, "id", id);
         return member;
     }

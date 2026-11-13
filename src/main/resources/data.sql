@@ -6,7 +6,6 @@ INSERT INTO member (email,
                     phone,
                     role,
                     address,
-                    profile_img_url,
                     status,
                     deleted_at,
                     created_at,
@@ -19,7 +18,6 @@ SELECT 'admin001@fixgo.com',
        '010-1234-5678',
        'ROLE_ADMIN',
        '서울특별시 강남구 테헤란로 123',
-       'https://via.placeholder.com/150',
        'ACTIVE',
        NULL,
        NOW(),
@@ -32,76 +30,76 @@ WHERE NOT EXISTS (SELECT 1 FROM member WHERE email = 'admin001@fixgo.com');
 -- 일반 직원 계정 초기 데이터
 -- password: password123 (BCrypt, 전 계정 동일)
 -- 접수 담당자 (ROLE_RECEPTIONIST)
-INSERT INTO member (email, password_hash, name, phone, role, address, profile_img_url,
+INSERT INTO member (email, password_hash, name, phone, role, address,
                     status, deleted_at, created_at, updated_at, created_by, updated_by)
 SELECT 'receptionist001@fixgo.com',
        '$2a$10$pycf5lZBMfgSIONoitiApektS2HjK7DNzzGvQFG6QahMkbtMzMcom',
        '최미소', '010-2345-6789', 'ROLE_RECEPTIONIST',
-       '서울특별시 서초구 서초대로 77', 'https://via.placeholder.com/150',
+       '서울특별시 서초구 서초대로 77',
        'ACTIVE', NULL, NOW(), NOW(), 0, 0
 WHERE NOT EXISTS (SELECT 1 FROM member WHERE email = 'receptionist001@fixgo.com');
 
-INSERT INTO member (email, password_hash, name, phone, role, address, profile_img_url,
+INSERT INTO member (email, password_hash, name, phone, role, address,
                     status, deleted_at, created_at, updated_at, created_by, updated_by)
 SELECT 'receptionist002@fixgo.com',
        '$2a$10$pycf5lZBMfgSIONoitiApektS2HjK7DNzzGvQFG6QahMkbtMzMcom',
        '한지우', '010-3456-7890', 'ROLE_RECEPTIONIST',
-       '서울특별시 마포구 월드컵북로 400', 'https://via.placeholder.com/150',
+       '서울특별시 마포구 월드컵북로 400',
        'ACTIVE', NULL, NOW(), NOW(), 0, 0
 WHERE NOT EXISTS (SELECT 1 FROM member WHERE email = 'receptionist002@fixgo.com');
 
-INSERT INTO member (email, password_hash, name, phone, role, address, profile_img_url,
+INSERT INTO member (email, password_hash, name, phone, role, address,
                     status, deleted_at, created_at, updated_at, created_by, updated_by)
 SELECT 'receptionist003@fixgo.com',
        '$2a$10$pycf5lZBMfgSIONoitiApektS2HjK7DNzzGvQFG6QahMkbtMzMcom',
        '오세린', '010-4567-8901', 'ROLE_RECEPTIONIST',
-       '경기도 성남시 분당구 판교역로 235', 'https://via.placeholder.com/150',
+       '경기도 성남시 분당구 판교역로 235',
        'ACTIVE', NULL, NOW(), NOW(), 0, 0
 WHERE NOT EXISTS (SELECT 1 FROM member WHERE email = 'receptionist003@fixgo.com');
 
 -- 수리기사 (ROLE_TECHNICIAN)
-INSERT INTO member (email, password_hash, name, phone, role, address, profile_img_url,
+INSERT INTO member (email, password_hash, name, phone, role, address,
                     status, deleted_at, created_at, updated_at, created_by, updated_by)
 SELECT 'technician001@fixgo.com',
        '$2a$10$pycf5lZBMfgSIONoitiApektS2HjK7DNzzGvQFG6QahMkbtMzMcom',
        '김민수', '010-5678-9012', 'ROLE_TECHNICIAN',
-       '서울특별시 영등포구 여의대로 108', 'https://via.placeholder.com/150',
+       '서울특별시 영등포구 여의대로 108',
        'ACTIVE', NULL, NOW(), NOW(), 0, 0
 WHERE NOT EXISTS (SELECT 1 FROM member WHERE email = 'technician001@fixgo.com');
 
-INSERT INTO member (email, password_hash, name, phone, role, address, profile_img_url,
+INSERT INTO member (email, password_hash, name, phone, role, address,
                     status, deleted_at, created_at, updated_at, created_by, updated_by)
 SELECT 'technician002@fixgo.com',
        '$2a$10$pycf5lZBMfgSIONoitiApektS2HjK7DNzzGvQFG6QahMkbtMzMcom',
        '이서연', '010-6789-0123', 'ROLE_TECHNICIAN',
-       '서울특별시 송파구 올림픽로 300', 'https://via.placeholder.com/150',
+       '서울특별시 송파구 올림픽로 300',
        'ACTIVE', NULL, NOW(), NOW(), 0, 0
 WHERE NOT EXISTS (SELECT 1 FROM member WHERE email = 'technician002@fixgo.com');
 
-INSERT INTO member (email, password_hash, name, phone, role, address, profile_img_url,
+INSERT INTO member (email, password_hash, name, phone, role, address,
                     status, deleted_at, created_at, updated_at, created_by, updated_by)
 SELECT 'technician003@fixgo.com',
        '$2a$10$pycf5lZBMfgSIONoitiApektS2HjK7DNzzGvQFG6QahMkbtMzMcom',
        '박준호', '010-7890-1234', 'ROLE_TECHNICIAN',
-       '인천광역시 연수구 컨벤시아대로 165', 'https://via.placeholder.com/150',
+       '인천광역시 연수구 컨벤시아대로 165',
        'ACTIVE', NULL, NOW(), NOW(), 0, 0
 WHERE NOT EXISTS (SELECT 1 FROM member WHERE email = 'technician003@fixgo.com');
 
-INSERT INTO member (email, password_hash, name, phone, role, address, profile_img_url,
+INSERT INTO member (email, password_hash, name, phone, role, address,
                     status, deleted_at, created_at, updated_at, created_by, updated_by)
 SELECT 'technician004@fixgo.com',
        '$2a$10$pycf5lZBMfgSIONoitiApektS2HjK7DNzzGvQFG6QahMkbtMzMcom',
        '정하늘', '010-8901-2345', 'ROLE_TECHNICIAN',
-       '경기도 수원시 영통구 광교중앙로 145', 'https://via.placeholder.com/150',
+       '경기도 수원시 영통구 광교중앙로 145',
        'ACTIVE', NULL, NOW(), NOW(), 0, 0
 WHERE NOT EXISTS (SELECT 1 FROM member WHERE email = 'technician004@fixgo.com');
 
-INSERT INTO member (email, password_hash, name, phone, role, address, profile_img_url,
+INSERT INTO member (email, password_hash, name, phone, role, address,
                     status, deleted_at, created_at, updated_at, created_by, updated_by)
 SELECT 'technician005@fixgo.com',
        '$2a$10$pycf5lZBMfgSIONoitiApektS2HjK7DNzzGvQFG6QahMkbtMzMcom',
        '윤도현', '010-9012-3456', 'ROLE_TECHNICIAN',
-       '서울특별시 관악구 남부순환로 1636', 'https://via.placeholder.com/150',
+       '서울특별시 관악구 남부순환로 1636',
        'ACTIVE', NULL, NOW(), NOW(), 0, 0
 WHERE NOT EXISTS (SELECT 1 FROM member WHERE email = 'technician005@fixgo.com');
 

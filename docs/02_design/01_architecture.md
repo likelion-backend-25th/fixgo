@@ -17,7 +17,6 @@ FixGo는 프론트엔드와 백엔드가 물리적으로 분리된 계층형 RES
 graph TD
     Client["React SPA 클라이언트 (브라우저)"]
     Netlify["Netlify (CDN / HTTPS)"]
-    S3_Profile["AWS S3 버킷 (직원 프로필 사진)"]
     EC2["AWS EC2 인스턴스 (Amazon Linux 2023)"]
     Docker_Nginx["Nginx 리버스 프록시 (컨테이너 / 443, 80)"]
     Docker_App["Spring Boot API & Batch 서버 (컨테이너 / 8080)"]
@@ -27,14 +26,11 @@ graph TD
 
     Client -->|정적 리소스 요청| Netlify
     Netlify -->|오리진 페치| GitHub
-    Client -->|프로필 사진 요청| Netlify
-    Netlify -->|프로필 사진 페치| S3_Profile
 
     Client -->|"REST API / SSE 요청 (JSON, JWT)"| EC2
     EC2 --> Docker_Nginx
     Docker_Nginx -->|리버스 프록시 포워딩| Docker_App
     Docker_App -->|Spring Data JPA / QueryDSL / JDBC| RDS_DB
-    Docker_App -->|직원 프로필 사진 업로드| S3_Profile
 
     Client -->|결제창 SDK 호출| PG_Gateway
     PG_Gateway -->|결제 승인 응답| Client
@@ -75,11 +71,6 @@ graph TD
   - 백엔드 EC2 인스턴스와 격리된 전용 서브넷 그룹에 Docker 컨테이너 기반 MySQL 인스턴스를 구축하여 데이터 무결성 보장.
   - 보안 그룹(Security Group) 규칙을 통해 백엔드 EC2 인스턴스의 프라이빗 IP로부터의 3306 포트 인바운드 트래픽만 엄격히 허용.
   - HikariCP 커넥션 풀을 최적화(MaximumPoolSize: 10~20)하여 대량 트래픽 및 배치 처리 시 안정적인 데이터베이스 커넥션 유지.
-
-### 1.2.4 파일 스토리지 (AWS S3)
-- 강의 자료 및 과제물 파일 업로드 파이프라인:
-  - 직원 프로필 사진 업로드 시 Spring Boot 서버가 요청 수신.
-  - AWS SDK for Java를 사용하여 S3 버킷에 저장.
 
 ---
 

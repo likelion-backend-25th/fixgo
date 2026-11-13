@@ -88,9 +88,7 @@ class AsReceptionRepositoryTest {
                         "최접수",
                         "010-0000-0001",
                         "서울시 강남구",
-                        Role.ROLE_RECEPTIONIST,
-                        "default.png"
-                )
+                        Role.ROLE_RECEPTIONIST)
         );
         kim = memberRepository.save(
                 new Member(
@@ -99,9 +97,7 @@ class AsReceptionRepositoryTest {
                         "김기사",
                         "010-0000-0002",
                         "서울시 강남구",
-                        Role.ROLE_TECHNICIAN,
-                        "default.png"
-                )
+                        Role.ROLE_TECHNICIAN)
         );
         park = memberRepository.save(
                 new Member(
@@ -110,9 +106,7 @@ class AsReceptionRepositoryTest {
                         "박기사",
                         "010-0000-0003",
                         "서울시 강남구",
-                        Role.ROLE_TECHNICIAN,
-                        "default.png"
-                )
+                        Role.ROLE_TECHNICIAN)
         );
         Long createdBy = receptionist.getId();
 

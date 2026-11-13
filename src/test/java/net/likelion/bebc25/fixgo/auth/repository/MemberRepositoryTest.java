@@ -47,8 +47,7 @@ class MemberRepositoryTest {
                 name,
                 "010-1234-5678",
                 "서울시 강남구",
-                role,
-                ""
+                role
         );
     }
 

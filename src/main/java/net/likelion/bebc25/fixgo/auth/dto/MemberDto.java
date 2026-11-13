@@ -21,13 +21,11 @@ public class MemberDto {
             @Schema(description = "주소", example = "서울특별시 강남구 테헤란로 123")
             @NotNull String address,
             @Schema(description = "역할", example = "TECHNICIAN")
-            @NotNull Role role,
-            @Schema(description = "프로필 이미지 URL", example = "https://cdn.fixgo.com/profile/1.png")
-            @NotNull String profileImgUrl
+            @NotNull Role role
     ) {
         public Member toEntity(PasswordEncoder passwordEncoder) {
             String passwordHash = passwordEncoder.encode(password);
-            return new Member(email, passwordHash, name, phone, address, role, profileImgUrl);
+            return new Member(email, passwordHash, name, phone, address, role);
         }
     }
 
@@ -69,9 +67,7 @@ public class MemberDto {
             @Schema(description = "휴대폰 번호", example = "010-9876-5432")
             @NotNull String phone,
             @Schema(description = "주소", example = "서울특별시 서초구 반포대로 45")
-            @NotNull String address,
-            @Schema(description = "프로필 이미지 URL", example = "https://cdn.fixgo.com/profile/1.png")
-            @NotNull String profileImgUrl
+            @NotNull String address
     ) {}
 
     public record BriefResponse(
@@ -131,8 +127,6 @@ public class MemberDto {
             String address,
             @Schema(description = "역할", example = "TECHNICIAN")
             Role role,
-            @Schema(description = "프로필 이미지 URL", example = "https://cdn.fixgo.com/profile/1.png")
-            String profileImgUrl,
             @Schema(description = "상태", example = "ACTIVE")
             Status status
     ) {
@@ -144,7 +138,6 @@ public class MemberDto {
                     member.getPhone(),
                     member.getAddress(),
                     member.getRole(),
-                    member.getProfileImgUrl(),
                     member.getStatus()
             );
         }

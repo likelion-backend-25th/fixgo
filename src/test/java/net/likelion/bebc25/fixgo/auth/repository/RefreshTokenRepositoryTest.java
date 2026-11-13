@@ -40,9 +40,7 @@ public class RefreshTokenRepositoryTest {
                 "test1",
                 "010-1234-5678",
                 "서울시 강남구",
-                Role.ROLE_ADMIN,
-                ""
-        );
+                Role.ROLE_ADMIN);
         em.persist(member); // insert 쿼리문 생성 (실행은 안함)
 
         memberId = member.getId();
@@ -66,9 +64,7 @@ public class RefreshTokenRepositoryTest {
                 "tech1",
                 "010-1234-5678",
                 "서울시 서초구",
-                Role.ROLE_TECHNICIAN,
-                ""
-        );
+                Role.ROLE_TECHNICIAN);
         em.persist(member);
         em.flush();
 

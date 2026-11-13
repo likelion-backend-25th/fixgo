@@ -127,9 +127,7 @@ class LaborRateControllerTest {
                 "테스트 기사",
                 "010-1111-2222",
                 "서울시",
-                Role.ROLE_TECHNICIAN,
-                "profile.png"
-        );
+                Role.ROLE_TECHNICIAN);
         return new CustomUserDetails(member);
     }
 
@@ -140,9 +138,7 @@ class LaborRateControllerTest {
                 "테스트 관리자",
                 "010-3333-4444",
                 "서울시",
-                Role.ROLE_ADMIN,
-                "profile.png"
-        );
+                Role.ROLE_ADMIN);
         return new CustomUserDetails(member);
     }
 
