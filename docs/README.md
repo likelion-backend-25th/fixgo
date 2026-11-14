@@ -3,22 +3,22 @@
 ## 목차
 
 - [1. FixGo 프로젝트 개요](#1-fixgo-프로젝트-개요)
-  - [1.1 서비스 소개](#11-서비스-소개)
-  - [1.2 핵심 기술 스택](#12-핵심-기술-스택)
-  - [1.3 팀 구성 및 도메인별 역할 분담](#13-팀-구성-및-도메인별-역할-분담)
+    - [1.1 서비스 소개](#11-서비스-소개)
+    - [1.2 핵심 기술 스택](#12-핵심-기술-스택)
+    - [1.3 팀 구성 및 도메인별 역할 분담](#13-팀-구성-및-도메인별-역할-분담)
 - [2. 필수 산출물 요약 목록](#2-필수-산출물-요약-목록)
-  - [2.1 기획 단계 산출물 (Planning)](#21-기획-단계-산출물-planning)
-  - [2.2 설계 단계 산출물 (Design)](#22-설계-단계-산출물-design)
-  - [2.3 구현 및 운영 보고 산출물 (Reports)](#23-구현-및-운영-보고-산출물-reports)
+    - [2.1 기획 단계 산출물 (Planning)](#21-기획-단계-산출물-planning)
+    - [2.2 설계 단계 산출물 (Design)](#22-설계-단계-산출물-design)
+    - [2.3 구현 및 운영 보고 산출물 (Reports)](#23-구현-및-운영-보고-산출물-reports)
 - [3. 필수 산출물 정의 및 작성 기준](#3-필수-산출물-정의-및-작성-기준)
-  - [3.1 프로젝트 기획서 (Project Proposal)](#31-프로젝트-기획서-project-proposal)
-  - [3.2 요구사항 기능 명세서 (PRD)](#32-요구사항-기능-명세서-prd)
-  - [3.3 코드 컨벤션 정의서 (Code Convention Document)](#33-코드-컨벤션-정의서-code-convention-document)
-  - [3.4 시스템 아키텍처 구성도 (System Architecture Diagram)](#34-시스템-아키텍처-구성도-system-architecture-diagram)
-  - [3.5 데이터베이스 ERD (Entity Relationship Diagram)](#35-데이터베이스-erd-entity-relationship-diagram)
-  - [3.6 화면 설계서 (UI Wireframe)](#36-화면-설계서-ui-wireframe)
-  - [3.7 REST API 명세서 및 규격서 (API Specification)](#37-rest-api-명세서-및-규격서-api-specification)
-  - [3.8 트러블슈팅 및 기술 문제 해결 기록 (Troubleshooting Log)](#38-트러블슈팅-및-기술-문제-해결-기록-troubleshooting-log)
+    - [3.1 프로젝트 기획서 (Project Proposal)](#31-프로젝트-기획서-project-proposal)
+    - [3.2 요구사항 기능 명세서 (PRD)](#32-요구사항-기능-명세서-prd)
+    - [3.3 코드 컨벤션 정의서 (Code Convention Document)](#33-코드-컨벤션-정의서-code-convention-document)
+    - [3.4 시스템 아키텍처 구성도 (System Architecture Diagram)](#34-시스템-아키텍처-구성도-system-architecture-diagram)
+    - [3.5 데이터베이스 ERD (Entity Relationship Diagram)](#35-데이터베이스-erd-entity-relationship-diagram)
+    - [3.6 화면 설계서 (UI Wireframe)](#36-화면-설계서-ui-wireframe)
+    - [3.7 REST API 명세서 및 규격서 (API Specification)](#37-rest-api-명세서-및-규격서-api-specification)
+    - [3.8 트러블슈팅 및 기술 문제 해결 기록 (Troubleshooting Log)](#38-트러블슈팅-및-기술-문제-해결-기록-troubleshooting-log)
 
 ---
 
@@ -26,17 +26,20 @@
 
 ## 1.1 서비스 소개
 
-FixGo는 사자전자의 스마트폰·노트북 A/S를 접수부터 제품 반환까지 한 흐름으로 다루는 **내부 A/S 업무 통합관리 시스템**입니다. 고객용 회원가입은 없으며, 관리자가 발급한 직원 계정으로만 업무 화면에 들어갑니다. 고객은 접수 건마다 발급된 전용 링크에서 진행 상태, 견적, 결제, 배송을 확인합니다.
+FixGo는 사자전자의 스마트폰·노트북 A/S를 접수부터 제품 반환까지 한 흐름으로 다루는 **내부 A/S 업무 통합관리 시스템**입니다. 고객용 회원가입은 없으며, 관리자가 발급한 직원 계정으로만 업무 화면에
+들어갑니다. 고객은 접수 건마다 발급된 전용 링크에서 진행 상태, 견적, 결제, 배송을 확인합니다.
 
 - 관리자(`ADMIN`): 직원 계정·역할, 지원 품목, 부품·공임비, 통계, 기사 배정 이력과 A/S 상태 변경 이력
 - 접수 담당자(`RECEPTIONIST`): A/S 접수·배정, 고객·제품 조회, 결제·배송, 고객 알림
 - 수리 기사(`TECHNICIAN`): 본인에게 배정된 점검·수리, 수리 프리셋, 견적과 수리비 산정
 
-핵심 흐름은 접수 → 담당 기사 배정 → 점검·견적 → 고객 승인 → 수리 → 결제 → 택배 반환 또는 방문 수령입니다. 보증 판정, 서류(접수증·견적서·수리 내역서·영수증), 운영 통계, 영수증 이미지 분석으로 수기 장부와 엑셀에 흩어진 업무를 한곳으로 모읍니다.
+핵심 흐름은 접수 → 담당 기사 배정 → 점검·견적 → 고객 승인 → 수리 → 결제 → 택배 반환 또는 방문 수령입니다. 보증 판정, 서류(접수증·견적서·수리 내역서·영수증), 운영 통계, 영수증 이미지 분석으로
+수기 장부와 엑셀에 흩어진 업무를 한곳으로 모읍니다.
 
 ## 1.2 핵심 기술 스택
 
-- 백엔드: Java 25, Spring Boot 4.1.x, Gradle, Spring Data JPA, Spring Security, JJWT 0.13, springdoc OpenAPI, Spring AI, Apache POI, Spring Mail
+- 백엔드: Java 25, Spring Boot 4.1.x, Gradle, Spring Data JPA, Spring Security, JJWT 0.13, springdoc OpenAPI, Spring AI,
+  Apache POI, Spring Mail
 - 프론트엔드: React 19.x, TypeScript 6.x, Vite 8.x, Tailwind CSS 4.x, Zustand 5.x, React Router 8.x
 - 데이터베이스: MySQL 9.x (운영), H2 Database (테스트)
 - 인프라 및 DevOps: AWS EC2, Docker, Docker Compose, Nginx, MySQL, AWS S3(직원 프로필), Netlify, Cloudflare, GitHub Actions CI/CD
@@ -46,15 +49,15 @@ FixGo는 사자전자의 스마트폰·노트북 A/S를 접수부터 제품 반�
 
 ## 1.3 팀 구성 및 도메인별 역할 분담
 
-| 이름 | 직책 | 담당 도메인 | 세부 구현 내용 |
-|-----|----|--------------|---------------------------------------------------------------------|
-| 김혜란 | PM | A/S 접수 및 배정 | 프로젝트 총괄·일정 관리, 접수 등록, 담당 기사 배정·변경, 배정 이력, 서류 발급 |
-| 김병호 | PL | 인증·직원·부품 | 기술 리딩, 직원 계정, Spring Security·JWT, RBAC, 부품 재고, AI 챗봇 |
-| 김남규 | 팀원 | 고객 및 제품 | 고객 등록·검색·수정, 엑셀 일괄등록, 제품 모델·시리얼, 고객별 A/S 이력, 백엔드 배포 |
-| 이수환 | 팀원 | A/S 상태 및 수리 | 상태 전이·이력, 점검·수리 기록, 프리셋, 수리비 계산·확정, 견적 승인 |
-| 최원일 | 팀원 | 결제 및 고객 포탈 | 청구, 토스페이먼츠 승인·웹훅, 가상계좌, 현장 수납, 고객 통합 링크 |
-| 이지원 | 팀원 | 배송 및 고객 알림 | 운송장·배송 상태, 방문 수령, SMS·이메일 발송과 이력 |
-| 최승혁 | 팀원 | 통계 및 AI | 운영 현황, 기사·모델·고장·수리비·미입금·장기 미처리 통계, 영수증 이미지 분석, 프론트엔드 배포 |
+| 이름  | 직책 | 담당 도메인      | 세부 구현 내용                                                |
+|-----|----|-------------|---------------------------------------------------------|
+| 김혜란 | PM | A/S 접수 및 배정 | 프로젝트 총괄·일정 관리, 접수 등록, 담당 기사 배정·변경, 배정 이력, 서류 발급         |
+| 김병호 | PL | 인증·직원·부품    | 기술 리딩, 직원 계정, Spring Security·JWT, RBAC, 부품 재고, AI 챗봇   |
+| 김남규 | 팀원 | 고객 및 제품     | 고객 등록·검색·수정, 엑셀 일괄등록, 제품 모델·시리얼, 고객별 A/S 이력, 백엔드 배포     |
+| 이수환 | 팀원 | A/S 상태 및 수리 | 상태 전이·이력, 점검·수리 기록, 프리셋, 수리비 계산·확정, 견적 승인               |
+| 최원일 | 팀원 | 결제 및 고객 포탈  | 청구, 토스페이먼츠 승인·웹훅, 가상계좌, 현장 수납, 고객 통합 링크                 |
+| 이지원 | 팀원 | 배송 및 고객 알림  | 운송장·배송 상태, 방문 수령, SMS·이메일 발송과 이력                        |
+| 최승혁 | 팀원 | 통계 및 AI     | 운영 현황, 기사·모델·고장·수리비·미입금·장기 미처리 통계, 영수증 이미지 분석, 프론트엔드 배포 |
 
 ---
 
@@ -64,26 +67,26 @@ FixGo를 체계적으로 구축하기 위해 작성한 단계별 필수 산출�
 
 ## 2.1 기획 단계 산출물 (Planning)
 
-| 산출물 번호 | 산출물 문서명 | 주요 내용 | 파일 링크 |
-|--------|-------------------|------------------------------------------------|-------------------------------------------------------------------------------|
-| 01 | 프로젝트 기획서 | 사자전자 A/S 배경, 업무 흐름, 주요 기능, 팀 구성 | [사자전자 AS업무 통합관리시스템 - FixGo 기획서](01_planning/01_proposal.md) |
-| 02 | 요구사항 기능 명세서 (PRD) | 도메인별 요구사항 ID, RBAC, 우선순위 | [A/S 관리 시스템 요구사항 명세서](01_planning/02_prd.md) |
-| 03 | 코드 컨벤션 정의서 | Java/Spring Boot 서식, 네이밍, 레이어, Git 협업 규약 | [AS업무 통합관리시스템 - FixGo 코드 컨벤션 정의서](01_planning/03_convention.md) |
+| 산출물 번호 | 산출물 문서명           | 주요 내용                                    | 파일 링크                                                           |
+|--------|-------------------|------------------------------------------|-----------------------------------------------------------------|
+| 01     | 프로젝트 기획서          | 사자전자 A/S 배경, 업무 흐름, 주요 기능, 팀 구성          | [사자전자 AS업무 통합관리시스템 - FixGo 기획서](01_planning/01_proposal.md)     |
+| 02     | 요구사항 기능 명세서 (PRD) | 도메인별 요구사항 ID, RBAC, 우선순위                 | [A/S 관리 시스템 요구사항 명세서](01_planning/02_prd.md)                    |
+| 03     | 코드 컨벤션 정의서        | Java/Spring Boot 서식, 네이밍, 레이어, Git 협업 규약 | [AS업무 통합관리시스템 - FixGo 코드 컨벤션 정의서](01_planning/03_convention.md) |
 
 ## 2.2 설계 단계 산출물 (Design)
 
-| 산출물 번호 | 산출물 문서명 | 주요 내용 | 파일 링크 |
-|--------|---------------------------|---------------------------------------------------|-----------------------------------------------------------------------------|
-| 01 | 시스템 아키텍처 구성도 | React SPA, Spring Boot REST, MySQL, AWS, 토스페이먼츠·알림·배송 흐름 | [시스템 아키텍처 설계서 (FixGo)](02_design/01_architecture.md), [시스템 아키텍처 구성](02_design/01_architecture_prt.md) |
-| 02 | 데이터베이스 ERD | 접수·수리·결제·배송·포탈 엔티티와 Mermaid ERD | [02_ERD](02_design/02_erd.md) |
-| 03 | 화면 설계서 (UI Wireframe) | 로그인, A/S, 고객, 결제, 배송, 알림, 통계, 고객 포탈 | [화면 설계서 (UI Wireframe)](02_design/03_ui_wireframe.md) |
-| 04 | REST API 명세서 및 규격서 | HTTP Method, URI, 요청/응답 JSON | [REST API 명세서 및 규격서 (FixGo MS)](02_design/04_api_specification.md) |
+| 산출물 번호 | 산출물 문서명               | 주요 내용                                                    | 파일 링크                                                                                             |
+|--------|-----------------------|----------------------------------------------------------|---------------------------------------------------------------------------------------------------|
+| 01     | 시스템 아키텍처 구성도          | React SPA, Spring Boot REST, MySQL, AWS, 토스페이먼츠·알림·배송 흐름 | [시스템 아키텍처 설계서 (FixGo)](02_design/01_architecture.md), [시스템 아키텍처 구성](02_design/01_architecture.md) |
+| 02     | 데이터베이스 ERD            | 접수·수리·결제·배송·포탈 엔티티와 Mermaid ERD                          | [02_ERD](02_design/02_erd.md)                                                                     |
+| 03     | 화면 설계서 (UI Wireframe) | 로그인, A/S, 고객, 결제, 배송, 알림, 통계, 고객 포탈                      | [화면 설계서 (UI Wireframe)](02_design/03_ui_wireframe.md)                                             |
+| 04     | REST API 명세서 및 규격서    | HTTP Method, URI, 요청/응답 JSON                             | [REST API 명세서 및 규격서 (FixGo MS)](02_design/04_api_specification.md)                                |
 
 ## 2.3 구현 및 운영 보고 산출물 (Reports)
 
-| 산출물 번호 | 산출물 문서명 | 주요 내용 | 파일 링크 |
-|--------|-------------------------------|--------------------------------|-------------------------------------------------------------------------------------|
-| 01 | 트러블슈팅 및 기술 문제 해결 기록 | 상태 전이, 결제 웹훅, 배송 연동, 쿼리, 배포 중 문제의 원인과 해결 | [트러블슈팅 및 기술적 의사결정 보고서](03_reports/troubleshooting.md) |
+| 산출물 번호 | 산출물 문서명             | 주요 내용                                    | 파일 링크                                                 |
+|--------|---------------------|------------------------------------------|-------------------------------------------------------|
+| 01     | 트러블슈팅 및 기술 문제 해결 기록 | 상태 전이, 결제 웹훅, 배송 연동, 쿼리, 배포 중 문제의 원인과 해결 | [트러블슈팅 및 기술적 의사결정 보고서](03_reports/troubleshooting.md) |
 
 ---
 
@@ -126,7 +129,8 @@ FixGo를 체계적으로 구축하기 위해 작성한 단계별 필수 산출�
 
 ### 3.2.3 필수 포함 항목 및 작성 방법
 
-- 요구사항 식별 ID: `REQ-AUTH-01`, `REQ-MASTER-01`, `REQ-INTAKE-01`, `REQ-REPAIR-01`, `REQ-PAY-01`, `REQ-PORTAL-01`, `REQ-FULFILL-01`, `REQ-SMS-01`, `REQ-STAT-01`처럼 도메인별 코드를 부여한다
+- 요구사항 식별 ID: `REQ-AUTH-01`, `REQ-MASTER-01`, `REQ-INTAKE-01`, `REQ-REPAIR-01`, `REQ-PAY-01`, `REQ-PORTAL-01`,
+  `REQ-FULFILL-01`, `REQ-SMS-01`, `REQ-STAT-01`처럼 도메인별 코드를 부여한다
 - 구분: 인증·직원, 고객·제품·부품, A/S 접수·배정, 수리·상태, 결제, 고객 포탈, 배송, 알림, 통계
 - 기능명 및 대상 역할: `ADMIN`, `RECEPTIONIST`, `TECHNICIAN` 를 구분한다. 고객 포탈은 계정 없이 링크 토큰으로 접근한다
 - 우선순위: 1순위(필수 구현), 2순위(주요 권장), 3순위(추가 선택)
@@ -182,7 +186,7 @@ React SPA부터 Spring Boot REST API, MySQL, AWS·Netlify 배포, 토스페이�
 - CI/CD: GitHub Actions로 테스트·이미지 빌드 후 EC2에서 `docker compose`로 기동
 
 - 시스템 아키텍처 설계서: [시스템 아키텍처 설계서 (FixGo)](02_design/01_architecture.md)
-- 인프라·배포 구성: [시스템 아키텍처 구성](02_design/01_architecture_prt.md)
+- 인프라·배포 구성: [시스템 아키텍처 구성](02_design/01_architecture.md)
 
 ---
 
@@ -200,28 +204,31 @@ React SPA부터 Spring Boot REST API, MySQL, AWS·Netlify 배포, 토스페이�
 ### 3.5.3 필수 포함 항목
 
 - 테이블·컬럼 명세: PK, FK, Not Null, Unique, Default
-- 핵심 테이블: `member`, `refresh_token`, `customer`, `product_model`, `product`, `as_reception`, `as_attachment`, `as_status_history`, `symptom_preset`, `repair_preset`, `repair`, `repair_work`, `repair_photo`, `part`, `part_stock_history`, `payment_bill`, `payment_attempt`, `virtual_account`, `shipment`, `shipment_event`, `customer_portal_link`, `notification_log`, `receipt_analysis`, `outbox_event`
+- 핵심 테이블: `member`, `refresh_token`, `customer`, `product_model`, `product`, `as_reception`, `as_attachment`,
+  `as_status_history`, `symptom_preset`, `repair_preset`, `repair`, `repair_work`, `repair_photo`, `part`,
+  `part_stock_history`, `payment_bill`, `payment_attempt`, `virtual_account`, `shipment`, `shipment_event`,
+  `customer_portal_link`, `notification_log`, `receipt_analysis`, `outbox_event`
 - 작성 방식: 마크다운 안 Mermaid `erDiagram`
 
 ### 3.5.4 Mermaid ERD 주요 문법
 
 - Mermaid ERD 문법: [https://docs.mermaidviewer.com/diagrams/er.html](https://docs.mermaidviewer.com/diagrams/er.html)
 - 관계 기호:
-  - 1:1 (양쪽 필수): `||--||`
-  - 1:1 (한쪽 필수, 반대쪽 0 또는 1): `||--o|`
-  - 1:N (한쪽 필수, 반대쪽 1개 이상): `||--|{`
-  - 1:N (한쪽 필수, 반대쪽 0개 이상): `||--o{`
-  - N:M (양쪽 1개 이상): `}|--|{`
-  - N:M (한쪽 1개 이상, 반대쪽 0개 이상): `}|--o{`
+    - 1:1 (양쪽 필수): `||--||`
+    - 1:1 (한쪽 필수, 반대쪽 0 또는 1): `||--o|`
+    - 1:N (한쪽 필수, 반대쪽 1개 이상): `||--|{`
+    - 1:N (한쪽 필수, 반대쪽 0개 이상): `||--o{`
+    - N:M (양쪽 1개 이상): `}|--|{`
+    - N:M (한쪽 1개 이상, 반대쪽 0개 이상): `}|--o{`
 - 기호 의미:
-  - `||`: 정확히 1개
-  - `|{`: 1개 이상
-  - `o{`: 0개 이상
-  - `o|`: 0개 또는 1개
+    - `||`: 정확히 1개
+    - `|{`: 1개 이상
+    - `o{`: 0개 이상
+    - `o|`: 0개 또는 1개
 - 구성 요소:
-  - `|`: 최소 1개 (필수)
-  - `o`: 0개일 수 있음 (선택)
-  - `}` 또는 `{`: 다수
+    - `|`: 최소 1개 (필수)
+    - `o`: 0개일 수 있음 (선택)
+    - `}` 또는 `{`: 다수
 
 - 데이터베이스 ERD: [02_ERD](02_design/02_erd.md)
 
@@ -240,7 +247,8 @@ React SPA부터 Spring Boot REST API, MySQL, AWS·Netlify 배포, 토스페이�
 
 ### 3.6.3 필수 포함 항목
 
-- 주요 화면: 로그인, 마이페이지, 직원 목록·상세, A/S 목록·접수·상세, 점검·수리, 프리셋, 고객, 결제, 배송, 알림 발송·이력, 지원 품목, 부품, 공임비, 통계, 배정 이력, 상태 변경 이력, 고객 포탈
+- 주요 화면: 로그인, 마이페이지, 직원 목록·상세, A/S 목록·접수·상세, 점검·수리, 프리셋, 고객, 결제, 배송, 알림 발송·이력, 지원 품목, 부품, 공임비, 통계, 배정 이력, 상태 변경 이력, 고객
+  포탈
 - 화면에 나오는 데이터와 버튼 동작
 - 역할별 메뉴·버튼 노출 차이
 
@@ -297,19 +305,23 @@ React SPA부터 Spring Boot REST API, MySQL, AWS·Netlify 배포, 토스페이�
 ### 3.8.3 필수 포함 항목 및 작성 템플릿
 
 - 작성자 식별자: `TS-[작성자영문]-[순번]`
-  (예: `TS-HYERAN-01`, `TS-BYEONGHO-01`, `TS-NAMGYU-01`, `TS-SUHWAN-01`, `TS-WONIL-01`, `TS-JIWON-01`, `TS-SEUNGHYEOK-01`)
+  (예: `TS-HYERAN-01`, `TS-BYEONGHO-01`, `TS-NAMGYU-01`, `TS-SUHWAN-01`, `TS-WONIL-01`, `TS-JIWON-01`,
+  `TS-SEUNGHYEOK-01`)
 - 복사용 템플릿:
 
 ````markdown
 ## TS-[작성자영문]-[순번]: [발생한 문제 및 에러 제목]
 
 ### 1) 발생 현상 및 에러
+
 - 런타임 현상과 에러 로그 또는 화면에서 보인 메시지를 적는다.
 
 ### 2) 원인 분석
+
 - 문제가 난 지점과 코드 흐름을 적는다.
 
 ### 3) 해결 방법
+
 - 바꾼 내용과 핵심 코드를 적는다.
 
 ```java
@@ -317,6 +329,7 @@ React SPA부터 Spring Boot REST API, MySQL, AWS·Netlify 배포, 토스페이�
 ```
 
 ### 4) 시사점 및 배운 점
+
 - 같은 문제가 다시 나지 않도록 남길 점을 적는다.
 ````
 
