@@ -35,7 +35,14 @@ public interface NotificationLogRepository extends JpaRepository<NotificationLog
                             OR LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
                         AND (:start IS NULL OR n.createdAt >= :start)
                         AND (:end IS NULL OR n.createdAt < :end)
+                        AND (:status IS NULL OR n.status = :status)
                         ORDER By n.createdAt DESC, n.id DESC
             """)
-    Page<NotificationLog> searchEmails(@Param("keyword") String keyword, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end, Pageable pageable);
+    Page<NotificationLog> searchEmails(
+            @Param("keyword") String keyword,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end,
+            @Param("status") NotificationStatus status,
+            Pageable pageable
+    );
 }
