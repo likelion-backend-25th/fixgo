@@ -43,7 +43,7 @@ FixGo는 사자전자의 스마트폰·노트북 A/S를 접수부터 제품 반�
 - 프론트엔드: React 19.x, TypeScript 6.x, Vite 8.x, Tailwind CSS 4.x, Zustand 5.x, React Router 8.x
 - 데이터베이스: MySQL 9.x (운영), H2 Database (테스트)
 - 인프라 및 DevOps: AWS EC2, Docker, Docker Compose, Nginx, MySQL, AWS S3(직원 프로필), Netlify, Cloudflare, GitHub Actions CI/CD
-- 외부 연동: 토스페이먼츠(카드·계좌이체·가상계좌), 카카오 주소 검색, 택배 배송 조회, SMS·이메일 알림, AI 영수증 분석
+- 외부 연동: 토스페이먼츠(카드·계좌이체·가상계좌), 카카오 주소 검색, 택배 배송 조회, 이메일 알림, AI 영수증 분석
 
 로컬 개발에서는 Vite가 `/api`를 Spring Boot `8080`으로 프록시합니다. API prefix는 `/api/v1`입니다.
 
@@ -56,7 +56,7 @@ FixGo는 사자전자의 스마트폰·노트북 A/S를 접수부터 제품 반�
 | 김남규 | 팀원 | 고객 및 제품     | 고객 등록·검색·수정, 엑셀 일괄등록, 제품 모델·시리얼, 고객별 A/S 이력, 백엔드 배포     |
 | 이수환 | 팀원 | A/S 상태 및 수리 | 상태 전이·이력, 점검·수리 기록, 프리셋, 수리비 계산·확정, 견적 승인               |
 | 최원일 | 팀원 | 결제 및 고객 포탈  | 청구, 토스페이먼츠 승인·웹훅, 가상계좌, 현장 수납, 고객 통합 링크                 |
-| 이지원 | 팀원 | 배송 및 고객 알림  | 운송장·배송 상태, 방문 수령, SMS·이메일 발송과 이력                        |
+| 이지원 | 팀원 | 배송 및 고객 알림  | 운송장·배송 상태, 방문 수령, 이메일 발송과 이력                        |
 | 최승혁 | 팀원 | 통계 및 AI     | 운영 현황, 기사·모델·고장·수리비·미입금·장기 미처리 통계, 영수증 이미지 분석, 프론트엔드 배포 |
 
 ---
@@ -169,7 +169,7 @@ FixGo를 체계적으로 구축하기 위해 작성한 단계별 필수 산출�
 
 ### 3.4.1 정의
 
-React SPA부터 Spring Boot REST API, MySQL, AWS·Netlify 배포, 토스페이먼츠, 주소 검색, 배송 조회, SMS·이메일, AI 영수증 분석까지의 구조와 데이터 흐름을 그린 구성도.
+React SPA부터 Spring Boot REST API, MySQL, AWS·Netlify 배포, 토스페이먼츠, 주소 검색, 배송 조회, 이메일, AI 영수증 분석까지의 구조와 데이터 흐름을 그린 구성도.
 
 ### 3.4.2 작성 필요성 및 목적
 
@@ -182,7 +182,7 @@ React SPA부터 Spring Boot REST API, MySQL, AWS·Netlify 배포, 토스페이�
 - 프론트엔드: Netlify에 Vite 빌드 결과 배포, Cloudflare DNS·HTTPS, SPA fallback으로 `index.html` 반환
 - 백엔드: AWS EC2, Nginx(80/443), Docker Compose, Spring Boot REST API(8080)
 - 데이터베이스: MySQL 3306, 볼륨으로 데이터 유지
-- 외부 연동 및 스토리지: S3 프로필, 토스페이먼츠, 카카오 주소 검색, 택배 조회, SMS·이메일, AI API
+- 외부 연동 및 스토리지: S3 프로필, 토스페이먼츠, 카카오 주소 검색, 택배 조회, 이메일, AI API
 - CI/CD: GitHub Actions로 테스트·이미지 빌드 후 EC2에서 `docker compose`로 기동
 
 - 시스템 아키텍처 설계서: [시스템 아키텍처 설계서 (FixGo)](02_design/01_architecture.md)
