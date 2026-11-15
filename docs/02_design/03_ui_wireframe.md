@@ -320,7 +320,7 @@ FixGo는 사자전자 스마트폰 및 노트북 제품의 A/S 접수부터 점�
 유효한 고객 전용 토큰 링크를 통해 로그인 없이 접수 현황을 확인하고 견적을 승인 또는 거\
 부하며 결제할 수 있다. 직원 메뉴는 제공하지 않는다.
 
-<img src="../images/ui-wireframe/page-09-x146.png" alt="PDF p. 9 wireframe" width="10%"> <img src="../images/ui-wireframe/page-09-x148.png" alt="PDF p. 9 wireframe" width="10%"> <img src="../images/ui-wireframe/page-09-x149.png" alt="PDF p. 9 wireframe" width="12%"> <img src="../images/ui-wireframe/page-09-x150.png" alt="PDF p. 9 wireframe" width="10%"> <img src="../images/ui-wireframe/page-09-x147.png" alt="PDF p. 9 wireframe" width="9%"> <img src="../images/ui-wireframe/page-09-x151.png" alt="PDF p. 9 wireframe" width="10%">
+<img src="../images/ui-wireframe/page-09-x146.png" alt="PDF p. 9 wireframe" width="19.94%"> <img src="../images/ui-wireframe/page-09-x148.png" alt="PDF p. 9 wireframe" width="17.50%"> <img src="../images/ui-wireframe/page-09-x149.png" alt="PDF p. 9 wireframe" width="14.36%"> <img src="../images/ui-wireframe/page-09-x150.png" alt="PDF p. 9 wireframe" width="13.82%"> <img src="../images/ui-wireframe/page-09-x147.png" alt="PDF p. 9 wireframe" width="12.81%"> <img src="../images/ui-wireframe/page-09-x151.png" alt="PDF p. 9 wireframe" width="13.57%">
 
 | 메뉴 영역 | 화면 및 주요 업무                                    |
 |-------|-----------------------------------------------|
@@ -409,9 +409,7 @@ FixGo는 사자전자 스마트폰 및 노트북 제품의 A/S 접수부터 점�
 
 접근 권한: 직원 공통
 
-<img src="../images/ui-wireframe/page-12-x176.jpg" alt="PDF p. 12 wireframe" width="400">
-
-<img src="../images/ui-wireframe/page-12-x177.jpg" alt="PDF p. 12 wireframe" width="400">
+<img src="../images/ui-wireframe/page-12-x176.jpg" alt="PDF p. 12 wireframe" width="35.20%"> <img src="../images/ui-wireframe/page-12-x177.jpg" alt="PDF p. 12 wireframe" width="60.80%">
 
 **입력 데이터 항목 (Input Data)**
 
@@ -1065,9 +1063,7 @@ customer/{customerId}
 
 접근 권한: 관리자 · 접수담당자
 
-<img src="../images/ui-wireframe/page-34-x299.png" alt="PDF p. 34 wireframe" width="400">
-
-<img src="../images/ui-wireframe/page-34-x298.png" alt="PDF p. 34 wireframe" width="400">
+<img src="../images/ui-wireframe/page-34-x299.png" alt="PDF p. 34 wireframe" width="63.78%"> <img src="../images/ui-wireframe/page-34-x298.png" alt="PDF p. 34 wireframe" width="32.22%">
 
 **출력 데이터 항목 (Output Data)**
 
@@ -1241,9 +1237,7 @@ customer/{customerId}
 
 접근 권한: 관리자 · 접수담당자
 
-<img src="../images/ui-wireframe/page-41-x344.png" alt="PDF p. 41 wireframe" width="400">
-
-<img src="../images/ui-wireframe/page-41-x345.png" alt="PDF p. 41 wireframe" width="400">
+<img src="../images/ui-wireframe/page-41-x344.png" alt="PDF p. 41 wireframe" width="68.07%"> <img src="../images/ui-wireframe/page-41-x345.png" alt="PDF p. 41 wireframe" width="27.93%">
 
 **출력 데이터 항목 (Output Data)**
 
@@ -1374,9 +1368,7 @@ customer/{customerId}
 
 접근 권한: 관리자 · 접수담당자
 
-<img src="../images/ui-wireframe/page-45-x367.png" alt="PDF p. 45 wireframe" width="400">
-
-<img src="../images/ui-wireframe/page-45-x366.jpg" alt="PDF p. 45 wireframe" width="400">
+<img src="../images/ui-wireframe/page-45-x367.png" alt="PDF p. 45 wireframe" width="43.60%"> <img src="../images/ui-wireframe/page-45-x366.jpg" alt="PDF p. 45 wireframe" width="52.40%">
 
 **출력 데이터 항목 (Output Data)**
 
@@ -1434,9 +1426,7 @@ customer/{customerId}
 
 ##### 1.3.9.1 지원 품목 · 제품 모델 및 수리 대상 제품 (/admin/products/list)
 
-<img src="../images/ui-wireframe/page-47-x377.jpg" alt="PDF p. 47 wireframe" width="400">
-
-<img src="../images/ui-wireframe/page-47-x378.png" alt="PDF p. 47 wireframe" width="400">
+<img src="../images/ui-wireframe/page-47-x377.jpg" alt="PDF p. 47 wireframe" width="60.06%"> <img src="../images/ui-wireframe/page-47-x378.png" alt="PDF p. 47 wireframe" width="35.94%">
 
 **출력 데이터 항목 (Output Data)**
 
@@ -1522,9 +1512,7 @@ customer/{customerId}
 
 접근 권한: 관리자
 
-<img src="../images/ui-wireframe/page-50-x395.png" alt="PDF p. 50 wireframe" width="400">
-
-<img src="../images/ui-wireframe/page-50-x394.jpg" alt="PDF p. 50 wireframe" width="400">
+<img src="../images/ui-wireframe/page-50-x395.png" alt="PDF p. 50 wireframe" width="50.09%"> <img src="../images/ui-wireframe/page-50-x394.jpg" alt="PDF p. 50 wireframe" width="45.91%">
 
 **출력 데이터 항목 (Output Data)**
 
@@ -1947,7 +1935,7 @@ customer/{customerId}
 
 접근 권한: 관리자
 
-<img src="../images/ui-wireframe/page-65-x471.png" alt="PDF p. 65 wireframe" width="500">
+<img src="../images/ui-wireframe/page-65-x471.png" alt="PDF p. 65 wireframe" width="350">
 
 **출력 데이터 항목 (Output Data)**
 
@@ -1977,7 +1965,7 @@ customer/{customerId}
 
 접근 권한: 유효한 토큰을 가진 고객
 
-<img src="../images/ui-wireframe/page-09-x146.png" alt="PDF p. 66 wireframe" width="10%"> <img src="../images/ui-wireframe/page-09-x149.png" alt="PDF p. 66 wireframe" width="12%"> <img src="../images/ui-wireframe/page-09-x148.png" alt="PDF p. 66 wireframe" width="10%"> <img src="../images/ui-wireframe/page-09-x147.png" alt="PDF p. 66 wireframe" width="9%"> <img src="../images/ui-wireframe/page-09-x150.png" alt="PDF p. 66 wireframe" width="10%"> <img src="../images/ui-wireframe/page-09-x151.png" alt="PDF p. 66 wireframe" width="10%">
+<img src="../images/ui-wireframe/page-09-x146.png" alt="PDF p. 66 wireframe" width="19.94%"> <img src="../images/ui-wireframe/page-09-x149.png" alt="PDF p. 66 wireframe" width="14.36%"> <img src="../images/ui-wireframe/page-09-x148.png" alt="PDF p. 66 wireframe" width="17.50%"> <img src="../images/ui-wireframe/page-09-x147.png" alt="PDF p. 66 wireframe" width="12.81%"> <img src="../images/ui-wireframe/page-09-x150.png" alt="PDF p. 66 wireframe" width="13.82%"> <img src="../images/ui-wireframe/page-09-x151.png" alt="PDF p. 66 wireframe" width="13.57%">
 
 **출력 데이터 항목 (Output Data)**
 
