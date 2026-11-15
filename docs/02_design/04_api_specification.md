@@ -1,1129 +1,1241 @@
-# 1. REST API 명세서 및 규격서 (FixGo MS)
+# **1. REST API 명세서 및 규격서 (FixGo)**
 
----
+기준 문서: http://localhost:8080/swagger-ui/index.html
 
-## 1.1 공통 응답 규격
+API 목록은 실행 중인 Swagger의 전체 오퍼레이션이다. 요청·응답 필드는 같은 경로의 컨트롤러 DTO를 따른다. Swagger의 CreateRequest, UpdateRequest, Response처럼 이름이 같은 스키마는 마지막에 등록된 정의가 나머지를 덮으므로, 이 명세서의 JSON은 그 덮인 스키마가 아니라 각 API의 DTO를 적는다.
 
-### 1.1.1 성공 응답 포맷 (HTTP 200 / 201)
+수록 API: 134개
 
-- 별도의 공통 래퍼 봉투 없이 각 도메인 컨트롤러 계층에서 DTO 단건 객체 또는 List 컬렉션, PageResponse 객체를 HTTP Body로 직접 반환.
-- 단건 응답 샘플 (CourseDetailResponse):
+## **1.1 공통 응답 규격**
+
+### **1.1.1 성공 응답 포맷 (HTTP 200 / 201)**
+
+별도의 공통 래퍼 없이 컨트롤러가 DTO 객체, List, 또는 Spring Data Page를 HTTP Body로 직접 반환한다.
+
+단건 응답은 각 API의 Response Body와 같다. 목록 페이징은 아래 Page 형식이다. number는 0부터 센다.
 
 ```json
 {
-  "id": 1,
-  "title": "Spring Boot & JPA 기반 엔터프라이즈 LMS 구축",
-  "category": "BACKEND",
-  "level": "INTERMEDIATE",
-  "price": 150000,
-  "accessDays": 90,
-  "status": "APPROVED",
-  "instructorName": "루카",
-  "averageRating": 4.9,
-  "thumbnailUrl": "<https://harubaeum-s3.s3.ap-northeast-2.amazonaws.com/courses/sample-01.jpg>",
-  "createdAt": "2026-10-15T10:00:00"
+	"content": [],
+	"totalElements": 0,
+	"totalPages": 0,
+	"size": 20,
+	"number": 0,
+	"first": true,
+	"last": true,
+	"empty": true
 }
 ```
 
-- 페이징 목록 응답 샘플 (PageResponse<CourseCardResponse>):
+### **1.1.2 실패 및 에러 응답 포맷 (ErrorResponse)**
+
+전역 예외 처리기가 아래 JSON을 반환한다. 인증 실패는 401, 권한 없음은 403, 잘못된 요청은 400, 대상 없음은 404, 그 밖은 500이다.
+
+```json
+{
+	"code": "NOT_FOUND",
+	"message": "요청한 리소스를 찾을 수 없습니다."
+}
+```
+
+## **1.2 API 목록**
+
+A/S Reception API
+
+- **API:** GET /api/v1/as-receptions — 접수 목록 조회
+- **API:** POST /api/v1/as-receptions — 접수 등록
+- **API:** POST /api/v1/as-receptions/my/{id}/inspection/start — 점검 시작
+- **API:** PATCH /api/v1/as-receptions/{receptionId}/technician — 기사 재배정
+- **API:** PATCH /api/v1/as-receptions/{receptionId}/status — 접수 상태 수동 변경
+- **API:** GET /api/v1/as-receptions/{id} — 접수 상세 조회
+- **API:** PATCH /api/v1/as-receptions/{id} — 접수 수정
+- **API:** GET /api/v1/as-receptions/{receptionId}/technician-history — 기사 배정 이력 조회
+- **API:** GET /api/v1/as-receptions/{id}/portal-link — 고객 안내 링크 조회
+- **API:** GET /api/v1/as-receptions/{id}/history — 접수 상태 변경 이력 조회
+- **API:** GET /api/v1/as-receptions/{id}/documents/repair-statement — 수리내역서 조회
+- **API:** GET /api/v1/as-receptions/{id}/documents/reception-receipt — 접수증 조회
+- **API:** GET /api/v1/as-receptions/{id}/documents/estimate — 견적서 조회
+- **API:** GET /api/v1/as-receptions/technician-histories —
+- **API:** GET /api/v1/as-receptions/status-histories —
+- **API:** GET /api/v1/as-receptions/my — 기사 전용 접수 목록 조회
+- **API:** GET /api/v1/as-receptions/my/{id} — 기사 전용 접수 상세 조회
+
+Admin Member API
+
+- **API:** POST /api/v1/admin/member — 직원생성
+- **API:** DELETE /api/v1/admin/member — 직원삭제
+- **API:** PATCH /api/v1/admin/member/status — 직원 상태 변경
+- **API:** PATCH /api/v1/admin/member/role — 직원역할 변경
+- **API:** PATCH /api/v1/admin/member/profile — 직원 프로필 수정
+
+AI API
+
+- **API:** POST /api/v1/ai/chat/test — BrunoTest용
+- **API:** POST /api/v1/ai/chat/stream — AI 스트리밍 채팅
+- **API:** GET /api/v1/ai — 채팅 이력 조회
+
+Auth API
+
+- **API:** POST /api/v1/auth/refresh — 토큰 재발급
+- **API:** POST /api/v1/auth/logout — 로그아웃
+- **API:** POST /api/v1/auth/login — 로그인
+
+Customer API
+
+- **API:** GET /api/v1/customers — 고객 목록/검색
+- **API:** POST /api/v1/customers — 고객 등록
+- **API:** POST /api/v1/customers/bulk — 고객 일괄 등록
+- **API:** POST /api/v1/customers/bulk/validate — 고객 일괄 등록 전 검증
+- **API:** GET /api/v1/customers/{id} — 고객 단건 조회
+- **API:** PATCH /api/v1/customers/{id} — 고객 정보 수정
+- **API:** GET /api/v1/customers/check-duplicate — 연락처 중복 체크
+- **API:** GET /api/v1/customers/bulk/template — 엑셀 양식 다운로드
+
+Email Preset API
+
+- **API:** PUT /api/v1/email-presets/{id} — 이메일 프리셋 수정
+- **API:** DELETE /api/v1/email-presets/{id} — 이메일 프리셋 삭제
+- **API:** GET /api/v1/email-presets — 이메일 프리셋 목록 조회
+- **API:** POST /api/v1/email-presets — 이메일 프리셋 등록
+
+Labor Rate API
+
+- **API:** GET /api/v1/labor-rates — 공임비점검비 전체 목록 조회
+- **API:** PATCH /api/v1/labor-rates — 공임비점검비 수정
+- **API:** GET /api/v1/labor-rates/{id} — 공임비점검비 상세 조회
+
+Long Pending Statistics API
+
+- **API:** GET /api/v1/admin/statistics/long_pending — 장기 미처리 접수건 조회
+
+Member API
+
+- **API:** PATCH /api/v1/member/me/password — 비밀번호 변경
+- **API:** GET /api/v1/member — 직원 목록 조회
+- **API:** GET /api/v1/member/{memberId} — 직원 상세 조회
+- **API:** GET /api/v1/member/technicians — 배정 가능 기술자 목록 조회
+- **API:** GET /api/v1/member/me — 내 프로필 조회
+- **API:** GET /api/v1/member/deleted_member — 삭제된 직원 목록 조회
+
+Model Statistics API
+
+- **API:** GET /api/v1/admin/statistics/models — 모델별 수리 통계 조회
+- **API:** GET /api/v1/admin/statistics/models/{modelId}/symptoms — 모델 증상별 통계 조회
+
+Notification API
+
+- **API:** GET /api/v1/notifications/emails — 이메일 발송 내역 조회
+- **API:** POST /api/v1/notifications/emails — 이메일 발송
+- **API:** POST /api/v1/notifications/emails/{id}/retry — 실패 이메일 재발송
+- **API:** GET /api/v1/notifications/statistics — 이메일 발송 통계 조회
+- **API:** GET /api/v1/notifications/emails/{id} — 이메일 발송 상세 조회
+
+Part API
+
+- **API:** PATCH /api/v1/part/unit_price — 부품 단가 수정
+- **API:** PATCH /api/v1/part/stocks — 재고 수량 다건 수정
+- **API:** PATCH /api/v1/part/stock — 재고 수량 단건 수정
+- **API:** PATCH /api/v1/part/standard_minutes — 표준 작업시간 수정
+- **API:** GET /api/v1/part — 부품 목록 조회
+- **API:** GET /api/v1/part/{partId} — 부품 상세 조회
+
+Payment API
+
+- **API:** POST /api/v1/payments/{billId}/refund — 결제 환불
+- **API:** POST /api/v1/payments/{billId}/cash — 현금 결제
+- **API:** POST /api/v1/payments/webhook — 토스 웹훅 처리
+- **API:** POST /api/v1/payments/confirm — 결제 승인
+- **API:** GET /api/v1/payments — 결제 목록 조회
+- **API:** GET /api/v1/payments/{billId} — 결제 상세 조회
+
+Payment Statistics API
+
+- **API:** GET /api/v1/admin/statistics/unpaid-bills — 미수금 청구서 조회
+- **API:** GET /api/v1/admin/statistics/payments — 결제 통계 조회
+- **API:** GET /api/v1/admin/statistics/payments/history — 기간 결제 내역 조회
+
+Portal API
+
+- **API:** POST /api/v1/portal/{token}/quote/reject — 견적 거부
+- **API:** POST /api/v1/portal/{token}/quote/approve — 견적 승인
+- **API:** POST /api/v1/portal/{token}/payments/start — 결제 시작
+- **API:** POST /api/v1/portal/{token}/payments/cancel — 가상계좌 취소
+- **API:** GET /api/v1/portal/{token} — 포탈 조회
+
+Product API
+
+- **API:** GET /api/v1/products — 시리얼번호 검색
+- **API:** POST /api/v1/products — 수리 대상 제품 정보 등록
+- **API:** PATCH /api/v1/products/{id}/purchased_at — 수리 대상 제품 정보 수정
+- **API:** GET /api/v1/products/{id} — 수리 대상 제품 정보 조회
+- **API:** GET /api/v1/products/search — 제품 페이징 검색
+
+Product Model API
+
+- **API:** POST /api/v1/product-models — 제품 모델 등록
+- **API:** GET /api/v1/product-models/{id} — 제품 모델 단건 조회
+- **API:** PATCH /api/v1/product-models/{id} — 제품 모델 수정
+- **API:** GET /api/v1/product-models/list — 제품 모델 목록 검색
+
+Reception Statistics API
+
+- **API:** GET /api/v1/admin/statistics/receptions — 접수 통계 조회
+
+Repair API
+
+- **API:** GET /api/v1/as/repairs/{id} — 수리 상세 조회
+- **API:** PUT /api/v1/as/repairs/{id} — 수리 정보 수정
+- **API:** DELETE /api/v1/as/repairs/{id} — 수리 삭제
+- **API:** GET /api/v1/as/repairs — 전체 수리 목록 조회
+- **API:** POST /api/v1/as/repairs — 수리 등록
+- **API:** POST /api/v1/as/repairs/{id}/abort — A/S 중단
+- **API:** PATCH /api/v1/as/repairs/{id}/status — 수리 상태 변경
+- **API:** PATCH /api/v1/as/repairs/{id}/start — 수리 시작
+- **API:** PATCH /api/v1/as/repairs/{id}/complete — 수리 완료
+- **API:** GET /api/v1/as/repairs/reception/{receptionNumber} — 접수번호로 수리 상세 조회
+- **API:** GET /api/v1/as/repairs/my — 본인에게 배정된 A/S 목록 조회
+- **API:** GET /api/v1/as/repairs/my/{id} — 본인에게 배정된 A/S 상세 조회
+
+Repair Cost API
+
+- **API:** POST /api/v1/as/repairs/{repairId}/cost — 수리비 계산
+- **API:** POST /api/v1/as/repairs/{repairId}/cost/confirm — 수리비 확정
+
+Repair History API
+
+- **API:** GET /api/v1/as/repair-histories/{asReceptionId} — A/S 수리 이력 조회
+
+Repair Part Usage API
+
+- **API:** POST /api/v1/as/repair-part-usages — 실제 수리 부품 사용 등록
+
+Repair Preset API
+
+- **API:** GET /api/v1/as/repair-presets/{id} — 단일 프리셋 조회
+- **API:** PUT /api/v1/as/repair-presets/{id} — 프리셋 수정
+- **API:** DELETE /api/v1/as/repair-presets/{id} — 프리셋 삭제
+- **API:** GET /api/v1/as/repair-presets — 전체 프리셋 조회
+- **API:** POST /api/v1/as/repair-presets — 프리셋 등록
+- **API:** GET /api/v1/as/repair-presets/{id}/parts — 프리셋 부품 목록 조회
+- **API:** GET /api/v1/as/repair-presets/search — 프리셋 이름 검색
+
+Repair Work API
+
+- **API:** GET /api/v1/as/repair-works/{id} — 수리 작업 내역 단건 조회
+- **API:** PUT /api/v1/as/repair-works/{id} — 수리 작업 내역 수정
+- **API:** DELETE /api/v1/as/repair-works/{id} — 수리 작업 내역 삭제
+- **API:** GET /api/v1/as/repair-works — 수리 작업 내역 전체 조회
+- **API:** POST /api/v1/as/repair-works — 수리 작업 내역 등록
+- **API:** GET /api/v1/as/repair-works/search — 작업명 검색
+- **API:** GET /api/v1/as/repair-works/repair/{repairId} — 특정 수리 건의 작업 내역 조회
+
+Shipment API
+
+- **API:** POST /api/v1/shipments — 택배 배송 등록
+- **API:** POST /api/v1/shipments/{shipmentId}/tracking/refresh — 배송 추적 갱신
+- **API:** POST /api/v1/shipments/pickups — 방문 수령 등록
+- **API:** PATCH /api/v1/shipments/{shipmentId}/tracking-info — 운송장 정보 수정
+- **API:** PATCH /api/v1/shipments/{shipmentId}/shipping — 배송 시작
+- **API:** PATCH /api/v1/shipments/{shipmentId}/pickup — 방문 수령 완료
+- **API:** PATCH /api/v1/shipments/{shipmentId}/delivered — 배송 완료
+- **API:** GET /api/v1/shipments/{shipmentId} — 배송 단건 조회
+- **API:** GET /api/v1/shipments/{shipmentId}/details — 배송 상세 조회
+- **API:** GET /api/v1/shipments/receptions/{asReceptionId} — 접수별 배송 조회
+- **API:** GET /api/v1/shipments/list — 배송 관리 목록 조회
+
+Shipment Statistics API
+
+- **API:** GET /api/v1/admin/statistics/shipments — 배송 현황 통계 조회
+- **API:** GET /api/v1/admin/statistics/shipments/history — 기간 배송 내역 조회
+
+Symptom Preset API
+
+- **API:** GET /api/v1/as/symptom-presets — 고장 증상 프리셋 목록 조회
+- **API:** GET /api/v1/as/symptom-presets/{symptomId}/repair-presets — 증상에 연결된 수리 프리셋 조회
+- **API:** GET /api/v1/as/symptom-presets/search — 고장 증상 프리셋 검색
+
+Technician Statistics API
+
+- **API:** GET /api/v1/admin/statistics/technicians — 기사별 통계 조회
+
+## 1.3 A/S Reception API
+
+### 1.3.1 접수 목록 조회
+
+- 엔드포인트: `GET /api/v1/as-receptions`
+- 설명: 검색 조건에 맞는 A/S 접수 목록을 페이징하여 반환한다.
+- 접근 권한: 로그인 사용자
+- Query Parameter: keyword (String, 선택) / status (AsReceptionStatus, 선택) / technicianId (Long, 선택) / customerId (Long, 선택) / page (int, 선택, 예: 0) — 페이지 번호. 0부터 시작한다. / size (int, 선택, 예: 20) — 페이지 크기 / sort (string, 선택) — 정렬. 예: createdAt,desc
+- Request Body: 없음
+- Response Body (HTTP 200):
 
 ```json
 {
   "content": [
     {
       "id": 1,
-      "title": "Spring Boot & JPA 기반 엔터프라이즈 LMS 구축",
-      "category": "BACKEND",
-      "level": "INTERMEDIATE",
-      "price": 150000,
-      "instructorName": "루카",
-      "averageRating": 4.9,
-      "reviewCount": 128,
-      "thumbnailUrl": "<https://harubaeum-s3.s3.ap-northeast-2.amazonaws.com/courses/sample-01.jpg>"
+      "receptionNumber": "AS-251111-abc",
+      "createdAt": "2025-11-11T09:00:00",
+      "customerName": "홍길동",
+      "customerPhone": "010-1234-5678",
+      "modelName": "FixGo Washer X1",
+      "receptionStatus": "RECEIVED",
+      "repairStatus": "DIAGNOSING",
+      "technicianName": "김기사"
     }
   ],
-  "pageNumber": 0,
-  "pageSize": 10,
-  "totalElements": 42,
-  "totalPages": 5,
-  "last": false
+  "totalElements": 1,
+  "totalPages": 1,
+  "size": 20,
+  "number": 0,
+  "first": true,
+  "last": true,
+  "empty": false
 }
 ```
 
-### 1.1.2 실패 및 에러 응답 포맷 (ApiErrorResponse)
+### 1.3.2 접수 등록
 
-- 글로벌 예외 처리기(@RestControllerAdvice)를 통해 일관된 에러 JSON 규격을 반환.
+- 엔드포인트: `POST /api/v1/as-receptions`
+- 설명: 새로운 A/S 접수를 등록한다.
+- 접근 권한: 로그인 사용자
+- 필수 필드: customerId, productId, technicianId, symptom, symptomDetail
+- Request Body:
 
 ```json
 {
-  "timestamp": "2026-10-19T08:30:00",
-  "status": 400,
-  "error": "BAD_REQUEST",
-  "code": "PAYMENT_AMOUNT_MISMATCH",
-  "message": "실제 결제 금액(130,000원)이 사전 등록된 주문 금액(150,000원)과 일치하지 않아 결제가 자동 취소되었습니다."
+  "customerId": 1,
+  "productId": 1,
+  "technicianId": 3,
+  "symptom": "전원 불량",
+  "symptomDetail": "전원 버튼을 눌러도 켜지지 않음",
+  "memo": "고객 방문 예정",
+  "returnMethod": "DELIVERY",
+  "fileUrl": "<https://cdn.fixgo.com/files/as-001.jpg>"
 }
 ```
 
----
+- Response Body (HTTP 201):
 
-## 1.2 인증 및 회원 관리 API
+```json
+{
+  "id": 1,
+  "receptionNumber": "AS-251111-abc",
+  "customerId": 1,
+  "productId": 1,
+  "receptionistId": 2,
+  "technicianId": 3,
+  "status": "RECEIVED",
+  "createdAt": "2025-11-11T09:00:00"
+}
+```
 
-### 1.2.1 직원 생성
+### 1.3.3 점검 시작
 
-- 엔드포인트:`Post /api/v1/admin/member/new`
+- 엔드포인트: `POST /api/v1/as-receptions/my/{id}/inspection/start`
+- 설명: 담당 기사가 접수 건의 점검을 시작한다.
+- 접근 권한: 수리기사
+- Path Variable: id (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "asReceptionId": 1,
+  "technicianId": 3,
+  "diagnosis": "메인보드 전원부 고장",
+  "workNote": "메인보드 교체",
+  "repairDecision": "REPAIRABLE",
+  "warrantyResult": "IN_WARRANTY",
+  "reason": "부품 노후",
+  "laborRate": 30000,
+  "inspectionCost": 10000,
+  "finalAmount": 85000,
+  "status": "WAITING",
+  "reasonForRejection": "견적 미승인",
+  "confirmedAt": "2025-11-11T12:00:00",
+  "createdAt": "2025-11-11T09:00:00",
+  "updatedAt": "2025-11-11T10:00:00",
+  "createdBy": 2,
+  "updatedBy": 3
+}
+```
+
+### 1.3.4 기사 재배정
+
+- 엔드포인트: `PATCH /api/v1/as-receptions/{receptionId}/technician`
+- 설명: 접수원/관리자가 A/S 접수의 담당 기사를 재배정한다.
+- 접근 권한: 접수담당자, 관리자
+- Path Variable: receptionId (Long, 필수)
+- 필수 필드: technicianId, reason
+- Request Body:
+
+```json
+{
+  "technicianId": 5,
+  "reason": "담당 기사 일정 변경"
+}
+```
+
+- Response Body: 없음 (HTTP 204)
+
+### 1.3.5 접수 상태 수동 변경
+
+- 엔드포인트: `PATCH /api/v1/as-receptions/{receptionId}/status`
+- 설명: 관리자/접수원이 A/S 접수 상태를 수동으로 변경한다.
+- 접근 권한: 관리자, 접수담당자
+- Path Variable: receptionId (Long, 필수)
+- Query Parameter: newStatus (AsReceptionStatus, 필수) / reason (String, 선택)
+- Request Body: 없음
+- Response Body: 없음 (HTTP 200)
+
+### 1.3.6 접수 상세 조회
+
+- 엔드포인트: `GET /api/v1/as-receptions/{id}`
+- 설명: 접수 ID로 A/S 접수 상세 정보를 조회한다.
+- 접근 권한: 로그인 사용자
+- Path Variable: id (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "receptionNumber": "AS-251111-abc",
+  "createdAt": "2025-11-11T09:00:00",
+  "customer": {
+    "id": 1,
+    "name": "",
+    "phone": "",
+    "email": "",
+    "zipcode": "",
+    "basicAddress": "",
+    "detailAddress": "",
+    "createdAt": "2026-11-13T10:00:00",
+    "updatedAt": "2026-11-13T10:00:00",
+    "createdBy": 1,
+    "updatedBy": 1
+  },
+  "product": {
+    "id": 1,
+    "productModelId": 1,
+    "customerId": 1,
+    "serialNumber": "",
+    "manufacturedAt": "2026-11-13T10:00:00",
+    "purchasedAt": "2026-11-13T10:00:00"
+  },
+  "modelName": "FixGo Washer X1",
+  "receptionist": {
+    "id": 1,
+    "name": "김기사"
+  },
+  "technician": {
+    "id": 1,
+    "name": "김기사"
+  },
+  "status": "RECEIVED",
+  "symptom": "전원 불량",
+  "symptomDetail": "전원 버튼을 눌러도 켜지지 않음",
+  "memo": "고객 방문 예정",
+  "returnMethod": "DELIVERY",
+  "fileUrl": "<https://cdn.fixgo.com/files/as-001.jpg>"
+}
+```
+
+### 1.3.7 접수 수정
+
+- 엔드포인트: `PATCH /api/v1/as-receptions/{id}`
+- 설명: A/S 접수 정보를 수정한다.
+- 접근 권한: 로그인 사용자
+- Path Variable: id (Long, 필수)
+- Request Body:
+
+```json
+{
+  "symptom": "전원 불량",
+  "symptomDetail": "전원 버튼을 눌러도 켜지지 않음",
+  "memo": "고객 방문 예정",
+  "returnMethod": "DELIVERY"
+}
+```
+
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "receptionNumber": "AS-251111-abc",
+  "createdAt": "2025-11-11T09:00:00",
+  "customer": {
+    "id": 1,
+    "name": "",
+    "phone": "",
+    "email": "",
+    "zipcode": "",
+    "basicAddress": "",
+    "detailAddress": "",
+    "createdAt": "2026-11-13T10:00:00",
+    "updatedAt": "2026-11-13T10:00:00",
+    "createdBy": 1,
+    "updatedBy": 1
+  },
+  "product": {
+    "id": 1,
+    "productModelId": 1,
+    "customerId": 1,
+    "serialNumber": "",
+    "manufacturedAt": "2026-11-13T10:00:00",
+    "purchasedAt": "2026-11-13T10:00:00"
+  },
+  "modelName": "FixGo Washer X1",
+  "receptionist": {
+    "id": 1,
+    "name": "김기사"
+  },
+  "technician": {
+    "id": 1,
+    "name": "김기사"
+  },
+  "status": "RECEIVED",
+  "symptom": "전원 불량",
+  "symptomDetail": "전원 버튼을 눌러도 켜지지 않음",
+  "memo": "고객 방문 예정",
+  "returnMethod": "DELIVERY",
+  "fileUrl": "<https://cdn.fixgo.com/files/as-001.jpg>"
+}
+```
+
+### 1.3.8 기사 배정 이력 조회
+
+- 엔드포인트: `GET /api/v1/as-receptions/{receptionId}/technician-history`
+- 설명: A/S 접수의 기사 배정/재배정 이력을 조회한다.
+- 접근 권한: 접수담당자, 관리자
+- Path Variable: receptionId (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "receptionId": 1,
+  "previousTechnician": {
+    "id": 3,
+    "name": "김기사"
+  },
+  "newTechnician": {
+    "id": 3,
+    "name": "김기사"
+  },
+  "reason": "담당 기사 일정 변경",
+  "createdAt": "2025-11-11T10:00:00",
+  "changedBy": {
+    "id": 3,
+    "name": "김기사"
+  }
+}
+```
+
+### 1.3.9 고객 안내 링크 조회
+
+- 엔드포인트: `GET /api/v1/as-receptions/{id}/portal-link`
+- 설명: 고객 포탈 안내 링크를 조회한다.
+- 접근 권한: 로그인 사용자
+- Path Variable: id (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "token": "",
+  "expiresAt": "2026-11-13T10:00:00"
+}
+```
+
+### 1.3.10 접수 상태 변경 이력 조회
+
+- 엔드포인트: `GET /api/v1/as-receptions/{id}/history`
+- 설명: A/S 접수의 상태 변경 이력을 조회한다.
+- 접근 권한: 로그인 사용자
+- Path Variable: id (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "fromStatus": "",
+  "toStatus": "",
+  "reason": "",
+  "changedBy": "",
+  "createdAt": "2026-11-13T10:00:00"
+}
+```
+
+### 1.3.11 수리내역서 조회
+
+- 엔드포인트: `GET /api/v1/as-receptions/{id}/documents/repair-statement`
+- 설명: A/S 접수에 대한 수리내역서를 조회한다.
+- 접근 권한: 접수담당자, 관리자
+- Path Variable: id (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "receptionNumber": "",
+  "customerName": "",
+  "issuedAt": "2026-11-13T10:00:00",
+  "technicianName": "",
+  "workNote": "",
+  "repairWorks": [
+    {
+      "repairWorkId": 1,
+      "repairPresetName": "",
+      "workName": "",
+      "usedParts": [
+        {
+          "id": 1,
+          "repairWorkId": 1,
+          "partId": 1,
+          "partName": "",
+          "quantity": 1,
+          "unitPrice": 1,
+          "totalPrice": 1,
+          "createdAt": "2026-11-13T10:00:00"
+        }
+      ]
+    }
+  ],
+  "laborCost": 1,
+  "finalAmount": 1
+}
+```
+
+### 1.3.12 접수증 조회
+
+- 엔드포인트: `GET /api/v1/as-receptions/{id}/documents/reception-receipt`
+- 설명: A/S 접수증 문서를 조회한다.
+- 접근 권한: 접수담당자, 관리자
+- Path Variable: id (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "receptionNumber": "AS-251111-abc",
+  "createdAt": "2025-11-11T09:00:00",
+  "customerName": "홍길동",
+  "customerPhone": "010-1234-5678",
+  "customerEmail": "customer@example.com",
+  "zipcode": "06236",
+  "basicAddress": "서울시 강남구 테헤란로",
+  "detailAddress": "101동 202호",
+  "modelName": "FixGo Washer X1",
+  "serialNumber": "SN-123456",
+  "symptom": "전원 불량",
+  "returnMethod": "DELIVERY",
+  "receptionistName": "이접수",
+  "technicianName": "김기사"
+}
+```
+
+### 1.3.13 견적서 조회
+
+- 엔드포인트: `GET /api/v1/as-receptions/{id}/documents/estimate`
+- 설명: A/S 접수에 대한 견적서를 조회한다.
+- 접근 권한: 접수담당자, 관리자
+- Path Variable: id (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "receptionId": 1,
+  "receptionNumber": "",
+  "confirmedAt": "2026-11-13T10:00:00",
+  "laborRate": 1,
+  "inspectionCost": 1,
+  "totalAmount": 1,
+  "items": [
+    {
+      "category": "",
+      "name": "",
+      "quantity": 1,
+      "amount": 1
+    }
+  ]
+}
+```
+
+### 1.3.14 /api/v1/as-receptions/technician-histories
+
+- 엔드포인트: `GET /api/v1/as-receptions/technician-histories`
+- 접근 권한: 관리자
+- Query Parameter: keyword (String, 선택) / page (int, 선택, 예: 0) — 페이지 번호. 0부터 시작한다. / size (int, 선택, 예: 20) — 페이지 크기 / sort (string, 선택) — 정렬. 예: createdAt,desc
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "content": [
+    {
+      "id": 1,
+      "receptionId": 1,
+      "receptionNumber": "",
+      "customerName": "",
+      "modelName": "",
+      "previousTechnicianName": "",
+      "newTechnicianName": "",
+      "reason": "",
+      "changedBy": "",
+      "createdAt": "2026-11-13T10:00:00"
+    }
+  ],
+  "totalElements": 1,
+  "totalPages": 1,
+  "size": 20,
+  "number": 0,
+  "first": true,
+  "last": true,
+  "empty": false
+}
+```
+
+### 1.3.15 /api/v1/as-receptions/status-histories
+
+- 엔드포인트: `GET /api/v1/as-receptions/status-histories`
+- 접근 권한: 관리자
+- Query Parameter: keyword (String, 선택) / toStatus (String, 선택) / page (int, 선택, 예: 0) — 페이지 번호. 0부터 시작한다. / size (int, 선택, 예: 20) — 페이지 크기 / sort (string, 선택) — 정렬. 예: createdAt,desc
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "content": [
+    {
+      "id": 1,
+      "receptionId": 1,
+      "receptionNumber": "",
+      "customerName": "",
+      "modelName": "",
+      "fromStatus": "",
+      "toStatus": "",
+      "reason": "",
+      "changedBy": "",
+      "createdAt": "2026-11-13T10:00:00"
+    }
+  ],
+  "totalElements": 1,
+  "totalPages": 1,
+  "size": 20,
+  "number": 0,
+  "first": true,
+  "last": true,
+  "empty": false
+}
+```
+
+### 1.3.16 기사 전용 접수 목록 조회
+
+- 엔드포인트: `GET /api/v1/as-receptions/my`
+- 설명: 담당 기사에게 배정된 A/S 접수 목록을 페이징하여 조회한다.
+- 접근 권한: 수리기사
+- Query Parameter: keyword (String, 선택) / status (AsReceptionStatus, 선택) / page (int, 선택, 예: 0) — 페이지 번호. 0부터 시작한다. / size (int, 선택, 예: 20) — 페이지 크기 / sort (string, 선택) — 정렬. 예: createdAt,desc
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "content": [
+    {
+      "id": 1,
+      "receptionNumber": "AS-251111-abc",
+      "createdAt": "2025-11-11T09:00:00",
+      "customerName": "홍길동",
+      "customerPhone": "010-1234-5678",
+      "modelName": "FixGo Washer X1",
+      "receptionStatus": "RECEIVED",
+      "repairStatus": "DIAGNOSING",
+      "technicianName": "김기사"
+    }
+  ],
+  "totalElements": 1,
+  "totalPages": 1,
+  "size": 20,
+  "number": 0,
+  "first": true,
+  "last": true,
+  "empty": false
+}
+```
+
+### 1.3.17 기사 전용 접수 상세 조회
+
+- 엔드포인트: `GET /api/v1/as-receptions/my/{id}`
+- 설명: 담당 기사에게 배정된 A/S 접수 상세 정보를 조회한다.
+- 접근 권한: 수리기사
+- Path Variable: id (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "reception": {
+    "id": 1,
+    "receptionNumber": "AS-251111-abc",
+    "createdAt": "2025-11-11T09:00:00",
+    "customer": {
+      "id": 1,
+      "name": "",
+      "phone": "",
+      "email": "",
+      "zipcode": "",
+      "basicAddress": "",
+      "detailAddress": "",
+      "createdAt": "2026-11-13T10:00:00",
+      "updatedAt": "2026-11-13T10:00:00",
+      "createdBy": 1,
+      "updatedBy": 1
+    },
+    "product": {
+      "id": 1,
+      "productModelId": 1,
+      "customerId": 1,
+      "serialNumber": "",
+      "manufacturedAt": "2026-11-13T10:00:00",
+      "purchasedAt": "2026-11-13T10:00:00"
+    },
+    "modelName": "FixGo Washer X1",
+    "receptionist": {
+      "id": 1,
+      "name": "김기사"
+    },
+    "technician": {
+      "id": 1,
+      "name": "김기사"
+    },
+    "status": "RECEIVED",
+    "symptom": "전원 불량",
+    "symptomDetail": "전원 버튼을 눌러도 켜지지 않음",
+    "memo": "고객 방문 예정",
+    "returnMethod": "DELIVERY",
+    "fileUrl": "<https://cdn.fixgo.com/files/as-001.jpg>"
+  },
+  "repair": {
+    "id": 1,
+    "asReceptionId": 1,
+    "technicianId": 3,
+    "diagnosis": "메인보드 전원부 고장",
+    "workNote": "메인보드 교체",
+    "repairDecision": "REPAIRABLE",
+    "warrantyResult": "IN_WARRANTY",
+    "reason": "부품 노후",
+    "laborRate": 30000,
+    "inspectionCost": 10000,
+    "finalAmount": 85000,
+    "status": "WAITING",
+    "reasonForRejection": "견적 미승인",
+    "confirmedAt": "2025-11-11T12:00:00",
+    "createdAt": "2025-11-11T09:00:00",
+    "updatedAt": "2025-11-11T10:00:00",
+    "createdBy": 2,
+    "updatedBy": 3
+  }
+}
+```
+
+## 1.4 Admin Member API
+
+### 1.4.1 회원 생성
+
+- 엔드포인트: `POST /api/v1/admin/member`
+- 설명: 관리자가 신규 회원을 생성
+- 접근 권한: 관리자
+- 필수 필드: email, password, name, phone, address, role
+- Request Body:
+
+```json
+{
+  "email": "user@fixgo.com",
+  "password": "password123!",
+  "name": "김병호",
+  "phone": "010-1234-5678",
+  "address": "서울특별시 강남구 테헤란로 123",
+  "role": "ROLE_ADMIN"
+}
+```
+
+- Response Body (HTTP 201):
+
+```json
+{
+  "id": 1,
+  "email": "user@fixgo.com",
+  "name": "김병호",
+  "phone": "010-1234-5678",
+  "address": "서울특별시 강남구 테헤란로 123",
+  "role": "ROLE_ADMIN",
+  "status": "PENDING"
+}
+```
+
+### 1.3.2 회원 삭제
+
+- 엔드포인트: `DELETE /api/v1/admin/member`
+- 설명: 관리자가 회원을 삭제(소프트 삭제)
+- 접근 권한: 관리자
+- Query Parameter: memberId (Long, 필수)
+- Request Body: 없음
+- Response Body: 없음 (HTTP 200)
+
+### 1.3.3 회원 상태 변경
+
+- 엔드포인트: `PATCH /api/v1/admin/member/status`
+- 설명: 관리자가 회원의 상태를 변경
+- 접근 권한: 관리자
+- 필수 필드: email, status
+- Request Body:
+
+```json
+{
+  "email": "user@fixgo.com",
+  "status": "PENDING"
+}
+```
+
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "email": "user@fixgo.com",
+  "name": "김병호",
+  "role": "ROLE_ADMIN",
+  "status": "PENDING"
+}
+```
+
+### 1.3.4 회원 역할 변경
+
+- 엔드포인트: `PATCH /api/v1/admin/member/role`
+- 설명: 관리자가 회원의 역할을 변경
+- 접근 권한: 관리자
+- 필수 필드: email, role
+- Request Body:
+
+```json
+{
+  "email": "user@fixgo.com",
+  "role": "ROLE_ADMIN"
+}
+```
+
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "email": "user@fixgo.com",
+  "name": "김병호",
+  "role": "ROLE_ADMIN",
+  "status": "PENDING"
+}
+```
+
+### 1.3.5 회원 프로필 수정
+
+- 엔드포인트: `PATCH /api/v1/admin/member/profile`
+- 설명: 관리자가 회원 프로필 정보를 수정
+- 접근 권한: 관리자
+- 필수 필드: email, name, phone, address
+- Request Body:
+
+```json
+{
+  "email": "user@fixgo.com",
+  "name": "김병호",
+  "phone": "010-9876-5432",
+  "address": "서울특별시 서초구 반포대로 45"
+}
+```
+
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "email": "user@fixgo.com",
+  "name": "김병호",
+  "phone": "010-1234-5678",
+  "address": "서울특별시 강남구 테헤란로 123",
+  "role": "ROLE_ADMIN",
+  "status": "PENDING"
+}
+```
+
+## **1.4 Admin Member API**
+
+### **1.4.1 직원 생성**
+
+- **엔드포인트:** POST /api/v1/admin/member
+- **설명:** 관리자가 신규 직원을 생성
+- **접근 권한:** 관리자
+- **필수 필드:** email, password, name, phone, address, role
+
+Request Body:
+
+```json
+{
+	"email": "user@fixgo.com",
+	"password": "password123!",
+	"name": "김병호",
+	"phone": "010-1234-5678",
+	"address": "서울특별시 강남구 테헤란로 123",
+	"role": "ROLE_ADMIN"
+}
+```
+
+Response Body (HTTP 201):
+
+```json
+{
+	"id": 1,
+	"email": "user@fixgo.com",
+	"name": "김병호",
+	"phone": "010-1234-5678",
+	"address": "서울특별시 강남구 테헤란로 123",
+	"role": "ROLE_ADMIN",
+	"status": "PENDING"
+}
+```
+
+실패 시 응답은 1.1.2 공통 에러 형식을 따른다.
+
+### **1.4.2 직원 삭제**
+
+- **엔드포인트:** DELETE /api/v1/admin/member
+- **설명:** 관리자가 직원을 삭제(소프트 삭제)
+- **접근 권한:** 관리자
+- **Query Parameter:** memberId (Long, 필수)
+- **Request Body:** 없음
+- **Response Body:** 없음 (HTTP 200)
+
+실패 시 응답은 1.1.2 공통 에러 형식을 따른다.
+
+### **1.4.3 직원 상태 변경**
+
+- **엔드포인트:** PATCH /api/v1/admin/member/status
+- **설명:** 관리자가 직원의 상태를 변경
+- **접근 권한:** 관리자
+- **필수 필드:** email, status
+
+Request Body:
+
+```json
+{
+	"email": "user@fixgo.com",
+	"status": "PENDING"
+}
+```
+
+Response Body (HTTP 200):
+
+```json
+{
+	"id": 1,
+	"email": "user@fixgo.com",
+	"name": "김병호",
+	"role": "ROLE_ADMIN",
+	"status": "PENDING"
+}
+```
+
+실패 시 응답은 1.1.2 공통 에러 형식을 따른다.
+
+### **1.4.4 직원 역할 변경**
+
+- **엔드포인트:** PATCH /api/v1/admin/member/role
+- **설명:** 관리자가 직원의 역할을 변경
+- **접근 권한:** 관리자
+- **필수 필드:** email, role
+
+Request Body:
+
+```json
+{
+	"email": "user@fixgo.com",
+	"role": "ROLE_ADMIN"
+}
+```
+
+Response Body (HTTP 200):
+
+```json
+{
+	"id": 1,
+	"email": "user@fixgo.com",
+	"name": "김병호",
+	"role": "ROLE_ADMIN",
+	"status": "PENDING"
+}
+```
+
+실패 시 응답은 1.1.2 공통 에러 형식을 따른다.
+
+### **1.4.5 직원 프로필 수정**
+
+- **엔드포인트:** PATCH /api/v1/admin/member/profile
+- **설명:** 관리자가 직원 프로필 정보를 수정
+- **접근 권한:** 관리자
+- **필수 필드:** email, name, phone, address
+
+Request Body:
+
+```json
+{
+	"email": "user@fixgo.com",
+	"name": "김병호",
+	"phone": "010-9876-5432",
+	"address": "서울특별시 서초구 반포대로 45"
+}
+```
+
+Response Body (HTTP 200):
+
+```json
+{
+	"id": 1,
+	"email": "user@fixgo.com",
+	"name": "김병호",
+	"phone": "010-1234-5678",
+	"address": "서울특별시 강남구 테헤란로 123",
+	"role": "ROLE_ADMIN",
+	"status": "PENDING"
+}
+```
+
+실패 시 응답은 1.1.2 공통 에러 형식을 따른다.
+
+## 1.5 AI API
+
+### 1.5.1 BrunoTest용
+
+- 엔드포인트: `POST /api/v1/ai/chat/test`
+- 설명: 사용자의 채팅을 입력받아 그에 맞는 답을 반환
 - 접근 권한: 관리자
 - Request Body:
 
 ```json
 {
-  "email": "admin001@fixgo.com",
-  "password": "password1234",
-  "name": "관리자",
-  "phone": "010-XXXX-XXXX",
-  "address": "서울특별시 OO구 OO동 ~",
-  "role": "ROLE_ADMIN"
+  "text": "안녕"
 }
 ```
 
-- Response Body (HTTP 201 Created):
+- Response Body: 텍스트 (HTTP 200)
 
-```json
-{
-  "id": 1,
-  "password": "password1234",
-  "name": "관리자",
-  "phone": "010-XXXX-XXXX",
-  "address": "서울특별시 OO구 OO동 ~",
-  "role": "ROLE_ADMIN"
-}
-```
+### 1.5.2 AI 스트리밍 채팅
 
-### 1.2.2 JWT 로그인
-
-- 엔드포인트: `POST /api/v1/auth/login`
-- 접근 권한: 전체 (직원)
+- 엔드포인트: `POST /api/v1/ai/chat/stream`
+- 설명: 사용자 입력을 받아 AI 응답을 스트리밍으로 반환한다.
+- 접근 권한: 관리자
 - Request Body:
 
 ```json
 {
-  "email": "admin001@fixgo.com",
-  "password": "password1234"
+  "text": "안녕"
 }
 ```
 
-- Response Body (HTTP 200 OK):
+- Response Body: 스트리밍 텍스트 (HTTP 200)
+
+### 1.5.3 채팅 이력 조회
+
+- 엔드포인트: `GET /api/v1/ai`
+- 설명: 로그인한 관리자의 AI 채팅 이력을 조회한다.
+- 접근 권한: 관리자
+- Request Body: 없음
+- Response Body (HTTP 200):
 
 ```json
 {
-  "accessToken": "eyJhbGciOiJIUzM4NCJ9...",
-  "refreshToken": "eyJhbGciOiJIUzM4NCJ9...",
-  "tokenType": "Bearer",
-  "expiresIn": 3600
+  "id": 1,
+  "memberId": "",
+  "content": "",
+  "type": "",
+  "createdAt": "2026-11-13T10:00:00"
 }
 ```
 
-### 1.2.3 토큰 갱신 (RTR)
+## 1.6 Auth API
+
+### 1.6.1 토큰 재발급
 
 - 엔드포인트: `POST /api/v1/auth/refresh`
-- 접근 권한: 전체 (직원)
+- 설명: Refresh Token으로 Access Token을 재발급한다.
+- 접근 권한: 전체 (비인증)
 - Request Body:
 
 ```json
 {
-  "refreshToken": "eyJhbGciOiJIUzM4NCJ9..."
+  "refreshToken": "eyJhbGciOiJIUzI1NiJ9..."
 }
 ```
 
-- Response Body (HTTP 200 OK):
+- Response Body (HTTP 200):
 
 ```json
 {
-  "accessToken": "eyJhbGciOiJIUzM4NCJ9...",
-  "refreshToken": "eyJhbGciOiJIUzM4NCJ9...",
+  "accessToken": "eyJhbGciOiJIUzI1NiJ9...",
+  "refreshToken": "eyJhbGciOiJIUzI1NiJ9...",
   "tokenType": "Bearer",
   "expiresIn": 3600
 }
 ```
 
-### 1.2.4 내 계정 프로필 조회 및 수정
+### 1.6.2 로그아웃
 
-- 조회 엔드포인트: `GET /api/v1/member/me`
-- 수정 엔드포인트: `PATCH /api/v1/member/me/password`
-- Request Body: `@AuthenticationPrincipal`이용, 로그인 한 직원 정보 추출
-- Response Body (HTTP 200 OK): `void`
+- 엔드포인트: `POST /api/v1/auth/logout`
+- 설명: 현재 로그인 사용자의 Refresh Token을 무효화한다.
+- 접근 권한: 로그인 사용자
+- Request Body: 없음
+- Response Body: 없음 (HTTP 200)
 
-### 1.2.5 직원 목록 조회
+### 1.6.3 로그인
 
-- 엔드포인트
-- 접근 권한: 전체 (직원)
+- 엔드포인트: `POST /api/v1/auth/login`
+- 설명: 이메일과 비밀번호로 로그인하여 Access/Refresh 토큰을 발급한다.
+- 접근 권한: 전체 (비인증)
+- 필수 필드: email, password
 - Request Body:
 
 ```json
 {
-  "keyword": "",
-  "role": "",
-  "status": ""
+  "email": "admin@fixgo.com",
+  "password": "password123!"
 }
 ```
 
-- Response Body (HTTP 200 OK):
+- Response Body (HTTP 200):
 
 ```json
 {
-  "content": [
-    {
-      "id": 1,
-      "email": "admin001@fixgo.com",
-      "name": "관리자",
-      "role": "ROLE_ADMIN",
-      "status": "ACTIVE"
-    },
-    {
-      "id": 2,
-      "email": "receptionist001@fixgo.com",
-      "name": "최미소",
-      "role": "ROLE_RECEPTIONIST",
-      "status": "ACTIVE"
-    }
-  ],
-  "page": 0,
-  "size": 20,
-  "totalElements": 2,
-  "totalPages": 1,
-  "first": true,
-  "last": true
+  "accessToken": "eyJhbGciOiJIUzI1NiJ9...",
+  "refreshToken": "eyJhbGciOiJIUzI1NiJ9...",
+  "tokenType": "Bearer",
+  "expiresIn": 3600
 }
 ```
 
-### 1.2.6 직원 프로필 수정
+## 1.7 Customer API
 
----
-
-# A/S 접수 관리 API
-
-## A/S 목록
-
-- 엔드포인트: `POST /api/v1/as-receptions`
-- 접근 권한: 관리자, 접수 담당자
-- 등록된 A/S 요청 목록을 조회하고 검색 조건, 처리 상태, 담당 기사에 따라 필터링한다.
-
-Response Body (HTTP 200 OK)
-
-```json
-{
-  "content": [
-    {
-      "id": 1,
-      "receptionNumber": "AS-2026-1101",
-      "customerId": 1,
-      "customerName": "김하늘",
-      "customerPhone": "010-1234-5678",
-      "productId": 3,
-      "modelName": "SZ-P24",
-      "status": "RECEIVED",
-      "technicianId": 5,
-      "technicianName": "김기사",
-      "createdAt": "2026-10-29T09:30:00"
-    },
-    {
-      "id": 2,
-      "receptionNumber": "AS-2026-1102",
-      "customerId": 2,
-      "customerName": "홍길동",
-      "customerPhone": "010-2222-3333",
-      "productId": 4,
-      "modelName": "SZ-P24",
-      "status": "IN_PROGRESS",
-      "technicianId": 8,
-      "technicianName": "정기사",
-      "createdAt": "2026-10-29T10:00:00"
-    }
-  ],
-  "page": 0,
-  "size": 20,
-  "totalElements": 2,
-  "totalPages": 1,
-  "first": true,
-  "last": true
-}
-```
-
-## A/S 접수
-
-엔드포인트:
-
-- 엔드포인트: `POST /api/v1/as-receptions`
-- 접근 권한: 관리자, 접수 담당자
-- 고객, 제품, 고장 증상, 담당 기사 및 수령 방식 정보를 입력하여 A/S 접수를 등록한다.
-
-Request Body
-
-```json
-{
-  "customerId": 1,
-  "productId": 3,
-  "technicianId": 5,
-  "symptom": "전원 불량",
-  "symptomDetail": "전원 버튼을 눌러도 화면이 켜지지 않음",
-  "Memo": "수리 완료 후 고객에게 연락 요청",
-  "returnMethod": "DELIVERY"
-}
-```
-
-Response Body (HTTP 201 Created)
-
-```json
-{
-  "id": 1,
-  "receptionNumber": "AS-2026-0001",
-  "customerId": 1,
-  "productId": 3,
-  "receptionistId": 2,
-  "technicianId": 5,
-  "symptom": "전원 불량",
-  "symptomDetail": "전원 버튼을 눌러도 화면이 켜지지 않음",
-  "Memo": "수리 완료 후 고객에게 연락 요청",
-  "returnMethod": "DELIVERY",
-  "status": "RECEIVED",
-  "createdAt": "2026-10-29T09:30:00",
-  "message": "A/S 접수가 완료되었습니다."
-}
-```
-
-## A/S 접수 상세
-
-- 엔드포인트: `GET /api/v1/as-receptions/{receptionId}`
-- 접근 권한: 관리자, 접수 담당자
-- 선택한 A/S 접수 건의 고객 정보, 제품 정보, 고장 내용, 담당 기사 및 처리 상태를 조회한다.
-
-Response Body (HTTP 200 OK)
-
-```json
-{
-  "id": 1,
-  "receptionNumber": "AS-2026-1112",
-  "customer": {
-    "id": 1,
-    "name": "한소희",
-    "phone": "010-5555-1212",
-    "email": "user@gmail.com",
-    "postalCode": "12345",
-    "address": "서울특별시 강남구 테헤란로 123",
-    "addressDetail": "101동 1001호"
-  },
-  "product": {
-    "id": 3,
-    "serialNumber": "SZP24-22018-51542",
-    "productCategory": "스마트폰",
-    "modelName": "SZP24",
-    "purchaseDate": "2025-05-14"
-  },
-  "receptionistId": 2,
-  "technician": {
-    "id": 5,
-    "name": "김기사"
-  },
-  "symptom": "스피커 불량",
-  "symptomDetail": "스피커가 지지직거리고 소리가 잘 안 들립니다.",
-  "Memo": "-",
-  "returnMethod": "PICKUP",
-  "status": "RECEIVED",
-  "statusChangedAt": "2026-11-10T09:30:00",
-  "createdAt": "2026-11-10T09:30:00",
-  "updatedAt": "2026-11-10T09:30:00"
-}
-```
-
-## 고객 관리 - 고객 조회
+### 1.7.1 고객 목록/검색
 
 - 엔드포인트: `GET /api/v1/customers`
-- 접근 권한: 인증된 사용자
-- `name`, `phone`, `email` 중 비어 있지 않은 첫 번째 조건으로 부분 일치 검색한다. 결과는 JSON 배열이다.
-
-## A/S 접수 모달 - 고객 및 시리얼번호 검색
-
-- 고객 검색: `GET /api/v1/customers/search?name=김민수&page=0&size=20`
-- 시리얼번호 검색: `GET /api/v1/products/search?serialNumber=SN-123&page=0&size=20`
-- 접근 권한: 인증된 사용자
-- 고객 검색은 기존 고객 조회와 같은 조건과 우선순위를 사용한다. 시리얼번호는 앞뒤 공백을 제거한 후 부분 일치 검색한다. 검색어가 없거나 공백이면 빈 페이지를 반환한다.
-- 페이지 번호는 0부터 시작한다. 기본값은 `page=0`, `size=20`, ID 오름차순이다.
-- HTTP 200 응답은 `content`(조회 결과), `number`(현재 페이지 번호), `size`(페이지 크기), `totalElements`(전체 결과 수), `totalPages`(전체 페이지 수)를 포함한다. `content`의 항목은 기존 배열 조회 API와 같은 형식이다.
-
-## A/S 접수 모달 - 배정 가능한 기사 조회
-
-- 엔드포인트: `GET /api/v1/member/technicians?keyword=김&sortBy=INSPECTION_WAITING_COUNT&direction=ASC&page=0&size=20`
-- 접근 권한: 관리자, 접수 담당자
-- 활성 기사만 조회한다. `keyword`는 기사명 부분 일치 검색이며 생략하면 전체 활성 기사를 조회한다.
-- 기본값은 `page=0`, `size=20`, `sortBy=NAME`, `direction=ASC`다. `sortBy`는 `NAME`, `INSPECTION_WAITING_COUNT`, `REPAIR_IN_PROGRESS_COUNT`, `ESTIMATED_DURATION_MINUTES`를 지원한다. 예상 시간 데이터가 없는 기사는 해당 열로 정렬할 때 마지막에 표시한다.
-- 응답은 `content`, `number`, `size`, `totalElements`, `totalPages`를 포함한다. `content`에는 아래 항목이 들어간다.
-  - `technicianId`, `name`, `email`, `status`. 선택한 `technicianId`를 접수 등록 또는 기사 재배정 요청에 사용한다.
-  - `inspectionWaitingCount`. 기사에게 배정된 접수 중 `RECEIVED` 상태이고 수리 기록이 생성되기 전인 건수다.
-  - `repairInProgressCount`. 해당 기사의 수리 기록 중 `REPAIRING` 상태인 건수다. 수리 기록이 없는 접수 건은 접수 담당 기사와 `REPAIR_IN_PROGRESS` 상태를 기준으로 포함한다.
-  - `estimatedDurationMinutes`. 완료 이력의 수리 시작부터 수리 완료까지 걸린 시간의 건당 평균(분)이다. 시작과 완료 이력이 모두 있는 건이 없으면 `null`을 반환한다.
-
-## 고객 관리 - 고객 상세
-
-- 엔드포인트: `GET /api/v1/customers/{customerId}`
-- 접근 권한: 관리자, 접수 담당자
-- 고객 목록에서 특정 고객을 선택하면 등록된 고객 상세 정보를 조회한다.
-
-Response Body (HTTP 200 OK)
-
-```json
-{
-  "id": 1,
-  "name": "김민수",
-  "phone": "010-2222-1818",
-  "email": "minsu@example.com",
-  "postalCode": "12345",
-  "address": "서울특별시 강남구 테헤란로 123",
-  "addressDetail": "101동 1001호",
-  "createdAt": "2026-10-28T09:30:00",
-  "updatedAt": "2026-10-28T09:30:00"
-}
-```
-
----
-
-# 1.3 배송 관리 API
-
-## 1.3.1 배송 목록 및 통계 조회
-
-- 엔드포인트: `GET /api/v1/shipments`
-- 접근 권한: 관리자, 접수 담당자
-- Response Body (HTTP 200 OK)
-
-```json
-{
-  "statistics": {
-    "deliveryWaiting": 2,
-    "deliveryStarted": 1,
-    "deliveryCompleted": 4,
-    "visitPickup": 1
-  },
-  "totalCount": 8
-  "content": [
-    {
-      "id": 1,
-      "receiptNumber": "AS-20261028-001",
-      "returnMethod": "DELIVERY",
-      "recipientName": "김수민",
-      "recipientPhone": "010-1234-5678",
-      "courier": "CJ대한통운",
-      "trackingNumber": "123456789012",
-      "status": "DELIVERY",
-      "shippedAt": "2026-10-28T14:10:00"
-    }
-  ],
-  "page": 0,
-  "size": 10,
-  "totalElements": 1,
-  "totalPages": 1
-}
-```
-
-## 1.3.2 배송 상세 조회
-
-- 엔드포인트: `GET /api/v1/shipments/{shipmentId}`
-- 접근 권한: 관리자, 접수 담당자
-- 배송 목록에서 상세보기 버튼 클릭 시 배송 정보와 배송 이벤트 이력을 조회한다.
-
-Response Body (HTTP 200 OK)
-
-```json
-{
-  "id": 1,
-  "receiptNumber": "AS-20261028-001",
-  "returnMethod": "DELIVERY",
-  "recipientName": "김수민",
-  "recipientPhone": "010-1234-5678",
-  "courier": "CJ대한통운",
-  "trackingNumber": "123456789012",
-  "status": "SHIPPING",
-  "zipcode": "06234"
-  "address": "서울시 강남구 테헤란로 152",
-  "addressDetail": "사자빌딩 3층"
-  "shippedAt": "2026-10-28T14:10:00"
-  "completedAt": null,
-  "events": [
-    {
-      "id": 2,
-      "eventType": "DELIVERD",
-      "description": "집화완료",
-      "processStatus": "PROCESSED",
-      "occurredAt": "2026-10-25T16:40:00"
-    },
-    {
-      "id": 1,
-      "eventType": "TRACKING_REGISTERED",
-      "description": "운송장 등록",
-      "processStatus": "PROCESSED",
-      "occurredAt": "2026-10-25T14:10:00"
-    }
-  ]
-}
-```
-
-## 1.3.3 배송 등록
-
-- 엔드포인트: `POST /api/v1/shipments/registration`
-- 접근 권한: 관리자, 접수 담당자
-
-Request Body
-
-```json
-{
-  "asReceptionId": 1062,
-  "courier": "CJ대한통운",
-  "courierCode": "SMARTTRACKER_COURIER_CODE",
-  "trackingNumber": "5100-2219"
-}
-```
-
-Response Body
-
-```json
-{
-  "id": 1,
-  "receptionNumber": "AS-2026-1062",
-  "recipientName": "정하늘",
-  "courier": "CJ대한통운",
-  "trackingNumber": "123456789012",
-  "status": "READY",
-  "createdAt": "2026-10-29T09:30:00"
-}
-```
-
-## 1.3.4 배송 시작 알림 발송
-
-- 엔드포인트: `POST /api/v1/shipments/{shipmentId}/start`
-- 접근 권한: 관리자, 접수 담당자
-
-Response Body (HTTP 200 OK)
-
-```json
-{
-  "id": 1,
-  "status": "SHIPPING",
-  "shippedAt": "2026-10-29T09:35:00",
-  "message": "배송 시작 처리되었습니다."
-}
-```
-
-## 1.3.5 운송장 수정
-
-- 엔드포인트: `PATCH /api/v1/shipments/tracking`
-- 접근 권한: 관리자, 접수 담당자
-
-Request Body
-
-```json
-{
-  "courier": "한진택배",
-  "courierCode": "SMARTTRACKER_COURIER_CODE",
-  "trackingNumber": "123456789012"
-}
-```
-
-Response Body (HTTP 200 OK)
-
-```json
-{
-  "id": 1,
-  "courier": "한진택배",
-  "trackingNumber": "123456789012",
-  "updatedAt": "2026-10-29T09:40:00",
-  "message": "운송장 정보가 수정되었습니다."
-}
-```
-
-## 1.3.7 배송 완료 및 방문수령 완료 처리
-
-- 엔드포인트: `PATCH /api/v1/shipments/{shipmentId}/complete`
-- 접근 권한: 관리자, 접수 담당자
-
-Request Body
-
-```json
-{
-  "reason": "택배 배송 완료"
-}
-```
-
-Response Body (HTTP 200 OK)
-
-```json
-{
-  "id": 18,
-  "returnMethod": "DELIVERY",
-  "status": "DELIVERED",
-  "completedAt": "2026-10-29T10:05:00",
-  "message": "배송 완료 처리되었습니다."
-}
-```
-
----
-
-## 1.4 결제 API
-
-### 1.4.1 결제 목록 조회
-
-- 엔드포인트: `GET /api/v1/manage/payments`
+- 설명: 조건이 없으면 전체 조회하며, id 내림차순으로 페이징한다.
+- 접근 권한: 로그인 사용자
+- Query Parameter: name (String, 선택, 예: 홍길동) — 검색할 고객 이름 / phone (String, 선택, 예: 010-1234-5678) — 검색할 고객 연락처 / email (String, 선택, 예: hong@example.com) — 검색할 고객 이메일 / page (int, 선택, 예: 0) — 페이지 번호. 0부터 시작한다. / size (int, 선택, 예: 20) — 페이지 크기 / sort (string, 선택) — 정렬. 예: createdAt,desc
 - Request Body: 없음
-- Response Body (HTTP 200 OK)
-
-```json
-{
-  "content": [
-    {
-      "billId": 10,
-      "asReceptionNumber": "AS-2026-1076",
-      "customerName": "최유진",
-      "amount": 45000,
-      "status": "UNPAID",
-      "paymentMethod": "VIRTUAL_ACCOUNT"
-    },
-    {
-      "billId": 11,
-      "asReceptionNumber": "AS-2026-1062",
-      "customerName": "정하늘",
-      "amount": 120000,
-      "status": "UNPAID",
-      "paymentMethod": "CARD"
-    }
-  ],
-  "page": 0,
-  "size": 10,
-  "totalElements": 25,
-  "totalPages": 3
-}
-```
-
-### 1.4.2 결제 상세 조회
-
-- 엔드포인트: `GET /api/v1/manage/payments/{billId}`
-- Request Body: 없음
-- Response Body (HTTP 200 OK)
-
-```json
-{
-  "billId": 10,
-  "asReceptionNumber": "AS-2026-1076",
-  "customerName": "최유진",
-  "productName": "시저북 SZ-N14",
-  "symptom": "키보드 불량",
-  "amount": 120000,
-  "billStatus": "UNPAID",
-  "payment": null,
-  "channel": "ONLINE"
-  "virtualAccount": {
-    "bankName": "국민은행",
-    "accountNumber": "110-220-3300",
-    "dueAt": "2026-10-30T23:59:00"
-  },
-  "refundedAmount": 0,
-  "refundableAmount": 0,
-  "refunds": []
-}
-```
-
-### 1.4.3 결제 시도 생성 및 결제 가능 여부 검증
-
-- 엔드포인트: `POST /api/v1/portal/{token}/payments/prepare`
-- Request Body: 없음
-- Response Body (HTTP 201 Created)
-
-```json
-{
-  "orderId": "ORD_20261019_1001",
-  "amount": 40000
-}
-```
-
-### 1.4.4 결제 사후 검증
-
-- 엔드포인트: `POST /api/v1/portal/{token}/payments/complete`
-- Request Body:
-
-```json
-{
-  "orderId": "ORD_20261019_1001",
-  "paymentKey": "PK_9876543210",
-  "amount": 40000
-}
-```
-
-- Response Body (HTTP 200 OK):
-
-```json
-{
-  "orderId": "ORD_20261019_1001",
-  "amount": 40000,
-  "status": "PAID"
-}
-```
-
-### 1.4.5 결제 비동기 웹훅 수신
-
-- 엔드포인트: `POST /api/v1/payments/webhook/deposit`
-- 접근 권한: 전체 공개 (토스페이먼츠 웹훅 검증)
-- Request Body:
-
-```json
-{
-  "createdAt": "2022-01-01T00:00:00.000000",
-  "secret": "4ipXAIss_MYROs3VT8E32",
-  "status": "DONE",
-  "transactionKey": "9FF15E1A29D0E77C218F57262BFA4986",
-  "orderId": "ORD_20261019_1001"
-}
-```
-
-- Response Body (HTTP 200 OK):
-
-```json
-{
-  "result": "SUCCESS"
-}
-```
-
-### 1.4.6 고객용 결제 정보 조회
-
-- 엔드포인트: `GET /api/v1/portal/{token}/payments`
-- Request Body: 없음
-- Response Body (HTTP 200 OK):
-
-```json
-{
-  "billId": 10,
-  "amount": 40000,
-  "status": "PAID"
-}
-```
-
-### 1.4.7 직원용 미결제 목록 조회
-
-- 엔드포인트: `GET /api/v1/manage/payments?status=UNPAID`
-- Request Body: 없음
-- Response Body (HTTP 200 OK):
-
-```json
-{
-  "payments": [
-    {
-      "billId": 10,
-      "amount": 40000,
-      "status": "UNPAID"
-    },
-    {
-      "billId": 11,
-      "amount": 55000,
-      "status": "UNPAID"
-    }
-    [
-      }
-```
-
-### 1.4.8 가상계좌 취소
-
-- 엔드포인트: `POST /api/v1/manage/payments/{billId}/virtual-account/cancel`
-- Request Body:
-
-```json
-{
-  "cancelReason": "결제 수단 변경"
-}
-```
-
-- Response Body (HTTP 204 No Content)
-
-### 1.4.9 전액 환불
-
-- 엔드포인트: `POST /api/v1/manage/payments/{billId}/refunds/all`
-- 요청 헤더: `Idempotency-Key`
-- Request Body:
-
-```json
-{
-  "cancelReason": "동일 증상 3회"
-}
-```
-
-- Response Body (HTTP 204 No Content)
-
-### 1.4.10 부분 환불
-
-- 엔드포인트: `POST /api/v1/manage/payments/{billId}/refunds/partial`
-- 요청 헤더: `Idempotency-Key`
-- Request Body:
-
-```json
-{
-  "cancelReason": "센터 과실",
-  "cancelAmount": 40000
-}
-```
-
-- Response Body (HTTP 204 No Content)
-
-### 1.4.11 현장 결제 등록
-
-- 엔드포인트: `POST /api/v1/manage/payments/{billId}/onsite`
-- Request Body:
-
-```json
-{
-  "method": "CARD",
-  "approvalNumber": "12345678"
-  ->
-  카드
-  단말기
-  승인번호
-  (현재는
-  생략)
-}
-```
-
-- Response Body (HTTP 204 No Content):
-
-# 1.5 고객 포탈 통합 조회 API
-
-## 1.5.1 고객 포탈 조회
-
-- 엔드포인트: `GET /api/v1/portal/{token}`
-- Request Body: 없음
-- Response Body (HTTP 200 OK):
-
-```json
-{
-  "asReceptionNumber": "AS-2026-1076",
-  "status": "PAYMENT_PENDING",
-  "customerName": "한소희",
-  "phone": "010-5555-1212",
-  "productName": "시저북 SZ-P24",
-  "symptom": "키보드 불량"
-}
-```
-
-## 1.5.2 고객 포탈 점검 및 견적 조회
-
-- 엔드포인트: `GET /api/v1/portal/{token}/inspection`
-- Request Body: 없음
-- Response Body (HTTP 200 OK):
-
-```json
-{
-  "inspectionStatus": "IN_PROGRESS",
-  "inspection": {
-    "startedAt": "2026-10-28T10:00:00",
-    "description": "제품 점검 진행 중"
-  },
-  "estimate": null
-}
-```
-
-```json
-{
-  "inspectionStatus": "COMPLETED",
-  "inspection": {
-    "startedAt": "2026-10-28T10:00:00",
-    "completedAt": "2026-10-29T11:00:00",
-    "description": "키보드 연결부 불량 확인"
-  },
-  "estimate": {
-    "estimateId": 15,
-    "status": "PENDING",
-    "items": [
-      {
-        "name": "키보드 교체",
-        "quantity": 1,
-        "unitPrice": 40000,
-        "amount": 40000
-      },
-      {
-        "name": "수리 공임",
-        "quantity": 1,
-        "unitPrice": 5000,
-        "amount": 5000
-      }
-    ],
-    "totalAmount": 45000,
-    "createdAt": "2026-10-29T11:00:00"
-  }
-}
-```
-
-## 1.5.3 고객 포탈 수리 조회
-
-- 엔드포인트: `GET /api/v1/portal/{token}/repair`
-- Request Body: 없음
-- Response Body (HTTP 200 OK):
-
-```json
-{
-  "repairStatus": "IN_PROGRESS",
-  "repair": {
-    "startedAt": "2026-10-29T10:00:00",
-    "completedAt": null,
-    "description": "키보드 교체 작업 진행 중"
-  }
-}
-```
-
-```json
-{
-  "repairStatus": "COMPLETED",
-  "repair": {
-    "startedAt": "2026-10-29T10:00:00",
-    "completedAt": "2026-10-29T15:00:00",
-    "description": "키보드 교체 및 정상 작동 확인"
-  }
-}
-```
-
-## 1.5.4 고객 포탈 결제 조회
-
-- 엔드포인트: `GET /api/v1/portal/{token}/payments`
-- Request Body: 없음
-- Response Body (HTTP 200 OK):
-
-```json
-1. 결제 대기
-{
-  "billId": 15,
-  "amount": 120000,
-  "status": "UNPAID",
-  "paymentMethod": null,
-  "paidAt": null,
-  "virtualAccount": null
-}
-```
-
-```json
-2. 가상계좌 입금 대기
-{
-  "billId": 15,
-  "amount": 120000,
-  "status": "UNPAID",
-  "paymentMethod": "VIRTUAL_ACCOUNT",
-  "paidAt": null,
-  "virtualAccount": {
-    "bankCode": "20",
-    "accountNumber": "12345678901234",
-    "dueAt": "2026-10-30T23:59:59"
-  }
-}
-```
-
-```json
-3. 결제 완료
-{
-  "billId": 15,
-  "amount": 120000,
-  "status": "PAID",
-  "paymentMethod": "CARD",
-  "paidAt": "2026-10-29T15:30:00",
-  "virtualAccount": null
-}
-```
-
----
-
-# 1.5 알림/SMS 관리 API
-
-## 1.5.1 SMS/알림 화면 조회
-
-- 엔드포인트: `GET /api/v1/notifications`
-- 접근 권한: 관리자, 접수 담당자
-
-Response Body (HTTP 200 OK)
-
-```json
-{
-  "statistics": {
-    "todaySent": 12,
-    "success": 10,
-    "failed": 2
-  },
-  "templates": [
-    {
-      "type": "RECEIVED",
-      "name": "접수 완료 안내",
-      "content": "[FixGo] {접수번호} 접수가 완료되었습니다."
-    },
-    {
-      "type": "INSPECTION",
-      "name": "점검 완료 안내",
-      "content": "[FixGo] {접수번호} 제품 점검이 완료되었습니다."
-    },
-    {
-      "type": "ESTIMATE",
-      "name": "견적서 발급 안내",
-      "content": "[FixGo] {접수번호} 견적서가 발급되었습니다."
-    },
-    {
-      "type": "REPAIR",
-      "name": "수리 완료 안내",
-      "content": "[FixGo] {접수번호} 제품 수리가 완료되었습니다."
-    },
-    {
-      "type": "PAYMENT",
-      "name": "결제 요청 안내",
-      "content": "[FixGo] {접수번호} 결제 내용을 확인해 주세요."
-    },
-    {
-      "type": "SHIPPING",
-      "name": "배송 시작 안내",
-      "content": "[FixGo] {접수번호} 제품 배송이 시작되었습니다."
-    }
-  ]
-}
-```
-
-## 1.5.2 알림 발송
-
-- 엔드포인트: `POST /api/v1/notifications/send`
-- 접근 권한: 관리자, 접수 담당자
-
-Request Body (HTTP 200 OK)
-
-```json
-{
-  "asReceptionId": 1112,
-  "recipientPhone": "01055551212",
-  "notificationType": "INSPECTION",
-  "requestKey": "AS-1112-INSPECTION-001"
-}
-```
-
-Response Body (HTTP 202 Accepted)
-
-```json
-{
-  "id": 128,
-  "notificationType": "INSPECTION",
-  "recipientPhone": "01055551212",
-  "requestedChannel": "ATA",
-  "status": "PENDING",
-  "message": "점검 완료 안내 발송 요청이 접수되었습니다."
-}
-```
-
-## 1.5.3 알림/SMS 발송 내역 조회
-
-- 엔드포인트: `GET /api/v1/notifications/history`
-- 접근 권한: 관리자, 접수 담당자
-
-Response Body (HTTP 200 OK)
-
-```json
-{
-  "totalCount": 3,
-  "content": [
-    {
-      "id": 128,
-      "sentAt": "2026-10-29T10:24:00",
-      "customerName": "김수민",
-      "recipientPhone": "010-5555-1212",
-      "notificationType": "RECEIVED",
-      "content": "접수 완료 안내",
-      "status": "SENT"
-    },
-    {
-      "id": 127,
-      "sentAt": "2026-10-29T09:18:00",
-      "customerName": "정우진",
-      "recipientPhone": "010-3333-9090",
-      "notificationType": "REPAIR",
-      "content": "수리 완료 안내",
-      "status": "SENT"
-    },
-    {
-      "id": 126,
-      "sentAt": "2026-10-28T16:40:00",
-      "customerName": "한소희",
-      "recipientPhone": "010-7777-4040",
-      "notificationType": "PAYMENT",
-      "content": "결제 요청 안내",
-      "status": "FAILED"
-    }
-  ],
-  "page": 0,
-  "size": 10,
-  "totalElements": 3,
-  "totalPages": 1
-}
-```
-
-## 1.5.4 알림/SMS 발송 상세 조회
-
-- 엔드포인트: `GET /api/v1/notifications/{notificationId}`
-- 접근 권한: 관리자, 접수 담당자
-
-Response Body (HTTP 200 OK)
-
-```json
-{
-  "id": 128,
-  "sentAt": "2026-10-29T10:24:00",
-  "notificationType": "REPAIR",
-  "requestedChannel": "ATA",
-  "finalChannel": "SMS",
-  "status": "SENT",
-  "recipient": {
-    "customerName": "김미영",
-    "recipientPhone": "010-1234-1234",
-    "email": "mi32@naver.com",
-    "receptionNumber": "AS-2026-1112"
-  },
-  "message": "[FixGo] 고객님의 수리가 완료되었습니다.",
-  "providerMessageId": "SOLAPI_MESSAGE_ID",
-  "providerGroupId": "SOLAPI_GROUP_ID",
-  "providerStatusCode": "4000",
-  "results": [
-    {
-      "channel": "ATA",
-      "status": "FAILED",
-      "failureReason": "알림톡 발송 실패"
-    },
-    {
-      "channel": "SMS",
-      "status": "SENT",
-      "failureReason": null
-    }
-  ]
-}
-```
-
-## 1.5.5 SMS 발송 결과 웹훅 수신
-
-- 엔드포인트: `POST /api/v1/webhooks/solapi`
-- SOLAPI 발송 결과를 수신하고 `NOTIFICATION_LOG`의 상태를 갱신
-
-Response Body (HTTP 200 OK)
-
-```json
-{
-  "message": "발송 결과가 정상적으로 처리되었습니다."
-}
-```
-
-## 1.6 고객 관리 API
-
-### 1.6.1 고객 목록 조회
-
-- 엔드포인트: `GET /api/v1/customer`
-- 접근 권한: 관리자, 접수 담당자, A/S 기사
-
-Query Parameter
-
-| 파라미터      | 타입      | 설명            |
-|-----------|---------|---------------|
-| `keyword` | String  | 고객명 또는 연락처 검색 |
-| `page`    | Integer | 페이지 번호        |
-| `size`    | Integer | 페이지당 조회 개수    |
-
-Response Body (HTTP 200 OK)
+- Response Body (HTTP 200):
 
 ```json
 {
@@ -1132,1238 +1244,2722 @@ Response Body (HTTP 200 OK)
       "id": 1,
       "name": "홍길동",
       "phone": "010-1234-5678",
-      "email": "hong@gmail.com",
-      "created_at": "2026-10-28T09:30:00"
+      "email": "hong@example.com",
+      "zipcode": "06236",
+      "basicAddress": "서울특별시 강남구 테헤란로 123",
+      "detailAddress": "101동 202호",
+      "createdAt": "2026-01-01T10:00:00",
+      "updatedAt": "2026-01-02T10:00:00",
+      "createdBy": 1,
+      "updatedBy": 1
     }
   ],
-  "page": 0,
+  "totalElements": 1,
+  "totalPages": 1,
   "size": 20,
-  "totalElements": 1,
-  "totalPages": 1
+  "number": 0,
+  "first": true,
+  "last": true,
+  "empty": false
 }
 ```
 
-### 1.6.2 고객 등록 엑셀 양식 다운로드
+### 1.7.2 고객 등록
 
-- 엔드포인트: `GET /api/v1/customer`
-- 접근 권한: 관리자, 접수 담당자
-
-Response Body (HTTP 200 OK)
-
-| 항목                  | 값                                                                                                              | 설명         |
-|---------------------|----------------------------------------------------------------------------------------------------------------|------------|
-| Content-Type        | `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`                                            | xlsx 파일 형식 |
-| Content-Disposition | `attachment; filename*=UTF-8''%EA%B3%A0%EA%B0%9D_%EC%9D%BC%EA%B4%84%EB%93%B1%EB%A1%9D_%EC%96%91%EC%8B%9D.xlsx` | 파일 다운로드 처리 |
-| Body                | `고객_일괄등록_양식.xlsx`                                                                                              | 바이너리 스트림   |
-
-Response Body (HTTP 400 Bad Request)
+- 엔드포인트: `POST /api/v1/customers`
+- 설명: 고객 정보를 등록한다.
+- 접근 권한: 로그인 사용자
+- 필수 필드: name, phone, email
+- Request Body:
 
 ```json
 {
-  "code": "INVALID_FILE_REQUEST",
-  "message": "파일이 없거나 올바른 엑셀 형식이 아닙니다."
+  "name": "홍길동",
+  "phone": "010-1234-5678",
+  "email": "hong@example.com",
+  "zipcode": "06236",
+  "basicAddress": "서울특별시 강남구 테헤란로 123",
+  "detailAddress": "101동 202호"
 }
 ```
 
-Response Body (HTTP 403 Bad Request)
+- Response Body (HTTP 201):
 
 ```json
 {
-  "code": "FORBIDDEN",
-  "message": "접근 권한이 없습니다."
+  "id": 1,
+  "name": "홍길동",
+  "phone": "010-1234-5678",
+  "email": "hong@example.com",
+  "zipcode": "06236",
+  "basicAddress": "서울특별시 강남구 테헤란로 123",
+  "detailAddress": "101동 202호",
+  "createdAt": "2026-01-01T10:00:00",
+  "updatedAt": "2026-01-02T10:00:00",
+  "createdBy": 1,
+  "updatedBy": 1
 }
 ```
 
-Response Body (HTTP 500 Bad Request)
+### 1.7.3 고객 일괄 등록
 
-```json
-{
-  "code": "TEMPLATE_GENERATION_FAILED",
-  "message": "양식 파일 생성에 실패했습니다."
-}
-```
-
-### 1.6.3 엑셀 파일 업로드 및 검증
-
-- 엔드포인트: `GET /api/v1/customer`
-- 접근 권한: 관리자, 접수 담당자
-
-Query Parameter
-
-| 파라미터   | 타입   | 설명         |
-|--------|------|------------|
-| `file` | File | 업로드할 엑셀 파일 |
-
-Response Body (HTTP 200 OK)
-
-```json
-{
-  "fileName": "고객_일괄등록_양식.xlsx",
-  "totalCount": 3,
-  "validCount": 1,
-  "invalidCount": 2,
-  "rows": [
-    {
-      "rowNumber": 1,
-      "name": "홍길동",
-      "phone": "010-1234-5678",
-      "email": "hong@gmail.com",
-      "registrable": true,
-      "reason": null
-    },
-    {
-      "rowNumber": 2,
-      "name": "김철수",
-      "phone": "010-1111-2222",
-      "email": null,
-      "registrable": false,
-      "reason": "이메일은 필수입니다."
-    },
-    {
-      "rowNumber": 3,
-      "name": "이영희",
-      "phone": "01033",
-      "email": "lee@gmail.com",
-      "registrable": false,
-      "reason": "연락처 형식이 올바르지 않습니다."
-    }
-  ]
-}
-```
-
-고객명 (`name`), 연락처 (`phone`), 이메일 (`email`)은 필수 입력 항목
-
-### 1.6.4 고객 일괄 등록
-
-- 엔드포인트: `POST /api/v1/customer`
-- 접근 권한: 관리자, 접수 담당자
-
-Request Body
+- 엔드포인트: `POST /api/v1/customers/bulk`
+- 설명: 검증된 고객 정보를 일괄 등록한다.
+- 접근 권한: 로그인 사용자
+- Request Body:
 
 ```json
 {
   "customers": [
     {
-      "rowNumber": 1,
+      "rowNumber": 2,
       "name": "홍길동",
       "phone": "010-1234-5678",
-      "email": "hong@gmail.com"
-    },
-    {
-      "rowNumber": 2,
-      "name": "김철수",
-      "phone": "010-1111-2222",
-      "email": "kim@gmail.com"
+      "email": "hong@example.com",
+      "zipcode": "06236",
+      "basicAddress": "서울특별시 강남구 테헤란로 123",
+      "detailAddress": "101동 202호"
     }
   ]
 }
 ```
 
-Response Body (HTTP 200 OK)
+- Response Body (HTTP 200):
 
 ```json
 {
-  "successCount": 2,
-  "failCount": 0,
-  "failures": []
-}
-```
-
-Response Body (HTTP 200 OK) - 일부 실패
-
-```json
-{
-  "successCount": 1,
-  "failCount": 1,
+  "successCount": 8,
+  "failCount": 2,
   "failures": [
     {
+      "rowNumber": 3,
+      "reason": "연락처가 중복되었습니다."
+    }
+  ]
+}
+```
+
+### 1.7.4 고객 일괄 등록 전 검증
+
+- 엔드포인트: `POST /api/v1/customers/bulk/validate`
+- 설명: 엑셀 파일의 고객 정보를 등록 전에 검증한다.
+- 접근 권한: 로그인 사용자
+- Request Body: multipart/form-data, file (필수)
+- Response Body (HTTP 200):
+
+```json
+{
+  "fileName": "customers.xlsx",
+  "totalCount": 10,
+  "validCount": 8,
+  "invalidCount": 2,
+  "rows": [
+    {
       "rowNumber": 2,
-      "reason": "이미 등록된 고객입니다."
+      "name": "홍길동",
+      "phone": "010-1234-5678",
+      "email": "hong@example.com",
+      "zipcode": "06236",
+      "basicAddress": "서울특별시 강남구 테헤란로 123",
+      "detailAddress": "101동 202호",
+      "registrable": true,
+      "reason": "연락처가 중복되었습니다."
     }
   ]
 }
 ```
 
-Response Body (HTTP 400 Bad Request)
+### 1.7.5 고객 단건 조회
 
-```json
-{
-  "code": "INVALID_BULK_REQUEST",
-  "message": "등록할 고객 정보가 올바르지 않습니다."
-}
-```
-
-Response Body (HTTP 403 Bad Request)
-
-```json
-{
-  "code": "FORBIDDEN",
-  "message": "접근 권한이 없습니다."
-}
-```
-
-### 1.6.5 고객 상세 - 상세 정보 조회
-
-- 엔드포인트: `GET /api/v1/customer/{customerId}`
-- 접근 권한: 관리자, 접수 담당자, A/S 기사
-
-Path Parameter
-
-| 파라미터         | 타입   | 설명    |
-|--------------|------|-------|
-| `customerId` | Long | 고객 ID |
-
-Response Body (HTTP 200 OK)
+- 엔드포인트: `GET /api/v1/customers/{id}`
+- 설명: id로 CustomerDto.Response를 반환한다.
+- 접근 권한: 로그인 사용자
+- Path Variable: id (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
 
 ```json
 {
   "id": 1,
-  "name": "김민수",
-  "phone": "010-2222-1818",
-  "email": "minsu@example.com",
-  "zipcode": "12345",
+  "name": "홍길동",
+  "phone": "010-1234-5678",
+  "email": "hong@example.com",
+  "zipcode": "06236",
   "basicAddress": "서울특별시 강남구 테헤란로 123",
-  "detailAddress": "강남타워 5층 501호"
+  "detailAddress": "101동 202호",
+  "createdAt": "2026-01-01T10:00:00",
+  "updatedAt": "2026-01-02T10:00:00",
+  "createdBy": 1,
+  "updatedBy": 1
 }
 ```
 
-Response Body (HTTP 404 Bad Request)
+### 1.7.6 고객 정보 수정
+
+- 엔드포인트: `PATCH /api/v1/customers/{id}`
+- 설명: 고객 정보를 수정한다.
+- 접근 권한: 로그인 사용자
+- Path Variable: id (Long, 필수)
+- 필수 필드: name, phone, email
+- Request Body:
 
 ```json
 {
-  "code": "CUSTOMER_NOT_FOUND",
-  "message": "존재하지 않는 고객입니다."
-}
-```
-
-### 1.6.6 고객 상세 - 상세 정보 수정
-
-- 엔드포인트: `PATCH /api/v1/customer/{customerId}`
-- 접근 권한: 관리자, 접수 담당자, A/S 기사
-
-Request Body
-
-```json
-{
-  "phone": "010-2222-1818",
-  "email": "minsu@example.com",
-  "zipcode": "12345",
+  "name": "홍길동",
+  "phone": "010-1234-5678",
+  "email": "hong@example.com",
+  "zipcode": "06236",
   "basicAddress": "서울특별시 강남구 테헤란로 123",
-  "detailAddress": "강남타워 5층 501호"
+  "detailAddress": "101동 202호"
 }
 ```
 
-Response Body (HTTP 200 OK)
-
-```json
-{
-  "phone": "010-2222-1818",
-  "email": "minsu@example.com",
-  "zipcode": "12345",
-  "basicAddress": "서울특별시 강남구 테헤란로 123",
-  "detailAddress": "강남타워 5층 501호"
-}
-```
-
-Response Body (HTTP 409 Bad Request)
-
-```json
-{
-  "code": "DUPLICATE_CUSTOMER_PHONE",
-  "message": "이미 등록된 연락처입니다."
-}
-```
-
-### 1.6.7 고객 상세 - 이전 수리내역 조회
-
-- 엔드포인트: `GET /api/v1/customer/{customerId}`
-- 접근 권한: 관리자, 접수 담당자, A/S 기사
-
-Query Parameter
-
-| 파라미터   | 타입      | 설명         |
-|--------|---------|------------|
-| `page` | Integer | 페이지 번호     |
-| `size` | Integer | 페이지당 조회 개수 |
-
-Response Body (HTTP 200 OK)
-
-```json
-{
-  "content": [
-    {
-      "id": 15,
-      "receiptNumber": "AS-20260-1108",
-      "receivedAt": "2026-10-23T09:30:00",
-      "modelName": "SZ-P24",
-      "symptom": "충전 안됨",
-      "status": "INSPECTION_WAITING",
-      "technicianName": "김기사",
-      "repairCost": null
-    },
-    {
-      "id": 9,
-      "receiptNumber": "AS-20260915-004",
-      "receivedAt": "2026-09-02T14:10:00",
-      "modelName": "SZ-N16",
-      "symptom": "액정 파손",
-      "status": "COMPLETED",
-      "technicianName": "김기사",
-      "repairCost": 85000
-    }
-  ],
-  "page": 0,
-  "size": 20,
-  "totalElements": 2,
-  "totalPages": 1
-}
-```
-
-## 1.7 제품 등록 API
-
-### 1.7.1 지원 품목 목록 조회
-
-- 엔드포인트: `GET /api/v1/admin/products/list`
-- 접근 권한: 관리자
-
-Query Parameter
-
-| 파라미터        | 타입      | 설명                        |
-|-------------|---------|---------------------------|
-| `keyword`   | String  | 모델명 또는 제품명 검색             |
-| `sortBy`    | String  | 정렬 기준 항목(기본값 `modelName`) |
-| `sortOrder` | String  | 정렬 순서 오름/내림차순(기본값 `asc`)  |
-| `page`      | Integer | 페이지 번호                    |
-| `size`      | Integer | 페이지당 조회 개수                |
-
-Response Body (HTTP 200 OK)
-
-```json
-{
-  "content": [
-    {
-      "id": 1,
-      "modelName": "SZ-P24",
-      "productName": "스마트폰",
-      "productGroup": "PHONE",
-      "warrantyMonths": 24,
-      "active": true
-    },
-    {
-      "id": 2,
-      "modelName": "SZ-N16",
-      "productName": "노트북",
-      "productGroup": "LAPTOP",
-      "warrantyMonths": 12,
-      "active": false
-    }
-  ],
-  "page": 0,
-  "size": 20,
-  "totalElements": 2,
-  "totalPages": 1
-}
-```
-
-# 2.0 A/S 관리 API
-
-## 2.1 A/S 접수 목록 조회
-
-- 엔드포인트: `GET /api/v1/as`
-- 접근 권한: 관리자, A/S 기사
-
-Query Parameters
-
-| 파라미터           | 타입      | 설명             |
-|----------------|---------|----------------|
-| `keyword`      | String  | 접수번호 또는 고객명 검색 |
-| `status`       | String  | A/S 진행 상태      |
-| `productGroup` | String  | 제품군 필터         |
-| `page`         | Integer | 페이지 번호         |
-| `size`         | Integer | 페이지당 조회 개수     |
-
-Response Body (HTTP 200 OK)
-
-```json
-{
-  "content": [
-    {
-      "id": 1,
-      "receiptNumber": "AS-20261028-001",
-      "customerName": "홍길동",
-      "productModel": "게이밍 PC",
-      "symptom": "전원 불량",
-      "status": "INSPECTION_WAITING",
-      "assignedAt": "2026-10-28T09:30:00"
-    }
-  ],
-  "page": 0,
-  "size": 10,
-  "totalElements": 1,
-  "totalPages": 1
-}
-```
-
-## 2.1.1 내 담당 A/S 목록 조회
-
-- 엔드포인트: `GET /api/v1/as/my-work`
-- 접근 권한: A/S 기사
-
-Query Parameters
-
-| 파라미터           | 타입      | 설명             |
-|----------------|---------|----------------|
-| `keyword`      | String  | 접수번호 또는 고객명 검색 |
-| `status`       | String  | A/S 진행 상태      |
-| `productGroup` | String  | 제품군 필터         |
-| `page`         | Integer | 페이지 번호         |
-| `size`         | Integer | 페이지당 조회 개수     |
-
-Response Body (HTTP 200 OK)
-
-```json
-{
-  "content": [
-    {
-      "id": 1,
-      "receiptNumber": "AS-20261028-001",
-      "customerName": "홍길동",
-      "productModel": "게이밍 PC",
-      "symptom": "전원 불량",
-      "status": "INSPECTION_WAITING",
-      "assignedAt": "2026-10-28T09:30:00"
-    }
-  ],
-  "page": 0,
-  "size": 10,
-  "totalElements": 1,
-  "totalPages": 1
-}
-```
-
-## 2.1.2 A/S 상세 정보 조회
-
-- 엔드포인트: `GET /api/v1/as/{id}`
-- 접근 권한: 관리자, 담당 A/S 기사
-
-Path Parameters
-
-| 파라미터 | 타입   | 설명        |
-|------|------|-----------|
-| `id` | Long | A/S 접수 ID |
-
-Response Body (HTTP 200 OK)
+- Response Body (HTTP 200):
 
 ```json
 {
   "id": 1,
-  "receiptNumber": "AS-20261028-001",
-  "customer": {
-    "name": "홍길동",
-    "phone": "010-1234-5678"
-  },
-  "product": {
-    "productModel": "게이밍 PC",
-    "serialNumber": "PC-2026-0001",
-    "warrantyMonths": 24
-  },
-  "symptom": "전원 불량",
-  "receivedMethod": "VISIT",
-  "receivedAt": "2026-10-28T09:00:00",
-  "assignedTechnician": "김기사",
-  "status": "INSPECTION_WAITING"
+  "name": "홍길동",
+  "phone": "010-1234-5678",
+  "email": "hong@example.com",
+  "zipcode": "06236",
+  "basicAddress": "서울특별시 강남구 테헤란로 123",
+  "detailAddress": "101동 202호",
+  "createdAt": "2026-01-01T10:00:00",
+  "updatedAt": "2026-01-02T10:00:00",
+  "createdBy": 1,
+  "updatedBy": 1
 }
 ```
 
-## 2.1.3 A/S 점검 정보 등록 및 수정
+### 1.7.7 연락처 중복 체크
 
-- 엔드포인트: `PUT /api/v1/as/{id}/inspection`
-- 접근 권한: 담당 A/S 기사
-
-Request Body
+- 엔드포인트: `GET /api/v1/customers/check-duplicate`
+- 설명: 연락처 중복 여부를 확인한다.
+- 접근 권한: 로그인 사용자
+- Query Parameter: phone (String, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
 
 ```json
 {
-  "inspectionContent": "전원 공급 장치 이상 확인",
-  "inspectionImages": [
-    "https://example.com/images/inspection-001.jpg"
-  ],
-  "repairItems": [
-    {
-      "itemType": "PART",
-      "itemName": "파워 서플라이",
-      "quantity": 1,
-      "unitPrice": 80000
-    },
-    {
-      "itemType": "LABOR",
-      "itemName": "부품 교체 공임",
-      "workHours": 1,
-      "unitPrice": 20000
-    }
-  ]
+  "duplicated": true
 }
 ```
 
-Response Body (HTTP 200 OK)
+### 1.7.8 엑셀 양식 다운로드
+
+- 엔드포인트: `GET /api/v1/customers/bulk/template`
+- 설명: 고객 일괄 등록용 엑셀 파일 양식을 다운로드한다.
+- 접근 권한: 로그인 사용자
+- Request Body: 없음
+- Response Body: 파일 (HTTP 200)
+
+## 1.8 Email Preset API
+
+### 1.8.1 이메일 프리셋 수정
+
+- 엔드포인트: `PUT /api/v1/email-presets/{id}`
+- 설명: 이메일 프리셋을 수정한다.
+- 접근 권한: 관리자, 접수담당자
+- Path Variable: id (Long, 필수)
+- 필수 필드: name, messageTitle, message
+- Request Body:
 
 ```json
 {
-  "asId": 1,
-  "inspectionContent": "전원 공급 장치 이상 확인",
-  "inspectionCompleted": true,
-  "estimatedRepairCost": 100000,
-  "status": "INSPECTION_COMPLETED"
+  "name": "수리 완료 안내",
+  "messageTitle": "수리가 완료되었습니다",
+  "message": "고객님의 제품 수리가 완료되었습니다."
 }
 ```
 
-## 2.1.4 수리 프리셋 목록 조회
+- Response Body (HTTP 200):
 
-- 엔드포인트: `GET /api/v1/as/repair-presets`
-- 접근 권한: 관리자, A/S 기사
+```json
+{
+  "id": 1,
+  "name": "수리 완료 안내",
+  "messageTitle": "수리가 완료되었습니다",
+  "message": "고객님의 제품 수리가 완료되었습니다."
+}
+```
 
-Query Parameters
+### 1.8.2 이메일 프리셋 삭제
 
-| 파라미터        | 타입     | 설명       |
-|-------------|--------|----------|
-| `symptomId` | Long   | 고장 증상 ID |
-| `keyword`   | String | 프리셋명 검색  |
+- 엔드포인트: `DELETE /api/v1/email-presets/{id}`
+- 설명: 이메일 프리셋을 삭제한다.
+- 접근 권한: 관리자, 접수담당자
+- Path Variable: id (Long, 필수)
+- Request Body: 없음
+- Response Body: 없음 (HTTP 200)
 
-Response Body (HTTP 200 OK)
+### 1.8.3 이메일 프리셋 목록 조회
+
+- 엔드포인트: `GET /api/v1/email-presets`
+- 설명: 이메일 프리셋 목록을 조회한다.
+- 접근 권한: 관리자, 접수담당자
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "name": "수리 완료 안내",
+  "messageTitle": "수리가 완료되었습니다",
+  "message": "고객님의 제품 수리가 완료되었습니다."
+}
+```
+
+### 1.8.4 이메일 프리셋 등록
+
+- 엔드포인트: `POST /api/v1/email-presets`
+- 설명: 이메일 프리셋을 등록한다.
+- 접근 권한: 관리자, 접수담당자
+- 필수 필드: name, messageTitle, message
+- Request Body:
+
+```json
+{
+  "name": "수리 완료 안내",
+  "messageTitle": "수리가 완료되었습니다",
+  "message": "고객님의 제품 수리가 완료되었습니다."
+}
+```
+
+- Response Body (HTTP 201):
+
+```json
+{
+  "id": 1,
+  "name": "수리 완료 안내",
+  "messageTitle": "수리가 완료되었습니다",
+  "message": "고객님의 제품 수리가 완료되었습니다."
+}
+```
+
+## 1.9 Labor Rate API
+
+### 1.9.1 공임비·점검비 전체 목록 조회
+
+- 엔드포인트: `GET /api/v1/labor-rates`
+- 설명: 등록된 공임비·점검비 전체 목록을 한 번에 조회한다.
+- 접근 권한: 로그인 사용자
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "productCategory": "LAPTOP",
+  "cost": 1,
+  "rateType": "INSPECTION_COST",
+  "effectiveDate": "2026-11-13",
+  "createdAt": "2026-11-13T10:00:00",
+  "updatedAt": "2026-11-13T10:00:00",
+  "createdBy": 1,
+  "updatedBy": 1
+}
+```
+
+### 1.9.2 공임비·점검비 수정
+
+- 엔드포인트: `PATCH /api/v1/labor-rates`
+- 설명: 관리자가 기존 공임비 또는 점검비 금액을 수정한다. 적용일은 수정 당일로 자동 반영된다.
+- 접근 권한: 관리자
+- 필수 필드: id, cost
+- Request Body:
+
+```json
+{
+  "id": 1,
+  "cost": 1
+}
+```
+
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "productCategory": "LAPTOP",
+  "cost": 1,
+  "rateType": "INSPECTION_COST",
+  "effectiveDate": "2026-11-13",
+  "createdAt": "2026-11-13T10:00:00",
+  "updatedAt": "2026-11-13T10:00:00",
+  "createdBy": 1,
+  "updatedBy": 1
+}
+```
+
+### 1.9.3 공임비·점검비 상세 조회
+
+- 엔드포인트: `GET /api/v1/labor-rates/{id}`
+- 설명: 요금 ID로 상세 정보를 조회한다.
+- 접근 권한: 로그인 사용자
+- Path Variable: id (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "productCategory": "LAPTOP",
+  "cost": 1,
+  "rateType": "INSPECTION_COST",
+  "effectiveDate": "2026-11-13",
+  "createdAt": "2026-11-13T10:00:00",
+  "updatedAt": "2026-11-13T10:00:00",
+  "createdBy": 1,
+  "updatedBy": 1
+}
+```
+
+## 1.10 Long Pending Statistics API
+
+### 1.10.1 장기 미처리 접수건 조회
+
+- 엔드포인트: `GET /api/v1/admin/statistics/long_pending`
+- 설명: 상태 변경 후 14일이 경과한 장기 미처리 접수건을 조회한다.
+- 접근 권한: 관리자
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "receptionId": 1,
+  "receptionNumber": "",
+  "customerName": "",
+  "modelName": "",
+  "status": "RECEIVED",
+  "technicianName": "",
+  "elapsedDays": 1,
+  "lastActivityAt": "2026-11-13T10:00:00"
+}
+```
+
+## 1.11 Member API
+
+### 1.11.1 비밀번호 변경
+
+- 엔드포인트: `PATCH /api/v1/member/me/password`
+- 설명: 로그인한 직원의 비밀번호를 변경
+- 접근 권한: 로그인 사용자
+- 필수 필드: email, password
+- Request Body:
+
+```json
+{
+  "email": "user@fixgo.com",
+  "password": "newPassword123!"
+}
+```
+
+- Response Body: 없음 (HTTP 200)
+
+### 1.11.2 직원 목록 조회
+
+- 엔드포인트: `GET /api/v1/member`
+- 설명: 검색 조건에 맞는 직원 목록을 페이징하여 반환
+- 접근 권한: 로그인 사용자
+- Query Parameter: keyword (String, 선택, 예: 김병호) — 검색 키워드(이름/이메일) / role (Role, 선택, 예: TECHNICIAN) — 역할 필터 / status (Status, 선택, 예: ACTIVE) — 상태 필터 / page (int, 선택, 예: 0) — 페이지 번호. 0부터 시작한다. / size (int, 선택, 예: 20) — 페이지 크기 / sort (string, 선택) — 정렬. 예: createdAt,desc
+- Request Body: 없음
+- Response Body (HTTP 200):
 
 ```json
 {
   "content": [
     {
       "id": 1,
-      "presetName": "파워 불량 교체",
-      "symptomName": "전원 불량",
-      "description": "파워 서플라이 점검 및 교체",
-      "items": [
-        {
-          "itemType": "PART",
-          "itemName": "파워 서플라이",
-          "partCode": "PSU-001",
-          "quantity": 1,
-          "unitPrice": 80000,
-          "amount": 80000
-        },
-        {
-          "itemType": "LABOR",
-          "itemName": "부품 교체 공임",
-          "quantity": 1,
-          "unitPrice": 20000,
-          "amount": 20000
-        }
-      ],
-      "estimatedRepairCost": 100000
-    }
-  ]
-}
-```
-
-## 2.1.5 수리 항목 등록
-
-- 엔드포인트: `POST /api/v1/as/{id}/repair-items`
-- 접근 권한: 담당 A/S 기사
-
-Request Body
-
-```json
-{
-  "items": [
-    {
-      "itemType": "PART",
-      "itemName": "파워 서플라이",
-      "partCode": "PSU-001",
-      "quantity": 1,
-      "unitPrice": 80000
-    },
-    {
-      "itemType": "LABOR",
-      "itemName": "부품 교체 공임",
-      "quantity": 1,
-      "workHours": 1,
-      "unitPrice": 20000
-    }
-  ]
-}
-```
-
-Response Body (HTTP 201 Created)
-
-```json
-{
-  "asId": 1,
-  "repairItems": [
-    {
-      "id": 101,
-      "itemType": "PART",
-      "itemName": "파워 서플라이",
-      "quantity": 1,
-      "unitPrice": 80000,
-      "amount": 80000
-    },
-    {
-      "id": 102,
-      "itemType": "LABOR",
-      "itemName": "부품 교체 공임",
-      "quantity": 1,
-      "unitPrice": 20000,
-      "amount": 20000
+      "email": "user@fixgo.com",
+      "name": "김병호",
+      "role": "ROLE_ADMIN",
+      "status": "PENDING"
     }
   ],
-  "estimatedRepairCost": 100000
-}
-```
-
-## 2.1.6 보증 판정 등록
-
-- 엔드포인트: `PUT /api/v1/as/{id}/warranty`
-- 접근 권한: 담당 A/S 기사
-
-Request Body
-
-```json
-{
-  "purchaseDate": "2025-10-28",
-  "warrantyMonths": 24,
-  "proofDocumentProvided": true,
-  "customerFault": false,
-  "warrantyApplied": true,
-  "judgmentReason": "보증 기간 내 제품 자체 결함"
-}
-```
-
-Response Body (HTTP 200 OK)
-
-```json
-{
-  "asId": 1,
-  "warrantyApplied": true,
-  "repairType": "FREE",
-  "judgmentReason": "보증 기간 내 제품 자체 결함",
-  "status": "WARRANTY_CONFIRMED"
-}
-```
-
-## 2.1.7 견적서 조회
-
-- 엔드포인트: `GET /api/v1/as/{id}/estimate`
-- 접근 권한: 관리자, 담당 A/S 기사
-
-Response Body (HTTP 200 OK)
-
-```json
-{
-  "asId": 1,
-  "receiptNumber": "AS-20261028-001",
-  "repairType": "PAID",
-  "items": [
-    {
-      "itemType": "PART",
-      "itemName": "파워 서플라이",
-      "quantity": 1,
-      "unitPrice": 80000,
-      "amount": 80000
-    },
-    {
-      "itemType": "LABOR",
-      "itemName": "부품 교체 공임",
-      "workHours": 1,
-      "unitPrice": 20000,
-      "amount": 20000
-    }
-  ],
-  "totalAmount": 100000,
-  "approvalStatus": "PENDING"
-}
-```
-
-## 2.1.8 견적서 발송
-
-- 엔드포인트: `POST /api/v1/as/{id}/estimate`
-- 접근 권한: 담당 A/S 기사
-
-Request Body
-
-```json
-{
-  "items": [
-    {
-      "itemType": "PART",
-      "itemName": "파워 서플라이",
-      "quantity": 1,
-      "unitPrice": 80000
-    },
-    {
-      "itemType": "LABOR",
-      "itemName": "부품 교체 공임",
-      "workHours": 1,
-      "unitPrice": 20000
-    }
-  ],
-  "totalAmount": 100000,
-  "message": "견적서를 확인하신 후 수리 승인 여부를 선택해 주세요."
-}
-```
-
-Response Body (HTTP 201 Created)
-
-```json
-{
-  "asId": 1,
-  "estimateId": 201,
-  "totalAmount": 100000,
-  "approvalStatus": "PENDING",
-  "sentAt": "2026-10-28T10:00:00",
-  "status": "ESTIMATE_SENT"
-}
-```
-
-## 2.1.9 수리 작업 시작
-
-- 엔드포인트: `POST /api/v1/as/{id}/repair/start`
-- 접근 권한: 담당 A/S 기사
-
-Request Body
-
-```json
-{
-  "startNote": "파워 서플라이 교체 작업 시작"
-}
-```
-
-Response Body (HTTP 200 OK)
-
-```json
-{
-  "asId": 1,
-  "status": "REPAIRING",
-  "startedAt": "2026-10-28T10:30:00",
-  "technicianName": "김기사"
-}
-```
-
-## 2.1.10 수리 작업 기록 등록
-
-- 엔드포인트: `POST /api/v1/as/{id}/repair-records`
-- 접근 권한: 담당 A/S 기사
-
-Request Body
-
-```json
-{
-  "workContent": "기존 파워 서플라이 분리 후 신규 부품 장착",
-  "usedParts": [
-    {
-      "partCode": "PSU-001",
-      "quantity": 1
-    }
-  ],
-  "workHours": 1,
-  "memo": "전원 정상 작동 확인"
-}
-```
-
-Response Body (HTTP 201 Created)
-
-```json
-{
-  "recordId": 301,
-  "asId": 1,
-  "workContent": "기존 파워 서플라이 분리 후 신규 부품 장착",
-  "workHours": 1,
-  "completedAt": "2026-10-28T11:30:00"
-}
-```
-
-## 2.1.11 수리 완료 처리
-
-- 엔드포인트: `POST /api/v1/as/{id}/repair/complete`
-- 접근 권한: 담당 A/S 기사
-
-Request Body
-
-```json
-{
-  "repairResult": "파워 서플라이 교체 완료",
-  "finalAmount": 100000,
-  "memo": "전원 및 부팅 정상 작동 확인"
-}
-```
-
-Response Body (HTTP 200 OK)
-
-```json
-{
-  "asId": 1,
-  "status": "REPAIR_COMPLETED",
-  "repairResult": "파워 서플라이 교체 완료",
-  "finalAmount": 100000,
-  "completedAt": "2026-10-28T12:00:00"
-}
-```
-
-## 2.1.11 A/S 거부 및 수리 불가 처리
-
-- 엔드포인트: `POST /api/v1/as/{id}/disposition`
-- 접근 권한: 담당 A/S 기사, 관리자
-
-Request Body
-
-```json
-{
-  "dispositionType": "REPAIR_IMPOSSIBLE",
-  "reason": "단종 부품으로 인해 수리 불가",
-  "inspectionFee": 10000,
-  "customerPickupRequired": true,
-  "memo": "고객에게 수리 불가 사유 안내 완료"
-}
-```
-
-`dispositionType`은 처리 유형에 따라 `CUSTOMER_REJECTED`, `REPAIR_IMPOSSIBLE`, `EXCHANGE`, `REFUND` 등을 사용할 수 있어.
-
-Response Body (HTTP 200 OK)
-
-```json
-{
-  "asId": 1,
-  "dispositionType": "REPAIR_IMPOSSIBLE",
-  "reason": "단종 부품으로 인해 수리 불가",
-  "inspectionFee": 10000,
-  "customerPickupRequired": true,
-  "status": "REPAIR_IMPOSSIBLE",
-  "processedAt": "2026-10-28T12:30:00",
-  "processedBy": "김기사"
-}
-```
-
-## 2.1.13 A/S 진행 이력 조회
-
-- 엔드포인트: `GET /api/v1/as/{id}/histories`
-- 접근 권한: 관리자, 담당 A/S 기사
-
-Response Body (HTTP 200 OK)
-
-```json
-{
-  "content": [
-    {
-      "id": 1,
-      "previousStatus": "RECEIVED",
-      "currentStatus": "INSPECTION_WAITING",
-      "changedBy": "김기사",
-      "reason": "담당 기사 배정",
-      "changedAt": "2026-10-28T09:30:00"
-    },
-    {
-      "id": 2,
-      "previousStatus": "INSPECTION_WAITING",
-      "currentStatus": "INSPECTION_COMPLETED",
-      "changedBy": "김기사",
-      "reason": "점검 완료",
-      "changedAt": "2026-10-28T10:00:00"
-    }
-  ]
-}
-```
-
-## 2.1.14 A/S 상태 변경
-
-- 엔드포인트: `PATCH /api/v1/as/{id}/status`
-- 접근 권한: 관리자, 담당 A/S 기사
-
-Request Body
-
-```json
-{
-  "status": "INSPECTION_COMPLETED",
-  "reason": "제품 점검 완료"
-}
-```
-
-Response Body (HTTP 200 OK)
-
-```json
-{
-  "asId": 1,
-  "previousStatus": "INSPECTION_WAITING",
-  "currentStatus": "INSPECTION_COMPLETED",
-  "changedBy": "김기사",
-  "changedAt": "2026-10-28T10:00:00"
-}
-```
-
-### 공통 오류 응답
-
-Response Body (HTTP 400 Bad Request)
-
-```json
-{
-  "code": "INVALID_AS_STATUS_TRANSITION",
-  "message": "허용되지 않은 A/S 상태 변경입니다."
-}
-```
-
-Response Body (HTTP 403 Forbidden)
-
-```json
-{
-  "code": "AS_ACCESS_DENIED",
-  "message": "해당 A/S 건에 대한 접근 권한이 없습니다."
-}
-```
-
-Response Body (HTTP 404 Not Found)
-
-```json
-{
-  "code": "AS_NOT_FOUND",
-  "message": "해당 A/S 접수 건을 찾을 수 없습니다."
-}
-```
-
-# 3. 통계 API
-
-## 3.1 통계 요약
-
-- 엔드포인트: `GET /api/v1/admin/statistics`
-- 접근 권한: 관리자
-
-Response Body (HTTP 200 OK)
-
-```json
-{
-  "period": {
-    "from": "2026-10-01",
-    "to": "2026-10-26"
-  },
-  "summary": {
-    "receivedCount": 128,
-    "receivedChangeRate": 12.0,
-    "completedCount": 96,
-    "completionRate": 75.0,
-    "averageLeadTimeDays": 3.2,
-    "unpaidAmount": 520000,
-    "unpaidCount": 3,
-    "paidAmount": 18400000,
-    "collectionRate": 97.3
-  }
-  "statusCounts": {
-    "RECEIVED": 12,
-    "REPAIRING": 8,
-    "WAITING_PAYMENT": 3,
-    "READY_RETURN": 4,
-    "COMPLETED": 96,
-    "CANCELLED": 2
-  },
-  "deliveryCounts": {
-    "READY": 4,
-    "SHIPPING": 2,
-    "COMPLETED": 90
-  },
-  "monthlyTrends": [
-    {
-      "term": "2026-01",
-      "receivedCount": 80,
-      "completedCount": 61
-    },
-    {
-      "term": "2026-07",
-      "receivedCount": 140,
-      "completedCount": 112
-    },
-    {
-      "term": "2026-10",
-      "receivedCount": 128,
-      "completedCount": 96
-    }
-  ],
-  "repairTypeDistribution": [
-    {
-      "type": "WARRANTY",
-      "count": 58,
-      "rate": 45.3
-    },
-    {
-      "type": "PAID",
-      "count": 49,
-      "rate": 38.3
-    },
-    {
-      "type": "INSPECTION_ONLY",
-      "count": 21,
-      "rate": 16.4
-    }
-  ],
-  "technicianRanks": [
-    {
-      "technicianId": 11,
-      "technicianName": "김민수",
-      "assignedCount": 42
-    },
-    {
-      "technicianId": 12,
-      "technicianName": "이서연",
-      "assignedCount": 35
-    },
-    {
-      "technicianId": 13,
-      "technicianName": "박준호",
-      "assignedCount": 28
-    },
-    {
-      "technicianId": 14,
-      "technicianName": "최유리",
-      "assignedCount": 21
-    }
-  ],
-  "modelFaults": [
-    {
-      "productId": 101,
-      "modelName": "Galaxy S24",
-      "receivedCount": 32,
-      "completedCount": 28,
-      "averageLeadTimeDays": 2.8,
-      "primarySymptom": "배터리"
-    },
-    {
-      "productId": 102,
-      "modelName": "iPhone 15",
-      "receivedCount": 27,
-      "completedCount": 24,
-      "averageLeadTimeDays": 3.1,
-      "primarySymptom": "액정"
-    }
-  ]
-}
-}
-```
-
-## 3.2 입금 대기 내역 조회
-
-- 엔드포인트: `GET /api/v1/admin/statistics/deposits/waiting`
-- 접근 권한: 관리자
-
-Response Body (HTTP 200 OK)
-
-```json
-{
-  "content": [
-    {
-      "asReceptionId": 1001,
-      "receptionNumber": "AS-202610-001",
-      "customerName": "홍길동",
-      "modelName": "Galaxy S24",
-      "amount": 150000,
-      "billedAt": "2026-10-20",
-      "elapsedDays": 6,
-      "depositStatus": "UNPAID"
-    },
-    {
-      "asReceptionId": 988,
-      "receptionNumber": "AS-202609-088",
-      "customerName": "이철수",
-      "modelName": "노트북",
-      "amount": 90000,
-      "billedAt": "2026-09-28",
-      "elapsedDays": 28,
-      "depositStatus": "DUNNING"
-    }
-  ],
-  "pageNumber": 0,
-  "pageSize": 20,
-  "totalElements": 3,
+  "totalElements": 1,
   "totalPages": 1,
-  "last": true
+  "size": 20,
+  "number": 0,
+  "first": true,
+  "last": true,
+  "empty": false
 }
 ```
 
-## 3.3 기사별 수리 현황
+### 1.11.3 직원 상세 조회
 
-- 엔드포인트: `GET /api/v1/admin/statistics/technicians`
-- 접근 권한: 관리자
-
-Response Body (HTTP 200 OK)
+- 엔드포인트: `GET /api/v1/member/{memberId}`
+- 설명: 회원 ID로 상세 프로필 정보를 조회
+- 접근 권한: 로그인 사용자
+- Path Variable: memberId (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
 
 ```json
 {
-  "period": {
-    "from": "2026-10-01",
-    "to": "2026-10-26"
-  },
-  "technicians": [
-    {
-      "technicianId": 11,
-      "technicianName": "김민수",
-      "assignedCount": 42,
-      "completedCount": 38,
-      "inProgressCount": 4,
-      "cancelledCount": 0,
-      "averageLeadTimeDays": 3.1,
-      "salesAmount": 4820000
-    },
-    {
-      "technicianId": 12,
-      "technicianName": "이서연",
-      "assignedCount": 35,
-      "completedCount": 31,
-      "inProgressCount": 4,
-      "cancelledCount": 0,
-      "averageLeadTimeDays": 2.8,
-      "salesAmount": 3640000
-    }
-  ]
+  "id": 1,
+  "email": "user@fixgo.com",
+  "name": "김병호",
+  "phone": "010-1234-5678",
+  "address": "서울특별시 강남구 테헤란로 123",
+  "role": "ROLE_ADMIN",
+  "status": "PENDING"
 }
 ```
 
-## 3.4 제품 모델 별 수리 접수 건수
+### 1.11.4 배정 가능 기술자 목록 조회
+
+- 엔드포인트: `GET /api/v1/member/technicians`
+- 설명: 접수원/관리자가 배정 가능한 기술자 목록을 조회
+- 접근 권한: 접수담당자, 관리자
+- Query Parameter: keyword (String, 선택) / sortBy (MemberDto.TechnicianSort, 선택, 예: NAME) / direction (Sort.Direction, 선택, 예: ASC) / page (int, 선택, 예: 0) — 페이지 번호. 0부터 시작한다. / size (int, 선택, 예: 20) — 페이지 크기 / sort (string, 선택) — 정렬. 예: createdAt,desc
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "content": [
+    {
+      "technicianId": 3,
+      "name": "이수리",
+      "email": "tech@fixgo.com",
+      "status": "PENDING",
+      "inspectionWaitingCount": 2,
+      "repairInProgressCount": 1,
+      "estimatedDurationMinutes": 90
+    }
+  ],
+  "totalElements": 1,
+  "totalPages": 1,
+  "size": 20,
+  "number": 0,
+  "first": true,
+  "last": true,
+  "empty": false
+}
+```
+
+### 1.11.5 내 프로필 조회
+
+- 엔드포인트: `GET /api/v1/member/me`
+- 설명: 로그인한 회원의 상세 프로필 정보를 반환
+- 접근 권한: 로그인 사용자
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "email": "user@fixgo.com",
+  "name": "김병호",
+  "phone": "010-1234-5678",
+  "address": "서울특별시 강남구 테헤란로 123",
+  "role": "ROLE_ADMIN",
+  "status": "PENDING"
+}
+```
+
+### 1.11.6 삭제된 회원 목록 조회
+
+- 엔드포인트: `GET /api/v1/member/deleted_member`
+- 설명: 관리자가 삭제된 회원 목록을 페이징하여 조회
+- 접근 권한: 관리자
+- Query Parameter: page (int, 선택, 예: 0) — 페이지 번호. 0부터 시작한다. / size (int, 선택, 예: 20) — 페이지 크기 / sort (string, 선택) — 정렬. 예: createdAt,desc
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "content": [
+    {
+      "id": 1,
+      "email": "user@fixgo.com",
+      "name": "김병호",
+      "role": "ROLE_ADMIN",
+      "status": "PENDING"
+    }
+  ],
+  "totalElements": 1,
+  "totalPages": 1,
+  "size": 20,
+  "number": 0,
+  "first": true,
+  "last": true,
+  "empty": false
+}
+```
+
+## 1.12 Model Statistics API
+
+### 1.12.1 모델별 수리 통계 조회
 
 - 엔드포인트: `GET /api/v1/admin/statistics/models`
+- 설명: 기간별 모델별 수리 통계를 조회한다.
 - 접근 권한: 관리자
-
-Response Body (HTTP 200 OK)
+- Query Parameter: startDate (LocalDate, 필수) / endDate (LocalDate, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
 
 ```json
 {
-  "period": {
-    "from": "2026-10-01",
-    "to": "2026-10-26"
-  },
-  "models": [
-    {
-      "productId": 101,
-      "modelName": "Galaxy S24",
-      "category": "스마트폰",
-      "receivedCount": 32,
-      "completedCount": 28,
-      "inProgressCount": 4,
-      "primarySymptom": "배터리"
-    },
-    {
-      "productId": 103,
-      "modelName": "Galaxy Book4",
-      "category": "노트북",
-      "receivedCount": 18,
-      "completedCount": 14,
-      "inProgressCount": 4,
-      "primarySymptom": "키보드"
-    }
-  ]
+  "modelId": 1,
+  "modelName": "",
+  "productGroup": "",
+  "receptionCount": 1,
+  "completedCount": 1,
+  "inProgressCount": 1,
+  "mainSymptom": ""
 }
 ```
 
-## 3.5 모델 별 고장 증상 통계
+### 1.12.2 모델 증상별 통계 조회
 
-- 엔드포인트: `GET /api/v1/admin/statistics/models/{id}`
+- 엔드포인트: `GET /api/v1/admin/statistics/models/{modelId}/symptoms`
+- 설명: 특정 모델의 증상별 통계를 조회한다.
 - 접근 권한: 관리자
-
-Response Body (HTTP 200 OK)
+- Path Variable: modelId (Long, 필수)
+- Query Parameter: startDate (LocalDate, 필수) / endDate (LocalDate, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
 
 ```json
 {
-  "period": {
-    "from": "2026-10-01",
-    "to": "2026-10-26"
-  },
-  "productId": 101,
-  "modelName": "Galaxy S24",
-  "receivedCount": 32,
-  "symptoms": [
-    {
-      "symptom": "배터리",
-      "count": 14
-    },
-    {
-      "symptom": "액정",
-      "count": 9
-    },
-    {
-      "symptom": "충전",
-      "count": 6
-    },
-    {
-      "symptom": "카메라",
-      "count": 3
-    }
-  ]
+  "symptomName": "",
+  "count": 1,
+  "percentage": 1
 }
 ```
 
-## 3.6 기간별 수리비 추이
+## 1.13 Notification API
 
-- 엔드포인트: `GET /api/v1/admin/statistics/repair_costs`
-- 접근 권한: 관리자
+### 1.13.1 이메일 발송 내역 조회
 
-Response Body (HTTP 200 OK)
-
-```json
-{
-  "period": {
-    "from": "2026-10-01",
-    "to": "2026-10-26"
-  },
-  "term": "MONTH",
-  "totalAmount": 128400000,
-  "points": [
-    {
-      "term": "2026-01",
-      "amount": 9200000
-    },
-    {
-      "term": "2026-07",
-      "amount": 15200000
-    },
-    {
-      "term": "2026-10",
-      "amount": 18400000
-    }
-  ]
-}
-```
-
-## 3.7 장기 미처리 조회
-
-- 엔드포인트: `GET /api/v1/admin/statistics/incomplete`
-- 접근 권한: 관리자
-
-Response Body (HTTP 200 OK)
+- 엔드포인트: `GET /api/v1/notifications/emails`
+- 설명: 이메일 발송 내역을 조건으로 페이징 조회한다.
+- 접근 권한: 관리자, 접수담당자
+- Query Parameter: keyword (String, 선택) / startDate (LocalDate, 선택) / endDate (LocalDate, 선택) / page (int, 선택, 예: 0) — 페이지 번호. 0부터 시작한다. / size (int, 선택, 예: 20) — 페이지 크기 / sort (string, 선택) — 정렬. 예: createdAt,desc
+- Request Body: 없음
+- Response Body (HTTP 200):
 
 ```json
 {
-  "minElapsedDays": 14,
-  "totalCount": 4,
   "content": [
     {
-      "asReceptionId": 901,
-      "receptionNumber": "AS-202609-054",
-      "customerName": "오세훈",
-      "modelName": "MacBook Air",
-      "status": "RECEIVED",
-      "technicianId": 11,
-      "technicianName": "김민수",
-      "elapsedDays": 35,
-      "receivedElapsedDays": 35,
-      "lastActivityAt": "2026-09-21T09:12:00"
-    },
-    {
-      "asReceptionId": 988,
-      "receptionNumber": "AS-202609-088",
-      "customerName": "이철수",
-      "modelName": "Galaxy Book4",
-      "status": "WAITING_PAYMENT",
-      "technicianId": 12,
-      "technicianName": "이서연",
-      "elapsedDays": 28,
-      "receivedElapsedDays": 28,
-      "lastActivityAt": "2026-09-28T15:40:00"
+      "id": 1,
+      "customerName": "홍길동",
+      "recipientEmail": "customer@example.com",
+      "notificationType": "RECEIVED",
+      "messageTitle": "수리 완료 안내",
+      "status": "PENDING",
+      "sentAt": "2024-01-01T12:00:00",
+      "createdAt": "2024-01-01T11:59:00"
     }
   ],
-  "pageNumber": 0,
-  "pageSize": 20,
-  "totalElements": 4,
+  "totalElements": 1,
   "totalPages": 1,
-  "last": true
+  "size": 20,
+  "number": 0,
+  "first": true,
+  "last": true,
+  "empty": false
 }
 ```
+
+### 1.13.2 이메일 발송
+
+- 엔드포인트: `POST /api/v1/notifications/emails`
+- 설명: 이메일을 발송한다.
+- 접근 권한: 관리자, 접수담당자
+- Request Body:
+
+```json
+{
+  "asReceptionId": 1,
+  "recipientEmail": "customer@example.com",
+  "messageTitle": "수리 완료 안내",
+  "message": "수리가 완료되었습니다.",
+  "notificationType": "RECEIVED"
+}
+```
+
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "customerName": "홍길동",
+  "recipientEmail": "customer@example.com",
+  "notificationType": "RECEIVED",
+  "messageTitle": "수리 완료 안내",
+  "status": "PENDING",
+  "sentAt": "2024-01-01T12:00:00",
+  "createdAt": "2024-01-01T11:59:00"
+}
+```
+
+### 1.13.3 실패 이메일 재발송
+
+- 엔드포인트: `POST /api/v1/notifications/emails/{id}/retry`
+- 설명: 실패한 이메일을 재발송한다.
+- 접근 권한: 관리자, 접수담당자
+- Path Variable: id (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "customerName": "홍길동",
+  "recipientEmail": "customer@example.com",
+  "notificationType": "RECEIVED",
+  "messageTitle": "수리 완료 안내",
+  "status": "PENDING",
+  "sentAt": "2024-01-01T12:00:00",
+  "createdAt": "2024-01-01T11:59:00"
+}
+```
+
+### 1.13.4 이메일 발송 통계 조회
+
+- 엔드포인트: `GET /api/v1/notifications/statistics`
+- 설명: 이메일 발송 통계를 조회한다.
+- 접근 권한: 관리자, 접수담당자
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "total": 100,
+  "success": 95,
+  "failed": 5
+}
+```
+
+### 1.13.5 이메일 발송 상세 조회
+
+- 엔드포인트: `GET /api/v1/notifications/emails/{id}`
+- 설명: 이메일 발송 상세 정보를 조회한다.
+- 접근 권한: 관리자, 접수담당자
+- Path Variable: id (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "asReceptionId": 1,
+  "receptionNumber": "AS-20240101-001",
+  "customerName": "홍길동",
+  "eventKey": "repair-complete-1",
+  "notificationType": "RECEIVED",
+  "recipientEmail": "customer@example.com",
+  "messageTitle": "수리 완료 안내",
+  "message": "수리가 완료되었습니다.",
+  "notificationStatus": "PENDING",
+  "retryCount": 0,
+  "errorMessage": "null",
+  "sentAt": "2024-01-01T12:00:00",
+  "createdAt": "2024-01-01T11:59:00"
+}
+```
+
+## 1.14 Part API
+
+### 1.14.1 부품 단가 수정
+
+- 엔드포인트: `PATCH /api/v1/part/unit_price`
+- 설명: 관리자가 부품 단가를 수정한다.
+- 접근 권한: 관리자
+- 필수 필드: unitPrice
+- Request Body:
+
+```json
+{
+  "id": 1,
+  "unitPrice": 55000
+}
+```
+
+- Response Body: 없음 (HTTP 200)
+
+### 1.14.2 재고 수량 다건 수정
+
+- 엔드포인트: `PATCH /api/v1/part/stocks`
+- 설명: 수리 ID에 연결된 사용 부품들의 재고 수량을 일괄 반영한다.
+- 접근 권한: 로그인 사용자
+- Query Parameter: repairId (Long, 필수)
+- Request Body: 없음
+- Response Body: 없음 (HTTP 200)
+
+### 1.14.3 재고 수량 단건 수정
+
+- 엔드포인트: `PATCH /api/v1/part/stock`
+- 설명: 단일 부품의 재고 수량을 입출고 처리한다.
+- 접근 권한: 로그인 사용자
+- 필수 필드: quantity
+- Request Body:
+
+```json
+{
+  "id": 1,
+  "movementType": "OUT",
+  "quantity": 2,
+  "reason": "수리 사용"
+}
+```
+
+- Response Body: 없음 (HTTP 200)
+
+### 1.14.4 표준 작업시간 수정
+
+- 엔드포인트: `PATCH /api/v1/part/standard_minutes`
+- 설명: 관리자가 부품 표준 작업시간(분)을 수정한다.
+- 접근 권한: 관리자
+- 필수 필드: standardMinutes
+- Request Body:
+
+```json
+{
+  "id": 1,
+  "standardMinutes": 90
+}
+```
+
+- Response Body: 없음 (HTTP 200)
+
+### 1.14.5 부품 목록 조회
+
+- 엔드포인트: `GET /api/v1/part`
+- 설명: 검색 조건에 맞는 부품 목록을 페이징하여 반환한다.
+- 접근 권한: 로그인 사용자
+- Query Parameter: partName (String, 선택, 예: 메인보드) — 부품명 검색어 / status (PartStatus, 선택, 예: ACTIVE) — 부품 상태 / category (Category, 선택, 예: LAPTOP) — 호환 제품군 / productModelId (Long, 선택, 예: 1) — 호환 제품 모델 ID / page (int, 선택, 예: 0) — 페이지 번호. 0부터 시작한다. / size (int, 선택, 예: 20) — 페이지 크기 / sort (string, 선택) — 정렬. 예: createdAt,desc
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "content": [
+    {
+      "id": 1,
+      "name": "메인보드",
+      "unitPrice": 50000,
+      "stockQuantity": 20
+    }
+  ],
+  "totalElements": 1,
+  "totalPages": 1,
+  "size": 20,
+  "number": 0,
+  "first": true,
+  "last": true,
+  "empty": false
+}
+```
+
+### 1.14.6 부품 상세 조회
+
+- 엔드포인트: `GET /api/v1/part/{partId}`
+- 설명: 부품 ID로 상세 정보를 조회한다.
+- 접근 권한: 로그인 사용자
+- Path Variable: partId (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "name": "메인보드",
+  "unitPrice": 50000,
+  "standardMinutes": 60,
+  "stockQuantity": 20,
+  "status": "ACTIVE",
+  "version": 1
+}
+```
+
+## 1.15 Payment API
+
+### 1.15.1 결제 환불
+
+- 엔드포인트: `POST /api/v1/payments/{billId}/refund`
+- 설명: 결제 완료된 청구서를 전액 환불한다.
+- 접근 권한: 접수담당자, 관리자
+- Path Variable: billId (Long, 필수)
+- 필수 필드: cancelReason
+- Request Body:
+
+```json
+{
+  "cancelReason": "고객 요청",
+  "refundAccount": {
+    "bank": "88",
+    "accountNumber": "110123456789",
+    "holderName": "홍길동"
+  }
+}
+```
+
+- Response Body: 없음 (HTTP 200)
+
+### 1.15.2 현금 결제
+
+- 엔드포인트: `POST /api/v1/payments/{billId}/cash`
+- 설명: 현장 현금 결제를 처리한다. (직원 전용)
+- 접근 권한: 접수담당자, 관리자
+- Path Variable: billId (Long, 필수)
+- Request Body: 없음
+- Response Body: 없음 (HTTP 204)
+
+### 1.15.3 토스 웹훅 처리
+
+- 엔드포인트: `POST /api/v1/payments/webhook`
+- 설명: 토스에서 보내는 웹훅을 처리한다.
+- 접근 권한: 전체 (비인증)
+- Request Body:
+
+```json
+{
+  "createdAt": "2026-11-13T10:00:00",
+  "secret": "4_SSzEfbIoCrMGsTwve2t",
+  "status": "DONE",
+  "orderId": "PAY-asdw125-sad1w5-dsadqs21"
+}
+```
+
+- Response Body: 없음 (HTTP 200)
+
+### 1.15.4 결제 승인
+
+- 엔드포인트: `POST /api/v1/payments/confirm`
+- 설명: 토스 결제창 성공 후 전달된 값으로 결제를 승인한다.
+- 접근 권한: 전체 (비인증)
+- 필수 필드: orderId, paymentKey, amount
+- Request Body:
+
+```json
+{
+  "orderId": "ORDER-20240101-001",
+  "paymentKey": "tgen_xxxxxxxx",
+  "amount": 50000
+}
+```
+
+- Response Body: 없음 (HTTP 204)
+
+### 1.15.5 결제 목록 조회
+
+- 엔드포인트: `GET /api/v1/payments`
+- 설명: 키워드·상태 조건으로 결제 목록을 페이징 조회한다.
+- 접근 권한: 접수담당자, 관리자, 수리기사
+- Query Parameter: keyword (String, 선택) / status (PaymentBillStatus, 선택) / page (int, 선택, 예: 0) — 페이지 번호. 0부터 시작한다. / size (int, 선택, 예: 20) — 페이지 크기 / sort (string, 선택) — 정렬. 예: createdAt,desc
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "content": [
+    {
+      "billId": 1,
+      "asReceptionNumber": "AS-20240101-001",
+      "customerName": "홍길동",
+      "amount": 50000,
+      "status": "PAID",
+      "paymentMethod": "CARD",
+      "approvedAt": "2024-01-01T12:00:00"
+    }
+  ],
+  "totalElements": 1,
+  "totalPages": 1,
+  "size": 20,
+  "number": 0,
+  "first": true,
+  "last": true,
+  "empty": false
+}
+```
+
+### 1.15.6 결제 상세 조회
+
+- 엔드포인트: `GET /api/v1/payments/{billId}`
+- 설명: 청구서 ID로 결제 상세 정보를 조회한다.
+- 접근 권한: 접수담당자, 관리자, 수리기사
+- Path Variable: billId (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "billId": 1,
+  "reception": {
+    "asReceptionNumber": "AS-20240101-001",
+    "customerName": "홍길동",
+    "productName": "갤럭시 S24",
+    "symptom": "액정 파손",
+    "symptomDetail": "화면 좌측 하단 깨짐"
+  },
+  "amount": 50000,
+  "status": "PAID",
+  "paymentStatus": "DONE",
+  "paymentMethod": "CARD",
+  "virtualAccount": {
+    "bankCode": "88",
+    "accountNumber": "56201234567890",
+    "dueAt": "2024-01-02T23:59:59"
+  },
+  "paymentHistory": {
+    "attemptId": 1,
+    "orderId": "ORDER-20240101-001",
+    "amount": 50000,
+    "paymentMethod": "CARD",
+    "approvedAt": "2024-01-01T12:00:00"
+  },
+  "refundHistory": {
+    "refundId": 1,
+    "amount": 50000,
+    "cancelReason": "고객 요청",
+    "status": "DONE",
+    "canceledAt": "2024-01-03T15:00:00"
+  },
+  "refundable": true
+}
+```
+
+## 1.16 Payment Statistics API
+
+### 1.16.1 미입금 청구서 조회
+
+- 엔드포인트: `GET /api/v1/admin/statistics/unpaid-bills`
+- 설명: 미입금 청구서 목록을 조회한다.
+- 접근 권한: 관리자
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "billId": 1,
+  "receptionNumber": "",
+  "customerName": "",
+  "modelName": "",
+  "amount": 1,
+  "billedAt": "2026-11-13T10:00:00",
+  "status": "UNPAID"
+}
+```
+
+### 1.16.2 결제 통계 조회
+
+- 엔드포인트: `GET /api/v1/admin/statistics/payments`
+- 설명: 기간별 결제 통계를 조회한다.
+- 접근 권한: 관리자
+- Query Parameter: startDate (LocalDate, 필수) / endDate (LocalDate, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "startDate": "2026-11-13",
+  "endDate": "2026-11-13",
+  "totalPaidAmount": 1,
+  "totalRefundAmount": 1,
+  "netCollectedAmount": 1,
+  "unpaidCount": 1
+}
+```
+
+### 1.16.3 기간 결제 내역 조회
+
+- 엔드포인트: `GET /api/v1/admin/statistics/payments/history`
+- 설명: 조회 기간의 입금, 미입금, 환불 내역을 조회한다.
+- 접근 권한: 관리자
+- Query Parameter: startDate (LocalDate, 필수) / endDate (LocalDate, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "billId": 1,
+  "receptionNumber": "",
+  "customerName": "",
+  "amount": 1,
+  "status": "UNPAID",
+  "occurredAt": "2026-11-13T10:00:00"
+}
+```
+
+## 1.17 Portal API
+
+### 1.17.1 견적 거부
+
+- 엔드포인트: `POST /api/v1/portal/{token}/quote/reject`
+- 설명: 견적을 거부한다. 점검비 청구서가 발행되고 결제 대기 상태가 된다.
+- 접근 권한: 전체 (비인증)
+- Path Variable: token (String, 필수)
+- Request Body: 없음
+- Response Body: 없음 (HTTP 204)
+
+### 1.17.2 견적 승인
+
+- 엔드포인트: `POST /api/v1/portal/{token}/quote/approve`
+- 설명: 견적을 승인한다. 이후 수리 대기 상태가 된다.
+- 접근 권한: 전체 (비인증)
+- Path Variable: token (String, 필수)
+- Request Body: 없음
+- Response Body: 없음 (HTTP 204)
+
+### 1.17.3 결제 시작
+
+- 엔드포인트: `POST /api/v1/portal/{token}/payments/start`
+- 설명: 결제를 시작하고, 프론트가 토스 결제창을 띄우는 데 필요한 값을 반환한다.
+- 접근 권한: 전체 (비인증)
+- Path Variable: token (String, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "orderId": "ORDER-20240101-001",
+  "amount": 50000,
+  "orderName": "수리비"
+}
+```
+
+### 1.17.4 가상계좌 취소
+
+- 엔드포인트: `POST /api/v1/portal/{token}/payments/cancel`
+- 설명: 발급된 가상계좌를 취소한다.
+- 접근 권한: 전체 (비인증)
+- Path Variable: token (String, 필수)
+- Request Body: 없음
+- Response Body: 없음 (HTTP 204)
+
+### 1.17.5 포탈 조회
+
+- 엔드포인트: `GET /api/v1/portal/{token}`
+- 설명: 고객 포탈 화면 데이터(접수, 견적, 결제)를 조회한다.
+- 접근 권한: 전체 (비인증)
+- Path Variable: token (String, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "reception": {
+    "receptionNumber": "AS-251111-abc",
+    "receivedAt": "2025-11-11T09:00:00",
+    "customerName": "홍길동",
+    "customerPhone": "010-1234-5678",
+    "modelName": "FixGo Washer X1",
+    "serialNumber": "SN-123456",
+    "symptom": "전원 불량",
+    "symptomDetail": "전원 버튼을 눌러도 켜지지 않음",
+    "status": "RECEIVED",
+    "histories": [
+      {
+        "status": "RECEIVED",
+        "changedAt": "2025-11-11T09:00:00"
+      }
+    ]
+  },
+  "quote": {
+    "status": "PENDING",
+    "diagnosis": "",
+    "items": [
+      {
+        "name": "",
+        "quantity": 1,
+        "unitPrice": 1,
+        "amount": 1
+      }
+    ],
+    "laborCost": 1,
+    "inspectionCost": 1,
+    "totalAmount": 1,
+    "issuedAt": "2026-11-13T10:00:00"
+  },
+  "payment": {
+    "status": "PENDING",
+    "orderName": "수리비",
+    "amount": 50000,
+    "paymentMethod": "CARD",
+    "paidAt": "2024-01-01T12:00:00",
+    "virtualAccount": {
+      "bankName": "신한",
+      "accountNumber": "56201234567890",
+      "dueAt": "2024-01-02T23:59:59"
+    }
+  }
+}
+```
+
+## 1.18 Product API
+
+### 1.18.1 시리얼번호 검색
+
+- 엔드포인트: `GET /api/v1/products`
+- 설명: 시리얼번호로 수리 대상 제품을 검색한다.
+- 접근 권한: 로그인 사용자
+- Query Parameter: serialNumber (String, 선택)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "serialNumber": "SN-ABC-12345",
+  "manufacturedAt": "2025-01-01T00:00:00",
+  "purchasedAt": "2025-06-01T00:00:00",
+  "customerId": 1,
+  "productModelId": 1,
+  "name": "갤럭시북",
+  "modelName": "NT750XDA",
+  "category": "LAPTOP",
+  "warrantyMonths": 24,
+  "createdAt": "2026-01-01T10:00:00",
+  "updatedAt": "2026-01-02T10:00:00",
+  "createdBy": 1,
+  "updatedBy": 1
+}
+```
+
+### 1.18.2 수리 대상 제품 정보 등록
+
+- 엔드포인트: `POST /api/v1/products`
+- 설명: 수리 대상 제품 정보를 등록한다.
+- 접근 권한: 로그인 사용자
+- 필수 필드: productModelId, serialNumber, manufacturedAt
+- Request Body:
+
+```json
+{
+  "productModelId": 1,
+  "customerId": 1,
+  "serialNumber": "SN-ABC-12345",
+  "manufacturedAt": "2025-01-01T00:00:00",
+  "purchasedAt": "2025-06-01T00:00:00"
+}
+```
+
+- Response Body (HTTP 201):
+
+```json
+{
+  "id": 1,
+  "serialNumber": "SN-ABC-12345",
+  "manufacturedAt": "2025-01-01T00:00:00",
+  "purchasedAt": "2025-06-01T00:00:00",
+  "customerId": 1,
+  "productModelId": 1,
+  "name": "갤럭시북",
+  "modelName": "NT750XDA",
+  "category": "LAPTOP",
+  "warrantyMonths": 24,
+  "createdAt": "2026-01-01T10:00:00",
+  "updatedAt": "2026-01-02T10:00:00",
+  "createdBy": 1,
+  "updatedBy": 1
+}
+```
+
+### 1.18.3 수리 대상 제품 정보 수정
+
+- 엔드포인트: `PATCH /api/v1/products/{id}/purchased_at`
+- 설명: 수리 대상 제품 정보를 수정한다.
+- 접근 권한: 로그인 사용자
+- Path Variable: id (Long, 필수)
+- 필수 필드: productModelId
+- Request Body:
+
+```json
+{
+  "productModelId": 1,
+  "purchasedAt": "2025-06-01T00:00:00"
+}
+```
+
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "serialNumber": "SN-ABC-12345",
+  "manufacturedAt": "2025-01-01T00:00:00",
+  "purchasedAt": "2025-06-01T00:00:00",
+  "customerId": 1,
+  "productModelId": 1,
+  "name": "갤럭시북",
+  "modelName": "NT750XDA",
+  "category": "LAPTOP",
+  "warrantyMonths": 24,
+  "createdAt": "2026-01-01T10:00:00",
+  "updatedAt": "2026-01-02T10:00:00",
+  "createdBy": 1,
+  "updatedBy": 1
+}
+```
+
+### 1.18.4 수리 대상 제품 정보 조회
+
+- 엔드포인트: `GET /api/v1/products/{id}`
+- 설명: 제품 ID로 수리 대상 제품 정보를 조회한다.
+- 접근 권한: 로그인 사용자
+- Path Variable: id (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "serialNumber": "SN-ABC-12345",
+  "manufacturedAt": "2025-01-01T00:00:00",
+  "purchasedAt": "2025-06-01T00:00:00",
+  "customerId": 1,
+  "productModelId": 1,
+  "name": "갤럭시북",
+  "modelName": "NT750XDA",
+  "category": "LAPTOP",
+  "warrantyMonths": 24,
+  "createdAt": "2026-01-01T10:00:00",
+  "updatedAt": "2026-01-02T10:00:00",
+  "createdBy": 1,
+  "updatedBy": 1
+}
+```
+
+### 1.18.5 제품 페이징 검색
+
+- 엔드포인트: `GET /api/v1/products/search`
+- 설명: 시리얼번호 조건으로 제품을 페이징 검색한다. 시리얼번호가 없으면 전체를 페이징한다.
+- 접근 권한: 로그인 사용자
+- Query Parameter: serialNumber (String, 선택, 예: SN-ABC-12345) — 검색할 시리얼 번호 / page (int, 선택, 예: 0) — 페이지 번호. 0부터 시작한다. / size (int, 선택, 예: 20) — 페이지 크기 / sort (string, 선택) — 정렬. 예: createdAt,desc
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "content": [
+    {
+      "id": 1,
+      "serialNumber": "SN-ABC-12345",
+      "manufacturedAt": "2025-01-01T00:00:00",
+      "purchasedAt": "2025-06-01T00:00:00",
+      "customerId": 1,
+      "productModelId": 1,
+      "name": "갤럭시북",
+      "modelName": "NT750XDA",
+      "category": "LAPTOP",
+      "warrantyMonths": 24,
+      "createdAt": "2026-01-01T10:00:00",
+      "updatedAt": "2026-01-02T10:00:00",
+      "createdBy": 1,
+      "updatedBy": 1
+    }
+  ],
+  "totalElements": 1,
+  "totalPages": 1,
+  "size": 20,
+  "number": 0,
+  "first": true,
+  "last": true,
+  "empty": false
+}
+```
+
+## 1.19 Product Model API
+
+### 1.19.1 제품 모델 등록
+
+- 엔드포인트: `POST /api/v1/product-models`
+- 설명: 제품 모델을 등록한다.
+- 접근 권한: 로그인 사용자
+- 필수 필드: name, modelName, category, warrantyMonths
+- Request Body:
+
+```json
+{
+  "name": "갤럭시북",
+  "modelName": "NT750XDA",
+  "category": "LAPTOP",
+  "warrantyMonths": 24
+}
+```
+
+- Response Body (HTTP 201):
+
+```json
+{
+  "id": 1,
+  "name": "갤럭시북",
+  "modelName": "NT750XDA",
+  "category": "LAPTOP",
+  "warrantyMonths": 24,
+  "isActive": true,
+  "createdAt": "2026-01-01T10:00:00",
+  "updatedAt": "2026-01-02T10:00:00",
+  "createdBy": 1,
+  "updatedBy": 1
+}
+```
+
+### 1.19.2 제품 모델 단건 조회
+
+- 엔드포인트: `GET /api/v1/product-models/{id}`
+- 설명: id로 ProductModelDto.Response를 반환한다.
+- 접근 권한: 로그인 사용자
+- Path Variable: id (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "name": "갤럭시북",
+  "modelName": "NT750XDA",
+  "category": "LAPTOP",
+  "warrantyMonths": 24,
+  "isActive": true,
+  "createdAt": "2026-01-01T10:00:00",
+  "updatedAt": "2026-01-02T10:00:00",
+  "createdBy": 1,
+  "updatedBy": 1
+}
+```
+
+### 1.19.3 제품 모델 수정
+
+- 엔드포인트: `PATCH /api/v1/product-models/{id}`
+- 설명: 제품 모델 정보를 수정한다.
+- 접근 권한: 로그인 사용자
+- Path Variable: id (Long, 필수)
+- 필수 필드: name, modelName, category, warrantyMonths, isActive
+- Request Body:
+
+```json
+{
+  "name": "갤럭시북",
+  "modelName": "NT750XDA",
+  "category": "LAPTOP",
+  "warrantyMonths": 24,
+  "isActive": true
+}
+```
+
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "name": "갤럭시북",
+  "modelName": "NT750XDA",
+  "category": "LAPTOP",
+  "warrantyMonths": 24,
+  "isActive": true,
+  "createdAt": "2026-01-01T10:00:00",
+  "updatedAt": "2026-01-02T10:00:00",
+  "createdBy": 1,
+  "updatedBy": 1
+}
+```
+
+### 1.19.4 제품 모델 목록 검색
+
+- 엔드포인트: `GET /api/v1/product-models/list`
+- 설명: 키워드로 제품 모델을 검색하고 페이징한다.
+- 접근 권한: 로그인 사용자
+- Query Parameter: keyword (String, 선택) / page (int, 선택, 예: 0) — 페이지 번호. 0부터 시작한다. / size (int, 선택, 예: 20) — 페이지 크기 / sort (string, 선택) — 정렬. 예: createdAt,desc
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "content": [
+    {
+      "id": 1,
+      "name": "갤럭시북",
+      "modelName": "NT750XDA",
+      "category": "LAPTOP",
+      "warrantyMonths": 24,
+      "isActive": true,
+      "createdAt": "2026-01-01T10:00:00",
+      "updatedAt": "2026-01-02T10:00:00",
+      "createdBy": 1,
+      "updatedBy": 1
+    }
+  ],
+  "totalElements": 1,
+  "totalPages": 1,
+  "size": 20,
+  "number": 0,
+  "first": true,
+  "last": true,
+  "empty": false
+}
+```
+
+## 1.20 Reception Statistics API
+
+### 1.20.1 접수 통계 조회
+
+- 엔드포인트: `GET /api/v1/admin/statistics/receptions`
+- 설명: 기간별 접수·완료 건수와 완료율을 조회한다.
+- 접근 권한: 관리자
+- Query Parameter: startDate (LocalDate, 필수) / endDate (LocalDate, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "startDate": "2026-11-13",
+  "endDate": "2026-11-13",
+  "receivedCount": 1,
+  "completedCount": 1,
+  "completionRate": 1
+}
+```
+
+## 1.21 Repair API
+
+### 1.21.1 수리 상세 조회
+
+- 엔드포인트: `GET /api/v1/as/repairs/{id}`
+- 설명: 수리 ID로 수리 상세 정보를 조회한다.
+- 접근 권한: 로그인 사용자
+- Path Variable: id (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "asReceptionId": 1,
+  "technicianId": 3,
+  "diagnosis": "메인보드 전원부 고장",
+  "workNote": "메인보드 교체",
+  "repairDecision": "REPAIRABLE",
+  "warrantyResult": "IN_WARRANTY",
+  "reason": "부품 노후",
+  "laborRate": 30000,
+  "inspectionCost": 10000,
+  "finalAmount": 85000,
+  "status": "WAITING",
+  "reasonForRejection": "견적 미승인",
+  "confirmedAt": "2025-11-11T12:00:00",
+  "createdAt": "2025-11-11T09:00:00",
+  "updatedAt": "2025-11-11T10:00:00",
+  "createdBy": 2,
+  "updatedBy": 3
+}
+```
+
+### 1.21.2 수리 정보 수정
+
+- 엔드포인트: `PUT /api/v1/as/repairs/{id}`
+- 설명: 수리 정보를 수정한다.
+- 접근 권한: 로그인 사용자
+- Path Variable: id (Long, 필수)
+- 필수 필드: asReceptionId, technicianId, warrantyResult, laborRate, inspectionCost, finalAmount, status
+- Request Body:
+
+```json
+{
+  "asReceptionId": 1,
+  "technicianId": 3,
+  "diagnosis": "메인보드 전원부 고장",
+  "workNote": "메인보드 교체",
+  "repairDecision": "REPAIRABLE",
+  "warrantyResult": "IN_WARRANTY",
+  "reason": "부품 노후",
+  "laborRate": 30000,
+  "inspectionCost": 10000,
+  "finalAmount": 85000,
+  "status": "WAITING",
+  "reasonForRejection": "견적 미승인"
+}
+```
+
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "asReceptionId": 1,
+  "technicianId": 3,
+  "diagnosis": "메인보드 전원부 고장",
+  "workNote": "메인보드 교체",
+  "repairDecision": "REPAIRABLE",
+  "warrantyResult": "IN_WARRANTY",
+  "reason": "부품 노후",
+  "laborRate": 30000,
+  "inspectionCost": 10000,
+  "finalAmount": 85000,
+  "status": "WAITING",
+  "reasonForRejection": "견적 미승인",
+  "confirmedAt": "2025-11-11T12:00:00",
+  "createdAt": "2025-11-11T09:00:00",
+  "updatedAt": "2025-11-11T10:00:00",
+  "createdBy": 2,
+  "updatedBy": 3
+}
+```
+
+### 1.21.3 수리 삭제
+
+- 엔드포인트: `DELETE /api/v1/as/repairs/{id}`
+- 설명: 수리 정보를 삭제한다.
+- 접근 권한: 로그인 사용자
+- Path Variable: id (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "message": "수리가 시작되었습니다."
+}
+```
+
+### 1.21.4 전체 수리 목록 조회
+
+- 엔드포인트: `GET /api/v1/as/repairs`
+- 설명: 등록된 전체 수리 목록을 조회한다.
+- 접근 권한: 로그인 사용자
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "asReceptionId": 1,
+  "technicianId": 3,
+  "diagnosis": "메인보드 전원부 고장",
+  "workNote": "메인보드 교체",
+  "repairDecision": "REPAIRABLE",
+  "warrantyResult": "IN_WARRANTY",
+  "reason": "부품 노후",
+  "laborRate": 30000,
+  "inspectionCost": 10000,
+  "finalAmount": 85000,
+  "status": "WAITING",
+  "reasonForRejection": "견적 미승인",
+  "confirmedAt": "2025-11-11T12:00:00",
+  "createdAt": "2025-11-11T09:00:00",
+  "updatedAt": "2025-11-11T10:00:00",
+  "createdBy": 2,
+  "updatedBy": 3
+}
+```
+
+### 1.21.5 수리 등록
+
+- 엔드포인트: `POST /api/v1/as/repairs`
+- 설명: 새로운 수리 정보를 등록한다.
+- 접근 권한: 로그인 사용자
+- 필수 필드: asReceptionId, technicianId, warrantyResult, laborRate, inspectionCost, finalAmount, status
+- Request Body:
+
+```json
+{
+  "asReceptionId": 1,
+  "technicianId": 3,
+  "diagnosis": "메인보드 전원부 고장",
+  "workNote": "메인보드 교체",
+  "repairDecision": "REPAIRABLE",
+  "warrantyResult": "IN_WARRANTY",
+  "reason": "부품 노후",
+  "laborRate": 30000,
+  "inspectionCost": 10000,
+  "finalAmount": 85000,
+  "status": "WAITING",
+  "reasonForRejection": "견적 미승인"
+}
+```
+
+- Response Body (HTTP 201):
+
+```json
+{
+  "message": "수리가 시작되었습니다."
+}
+```
+
+### 1.21.6 A/S 중단
+
+- 엔드포인트: `POST /api/v1/as/repairs/{id}/abort`
+- 설명: 담당 기사가 점검 중인 A/S를 중단하고 반환 대기로 넘긴다.
+- 접근 권한: 수리기사
+- Path Variable: id (Long, 필수)
+- 필수 필드: category, reason
+- Request Body:
+
+```json
+{
+  "category": "REPAIR_IMPOSSIBLE",
+  "reason": "부품 단종"
+}
+```
+
+- Response Body (HTTP 200):
+
+```json
+{
+  "message": "수리가 시작되었습니다."
+}
+```
+
+### 1.21.7 수리 상태 변경
+
+- 엔드포인트: `PATCH /api/v1/as/repairs/{id}/status`
+- 설명: 관리자/매니저가 수리 상태를 변경한다.
+- 접근 권한: 관리자, 매니저
+- Path Variable: id (Long, 필수)
+- Request Body:
+
+```json
+{
+  "status": "DIAGNOSING"
+}
+```
+
+- Response Body (HTTP 200):
+
+```json
+{
+  "message": "수리가 시작되었습니다."
+}
+```
+
+### 1.21.8 수리 시작
+
+- 엔드포인트: `PATCH /api/v1/as/repairs/{id}/start`
+- 설명: 담당 기사가 수리를 시작한다.
+- 접근 권한: 수리기사
+- Path Variable: id (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "message": "수리가 시작되었습니다."
+}
+```
+
+### 1.21.9 수리 완료
+
+- 엔드포인트: `PATCH /api/v1/as/repairs/{id}/complete`
+- 설명: 담당 기사가 본인에게 배정된 수리를 완료한다.
+- 접근 권한: 수리기사
+- Path Variable: id (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "message": "수리가 시작되었습니다."
+}
+```
+
+### 1.21.10 접수번호로 수리 상세 조회
+
+- 엔드포인트: `GET /api/v1/as/repairs/reception/{receptionNumber}`
+- 설명: A/S 접수번호로 수리 상세 정보를 조회한다.
+- 접근 권한: 로그인 사용자
+- Path Variable: receptionNumber (String, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "asReceptionId": 1,
+  "technicianId": 3,
+  "diagnosis": "메인보드 전원부 고장",
+  "workNote": "메인보드 교체",
+  "repairDecision": "REPAIRABLE",
+  "warrantyResult": "IN_WARRANTY",
+  "reason": "부품 노후",
+  "laborRate": 30000,
+  "inspectionCost": 10000,
+  "finalAmount": 85000,
+  "status": "WAITING",
+  "reasonForRejection": "견적 미승인",
+  "confirmedAt": "2025-11-11T12:00:00",
+  "createdAt": "2025-11-11T09:00:00",
+  "updatedAt": "2025-11-11T10:00:00",
+  "createdBy": 2,
+  "updatedBy": 3
+}
+```
+
+### 1.21.11 본인에게 배정된 A/S 목록 조회
+
+- 엔드포인트: `GET /api/v1/as/repairs/my`
+- 설명: 담당 기사에게 배정된 수리 목록을 조회한다.
+- 접근 권한: 수리기사
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "asReceptionId": 1,
+  "technicianId": 3,
+  "diagnosis": "메인보드 전원부 고장",
+  "workNote": "메인보드 교체",
+  "repairDecision": "REPAIRABLE",
+  "warrantyResult": "IN_WARRANTY",
+  "reason": "부품 노후",
+  "laborRate": 30000,
+  "inspectionCost": 10000,
+  "finalAmount": 85000,
+  "status": "WAITING",
+  "reasonForRejection": "견적 미승인",
+  "confirmedAt": "2025-11-11T12:00:00",
+  "createdAt": "2025-11-11T09:00:00",
+  "updatedAt": "2025-11-11T10:00:00",
+  "createdBy": 2,
+  "updatedBy": 3
+}
+```
+
+### 1.21.12 본인에게 배정된 A/S 상세 조회
+
+- 엔드포인트: `GET /api/v1/as/repairs/my/{id}`
+- 설명: 담당 기사에게 배정된 수리 상세 정보를 조회한다.
+- 접근 권한: 수리기사
+- Path Variable: id (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "asReceptionId": 1,
+  "technicianId": 3,
+  "diagnosis": "메인보드 전원부 고장",
+  "workNote": "메인보드 교체",
+  "repairDecision": "REPAIRABLE",
+  "warrantyResult": "IN_WARRANTY",
+  "reason": "부품 노후",
+  "laborRate": 30000,
+  "inspectionCost": 10000,
+  "finalAmount": 85000,
+  "status": "WAITING",
+  "reasonForRejection": "견적 미승인",
+  "confirmedAt": "2025-11-11T12:00:00",
+  "createdAt": "2025-11-11T09:00:00",
+  "updatedAt": "2025-11-11T10:00:00",
+  "createdBy": 2,
+  "updatedBy": 3
+}
+```
+
+## 1.22 Repair Cost API
+
+### 1.22.1 수리비 계산
+
+- 엔드포인트: `POST /api/v1/as/repairs/{repairId}/cost`
+- 설명: 수리 ID로 수리비를 계산한다.
+- 접근 권한: 로그인 사용자
+- Path Variable: repairId (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "laborRate": 1,
+  "inspectionCost": 1,
+  "finalAmount": 1
+}
+```
+
+### 1.22.2 수리비 확정
+
+- 엔드포인트: `POST /api/v1/as/repairs/{repairId}/cost/confirm`
+- 설명: 계산된 수리비를 확정한다.
+- 접근 권한: 로그인 사용자
+- Path Variable: repairId (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "message": "수리가 시작되었습니다."
+}
+```
+
+## 1.23 Repair History API
+
+### 1.23.1 A/S 수리 이력 조회
+
+- 엔드포인트: `GET /api/v1/as/repair-histories/{asReceptionId}`
+- 설명: A/S 접수 ID로 수리 이력을 조회한다.
+- 접근 권한: 로그인 사용자
+- Path Variable: asReceptionId (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "repairId": 1,
+  "asReceptionId": 1,
+  "diagnosis": "",
+  "workNote": "",
+  "repairDecision": "",
+  "warrantyResult": "",
+  "finalAmount": 1,
+  "status": "",
+  "createdAt": "2026-11-13T10:00:00",
+  "updatedAt": "2026-11-13T10:00:00",
+  "repairWorks": [
+    {
+      "repairWorkId": 1,
+      "repairPresetName": "",
+      "workName": "",
+      "usedParts": [
+        {
+          "id": 1,
+          "repairWorkId": 1,
+          "partId": 1,
+          "partName": "",
+          "quantity": 1,
+          "unitPrice": 1,
+          "totalPrice": 1,
+          "createdAt": "2026-11-13T10:00:00"
+        }
+      ]
+    }
+  ]
+}
+```
+
+## 1.24 Repair Part Usage API
+
+### 1.24.1 실제 수리 부품 사용 등록
+
+- 엔드포인트: `POST /api/v1/as/repair-part-usages`
+- 설명: 수리에 사용된 부품을 등록한다.
+- 접근 권한: 로그인 사용자
+- 필수 필드: repairWorkId, partId, quantity
+- Request Body:
+
+```json
+{
+  "repairWorkId": 1,
+  "partId": 1,
+  "quantity": 1
+}
+```
+
+- Response Body (HTTP 201):
+
+```json
+{
+  "id": 1,
+  "repairWorkId": 1,
+  "partId": 1,
+  "partName": "",
+  "quantity": 1,
+  "unitPrice": 1,
+  "totalPrice": 1,
+  "createdAt": "2026-11-13T10:00:00"
+}
+```
+
+## 1.25 Repair Preset API
+
+### 1.25.1 단일 프리셋 조회
+
+- 엔드포인트: `GET /api/v1/as/repair-presets/{id}`
+- 설명: 프리셋 ID로 수리 프리셋 상세 정보를 조회한다.
+- 접근 권한: 로그인 사용자
+- Path Variable: id (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "name": "",
+  "description": "",
+  "createdAt": "2026-11-13T10:00:00",
+  "updatedAt": "2026-11-13T10:00:00",
+  "createdBy": 1,
+  "updatedBy": 1,
+  "basePrice": 1,
+  "estimatedMinutes": 1
+}
+```
+
+### 1.25.2 프리셋 수정
+
+- 엔드포인트: `PUT /api/v1/as/repair-presets/{id}`
+- 설명: 수리 프리셋 정보를 수정한다.
+- 접근 권한: 로그인 사용자
+- Path Variable: id (Long, 필수)
+- Request Body:
+
+```json
+{
+  "name": "메인보드 교체",
+  "description": "메인보드 불량 시 교체 작업",
+  "parts": [
+    {
+      "partId": 1,
+      "quantity": 1
+    }
+  ]
+}
+```
+
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "name": "",
+  "description": "",
+  "createdAt": "2026-11-13T10:00:00",
+  "updatedAt": "2026-11-13T10:00:00",
+  "createdBy": 1,
+  "updatedBy": 1,
+  "basePrice": 1,
+  "estimatedMinutes": 1
+}
+```
+
+### 1.25.3 프리셋 삭제
+
+- 엔드포인트: `DELETE /api/v1/as/repair-presets/{id}`
+- 설명: 수리 프리셋을 삭제한다.
+- 접근 권한: 로그인 사용자
+- Path Variable: id (Long, 필수)
+- Request Body: 없음
+- Response Body: 없음 (HTTP 204)
+
+### 1.25.4 전체 프리셋 조회
+
+- 엔드포인트: `GET /api/v1/as/repair-presets`
+- 설명: 등록된 전체 수리 프리셋 목록을 조회한다.
+- 접근 권한: 로그인 사용자
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "name": "",
+  "description": "",
+  "createdAt": "2026-11-13T10:00:00",
+  "updatedAt": "2026-11-13T10:00:00",
+  "createdBy": 1,
+  "updatedBy": 1,
+  "basePrice": 1,
+  "estimatedMinutes": 1
+}
+```
+
+### 1.25.5 프리셋 등록
+
+- 엔드포인트: `POST /api/v1/as/repair-presets`
+- 설명: 새로운 수리 프리셋을 등록한다.
+- 접근 권한: 로그인 사용자
+- 필수 필드: name
+- Request Body:
+
+```json
+{
+  "name": "메인보드 교체",
+  "description": "메인보드 불량 시 교체 작업",
+  "parts": [
+    {
+      "partId": 1,
+      "quantity": 1
+    }
+  ]
+}
+```
+
+- Response Body (HTTP 201):
+
+```json
+{
+  "id": 1,
+  "name": "",
+  "description": "",
+  "createdAt": "2026-11-13T10:00:00",
+  "updatedAt": "2026-11-13T10:00:00",
+  "createdBy": 1,
+  "updatedBy": 1,
+  "basePrice": 1,
+  "estimatedMinutes": 1
+}
+```
+
+### 1.25.6 프리셋 부품 목록 조회
+
+- 엔드포인트: `GET /api/v1/as/repair-presets/{id}/parts`
+- 설명: 수리 프리셋에 연결된 부품 목록을 조회한다.
+- 접근 권한: 로그인 사용자
+- Path Variable: id (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+	"partId": 1,
+	"partName": "",
+	"quantiㅂty": 1,
+	"stockQuantity": 1,
+	"standardMinutes": 1,
+	"unitPrice": 1
+}
+```
+
+### 1.25.7 프리셋 이름 검색
+
+- 엔드포인트: `GET /api/v1/as/repair-presets/search`
+- 설명: 이름으로 수리 프리셋을 검색한다.
+- 접근 권한: 로그인 사용자
+- Query Parameter: name (String, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+	"id": 1,
+	"name": "",
+	"description": "",
+	"createdAt": "2026-11-13T10:00:00",
+	"updatedAt": "2026-11-13T10:00:00",
+	"createdBy": 1,
+	"updatedBy": 1,
+	"basePrice": 1,
+	"estimatedMinutes": 1
+}
+```
+
+## 1.26 Repair Work API
+
+### 1.26.1 수리 작업 내역 단건 조회
+
+- 엔드포인트: `GET /api/v1/as/repair-works/{id}`
+- 설명: 수리 작업 내역 ID로 단건을 조회한다.
+- 접근 권한: 로그인 사용자
+- Path Variable: id (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "repairId": 1,
+  "repairPresetName": "",
+  "workName": "",
+  "createdAt": "2026-11-13T10:00:00",
+  "updatedAt": "2026-11-13T10:00:00",
+  "createdBy": 1,
+  "updatedBy": 1
+}
+```
+
+### 1.26.2 수리 작업 내역 수정
+
+- 엔드포인트: `PUT /api/v1/as/repair-works/{id}`
+- 설명: 수리 작업 내역을 수정한다.
+- 접근 권한: 로그인 사용자
+- Path Variable: id (Long, 필수)
+- Request Body:
+
+```json
+{
+  "presetId": 10,
+  "workName": "메인보드 교체"
+}
+```
+
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "repairId": 1,
+  "repairPresetName": "",
+  "workName": "",
+  "createdAt": "2026-11-13T10:00:00",
+  "updatedAt": "2026-11-13T10:00:00",
+  "createdBy": 1,
+  "updatedBy": 1
+}
+```
+
+### 1.26.3 수리 작업 내역 삭제
+
+- 엔드포인트: `DELETE /api/v1/as/repair-works/{id}`
+- 설명: 수리 작업 내역을 삭제한다.
+- 접근 권한: 로그인 사용자
+- Path Variable: id (Long, 필수)
+- Request Body: 없음
+- Response Body: 없음 (HTTP 204)
+
+### 1.26.4 수리 작업 내역 전체 조회
+
+- 엔드포인트: `GET /api/v1/as/repair-works`
+- 설명: 등록된 전체 수리 작업 내역을 조회한다.
+- 접근 권한: 로그인 사용자
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+	"id": 1,
+	"repairId": 1,
+	"repairPresetName": "",
+	"workName": "",
+	"createdAt": "2026-11-13T10:00:00",
+	"updatedAt": "2026-11-13T10:00:00",
+	"createdBy": 1,
+	"updatedBy": 1
+}
+```
+
+### 1.26.5 수리 작업 내역 등록
+
+- 엔드포인트: `POST /api/v1/as/repair-works`
+- 설명: 새로운 수리 작업 내역을 등록한다.
+- 접근 권한: 로그인 사용자
+- Request Body:
+
+```json
+{
+  "repairId": 1,
+  "presetId": 10,
+  "workName": "메인보드 교체"
+}
+```
+
+- Response Body (HTTP 201):
+
+```json
+{
+  "id": 1,
+  "repairId": 1,
+  "repairPresetName": "",
+  "workName": "",
+  "createdAt": "2026-11-13T10:00:00",
+  "updatedAt": "2026-11-13T10:00:00",
+  "createdBy": 1,
+  "updatedBy": 1
+}
+```
+
+### 1.26.6 작업명 검색
+
+- 엔드포인트: `GET /api/v1/as/repair-works/search`
+- 설명: 작업명으로 수리 작업 내역을 검색한다.
+- 접근 권한: 로그인 사용자
+- Query Parameter: workName (String, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "repairId": 1,
+  "repairPresetName": "",
+  "workName": "",
+  "createdAt": "2026-11-13T10:00:00",
+  "updatedAt": "2026-11-13T10:00:00",
+  "createdBy": 1,
+  "updatedBy": 1
+}
+```
+
+### 1.26.7 특정 수리 건의 작업 내역 조회
+
+- 엔드포인트: `GET /api/v1/as/repair-works/repair/{repairId}`
+- 설명: 수리 ID에 연결된 작업 내역 목록을 조회한다.
+- 접근 권한: 로그인 사용자
+- Path Variable: repairId (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "repairId": 1,
+  "repairPresetName": "",
+  "workName": "",
+  "createdAt": "2026-11-13T10:00:00",
+  "updatedAt": "2026-11-13T10:00:00",
+  "createdBy": 1,
+  "updatedBy": 1
+}
+```
+
+## 1.27 Shipment API
+
+### 1.27.1 택배 배송 등록
+
+- 엔드포인트: `POST /api/v1/shipments`
+- 설명: 택배 배송을 등록한다.
+- 접근 권한: 관리자, 접수담당자
+- 필수 필드: asReceptionId, courierCode, trackingNumber
+- Request Body:
+
+```json
+{
+  "asReceptionId": 1,
+  "courierCode": "04",
+  "trackingNumber": "123456789012"
+}
+```
+
+- Response Body (HTTP 201):
+
+```json
+{
+  "id": 1,
+  "asReceptionId": 1,
+  "receptionNumber": "AS-20240101-001",
+  "recipientName": "홍길동",
+  "recipientPhone": "01012345678",
+  "returnMethod": "DELIVERY",
+  "courier": "CJ대한통운",
+  "courierCode": "04",
+  "trackingNumber": "123456789012",
+  "status": "SHIPPING",
+  "shippedAt": "2024-01-01T10:00:00",
+  "completedAt": "2024-01-03T15:00:00"
+}
+```
+
+### 1.27.2 배송 추적 갱신
+
+- 엔드포인트: `POST /api/v1/shipments/{shipmentId}/tracking/refresh`
+- 설명: SweetTracker로 배송을 조회하고 이력을 갱신한다.
+- 접근 권한: 관리자, 접수담당자
+- Path Variable: shipmentId (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "invoiceNo": "",
+  "itemName": "",
+  "result": "",
+  "level": 1,
+  "complete": true,
+  "completeYN": "",
+  "estimate": "",
+  "trackingDetails": [
+    {
+      "code": "",
+      "kind": "",
+      "level": 1,
+      "time": 1,
+      "timeString": "",
+      "where": "",
+      "remark": ""
+    }
+  ],
+  "status": true,
+  "msg": ""
+}
+```
+
+### 1.27.3 방문 수령 등록
+
+- 엔드포인트: `POST /api/v1/shipments/pickups`
+- 설명: 방문 수령을 등록한다.
+- 접근 권한: 관리자, 접수담당자
+- 필수 필드: asReceptionId
+- Request Body:
+
+```json
+{
+  "asReceptionId": 1
+}
+```
+
+- Response Body (HTTP 201):
+
+```json
+{
+  "id": 1,
+  "asReceptionId": 1,
+  "receptionNumber": "AS-20240101-001",
+  "recipientName": "홍길동",
+  "recipientPhone": "01012345678",
+  "returnMethod": "DELIVERY",
+  "courier": "CJ대한통운",
+  "courierCode": "04",
+  "trackingNumber": "123456789012",
+  "status": "SHIPPING",
+  "shippedAt": "2024-01-01T10:00:00",
+  "completedAt": "2024-01-03T15:00:00"
+}
+```
+
+### 1.27.4 운송장 정보 수정
+
+- 엔드포인트: `PATCH /api/v1/shipments/{shipmentId}/tracking-info`
+- 설명: 택배사 및 운송장번호를 수정한다.
+- 접근 권한: 관리자, 접수담당자
+- Path Variable: shipmentId (Long, 필수)
+- 필수 필드: courierCode, trackingNumber
+- Request Body:
+
+```json
+{
+  "courierCode": "04",
+  "trackingNumber": "123456789012"
+}
+```
+
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "asReceptionId": 1,
+  "receptionNumber": "AS-20240101-001",
+  "recipientName": "홍길동",
+  "recipientPhone": "01012345678",
+  "returnMethod": "DELIVERY",
+  "courier": "CJ대한통운",
+  "courierCode": "04",
+  "trackingNumber": "123456789012",
+  "status": "SHIPPING",
+  "shippedAt": "2024-01-01T10:00:00",
+  "completedAt": "2024-01-03T15:00:00"
+}
+```
+
+### 1.27.5 배송 시작
+
+- 엔드포인트: `PATCH /api/v1/shipments/{shipmentId}/shipping`
+- 설명: 배송을 시작하고 이메일 알림을 발송한다.
+- 접근 권한: 관리자, 접수담당자
+- Path Variable: shipmentId (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "asReceptionId": 1,
+  "receptionNumber": "AS-20240101-001",
+  "recipientName": "홍길동",
+  "recipientPhone": "01012345678",
+  "returnMethod": "DELIVERY",
+  "courier": "CJ대한통운",
+  "courierCode": "04",
+  "trackingNumber": "123456789012",
+  "status": "SHIPPING",
+  "shippedAt": "2024-01-01T10:00:00",
+  "completedAt": "2024-01-03T15:00:00"
+}
+```
+
+### 1.27.6 방문 수령 완료
+
+- 엔드포인트: `PATCH /api/v1/shipments/{shipmentId}/pickup`
+- 설명: 방문 수령 완료를 처리한다.
+- 접근 권한: 관리자, 접수담당자
+- Path Variable: shipmentId (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "asReceptionId": 1,
+  "receptionNumber": "AS-20240101-001",
+  "recipientName": "홍길동",
+  "recipientPhone": "01012345678",
+  "returnMethod": "DELIVERY",
+  "courier": "CJ대한통운",
+  "courierCode": "04",
+  "trackingNumber": "123456789012",
+  "status": "SHIPPING",
+  "shippedAt": "2024-01-01T10:00:00",
+  "completedAt": "2024-01-03T15:00:00"
+}
+```
+
+### 1.27.7 배송 완료
+
+- 엔드포인트: `PATCH /api/v1/shipments/{shipmentId}/delivered`
+- 설명: 배송 완료를 수동 처리한다.
+- 접근 권한: 관리자, 접수담당자
+- Path Variable: shipmentId (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "asReceptionId": 1,
+  "receptionNumber": "AS-20240101-001",
+  "recipientName": "홍길동",
+  "recipientPhone": "01012345678",
+  "returnMethod": "DELIVERY",
+  "courier": "CJ대한통운",
+  "courierCode": "04",
+  "trackingNumber": "123456789012",
+  "status": "SHIPPING",
+  "shippedAt": "2024-01-01T10:00:00",
+  "completedAt": "2024-01-03T15:00:00"
+}
+```
+
+### 1.27.8 배송 단건 조회
+
+- 엔드포인트: `GET /api/v1/shipments/{shipmentId}`
+- 설명: 배송 ID로 배송 정보를 조회한다.
+- 접근 권한: 관리자, 접수담당자, 수리기사
+- Path Variable: shipmentId (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "asReceptionId": 1,
+  "receptionNumber": "AS-20240101-001",
+  "recipientName": "홍길동",
+  "recipientPhone": "01012345678",
+  "returnMethod": "DELIVERY",
+  "courier": "CJ대한통운",
+  "courierCode": "04",
+  "trackingNumber": "123456789012",
+  "status": "SHIPPING",
+  "shippedAt": "2024-01-01T10:00:00",
+  "completedAt": "2024-01-03T15:00:00"
+}
+```
+
+### 1.27.9 배송 상세 조회
+
+- 엔드포인트: `GET /api/v1/shipments/{shipmentId}/details`
+- 설명: 배송 상세 및 이벤트 이력을 조회한다.
+- 접근 권한: 관리자, 접수담당자, 수리기사
+- Path Variable: shipmentId (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "asReceptionId": 1,
+  "receptionNumber": "AS-20240101-001",
+  "recipientName": "홍길동",
+  "recipientPhone": "01012345678",
+  "returnMethod": "DELIVERY",
+  "address": "서울시 강남구",
+  "addressDetail": "테헤란로 123",
+  "courier": "CJ대한통운",
+  "courierCode": "04",
+  "trackingNumber": "123456789012",
+  "status": "SHIPPING",
+  "shippedAt": "2024-01-01T10:00:00",
+  "completedAt": "2024-01-03T15:00:00",
+  "lastCheckedAt": "2024-01-02T12:00:00",
+  "lastTrackingStatus": "배송중",
+  "events": [
+    {
+      "id": 1,
+      "status": "IN_TRANSIT",
+      "description": "배송중",
+      "occurredAt": "2024-01-02T09:00:00"
+    }
+  ]
+}
+```
+
+### 1.27.10 접수별 배송 조회
+
+- 엔드포인트: `GET /api/v1/shipments/receptions/{asReceptionId}`
+- 설명: A/S 접수별 배송 정보를 조회한다.
+- 접근 권한: 관리자, 접수담당자, 수리기사
+- Path Variable: asReceptionId (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "asReceptionId": 1,
+  "receptionNumber": "AS-20240101-001",
+  "recipientName": "홍길동",
+  "recipientPhone": "01012345678",
+  "returnMethod": "DELIVERY",
+  "courier": "CJ대한통운",
+  "courierCode": "04",
+  "trackingNumber": "123456789012",
+  "status": "SHIPPING",
+  "shippedAt": "2024-01-01T10:00:00",
+  "completedAt": "2024-01-03T15:00:00"
+}
+```
+
+### 1.27.11 배송 관리 목록 조회
+
+- 엔드포인트: `GET /api/v1/shipments/list`
+- 설명: 배송 및 방문 수령 통합 목록을 조회한다.
+- 접근 권한: 관리자, 접수담당자, 수리기사
+- Query Parameter: keyword (String, 선택) / status (String, 선택, 예: ALL) / returnMethod (String, 선택, 예: ALL) / page (int, 선택, 예: 0) / size (int, 선택, 예: 20)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "content": [
+    {
+      "asReceptionId": 1,
+      "shipmentId": 1,
+      "receptionNumber": "AS-20240101-001",
+      "customerName": "홍길동",
+      "recipientPhone": "01012345678",
+      "returnMethod": "DELIVERY",
+      "asReceptionStatus": "RECEIVED",
+      "shipmentStatus": "SHIPPING",
+      "courier": "CJ대한통운",
+      "trackingNumber": "123456789012",
+      "shippedAt": "2024-01-01T10:00:00"
+    }
+  ],
+  "totalElements": 1,
+  "totalPages": 1,
+  "size": 20,
+  "number": 0,
+  "first": true,
+  "last": true,
+  "empty": false
+}
+```
+
+## 1.28 Shipment Statistics API
+
+### 1.28.1 배송 현황 통계 조회
+
+- 엔드포인트: `GET /api/v1/admin/statistics/shipments`
+- 설명: 기간별 배송 현황 통계를 조회한다.
+- 접근 권한: 관리자
+- Query Parameter: startDate (LocalDate, 필수) / endDate (LocalDate, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "startDate": "2026-11-13",
+  "endDate": "2026-11-13",
+  "readyCount": 1,
+  "shippingCount": 1,
+  "completedCount": 1
+}
+```
+
+### 1.28.2 기간 배송 내역 조회
+
+- 엔드포인트: `GET /api/v1/admin/statistics/shipments/history`
+- 설명: 조회 기간에 등록된 배송 내역을 조회한다.
+- 접근 권한: 관리자
+- Query Parameter: startDate (LocalDate, 필수) / endDate (LocalDate, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+	"shipmentId": 1,
+	"receptionId": 1,
+	"receptionNumber": "",
+	"customerName": "",
+	"returnMethod": "DELIVERY",
+	"status": "READY",
+	"createdAt": "2026-11-13T10:00:00"
+}
+```
+
+## 1.29 Symptom Preset API
+
+### 1.29.1 고장 증상 프리셋 목록 조회
+
+- 엔드포인트: `GET /api/v1/as/symptom-presets`
+- 설명: 등록된 고장 증상 프리셋 목록을 조회한다.
+- 접근 권한: 로그인 사용자
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+  "id": 1,
+  "productCategory": "",
+  "name": ""
+}
+```
+
+### 1.29.2 증상에 연결된 수리 프리셋 조회
+
+- 엔드포인트: `GET /api/v1/as/symptom-presets/{symptomId}/repair-presets`
+- 설명: 고장 증상 ID에 연결된 수리 프리셋 목록을 조회한다.
+- 접근 권한: 로그인 사용자
+- Path Variable: symptomId (Long, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+	"id": 1,
+	"name": "",
+	"description": "",
+	"createdAt": "2026-11-13T10:00:00",
+	"updatedAt": "2026-11-13T10:00:00",
+	"createdBy": 1,
+	"updatedBy": 1,
+	"basePrice": 1,
+	"estimatedMinutes": 1
+}
+```
+
+### 1.29.3 고장 증상 프리셋 검색
+
+- 엔드포인트: `GET /api/v1/as/symptom-presets/search`
+- 설명: 이름으로 고장 증상 프리셋을 검색한다.
+- 접근 권한: 로그인 사용자
+- Query Parameter: name (String, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+	"id": 1,
+	"productCategory": "",
+	"name": ""
+}
+```
+
+## 1.30 Technician Statistics API
+
+### 1.30.1 기사별 통계 조회
+
+- 엔드포인트: `GET /api/v1/admin/statistics/technicians`
+- 설명: 기간별 기사별 통계를 조회한다.
+- 접근 권한: 관리자
+- Query Parameter: startDate (LocalDate, 필수) / endDate (LocalDate, 필수)
+- Request Body: 없음
+- Response Body (HTTP 200):
+
+```json
+{
+	 "technicianId": 1,
+	 "technicianName": "",
+	 "assignedCount": 1,
+	 "completedCount": 1,
+	 "inProgressCount": 1,
+	 "averageDurationMinutes": 1,
+	 "revenue": 1
+}
+```
+
+실패 시 응답은 1.1.2 공통 에러 형식을 따른다.
