@@ -9,7 +9,6 @@ FixGo는 전자제품 A/S 업무를 효율적으로 관리하기 위한 웹 기�
 - **Frontend**: React 기반 SPA로 구성하며 GitHub를 통해 소스 코드를 관리하고 Netlify를 통해 배포한다.
 - **Backend**: Spring Boot 기반 REST API 서버로 구성하며 Docker 컨테이너로 패키징하여 AWS EC2에서 실행한다.
 - **Database**: AWS RDS for MySQL을 사용하여 서비스 데이터를 관리한다.
-- **Image Storage**: AWS S3를 활용하여 접수 사진, 제품 사진 등의 파일을 저장한다.
 - **Container Image Registry**: Docker Hub를 활용하여 빌드된 Docker 이미지를 저장하고 EC2에서 이미지를 가져와 실행한다.
 - **CDN 및 보안**: Cloudflare를 활용하여 DNS, CDN 및 보안 기능을 제공한다.
 
@@ -39,9 +38,6 @@ graph TD
                 RDS[(AWS RDS MySQL)]
             end
         end
-
-        S3[(Amazon S3)]
-
     end
 
     GITHUB[GitHub]
@@ -56,7 +52,6 @@ graph TD
     CF --> NGINX
     NGINX --> APP
     APP --> RDS
-    APP --> S3
 
     GITHUB --> ACTIONS
     ACTIONS --> DOCKERHUB
@@ -110,14 +105,7 @@ AWS VPC 내부에 EC2와 RDS를 배치하여 네트워크를 분리한다.
 - Spring Data JPA 및 MyBatis를 활용하여 데이터베이스에 접근한다.
 - 데이터베이스 백업 및 복구 기능을 활용하여 데이터를 관리한다.
 
-### 1.2.5 S3 파일 저장소 구성
-
-- AWS S3를 사용하여 A/S 접수 사진, 제품 사진 및 관련 첨부 파일을 저장한다.
-- 데이터베이스에는 파일 자체가 아닌 파일 경로 또는 객체 키 등의 메타데이터를 저장한다.
-- 파일 접근은 필요한 경우 Presigned URL을 활용한다.
-- 버킷은 기본적으로 비공개로 설정하고 필요한 접근 권한만 부여한다.
-
-### 1.2.6 Docker Hub 이미지 저장소 구성
+### 1.2.5 Docker Hub 이미지 저장소 구성
 
 - Docker Hub를 사용하여 빌드된 Docker 이미지를 저장한다.
 - GitHub Actions에서 Spring Boot 애플리케이션을 Docker 이미지로 빌드한다.
@@ -125,7 +113,7 @@ AWS VPC 내부에 EC2와 RDS를 배치하여 네트워크를 분리한다.
 - AWS EC2에서는 Docker Hub에 저장된 이미지를 Pull하여 컨테이너를 실행한다.
 - Docker Hub 저장소는 Private Repository로 설정하고 인증 정보를 통해 접근하도록 구성한다.
 
-### 1.2.7 외부 API 연동
+### 1.2.6 외부 API 연동
 
 서비스 기능에 필요한 외부 API를 연동한다.
 
@@ -195,9 +183,8 @@ flowchart TD
 
 1. 고객이 A/S를 요청하거나 직원이 고객의 요청을 접수한다.
 2. 접수 정보와 제품 정보가 데이터베이스에 저장된다.
-3. 첨부 사진은 S3에 저장하고 파일 정보는 데이터베이스에 기록한다.
-4. 직원이 수리 진행 상태를 관리한다.
-5. 수리 완료 및 상태 변경 정보가 시스템에 반영된다.
+3. 직원이 수리 진행 상태를 관리한다.
+4. 수리 완료 및 상태 변경 정보가 시스템에 반영된다.
 
 ### 1.4.2 결제 처리
 
@@ -224,7 +211,6 @@ flowchart TD
 ### 1.4.5 AI 영수증 분석 (보류)
 
 1. 고객 또는 직원이 영수증 이미지를 등록한다.
-2. 이미지는 S3에 저장한다.
-3. 서버에서 AI API에 영수증 분석을 요청한다.
-4. 분석 결과를 수신하여 제품 및 구매 정보 확인에 활용한다.
-5. 직원이 분석 결과를 확인하고 필요한 경우 수정한다.
+2. 서버에서 AI API에 영수증 분석을 요청한다.
+3. 분석 결과를 수신하여 제품 및 구매 정보 확인에 활용한다.
+4. 직원이 분석 결과를 확인하고 필요한 경우 수정한다.
