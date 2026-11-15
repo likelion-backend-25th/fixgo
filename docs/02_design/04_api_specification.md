@@ -1,6 +1,6 @@
 # **1. REST API 명세서 및 규격서 (FixGo)**
 
-기준 문서: http://localhost:8080/swagger-ui/index.html
+기준 문서: https://fixgo-api.likelion.shop/swagger-ui/index.html
 
 API 목록은 실행 중인 Swagger의 전체 오퍼레이션이다. 요청·응답 필드는 같은 경로의 컨트롤러 DTO를 따른다. Swagger의 CreateRequest, UpdateRequest, Response처럼 이름이 같은 스키마는 마지막에 등록된 정의가 나머지를 덮으므로, 이 명세서의 JSON은 그 덮인 스키마가 아니라 각 API의 DTO를 적는다.
 
